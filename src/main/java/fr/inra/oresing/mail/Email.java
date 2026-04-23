@@ -22,5 +22,5 @@ public interface Email {
 
     void sendUpoadSuccessMail(Application application, String dataName, String fileName, EmailService.UPLOAD_STATE uploadState, Locale locale, DataVersioningResult dataVersioningResult, OreSiUser currentUser);
 
-    void sendUpoadErrorsMail(Locale locale, String application, String dataname, boolean isReference, OreSiUser currentUser, String body);
+    void sendUpoadErrorsMail(Locale locale, String application, String dataname, String fileName, boolean isReference, OreSiUser currentUser, String body);
 }

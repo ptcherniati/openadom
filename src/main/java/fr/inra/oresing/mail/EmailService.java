@@ -141,17 +141,21 @@ public class EmailService implements Email {
     /**
      * #477 - Corps des emails d'erreur d'insertion , différenciés selon
      * qu'il s'agit d'un référentiel ( TRUE ) ou d'un type de données ( FALSE ).
-     * Le texte d'accompagnement encadre désormais le message technique brut
-     * pour guider l'utilisateur vers une reprise ou un contact administrateur.
+     * Le texte d'accompagnement encadre le message technique brut pour
+     * guider l'utilisateur vers une reprise ou un contact administrateur.
+     * Le nom du fichier CSV en erreur est désormais inclus , en cohérence
+     * avec l'email de succès ( harmonisation proposée en complément du
+     * document ODT ).
      * Placeholders :
      *   %1$s = titre ( localisé )
      *   %2$s = titre de l'application ( localisé )
      *   %3$s = message d'erreur technique brut ( JSON , tel que renvoyé par le backend )
+     *   %4$s = nom du fichier CSV soumis
      */
     private static final Map<Boolean, Map<Locale, String>> ERROR_BODIES = Map.of(
             Boolean.TRUE, Map.of(
                     Locale.FRENCH, """
-                            Une erreur est survenue lors de l'opération sur le référentiel %1$s de l'application %2$s.
+                            Une erreur est survenue lors du traitement du fichier de données "%4$s" du référentiel "%1$s" de l'application %2$s.
                             Vous trouverez ci-dessous le message d'erreur technique associé :
 
                             %3$s
@@ -159,7 +163,7 @@ public class EmailService implements Email {
                             Vous pouvez vérifier vos données et réessayer.
                             Si le problème persiste, nous vous invitons à contacter le(s) administrateur(s) du système d'information.""",
                     Locale.ENGLISH, """
-                            An error occurred while processing the reference dataset "%1$s" in the application %2$s.
+                            An error occurred while processing the data file "%4$s" from the reference "%1$s" in the application %2$s.
                             The technical error message is provided below:
 
                             %3$s
@@ -169,7 +173,7 @@ public class EmailService implements Email {
             ),
             Boolean.FALSE, Map.of(
                     Locale.FRENCH, """
-                            Une erreur est survenue lors de l'opération sur le type de données %1$s de l'application %2$s.
+                            Une erreur est survenue lors du traitement du fichier de données "%4$s" du type de données "%1$s" de l'application %2$s.
                             Vous trouverez ci-dessous le message d'erreur technique associé :
 
                             %3$s
@@ -177,7 +181,7 @@ public class EmailService implements Email {
                             Vous pouvez vérifier vos données et réessayer.
                             Si le problème persiste, nous vous invitons à contacter le(s) administrateur(s) du système d'information.""",
                     Locale.ENGLISH, """
-                            An error occurred while processing the data type dataset "%1$s" in the application %2$s.
+                            An error occurred while processing the data file "%4$s" from the data type "%1$s" in the application %2$s.
                             The technical error message is provided below:
 
                             %3$s
@@ -286,16 +290,19 @@ public class EmailService implements Email {
     }
 
     @Override
-    public void sendUpoadErrorsMail(Locale locale, String application, String dataName, boolean isReference, OreSiUser currentUser, String body) {
+    public void sendUpoadErrorsMail(Locale locale, String application, String dataName, String fileName, boolean isReference, OreSiUser currentUser, String body) {
         // #477 - Le sujet et le corps sont désormais différenciés selon
         // qu'il s'agit d'un référentiel ou d'un type de données , et le
         // corps encadre le message technique brut par un texte
-        // d'accompagnement ( document ODT joint à l'issue ).
+        // d'accompagnement ( document ODT joint à l'issue ). Le nom du
+        // fichier CSV en erreur est inclus par harmonisation avec l'email
+        // de succès.
         Locale effectiveLocale = Locale.ENGLISH.getLanguage().equals(locale.getLanguage()) ? Locale.ENGLISH : Locale.FRENCH;
+        String safeFileName = fileName == null ? "" : fileName;
         String subject = ERROR_SUBJECTS.get(isReference).get(effectiveLocale)
                 .formatted(dataName, application);
         String text = ERROR_BODIES.get(isReference).get(effectiveLocale)
-                .formatted(dataName, application, body);
+                .formatted(dataName, application, body, safeFileName);
 
         final SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(currentUser.getEmail());
