@@ -20,7 +20,7 @@ public interface Email {
             FileSenderInternationalisation fileSenderInternationalisation,
             String internationnalizedDataName);
 
-    void sendUpoadSuccessMail(Application application, String dataName, EmailService.UPLOAD_STATE uploadState, Locale locale, DataVersioningResult dataVersioningResult, OreSiUser currentUser);
+    void sendUpoadSuccessMail(Application application, String dataName, String fileName, EmailService.UPLOAD_STATE uploadState, Locale locale, DataVersioningResult dataVersioningResult, OreSiUser currentUser);
 
-    void sendUpoadErrorsMail(Locale locale, String application, String dataname, OreSiUser body, String currentUser);
+    void sendUpoadErrorsMail(Locale locale, String application, String dataname, boolean isReference, OreSiUser currentUser, String body);
 }

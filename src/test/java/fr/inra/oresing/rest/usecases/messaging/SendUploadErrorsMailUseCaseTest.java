@@ -29,13 +29,14 @@ class SendUploadErrorsMailUseCaseTest {
         Locale locale = Locale.FRENCH;
         String application = "testApp";
         String dataName = "testData";
+        boolean isReference = false;
         OreSiUser currentUser = new OreSiUser();
         String body = "Error details";
 
         // When
-        useCase.execute(locale, application, dataName, currentUser, body);
+        useCase.execute(locale, application, dataName, isReference, currentUser, body);
 
         // Then
-        verify(emailService).sendUpoadErrorsMail(locale, application, dataName, currentUser, body);
+        verify(emailService).sendUpoadErrorsMail(locale, application, dataName, isReference, currentUser, body);
     }
 }

@@ -81,7 +81,7 @@ public class VersioningService {
                 uploadState = EmailService.UPLOAD_STATE.UPLOADED;
             }
             if (withEmail) {
-                serviceContainer.emailService().sendUpoadSuccessMail(application, dataName, uploadState, locale, dataVersioningResult, serviceContainer.authenticationService().getCurrentUser());
+                serviceContainer.emailService().sendUpoadSuccessMail(application, dataName, fileName, uploadState, locale, dataVersioningResult, serviceContainer.authenticationService().getCurrentUser());
                 return dataVersioningResult;
             }
         }
@@ -93,7 +93,7 @@ public class VersioningService {
         final List<ApplicationResult.DataSynthesis> dataSynthesis = Optional.ofNullable(serviceContainer.dataService().getReferenceSynthesis(application)).orElseGet(List::of);
         DataVersioningResult dataVersioningResult = DataVersioningResult.of(nameOrId, dataName, state.binaryFile().getId(), dataSynthesis);
         if (withEmail) {
-            serviceContainer.emailService().sendUpoadSuccessMail(application, dataName, uploadState, locale, dataVersioningResult, serviceContainer.authenticationService().getCurrentUser());
+            serviceContainer.emailService().sendUpoadSuccessMail(application, dataName, fileName, uploadState, locale, dataVersioningResult, serviceContainer.authenticationService().getCurrentUser());
         }
         return dataVersioningResult;
 

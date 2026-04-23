@@ -870,10 +870,13 @@ public class OreSiResources {
                     String localizedApplicationName = application.getLocalizedLocalName(locale);
                     String localizedDataName = application.getLocalizedDataName(locale, dataName);
                     OreSiUser currentUser = getCurrentUserUseCase.execute();
+                    // #477 - Distinction référentiel / type de données pour le template d'email
+                    boolean isReference = !application.isData(dataName);
                     sendUploadErrorsMailUseCase.execute(
                             locale,
                             localizedApplicationName,
                             localizedDataName,
+                            isReference,
                             currentUser,
                             errorsToJson
                     );
