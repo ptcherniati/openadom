@@ -25,6 +25,7 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.workflow.cascade.progress.ImportProgressReporter;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 
 import java.io.BufferedWriter;
@@ -87,15 +88,18 @@ public class DataImporter {
         getDataImporterContext().dataHeaderReader().readHeader(linesIterator);
         getDataImporterContext().withPatternColumn();
         getDataImporterContext().setTransformedLineCheckers(getRecursionStrategy(), csvReader.buildLineCheckers(getDataImporterContext().dataHeaderReader().constantValues().values()));
-        try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8)) {
+        // #499 - Utiliser CSVPrinter pour re-serialiser les records : il
+        // ré-entoure automatiquement les champs contenant le délimiteur ,
+        // des guillemets ou des retours ligne. Une reconstruction manuelle
+        // ( writer.write( record.get(i) ) ) écrivait le contenu BRUT , ce
+        // qui faisait fuiter les retours ligne internes des cellules
+        // multi-lignes comme de vrais retours ligne physiques dans le
+        // fichier de sortie , cassant ensuite la lecture par chunks et le
+        // re-parsing en aval.
+        try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8);
+             CSVPrinter printer = new CSVPrinter(writer, csvFormat)) {
             while (linesIterator.hasNext()) {
-                CSVRecord csvRecord = linesIterator.next();
-                // Reconstituer la ligne CSV
-                for (int i = 0; i < csvRecord.size(); i++) {
-                    if (i > 0) writer.write(csvFormat.getDelimiterString());
-                    writer.write(csvRecord.get(i));
-                }
-                writer.newLine();
+                printer.printRecord(linesIterator.next());
             }
         }
         return tempFile;
