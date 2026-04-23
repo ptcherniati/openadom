@@ -48,7 +48,7 @@ public class EmailService implements Email {
             ),
             UPLOAD_STATE.UPLOADED, Map.of(
                     Locale.FRENCH, "Votre fichier a bien été enregistré",
-                    Locale.ENGLISH, "Your file has been register"
+                    Locale.ENGLISH, "Your file has been registered"
             ),
             UPLOAD_STATE.DELETED, Map.of(
                     Locale.FRENCH, "Votre fichier a bien été supprimé",
@@ -58,35 +58,35 @@ public class EmailService implements Email {
     private static final Map<UPLOAD_STATE, Map<Locale, String>> SUCCESS_UPLOAD_TEXTS = Map.of(
             UNPUBLISHED, Map.of(
                     Locale.FRENCH, """
-                            Le fichier de données %1$s a bien été dépublié pour l'application %2$s.
-                            %1$s continent %3$s enregistrement(s)""",
+                            Le fichier de données "%1$s" a bien été dépublié pour l'application %2$s.
+                            %1$s contient %3$s enregistrement(s)""",
                     Locale.ENGLISH, """
-                            The data file %1$s has been successfully unpublished for the application %2$s.
-                            %1$s continent %3$s record(s)"""
+                            The data file "%1$s" has been successfully unpublished for the application %2$s.
+                            %1$s contains %3$s record(s)"""
             ),
             UPLOAD_STATE.PUBLISHED, Map.of(
                     Locale.FRENCH, """
-                            Le fichier de données %1$s a bien été publié pour l'application %2$s.
-                            %1$s continent %3$s enregistrement(s)""",
+                            Le fichier de données "%1$s" a bien été publié pour l'application %2$s.
+                            %1$s contient %3$s enregistrement(s)""",
                     Locale.ENGLISH, """
-                            The data file %1$s has been successfully published for the application %2$s.
-                            %1$s continent %3$s record(s)"""
+                            The data file "%1$s" has been successfully published for the application %2$s.
+                            %1$s contains %3$s record(s)"""
             ),
             UPLOAD_STATE.UPLOADED, Map.of(
                     Locale.FRENCH, """
-                            Le fichier de données %1$s a bien été enregistré pour l'application %2$s.
-                            %1$s continent %3$s enregistrement(s)""",
+                            Le fichier de données "%1$s" a bien été enregistré pour l'application %2$s.
+                            %1$s contient %3$s enregistrement(s)""",
                     Locale.ENGLISH, """
-                            The data file %1$s has been successfully register for the application %2$s.
-                            %1$s continent %3$s record(s)"""
+                            The data file "%1$s" has been successfully registered for the application %2$s.
+                            %1$s contains %3$s record(s)"""
             ),
             UPLOAD_STATE.DELETED, Map.of(
                     Locale.FRENCH, """
-                            Le fichier de données %1$s a bien été supprimé pour l'application %2$s.
-                            %1$s continent %3$s enregistrement(s)""",
+                            Le fichier de données "%1$s" a bien été supprimé pour l'application %2$s.
+                            %1$s contient %3$s enregistrement(s)""",
                     Locale.ENGLISH, """
-                            The data file %1$s has been successfully deleted for the application %2$s.
-                            %1$s continent %3$s record(s)"""
+                            The data file "%1$s" has been successfully deleted for the application %2$s.
+                            %1$s contains %3$s record(s)"""
             )
     );
     private static final String MAIL_VERIFICATION_TEMPLATE = """
