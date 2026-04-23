@@ -42,59 +42,60 @@ public record ConstantComponentsBuilder(RootBuilder rootBuilder) {
                final Integer headerLine,
                final Integer firstRowLine) {
         final Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.findPath(ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS).fields();
+
         while (fields.hasNext()) {
             final Map.Entry<String, JsonNode> constantComponentEntry = fields.next();
-            final String constantComponentKey = constantComponentEntry.getKey();
-            final JsonNode componentNodeValue = constantComponentEntry.getValue();
-            final JsonNode defaultValueNode = componentNodeValue.findPath(ConfigurationSchemaNode.OA_DEFAULT_VALUE);
-            final boolean required = componentNodeValue.findPath(ConfigurationSchemaNode.OA_REQUIRED).asBoolean(false);
-
+            ConstantComponentFields fieldsExtracted = extractConstantComponentFields(constantComponentEntry);
+            final String constantComponentKey = fieldsExtracted.constantComponentKey();
+            final JsonNode componentNodeValue = fieldsExtracted.componentNodeValue();
+            final JsonNode defaultValueNode = fieldsExtracted.defaultValueNode();
+            final boolean required = fieldsExtracted.required();
             final Parsing<CheckerDescription> checkerDescriptionParsing = rootBuilder
-                    .getCheckerDescriptionBuilder()
-                    .build(
-                            i18n,
-                            constantComponentKey,
-                            required,
-                            NodeSchemaValidator.joinPath(
-                                    componentPath,
-                                    ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS,
-                                    constantComponentKey
-                            ),
-                            componentNodeValue
-                                    .get(ConfigurationSchemaNode.OA_CHECKER),
-                            key);
+                .getCheckerDescriptionBuilder()
+                .build(
+                    i18n,
+                    constantComponentKey,
+                    required,
+                    NodeSchemaValidator.joinPath(
+                        componentPath,
+                        ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS,
+                        constantComponentKey
+                    ),
+                    componentNodeValue
+                        .get(ConfigurationSchemaNode.OA_CHECKER),
+                    key);
             i18n = Objects.requireNonNull(checkerDescriptionParsing).i18n();
             Multiplicity multiplicity = Optional.ofNullable(checkerDescriptionParsing.result())
-                    .map(CheckerDescription::multiplicity)
-                    .orElse(Multiplicity.ONE);
+                .map(CheckerDescription::multiplicity)
+                .orElse(Multiplicity.ONE);
             Parsing<ComputationChecker> defaultValueParsing;
             if (defaultValueNode != null && !defaultValueNode.isMissingNode()) {
                 defaultValueParsing = rootBuilder
-                        .getComputationBuilder()
-                        .build(
-                                i18n,
-                                required, multiplicity,
-                                NodeSchemaValidator.joinPath(
-                                        componentPath,
-                                        ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS,
-                                        constantComponentKey,
-                                        ConfigurationSchemaNode.OA_DEFAULT_VALUE
-                                ),
-                                defaultValueNode);
+                    .getComputationBuilder()
+                    .build(
+                        i18n,
+                        required, multiplicity,
+                        NodeSchemaValidator.joinPath(
+                            componentPath,
+                            ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS,
+                            constantComponentKey,
+                            ConfigurationSchemaNode.OA_DEFAULT_VALUE
+                        ),
+                        defaultValueNode);
                 i18n = defaultValueParsing.i18n();
                 if (defaultValueParsing.result().getReferences() != null) {
                     for (final String reference : defaultValueParsing.result().getReferences()) {
                         if (!rootBuilder.getListDataKeys().contains(reference)) {
                             rootBuilder.buildError(ConfigurationException.UNKNOWN_REFERENCE_NAME, Map.of(
-                                            "referenceName", reference,
-                                            "allDataNames", rootBuilder.getListDataKeys()),
-                                    NodeSchemaValidator.joinPath(
-                                            componentPath,
-                                            ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS,
-                                            constantComponentKey,
-                                            ConfigurationSchemaNode.OA_DEFAULT_VALUE,
-                                            ConfigurationSchemaNode.OA_REFERENCES
-                                    )
+                                    "referenceName", reference,
+                                    "allDataNames", rootBuilder.getListDataKeys()),
+                                NodeSchemaValidator.joinPath(
+                                    componentPath,
+                                    ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS,
+                                    constantComponentKey,
+                                    ConfigurationSchemaNode.OA_DEFAULT_VALUE,
+                                    ConfigurationSchemaNode.OA_REFERENCES
+                                )
                             );
                         }
                     }
@@ -103,25 +104,25 @@ public record ConstantComponentsBuilder(RootBuilder rootBuilder) {
                 defaultValueParsing = new Parsing<>(i18n, null);
             }
             final Set<Tag> oaTags = TagsBuilder.validateDomainTagNames(
-                    componentNodeValue,
-                    NodeSchemaValidator.joinPath(
-                            componentPath,
-                            ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS,
-                            constantComponentKey,
-                            ConfigurationSchemaNode.OA_TAGS
-                    ),
-                    rootBuilder);
+                componentNodeValue,
+                NodeSchemaValidator.joinPath(
+                    componentPath,
+                    ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS,
+                    constantComponentKey,
+                    ConfigurationSchemaNode.OA_TAGS
+                ),
+                rootBuilder);
             final ComponentPresenceConstraint mandatory = RootBuilder.isMandatory(componentNodeValue);
             final JsonNode importHeaderNode = componentNodeValue.findPath(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_TARGET);
             final ConstantImportHeader importHeader = getAndtestConstantImportHeader(importHeaderNode,
-                    key,
-                    headerLine,
-                    firstRowLine,
-                    NodeSchemaValidator.joinPath(componentPath,
-                            ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS,
-                            constantComponentKey,
-                            ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_TARGET
-                    )
+                key,
+                headerLine,
+                firstRowLine,
+                NodeSchemaValidator.joinPath(componentPath,
+                    ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS,
+                    constantComponentKey,
+                    ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_TARGET
+                )
             );
             final Parsing<String> exportHeaderParsing = rootBuilder.addExportHeaders(key, i18n, constantComponentEntry, ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS);
             String exportHeaderName = null;
@@ -130,19 +131,19 @@ public record ConstantComponentsBuilder(RootBuilder rootBuilder) {
                 exportHeaderName = exportHeaderParsing.result();
             }
             componentDescriptionBuilder.put(
+                constantComponentKey,
+                new ConstantComponent(
+                    ComponentDescription.ComponentDescriptionType.ConstantComponent,
                     constantComponentKey,
-                    new ConstantComponent(
-                            ComponentDescription.ComponentDescriptionType.ConstantComponent,
-                            constantComponentKey,
-                            defaultValueParsing.result(),
-                            oaTags,
-                            required,
-                            mandatory,
-                            checkerDescriptionParsing.result(),
-                            importHeader,
-                            exportHeaderName == null ? constantComponentKey : exportHeaderName,
-                            null
-                    ));
+                    defaultValueParsing.result(),
+                    oaTags,
+                    required,
+                    mandatory,
+                    checkerDescriptionParsing.result(),
+                    importHeader,
+                    exportHeaderName == null ? constantComponentKey : exportHeaderName,
+                    null
+                ));
         }
         return i18n;
     }
@@ -251,4 +252,14 @@ public record ConstantComponentsBuilder(RootBuilder rootBuilder) {
                 constantColumnNumber
         );
     }
+
+    private static ConstantComponentFields extractConstantComponentFields(Map.Entry<String, JsonNode> entry) {
+        final String constantComponentKey = entry.getKey();
+        final JsonNode componentNodeValue = entry.getValue();
+        final JsonNode defaultValueNode = componentNodeValue.findPath(ConfigurationSchemaNode.OA_DEFAULT_VALUE);
+        final boolean required = componentNodeValue.findPath(ConfigurationSchemaNode.OA_REQUIRED).asBoolean(false);
+        return new ConstantComponentFields(constantComponentKey, componentNodeValue, defaultValueNode, required);
+    }
+
+    private record ConstantComponentFields(String constantComponentKey, JsonNode componentNodeValue, JsonNode defaultValueNode, boolean required) {}
 }

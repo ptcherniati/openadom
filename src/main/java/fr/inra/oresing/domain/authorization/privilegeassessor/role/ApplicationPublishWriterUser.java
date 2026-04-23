@@ -29,16 +29,7 @@ public record ApplicationPublishWriterUser(
             }
             return true;
         }
-        List<AuthorizationParsed> authorizationParseds = authorizations().stream()
-                .filter(authorizationParsed -> testRequiredAuthorizations(authorizationParsed.requiredAuthorizations(), fileOrUUID.binaryfiledataset().getRequiredAuthorizations()))
-                .toList();
-        if (authorizationParseds.isEmpty()) {
-            throw getException();
-        }
-        if (isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)) {
-            return true;
-        }
-        throw getException();
+        return testAuthorizationParsed(authorizations(), fileOrUUID);
     }
 
     @Override

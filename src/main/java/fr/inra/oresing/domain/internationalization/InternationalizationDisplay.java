@@ -38,20 +38,7 @@ public class InternationalizationDisplay {
         displayPattern
                 .ifPresent(patterns -> patterns.getTitle()
                         .forEach((key, value) -> {
-                            DataColumnSingleValue displayForLocale = new DataColumnSingleValue(
-                                    StringType.getStringTypeFromStringValue(
-                                            parsePattern(value).stream()
-                                                    .map(patternSection -> {
-                                                                String internationalizedPattern = patternSection.text;
-                                                                if (!Strings.isNullOrEmpty(patternSection.variable)) {
-                                                                    String referencedColumn = patternSection.variable;
-                                                                    internationalizedPattern += refValues.get(new DataColumn(referencedColumn)).toValueString(dataImporterContext, referencedColumn, key.getDisplayName());
-                                                                }
-                                                                return internationalizedPattern;
-                                                            }
-                                                    )
-                                                    .collect(Collectors.joining()))
-                            );
+                            DataColumnSingleValue displayForLocale = buildDisplayForLocale(value, key, refValues, dataImporterContext);
                             displaysName.put(DataColumn.forDisplayName(key),
                                     displayForLocale
                             );
@@ -95,20 +82,7 @@ public class InternationalizationDisplay {
                 .orElse(Locale.FRENCH);
         displayPattern
                 .ifPresent(patterns -> patterns.getDescription().forEach((key, value) -> {
-                    DataColumnSingleValue displayForLocale = new DataColumnSingleValue(
-                            StringType.getStringTypeFromStringValue(
-                                    parsePattern(value).stream()
-                                            .map(patternSection -> {
-                                                        String internationalizedPattern = patternSection.text;
-                                                        if (!Strings.isNullOrEmpty(patternSection.variable)) {
-                                                            String referencedColumn = patternSection.variable;
-                                                            internationalizedPattern += refValues.get(new DataColumn(referencedColumn)).toValueString(dataImporterContext, referencedColumn, key.getDisplayName());
-                                                        }
-                                                        return internationalizedPattern;
-                                                    }
-                                            )
-                                            .collect(Collectors.joining()))
-                    );
+                    DataColumnSingleValue displayForLocale = buildDisplayForLocale(value, key, refValues, dataImporterContext);
                     displaysDescription.put(DataColumn.forDisplayDescription(key),
                             displayForLocale
                     );
@@ -170,5 +144,22 @@ public class InternationalizationDisplay {
             text = section[0];
             variable = section.length > 1 ? section[1] : "";
         }
+    }
+
+    private static DataColumnSingleValue buildDisplayForLocale(String value, Locale key, DataDatum refValues, AsynchroneFileImporterContext dataImporterContext) {
+        return new DataColumnSingleValue(
+                StringType.getStringTypeFromStringValue(
+                        parsePattern(value).stream()
+                                .map(patternSection -> {
+                                    String internationalizedPattern = patternSection.text;
+                                    if (!Strings.isNullOrEmpty(patternSection.variable)) {
+                                        String referencedColumn = patternSection.variable;
+                                        internationalizedPattern += refValues.get(new DataColumn(referencedColumn)).toValueString(dataImporterContext, referencedColumn, key.getDisplayName());
+                                    }
+                                    return internationalizedPattern;
+                                })
+                                .collect(Collectors.joining())
+                )
+        );
     }
 }

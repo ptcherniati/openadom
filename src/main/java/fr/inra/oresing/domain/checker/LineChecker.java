@@ -198,7 +198,7 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
             ) implements TransformOneLineElementTransformer {
 
                 @Override
-                @SuppressWarnings({"unchecked", "java:S3740"})
+                @SuppressWarnings({"java:S3740"})
                 public FieldType<?> transform(final SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext) {
                     ImmutableMap<String, Object> result = ImmutableMap.<String, Object>builder()
                             .putAll(Stream.of(

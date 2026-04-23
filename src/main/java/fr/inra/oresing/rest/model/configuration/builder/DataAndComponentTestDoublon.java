@@ -43,16 +43,15 @@ public class DataAndComponentTestDoublon extends HashMap<String, Map<String, Lis
             currentNode = currentNode.findPath(label);
             headerName = currentNode.findPath(OA_IMPORT_HEADER).findPath(OA_HEADER_NAME).asText(label);
             if (i == split.length - 1) {
-                final boolean noHeader = currentNode.findPath(OA_IMPORT_HEADER).findPath(OA_HEADER_NAME).isMissingNode() || currentNode.findPath(OA_IMPORT_HEADER).findPath(OA_HEADER_NAME).isNull();
-                final String importHeaderPath = noHeader ? path : NodeSchemaValidator.joinPath(path, OA_IMPORT_HEADER, OA_HEADER_NAME);
-                headerForData.computeIfAbsent(headerName, l -> new LinkedList<>())
-                        .add(importHeaderPath);
+                addHeaderPath(currentNode, path, headerName, headerForData);
             }
         }
     }
 
-    private static void addPatternImportHeader(final JsonNode componentComponentNode, final String headerName, final String path, final Map<String, List<String>> headerForData) {
-        final boolean noHeader = componentComponentNode.findPath(OA_IMPORT_HEADER).findPath(OA_HEADER_NAME).isMissingNode() || componentComponentNode.findPath(OA_IMPORT_HEADER).findPath(OA_HEADER_NAME).isNull();
+
+
+    private static void addHeaderPath(JsonNode node, String path, String headerName, Map<String, List<String>> headerForData) {
+        final boolean noHeader = node.findPath(OA_IMPORT_HEADER).findPath(OA_HEADER_NAME).isMissingNode() || node.findPath(OA_IMPORT_HEADER).findPath(OA_HEADER_NAME).isNull();
         final String importHeaderPath = noHeader ? path : NodeSchemaValidator.joinPath(path, OA_IMPORT_HEADER, OA_HEADER_NAME);
         headerForData.computeIfAbsent(headerName, l -> new LinkedList<>())
                 .add(importHeaderPath);
@@ -158,7 +157,7 @@ public class DataAndComponentTestDoublon extends HashMap<String, Map<String, Lis
                 .computeIfAbsent(componentName, l -> new HashMap<>())
                 .computeIfAbsent(qualifierOrAdjacentName, l -> new LinkedList<>())
                 .add(path);
-        addPatternImportHeader(
+        addHeaderPath(
                 dataNodes.findPath(qualifierOrAdjacentName),
                 path,
                 qualifierOrAdjacentName,

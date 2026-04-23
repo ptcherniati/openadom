@@ -21,6 +21,30 @@ import java.util.stream.Stream;
 @Component
 @Transactional(readOnly = true)
 public class NormalizedService {
+            /**
+             * Construit un Component à partir des paramètres donnés (clé, valeur, autorisation, nom du champ parent).
+             */
+                    private fr.inra.oresing.domain.application.normalized.Component buildComponent(
+                            String key,
+                            fr.inra.oresing.domain.application.configuration.ComponentDescription value,
+                            Optional<Authorization> authorization,
+                            String parentFieldName
+                    ) {
+                        return fr.inra.oresing.domain.application.normalized.Component.of(
+                                key,
+                                value,
+                                authorization
+                                        .map(Authorization::timeScope)
+                                        .stream().anyMatch(key::equals),
+                                authorization
+                                        .map(Authorization::authorizationScope)
+                                        .stream()
+                                        .flatMap(List::stream)
+                                        .map(AuthorizationScopeComponentData::component)
+                                        .anyMatch(key::equals),
+                                parentFieldName
+                        );
+                    }
     public static final String CANT_CREATE_DENORMALIZED_TABLE = "CANT_CREATE_DENORMALIZED_TABLE";
     private final OreSiRepository repository;
     private final BeanFactory beanFactory;
@@ -77,38 +101,11 @@ public class NormalizedService {
                                         List<fr.inra.oresing.domain.application.normalized.Component> components = new ArrayList<>();
                                         components.add(component);
                                         patternComponent.patternComponentQualifiers().entrySet().stream()
-                                                .map(qualifierComponentEntry -> fr.inra.oresing.domain.application.normalized.Component.of(
-                                                                qualifierComponentEntry.getKey(),
-                                                                qualifierComponentEntry.getValue(),
-                                                                authorization
-                                                                        .map(Authorization::timeScope)
-                                                                        .stream().anyMatch(qualifierComponentEntry.getKey()::equals),
-                                                                authorization
-                                                                        .map(Authorization::authorizationScope)
-                                                                        .stream()
-                                                                        .flatMap(List::stream)
-                                                                        .map(AuthorizationScopeComponentData::component)
-                                                                        .anyMatch(qualifierComponentEntry.getKey()::equals),
-                                                                component.fieldName()
-                                                        )
-                                                )
-                                                .forEach(qualifierComponent -> components.add(qualifierComponent));
+                                                .map(qualifierEntry -> buildComponent(qualifierEntry.getKey(), qualifierEntry.getValue(), authorization, component.fieldName()))
+                                                .forEach(components::add);
                                         patternComponent.patternComponentAdjacents().entrySet().stream()
-                                                .map(adjacentComponentEntry -> fr.inra.oresing.domain.application.normalized.Component.of(
-                                                        adjacentComponentEntry.getKey(),
-                                                        adjacentComponentEntry.getValue(),
-                                                        authorization
-                                                                .map(Authorization::timeScope)
-                                                                .stream().anyMatch(adjacentComponentEntry.getKey()::equals),
-                                                        authorization
-                                                                .map(Authorization::authorizationScope)
-                                                                .stream()
-                                                                .flatMap(List::stream)
-                                                                .map(AuthorizationScopeComponentData::component)
-                                                                .anyMatch(adjacentComponentEntry.getKey()::equals),
-                                                        component.fieldName())
-                                                )
-                                                .forEach(adjacentComponent -> components.add(adjacentComponent));
+                                                .map(adjacentEntry -> buildComponent(adjacentEntry.getKey(), adjacentEntry.getValue(), authorization, component.fieldName()))
+                                                .forEach(components::add);
                                         yield components.stream();
                                     }
                                     default -> Stream.of(component);
@@ -133,7 +130,7 @@ public class NormalizedService {
             if (!sqlService.createNormalizedTable(tableSql)) {
                 return CANT_CREATE_DENORMALIZED_TABLE;
             }
-            ;
+            //
         } catch (Exception e) {
             log.error(CANT_CREATE_DENORMALIZED_TABLE, e);
             return CANT_CREATE_DENORMALIZED_TABLE;

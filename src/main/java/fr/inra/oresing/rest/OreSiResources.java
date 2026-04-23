@@ -494,7 +494,7 @@ public class OreSiResources {
         }
         Optional<UUID> uuid = removeFileUseCase.execute(application, id);
         if (uuid.isPresent()) {
-            return ResponseEntity.ok(id.toString());
+            return okResponse(id.toString());
         } else {
             throw new NotApplicationCanDeleteRightsException(applicationName, dataName);
         }
@@ -549,7 +549,7 @@ public class OreSiResources {
                                 getReferencedFiles(binaryFile)
                         ))
                         .toList();
-        return ResponseEntity.ok(files);
+        return okResponse(files);
     }
 
     private List<ReferencedBinaryFiles> getReferencedFiles(BinaryFile binaryFile) {
@@ -702,13 +702,13 @@ public class OreSiResources {
             final String nameOrId,
             final RightsRequestInfos rightsRequestInfos) {
         final GetRightsRequestResult list = findRightsRequestUseCase.execute(nameOrId, rightsRequestInfos);
-        return ResponseEntity.ok(list);
+        return okResponse(list);
     }
 
     private ResponseEntity<?> createRightsRequest(final String nameOrId,
                                                   final CreateRightsRequestRequest createRightsRequestRequest) {
         final UUID fileUUID = createOrUpdateRightsRequestUseCase.execute(createRightsRequestRequest, nameOrId);
-        return ResponseEntity.ok(fileUUID);
+        return okResponse(fileUUID);
     }
 
     /**
@@ -723,7 +723,7 @@ public class OreSiResources {
         String[] filter = {ApplicationInformation.ALL.name()};
         final ApplicationResult application = getApplication(nameOrId, filter);
 
-        return ResponseEntity.ok(application.getOrderedReferences());
+        return okResponse(application.getOrderedReferences());
     }
 
     /**
@@ -777,7 +777,7 @@ public class OreSiResources {
                         )
                 )
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetReferenceResult.ReferenceValue::commparingValue)));
-        return ResponseEntity.ok(new GetReferenceResult(referenceValues,
+        return okResponse(new GetReferenceResult(referenceValues,
                 referenceTypeForReferencingColumns));
     }
 
@@ -833,7 +833,7 @@ public class OreSiResources {
     public ResponseEntity<List<List<String>>> listDataForColumn(@PathVariable("nameOrId") final String nameOrId, @PathVariable("refType") final String refType, @PathVariable("column") final String column) {
         final Application application = getApplicationUseCase.execute(nameOrId);
         final List<List<String>> result = getDataColumnUseCase.execute(application, refType, column);
-        return ResponseEntity.ok(result);
+        return okResponse(result);
     }
 
     protected ResponseEntity<Map<String, Object>> createData(
@@ -917,7 +917,7 @@ public class OreSiResources {
     protected ResponseEntity<List<String>> listData(final String nameOrId) {
         final Application application = getApplicationUseCase.execute(nameOrId);
         List<String> allDataNames = application.getAllDataNames();
-        return ResponseEntity.ok(allDataNames);
+        return okResponse(allDataNames);
     }
 
     /**
@@ -936,7 +936,7 @@ public class OreSiResources {
         }
         additionalFilesInfos.setFiletype(additionalFilesInfos.getFiletype() == null ? additionalFileName : additionalFilesInfos.getFiletype());
         final GetAdditionalFilesResult list = findAdditionalFileUseCase.execute(nameOrId, additionalFilesInfos);
-        return ResponseEntity.ok(list);
+        return okResponse(list);
     }
 
     @GetMapping(value = "/applications/{nameOrId}/additionalFiles", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -1029,7 +1029,7 @@ public class OreSiResources {
             BadAdditionalFileParamsSearchException {
         final List<UUID> deletedFiles = deleteAdditionalFilesUseCase.execute(nameOrId, additionalFilesInfos);
         if (deletedFiles != null && !deletedFiles.isEmpty()) {
-            return ResponseEntity.ok(deletedFiles.stream().map(UUID::toString).collect(Collectors.joining(LIST_DELIMITER)));
+            return okResponse(deletedFiles.stream().map(UUID::toString).collect(Collectors.joining(LIST_DELIMITER)));
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -1040,7 +1040,7 @@ public class OreSiResources {
                                                        final MultipartFile file,
                                                        final CreateAdditionalFileRequest createAdditionalFileRequest) {
         final UUID fileUUID = createOrUpdateAdditionalFileUseCase.execute(createAdditionalFileRequest, additionalFileName, nameOrId, file);
-        return ResponseEntity.ok(fileUUID);
+        return okResponse(fileUUID);
 
 
     }
@@ -1101,7 +1101,7 @@ public class OreSiResources {
         // PERF #465 — filterLists est désormais une liste vide ici.
         // Les filtres sont chargés via l'endpoint séparé GET /filters (voir getDataFilters ci-dessous).
         // Cela permet d'afficher les données immédiatement sans attendre la requête lente des filtres (~54s).
-        return ResponseEntity.ok(new GetDataResult(
+        return okResponse(new GetDataResult(
                 downloadDatasetQuery.patternDefinitionCount(),
                 variables,
                 dataRowResults,
@@ -1150,7 +1150,7 @@ public class OreSiResources {
         }
         // Retourne le JSON sérialisé directement depuis le cache (pas de re-sérialisation Jackson)
         String json = serviceContainer.dataService().filterListAsJson(application, dataName);
-        return ResponseEntity.ok(json);
+        return okResponse(json);
     }
 
     /**
@@ -1165,7 +1165,7 @@ public class OreSiResources {
         // #58 - Reconstruire le cache des filtres après une suppression réussie
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
         serviceContainer.dataService().refreshFilterListCache(application, dataName);
-        return ResponseEntity.ok(deletedData.stream().map(UUID::toString).collect(Collectors.joining(LIST_DELIMITER)));
+        return okResponse(deletedData.stream().map(UUID::toString).collect(Collectors.joining(LIST_DELIMITER)));
 
     }
 
@@ -1427,7 +1427,7 @@ public class OreSiResources {
             return ResponseEntity.created(URI.create(uri)).body(synthesisResults);
         } catch (final InvalidDatasetContentException e) {
             final List<CsvRowValidationCheckResult> errors = e.getErrors();
-            return ResponseEntity.badRequest().body(errors);
+            return badRequestResponse(errors);
         }
     }
 
@@ -1440,7 +1440,7 @@ public class OreSiResources {
             return ResponseEntity.created(URI.create(uri)).body(synthesis);
         } catch (final InvalidDatasetContentException e) {
             final List<CsvRowValidationCheckResult> errors = e.getErrors();
-            return ResponseEntity.badRequest().body(errors);
+            return badRequestResponse(errors);
         }
     }
 
@@ -1453,7 +1453,7 @@ public class OreSiResources {
             return ResponseEntity.created(URI.create(uri)).body(synthesis);
         } catch (final InvalidDatasetContentException e) {
             final List<CsvRowValidationCheckResult> errors = e.getErrors();
-            return ResponseEntity.badRequest().body(errors);
+            return badRequestResponse(errors);
         }
     }
 
@@ -1900,6 +1900,23 @@ public class OreSiResources {
                         }
                     });
         };
+    }
+
+    // --- Méthodes utilitaires pour factoriser les réponses HTTP ---
+    private <T> ResponseEntity<T> okResponse(T body) {
+        return ResponseEntity.ok(body);
+    }
+
+    private ResponseEntity<Void> okResponse() {
+        return ResponseEntity.ok().build();
+    }
+
+    private ResponseEntity<Void> notFoundResponse() {
+        return ResponseEntity.notFound().build();
+    }
+
+    private <T> ResponseEntity<T> badRequestResponse(T errors) {
+        return ResponseEntity.badRequest().body(errors);
     }
 
     public static File getPhysicalFileOrCopy(MultipartFile multipartFile) throws IOException {

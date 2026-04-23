@@ -133,5 +133,17 @@ public sealed interface ApplicationDataWriter extends ApplicationUser, DataWrite
 
         return true;
     }
+    default boolean testAuthorizationParsed(List<AuthorizationParsed> authorizations, FileOrUUID fileOrUUID) {
+        List<AuthorizationParsed> authorizationParseds = authorizations.stream()
+                .filter(authorizationParsed -> testRequiredAuthorizations(authorizationParsed.requiredAuthorizations(), fileOrUUID.binaryfiledataset().getRequiredAuthorizations()))
+                .toList();
+        if (authorizationParseds.isEmpty()) {
+            throw getException();
+        }
+        if (isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)) {
+            return true;
+        }
+        throw getException();
+    }
 
 }

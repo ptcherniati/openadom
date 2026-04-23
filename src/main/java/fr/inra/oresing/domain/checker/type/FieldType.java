@@ -17,16 +17,17 @@ import java.util.regex.Pattern;
 
 public sealed interface FieldType<T> extends SomethingToBeStoredAsJsonInDatabase, SomethingToBeSentToFrontend
         permits
-        ReferenceType,
-        BooleanType,
-        DateType,
-        FloatType,
-        IntegerType,
-        ListType,
-        MapType,
-        PatternType,
-        NullType,
-        StringType {
+         ReferenceType,
+         BooleanType,
+         DateType,
+         FloatType,
+         IntegerType,
+         ListType,
+         MapType,
+         PatternType,
+         AbstractMapType,
+         NullType,
+         StringType {
 
 
     public static <T> fr.inra.oresing.domain.checker.type.FieldType<T> readObject(final T fieldType) {

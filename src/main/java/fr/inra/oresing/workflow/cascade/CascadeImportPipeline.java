@@ -118,12 +118,7 @@ public class CascadeImportPipeline {
                 uploadedPath = uploadFile(headerlessCsv, userId, correlationId);
             } catch (IOException e) {
                 log.error("Erreur lors de la preparation de l'upload pour {} : {}", userId, e.getMessage(), e);
-                Duration failDuration = Duration.between(startedAt, Instant.now());
-                metrics.recordImportCompleted(applicationName, dataType, WorkflowLogEntry.STATUS_FAILED,
-                        failDuration, 0L, 0L, 0, fileSizeBytes);
-                logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
-                        startedAt, failDuration, WorkflowLogEntry.STATUS_FAILED,
-                        0L, 0L, 0, fileSizeBytes, List.of(), e.getMessage());
+                logErrors(userId, applicationName, userLogin, dataType, e, startedAt, fileSizeBytes, correlationId, resourceName);
                 throw new UnsupportedOperationException("Failed to prepare workflow", e);
             }
 
@@ -204,12 +199,8 @@ public class CascadeImportPipeline {
                 if (!(e instanceof UnsupportedOperationException
                         && e.getMessage() != null
                         && e.getMessage().startsWith("Import workflow failed"))) {
-                    Duration failDuration = Duration.between(startedAt, Instant.now());
-                    metrics.recordImportCompleted(applicationName, dataType, WorkflowLogEntry.STATUS_FAILED,
-                            failDuration, 0L, 0L, 0, fileSizeBytes);
-                    logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
-                            startedAt, failDuration, WorkflowLogEntry.STATUS_FAILED,
-                            0L, 0L, 0, fileSizeBytes, List.of(), e.getMessage());
+
+                    logErrors(userId, userLogin, applicationName, dataType, e, startedAt, fileSizeBytes, correlationId, resourceName);
                 }
                 tempCleanup.cleanup(chunksDir, processedDir, mergedPath, uploadedPath);
                 throw e;
@@ -217,6 +208,25 @@ public class CascadeImportPipeline {
         } finally {
             importRateLimiter.release(userId);
         }
+    }
+
+    private void logErrors(String userId, String userLogin, String applicationName, String dataType, IOException e, Instant startedAt, long fileSizeBytes, String correlationId, String resourceName) {
+        Duration failDuration = Duration.between(startedAt, Instant.now());
+        metrics.recordImportCompleted(applicationName, dataType, WorkflowLogEntry.STATUS_FAILED,
+                failDuration, 0L, 0L, 0, fileSizeBytes);
+        logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
+                startedAt, failDuration, WorkflowLogEntry.STATUS_FAILED,
+                0L, 0L, 0, fileSizeBytes, List.of(), e.getMessage());
+    }
+
+    // Surcharge pour gérer les exceptions non-IOException
+    private void logErrors(String userId, String userLogin, String applicationName, String dataType, Exception e, Instant startedAt, long fileSizeBytes, String correlationId, String resourceName) {
+        Duration failDuration = Duration.between(startedAt, Instant.now());
+        metrics.recordImportCompleted(applicationName, dataType, WorkflowLogEntry.STATUS_FAILED,
+                failDuration, 0L, 0L, 0, fileSizeBytes);
+        logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
+                startedAt, failDuration, WorkflowLogEntry.STATUS_FAILED,
+                0L, 0L, 0, fileSizeBytes, List.of(), e.getMessage());
     }
 
     /**

@@ -28,13 +28,11 @@ public class UpdateRolesOnAdditionalFilesManagement {
         this.authenticationService = authenticationService;
     }
 
-    private static String createExpression(final OreSiAdditionalFileAuthorization authorization, final Set<String> usingExpressionElements, final Application application, final SqlSchemaForApplication sqlSchemaForApplication, final OperationAdditionalFileType operation) {
+    private static String createExpression(final OreSiAdditionalFileAuthorization authorization, final OperationAdditionalFileType operation) {
         if (authorization.getAdditionalFiles().containsKey(operation) &&
                 !CollectionUtils.isEmpty(authorization.getAdditionalFiles().get(operation))) {
             return authorization.getAdditionalFiles().get(operation).stream()
                     .collect(Collectors.joining(",", "filetype  = any('{", "}'::text[])")
-
-
                     );
         }
         return "";
@@ -56,19 +54,19 @@ public class UpdateRolesOnAdditionalFilesManagement {
         if (modifiedAuthorization.getAdditionalFiles().containsKey(OperationAdditionalFileType.admin)) {
             toAdditionalFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationAdditionalFileType.admin, List.of(SqlPolicy.Statement.ALL))
                     .forEach(db::createPolicy);
-            toBinaryFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationAdditionalFileType.admin, List.of(SqlPolicy.Statement.ALL))
+            toBinaryFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, List.of(SqlPolicy.Statement.ALL))
                     .forEach(db::createPolicy);
         }
         if (modifiedAuthorization.getAdditionalFiles().containsKey(OperationAdditionalFileType.delete)) {
             toAdditionalFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationAdditionalFileType.delete, List.of(SqlPolicy.Statement.DELETE))
                     .forEach(db::createPolicy);
-            toBinaryFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationAdditionalFileType.admin, List.of(SqlPolicy.Statement.ALL))
+            toBinaryFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, List.of(SqlPolicy.Statement.ALL))
                     .forEach(db::createPolicy);
         }
         if (modifiedAuthorization.getAdditionalFiles().containsKey(OperationAdditionalFileType.depot)) {
             toAdditionalFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationAdditionalFileType.depot, List.of(SqlPolicy.Statement.INSERT))
                     .forEach(db::createPolicy);
-            toBinaryFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationAdditionalFileType.admin, List.of(SqlPolicy.Statement.ALL))
+            toBinaryFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, List.of(SqlPolicy.Statement.ALL))
                     .forEach(db::createPolicy);
         }
     }
@@ -100,12 +98,8 @@ public class UpdateRolesOnAdditionalFilesManagement {
     }
 
     private List<SqlPolicy> toAdditionalFilePolicy(final OreSiAdditionalFileAuthorization authorization, final OreSiRightOnApplicationRole oreSiRightOnApplicationRole, final OperationAdditionalFileType operation, final List<SqlPolicy.Statement> statements) {
-        final Set<String> usingExpressionElements = new LinkedHashSet<>();
         final SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
-        final SqlPolicy sqlPolicy = null;
-        final String expression = createExpression(authorization, usingExpressionElements, application, sqlSchemaForApplication, operation);
-        String usingExpression = null, checkExpression = null;
-
+        final String expression = createExpression(authorization, operation);
         return statements.stream()
                 .map(statement -> new SqlPolicy(
                         OreSiAdditionalFileAuthorization.class.getSimpleName() + "_" + authorization.getId().toString().substring(0, 13) + "_AdditionalFile_" + statement.name().substring(0, 3),
@@ -119,10 +113,8 @@ public class UpdateRolesOnAdditionalFilesManagement {
                 .toList();
     }
 
-    private List<SqlPolicy> toBinaryFilePolicy(final OreSiAdditionalFileAuthorization authorization, final OreSiRightOnApplicationRole oreSiRightOnApplicationRole, final OperationAdditionalFileType operation, final List<SqlPolicy.Statement> statements) {
-        final Set<String> usingExpressionElements = new LinkedHashSet<>();
+    private List<SqlPolicy> toBinaryFilePolicy(final OreSiAdditionalFileAuthorization authorization, final OreSiRightOnApplicationRole oreSiRightOnApplicationRole, final List<SqlPolicy.Statement> statements) {
         final SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
-        final SqlPolicy sqlPolicy = null;
 
         return statements.stream()
                 .map(statement -> new SqlPolicy(

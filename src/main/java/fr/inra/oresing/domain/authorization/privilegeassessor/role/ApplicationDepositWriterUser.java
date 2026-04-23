@@ -40,16 +40,8 @@ public record ApplicationDepositWriterUser(
                     if(fileOrUUID==null) {
                         throw new NotApplicationDataWriterForDepositException(applicationName(), dataName());
                     }
-                    List<AuthorizationParsed> authorizationParseds = authorizations().stream()
-                            .filter(authorizationParsed -> testRequiredAuthorizations(authorizationParsed.requiredAuthorizations(), fileOrUUID.binaryfiledataset().getRequiredAuthorizations()))
-                            .toList();
-                    if (authorizationParseds.isEmpty()) {
-                        throw getException();
-                    }
-                    if (isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)) {
-                        return true;
-                    }
-                    throw getException();
+
+                    return testAuthorizationParsed(authorizations(), fileOrUUID);
                 })
                 .orElse(true);
     }

@@ -58,7 +58,7 @@ public class KeepAliveZipOutputStream extends ZipOutputStream {
     }
 
     @Override
-    public void write(byte[] b, int off, int len) throws IOException {
+    synchronized public void write(byte[] b, int off, int len) throws IOException {
         super.write(b, off, len);
         scheduleKeepAliveTask();
     }

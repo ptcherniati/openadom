@@ -68,19 +68,8 @@ public class AsyncExecutorConfiguration implements AsyncConfigurer {
             };
         }
     }
-
-    /// Creates the Fast Service Executor with properties from configuration.
-    @Bean(name = "fastServiceExecutor")
-    public Executor fastServiceExecutor() {
-        ExecutorProperties.Fast config = properties.getFast();
-
-        log.info("Configuring Fast Executor - Core: {}, Max: {}, Queue: {}",
-                config.getCorePoolSize(),
-                config.getMaxPoolSize(),
-                config.getQueueCapacity());
-
+    private ThreadPoolTaskExecutor createThreadPoolExecutor(ExecutorProperties.PoolConfig config) {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-
         executor.setCorePoolSize(config.getCorePoolSize());
         executor.setMaxPoolSize(config.getMaxPoolSize());
         executor.setQueueCapacity(config.getQueueCapacity());
@@ -95,6 +84,20 @@ public class AsyncExecutorConfiguration implements AsyncConfigurer {
         }
 
         executor.setTaskDecorator(new ContextPropagatingTaskDecorator());
+        return executor;
+    }
+
+    /// Creates the Fast Service Executor with properties from configuration.
+    @Bean(name = "fastServiceExecutor")
+    public Executor fastServiceExecutor() {
+        ExecutorProperties.Fast config = properties.getFast();
+
+        log.info("Configuring Fast Executor - Core: {}, Max: {}, Queue: {}",
+                config.getCorePoolSize(),
+                config.getMaxPoolSize(),
+                config.getQueueCapacity());
+
+        ThreadPoolTaskExecutor executor = createThreadPoolExecutor(config);
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.AbortPolicy());
 
         executor.setWaitForTasksToCompleteOnShutdown(properties.isAwaitTermination());
@@ -114,22 +117,7 @@ public class AsyncExecutorConfiguration implements AsyncConfigurer {
                 config.getMaxPoolSize(),
                 config.getQueueCapacity());
 
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-
-        executor.setCorePoolSize(config.getCorePoolSize());
-        executor.setMaxPoolSize(config.getMaxPoolSize());
-        executor.setQueueCapacity(config.getQueueCapacity());
-        executor.setThreadNamePrefix(config.getThreadNamePrefix());
-
-        if (properties.isUseVirtualThreads()) {
-            executor.setThreadFactory(Thread.ofVirtual()
-                    .name(config.getThreadNamePrefix(), 0)
-                    .uncaughtExceptionHandler((t, e) ->
-                            log.error(LOG_UNCAUGHT_VT, t.getName(), e.getMessage(), e))
-                    .factory());
-        }
-
-        executor.setTaskDecorator(new ContextPropagatingTaskDecorator());
+        ThreadPoolTaskExecutor executor = createThreadPoolExecutor(config);
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
 
         executor.setWaitForTasksToCompleteOnShutdown(properties.isAwaitTermination());
@@ -149,22 +137,7 @@ public class AsyncExecutorConfiguration implements AsyncConfigurer {
                 config.getMaxPoolSize(),
                 config.getQueueCapacity());
 
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-
-        executor.setCorePoolSize(config.getCorePoolSize());
-        executor.setMaxPoolSize(config.getMaxPoolSize());
-        executor.setQueueCapacity(config.getQueueCapacity());
-        executor.setThreadNamePrefix(config.getThreadNamePrefix());
-
-        if (properties.isUseVirtualThreads()) {
-            executor.setThreadFactory(Thread.ofVirtual()
-                    .name(config.getThreadNamePrefix(), 0)
-                    .uncaughtExceptionHandler((t, e) ->
-                            log.error(LOG_UNCAUGHT_VT, t.getName(), e.getMessage(), e))
-                    .factory());
-        }
-
-        executor.setTaskDecorator(new ContextPropagatingTaskDecorator());
+        ThreadPoolTaskExecutor executor = createThreadPoolExecutor(config);
         executor.setRejectedExecutionHandler(new CustomRejectionHandler());
 
         executor.setWaitForTasksToCompleteOnShutdown(properties.isAwaitTermination());
@@ -184,22 +157,7 @@ public class AsyncExecutorConfiguration implements AsyncConfigurer {
                 config.getMaxPoolSize(),
                 config.getQueueCapacity());
 
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-
-        executor.setCorePoolSize(config.getCorePoolSize());
-        executor.setMaxPoolSize(config.getMaxPoolSize());
-        executor.setQueueCapacity(config.getQueueCapacity());
-        executor.setThreadNamePrefix(config.getThreadNamePrefix());
-
-        if (properties.isUseVirtualThreads()) {
-            executor.setThreadFactory(Thread.ofVirtual()
-                    .name(config.getThreadNamePrefix(), 0)
-                    .uncaughtExceptionHandler((t, e) ->
-                            log.error(LOG_UNCAUGHT_VT, t.getName(), e.getMessage(), e))
-                    .factory());
-        }
-
-        executor.setTaskDecorator(new ContextPropagatingTaskDecorator());
+        ThreadPoolTaskExecutor executor = createThreadPoolExecutor(config);
 
         executor.setRejectedExecutionHandler((r, ex) -> {
             log.warn("Backup rejected - system overloaded");
@@ -216,8 +174,13 @@ public class AsyncExecutorConfiguration implements AsyncConfigurer {
     }
     @Bean(name = "fastExecutorService")
     public ExecutorService fastExecutorService() {
-        ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) fastServiceExecutor();
-        return taskExecutor.getThreadPoolExecutor();
+        // On suppose que le bean fastServiceExecutor retourne bien un ThreadPoolTaskExecutor
+        Executor executor = fastServiceExecutor();
+        if (executor instanceof ThreadPoolTaskExecutor taskExecutor) {
+            return taskExecutor.getThreadPoolExecutor();
+        } else {
+            throw new IllegalStateException("fastServiceExecutor bean is not a ThreadPoolTaskExecutor");
+        }
     }
 
     /**
@@ -227,8 +190,12 @@ public class AsyncExecutorConfiguration implements AsyncConfigurer {
      */
     @Bean(name = "normalExecutorService")
     public ExecutorService normalExecutorService() {
-        ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) normalServiceExecutor();
-        return taskExecutor.getThreadPoolExecutor();
+        Executor executor = normalServiceExecutor();
+        if (executor instanceof ThreadPoolTaskExecutor taskExecutor) {
+            return taskExecutor.getThreadPoolExecutor();
+        } else {
+            throw new IllegalStateException("normalServiceExecutor bean is not a ThreadPoolTaskExecutor");
+        }
     }
 
     /**
@@ -238,8 +205,12 @@ public class AsyncExecutorConfiguration implements AsyncConfigurer {
      */
     @Bean(name = "heavyExecutorService")
     public ExecutorService heavyExecutorService() {
-        ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) heavyServiceExecutor();
-        return taskExecutor.getThreadPoolExecutor();
+        Executor executor = heavyServiceExecutor();
+        if (executor instanceof ThreadPoolTaskExecutor taskExecutor) {
+            return taskExecutor.getThreadPoolExecutor();
+        } else {
+            throw new IllegalStateException("heavyServiceExecutor bean is not a ThreadPoolTaskExecutor");
+        }
     }
 
     /**
@@ -249,8 +220,12 @@ public class AsyncExecutorConfiguration implements AsyncConfigurer {
      */
     @Bean(name = "backupExecutorService")
     public ExecutorService backupExecutorService() {
-        ThreadPoolTaskExecutor taskExecutor = (ThreadPoolTaskExecutor) backupExecutor();
-        return taskExecutor.getThreadPoolExecutor();
+        Executor executor = backupExecutor();
+        if (executor instanceof ThreadPoolTaskExecutor taskExecutor) {
+            return taskExecutor.getThreadPoolExecutor();
+        } else {
+            throw new IllegalStateException("backupExecutor bean is not a ThreadPoolTaskExecutor");
+        }
     }
 
     /**

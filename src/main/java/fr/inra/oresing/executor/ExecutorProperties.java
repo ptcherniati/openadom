@@ -18,6 +18,13 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "executor")
 public class ExecutorProperties {
 
+    public interface PoolConfig {
+        int getCorePoolSize();
+        int getMaxPoolSize();
+        int getQueueCapacity();
+        String getThreadNamePrefix();
+    }
+
     private final Fast fast = new Fast();
     private final Normal normal = new Normal();
     private final Heavy heavy = new Heavy();
@@ -48,7 +55,7 @@ public class ExecutorProperties {
     }
 
     /// Fast executor properties
-    public static class Fast {
+    public static class Fast implements PoolConfig {
         private int corePoolSize = 200;
         private int maxPoolSize = 200;
         private int queueCapacity = Integer.MAX_VALUE;
@@ -69,7 +76,7 @@ public class ExecutorProperties {
     }
 
     /// Normal executor properties
-    public static class Normal {
+    public static class Normal implements PoolConfig {
         private int corePoolSize = 100;
         private int maxPoolSize = 100;
         private int queueCapacity = 1000;
@@ -90,7 +97,7 @@ public class ExecutorProperties {
     }
 
     /// Heavy executor properties
-    public static class Heavy {
+    public static class Heavy implements PoolConfig {
         private int corePoolSize = 50;
         private int maxPoolSize = 50;
         private int queueCapacity = 200;
@@ -111,7 +118,7 @@ public class ExecutorProperties {
     }
 
     /// Backup executor properties
-    public static class Backup {
+    public static class Backup implements PoolConfig {
         private int corePoolSize = 50;
         private int maxPoolSize = 50;
         private int queueCapacity = 500;

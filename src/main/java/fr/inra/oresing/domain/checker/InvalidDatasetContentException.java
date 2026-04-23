@@ -96,19 +96,18 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
                         .collect(Collectors.toUnmodifiableSet());
                 throw forMissingMandatoryColumns(missingMandatoryColumns, headerLine);
             } else if (!givenColumnIsUnexpected) {
-                final ImmutableSet<String> duplicatedHeaders = actualColumns.entrySet().stream()
-                        .filter(column -> column.getCount() > 1)
-                        .map(Multiset.Entry::getElement)
-                        .collect(ImmutableSet.toImmutableSet());
-                if (!duplicatedHeaders.isEmpty()) {
-                    throw forDuplicatedHeaders(headerLine, duplicatedHeaders);
-                }
+                checkDuplicatedHeaders(actualColumns, headerLine);
                 return headersForRow;
             }
 
             throw forInvalidHeaders(expectedColumns, mandatoryColumns, actualColumnsAsSet, headerLine);
         }
 
+        checkDuplicatedHeaders(actualColumns, headerLine);
+        return headersForRow;
+    }
+
+    private static void checkDuplicatedHeaders(final ImmutableMultiset<String> actualColumns, final int headerLine) {
         final ImmutableSet<String> duplicatedHeaders = actualColumns.entrySet().stream()
                 .filter(column -> column.getCount() > 1)
                 .map(Multiset.Entry::getElement)
@@ -116,7 +115,6 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
         if (!duplicatedHeaders.isEmpty()) {
             throw forDuplicatedHeaders(headerLine, duplicatedHeaders);
         }
-        return headersForRow;
     }
 
     private static InvalidDatasetContentException forEmptyHeader(final int headerLine) {
