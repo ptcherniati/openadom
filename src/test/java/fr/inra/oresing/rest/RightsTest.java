@@ -8,7 +8,6 @@ import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.rest.services.AbstractIntegrationTest;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +17,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.BadCredentialsException;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -27,6 +25,7 @@ import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("integration.rest")
@@ -57,19 +56,20 @@ public class RightsTest extends AbstractIntegrationTest {
 
     @Test
     void timeOutBearer() throws Exception {
+        // #470 - Un JWT expiré doit provoquer une réponse HTTP 401 avec
+        // un body JSON stable { code: "TOKEN_EXPIRED", message: "..." } ,
+        // et NON une remontée d'exception non catchée comme auparavant
+        // ( qui se traduisait par un 500 imprévisible côté client ).
         OreSiUser oreSiUser = new OreSiUser();
         final UUID authUserId = fixtures.adminConnection.userResult().userId();
         oreSiUser.setId(authUserId);
         OreSiUserRequestClient oreSiUserRequestClient = new OreSiUserRequestClient(authUserId, OreSiUserRole.forUser(oreSiUser));
-        String token = newJwt(oreSiUserRequestClient); // nouvelle méthode : retourne juste la chaîne JWT
+        String token = newJwt(oreSiUserRequestClient);
 
-        try {
-            mockMvc.perform(get("/api/v1/applications")
-                    .header("Authorization", "Bearer " + token));
-            Assertions.fail();
-        } catch (BadCredentialsException e) {
-            Assertions.assertInstanceOf(ExpiredJwtException.class, e.getCause());
-        }
+        mockMvc.perform(get("/api/v1/applications")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("TOKEN_EXPIRED"));
     }
 
 
