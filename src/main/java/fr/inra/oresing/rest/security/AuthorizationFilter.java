@@ -32,6 +32,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
@@ -127,8 +130,25 @@ public class AuthorizationFilter extends GenericFilterBean {
             response.getWriter().write(body);
             response.getWriter().flush();
             return;
+        } catch (BadCredentialsException | AuthenticationCredentialsNotFoundException e) {
+            // #470 - Les exceptions JWT levées par le filtre n'atteignent
+            // pas @ExceptionHandler ( applicable uniquement aux controllers ) ;
+            // on écrit la réponse 401 directement ici pour renvoyer au
+            // frontend le contrat stable { code , message } au lieu du
+            // 500 par défaut Spring.
+            writeJsonAuthError(response, e);
+            return;
         }
         chain.doFilter(request, response);
+    }
+
+    private void writeJsonAuthError(HttpServletResponse response, AuthenticationException ex) throws IOException {
+        String code = ex.getCause() instanceof io.jsonwebtoken.ExpiredJwtException ? "TOKEN_EXPIRED" : "TOKEN_INVALID";
+        String message = ex.getMessage() == null ? "" : ex.getMessage().replace("\"", "\\\"");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.getWriter().write(String.format("{\"code\":\"%s\",\"message\":\"%s\"}", code, message));
+        response.getWriter().flush();
     }
 
 
