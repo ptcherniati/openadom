@@ -16,7 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 
 @SpringBootTest(classes = {OreSiNg.class})
-@Tag("integration.rest")
+@Tag("core.basic")
 public class HomeResourcesTest extends AbstractIntegrationTest {
 
     /**

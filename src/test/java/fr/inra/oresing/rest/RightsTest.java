@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Tag("integration.rest")
+@Tag("core.auth")
 @Slf4j
 public class RightsTest extends AbstractIntegrationTest {
     @Value("${jwt.secret:1234567890AZERTYUIOP}")

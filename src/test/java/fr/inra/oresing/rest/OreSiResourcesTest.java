@@ -64,7 +64,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
-@Tag("integration.rest")
 @Slf4j
 public class OreSiResourcesTest extends AbstractIntegrationTest {
 
@@ -124,7 +123,7 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
 
     @Test
     @Tag("SWAGGER_BUILD")
-    @Tag("integration.rest")
+    @Tag("core.basic")
     public void services_model() throws Exception {
         final String services_model = mockMvc.perform(get("/api-docs.yaml").accept(MediaType.parseMediaType("application/vnd.oai.openapi"))).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
         registerFile("documentations/openapi.yaml", services_model);
@@ -174,7 +173,7 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
 
     @Test
     @Tag("OTHERS_TEST")
-    @Tag("integration.rest")
+    @Tag("core.basic")
     public void buildSwaggerApi() throws Exception {
         mockMvc.perform(get("/v2/api-docs"));
     }
@@ -1658,7 +1657,7 @@ on test le dépôt d'un fichier récursif
     @Test
     @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
     @Disabled
-    @Tag("integration.rest")
+    @Tag("integration.bundle")
     public void testGetUploadBundle() throws Exception {
         URL resource = getClass().getResource(getMonsoreApplicationConfigurationWithRepositoryResourceName());
         try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
