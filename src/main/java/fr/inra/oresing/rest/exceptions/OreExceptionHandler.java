@@ -22,6 +22,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -32,6 +34,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestControllerAdvice
@@ -63,6 +66,25 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ExpiredJwtException.class)
     public ResponseEntity<ExpiredJwtException> handle(final ExpiredJwtException expiredJwtException) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(expiredJwtException);
+    }
+
+    // #470 - Retour HTTP 401 propre sur token JWT expiré ou invalide.
+    // JWTExtractor traduit ExpiredJwtException en BadCredentialsException
+    // ( cf. JWTExtractor.getRequestClientFromJwt ) , qui n'avait aucun
+    // gestionnaire ici : la réponse HTTP était imprévisible ( typiquement
+    // 500 avec "expired JWT" dans le body ) , obligeant le frontend à
+    // détecter l'expiration par string-matching fragile.
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<Map<String, String>> handle(final BadCredentialsException ex) {
+        String code = ex.getCause() instanceof ExpiredJwtException ? "TOKEN_EXPIRED" : "TOKEN_INVALID";
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("code", code, "message", String.valueOf(ex.getMessage())));
+    }
+
+    @ExceptionHandler(AuthenticationCredentialsNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handle(final AuthenticationCredentialsNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("code", "TOKEN_INVALID", "message", String.valueOf(ex.getMessage())));
     }
 
     @ExceptionHandler(SiOreIllegalArgumentException.class)
