@@ -9,6 +9,7 @@ import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
+import fr.inra.oresing.rest.security.JWTExtractor;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -20,6 +21,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -43,9 +45,45 @@ import java.util.UUID;
 public class AuthenticationResources {
 
     protected final AuthenticationService authenticationService;
+    protected final JWTExtractor jwtExtractor;
 
-    public AuthenticationResources(AuthenticationService authenticationService) {
+    // #470 - Exposé au frontend via GET /api/v1/session/config pour que
+    // SessionService aligne son timer d'inactivité sur le TTL serveur.
+    @Value("${jwt.expiration:3600}")
+    private int jwtExpirationSeconds;
+
+    public AuthenticationResources(AuthenticationService authenticationService,
+                                   JWTExtractor jwtExtractor) {
         this.authenticationService = authenticationService;
+        this.jwtExtractor = jwtExtractor;
+    }
+
+    @Operation(
+            summary = "Configuration de session exposée au client",
+            description = "Durée d'expiration du JWT ( en secondes ). Permet au frontend " +
+                          "d'aligner son timer d'inactivité sur le TTL configuré côté serveur. " +
+                          "Endpoint anonyme : appelable avant authentification.",
+            tags = {"Authentication"})
+    @GetMapping(value = "/session/config", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> sessionConfig() {
+        return Map.of("jwtExpirationSeconds", jwtExpirationSeconds);
+    }
+
+    @Operation(
+            summary = "Rafraîchir le JWT courant",
+            description = "Génère un nouveau JWT pour l'utilisateur authentifié et le retourne dans " +
+                          "l'en-tête Authorization de la réponse. Permet de prolonger la session " +
+                          "avant une opération longue ou à la demande de l'utilisateur " +
+                          "( bouton \"Rester connecté\" de l'avertissement d'inactivité ). " +
+                          "Requiert un token encore valide ; un token expiré ne peut pas se rafraîchir lui-même.",
+            tags = {"Authentication"})
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping(value = "/refresh", produces = MediaType.APPLICATION_JSON_VALUE)
+    @SecurityRequirement(name = "Bearer Authentication")
+    public Map<String, Object> refresh(HttpServletResponse response) {
+        UUID userId = OreSiApiRequestContext.getRequestClient().id();
+        jwtExtractor.refreshJwtInResponse(response, userId);
+        return Map.of("status", "refreshed", "jwtExpirationSeconds", jwtExpirationSeconds);
     }
 
     @PreAuthorize("isAuthenticated()")

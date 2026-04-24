@@ -52,6 +52,9 @@ public class SecurityConfig {
     public static final String API_V_1_LOGOUT = "/api/v1/logout";
     public static final String API_V_1_LOGIN = "/api/v1/login";
     public static final String API_V_1_USERS = "/api/v1/users";
+    // #470 - Endpoint public exposant la durée d'expiration du JWT ,
+    // pour que le frontend aligne son timer d'inactivité sur le TTL serveur.
+    public static final String API_V_1_SESSION_CONFIG = "/api/v1/session/config";
     public static final String BASE = "/";
     public static final long MAX_AGE = 3600L;
     @Value("${allowed.origin}")
@@ -92,6 +95,7 @@ public class SecurityConfig {
                                 .requestMatchers(
                                         BASE,
                                         API_V_1_LOGOUT,
+                                        API_V_1_SESSION_CONFIG,
                                         UPLOAD,
                                         ADMIN,
                                         POOLS,

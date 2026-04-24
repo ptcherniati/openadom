@@ -102,6 +102,13 @@ server:
 allowed:
   origin: ${ALLOWED_ORIGIN:http://localhost:8080}
 
+# JWT : durée d'expiration du token ( en secondes ).
+# Doit rester alignée avec le timer d'inactivité côté frontend
+# ( SessionService ), qui lit cette valeur via l'endpoint public
+# GET /api/v1/session/config.
+jwt:
+  expiration: ${JWT_EXPIRATION:3600}
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
