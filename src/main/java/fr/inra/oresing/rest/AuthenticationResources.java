@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -44,8 +45,24 @@ public class AuthenticationResources {
 
     protected final AuthenticationService authenticationService;
 
+    // #470 - Exposé au frontend via GET /api/v1/session/config pour que
+    // SessionService aligne son timer d'inactivité sur le TTL serveur.
+    @Value("${jwt.expiration:3600}")
+    private int jwtExpirationSeconds;
+
     public AuthenticationResources(AuthenticationService authenticationService) {
         this.authenticationService = authenticationService;
+    }
+
+    @Operation(
+            summary = "Configuration de session exposée au client",
+            description = "Durée d'expiration du JWT ( en secondes ). Permet au frontend " +
+                          "d'aligner son timer d'inactivité sur le TTL configuré côté serveur. " +
+                          "Endpoint anonyme : appelable avant authentification.",
+            tags = {"Authentication"})
+    @GetMapping(value = "/session/config", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> sessionConfig() {
+        return Map.of("jwtExpirationSeconds", jwtExpirationSeconds);
     }
 
     @PreAuthorize("isAuthenticated()")
