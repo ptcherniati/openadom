@@ -111,6 +111,13 @@ public class AuthorizationFilter extends GenericFilterBean {
                 path.startsWith(SecurityConfig.API_DOCS) ||
                 path.startsWith(SecurityConfig.API_PUBLIC) ||
                 path.startsWith(SecurityConfig.API_DOCS_YAML) ||
+                // #470 - Endpoint anonyme exposant la configuration de session ;
+                // appelé par le frontend à l'init ( avant tout login ) , donc
+                // sans token. Sans ce skip , le filtre tente de parser un
+                // "Bearer null" envoyé par le Fetcher et répond 401 ( traité
+                // alors par le listener "disconnected" comme une perte de
+                // session , d'où la boucle /login?returnUrl=/login ).
+                path.equals(SecurityConfig.API_V_1_SESSION_CONFIG) ||
                 path.equals(SecurityConfig.ERROR)) {
             chain.doFilter(request, response); // Skip le filtre
             return;
