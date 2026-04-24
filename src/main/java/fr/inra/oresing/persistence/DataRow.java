@@ -53,8 +53,8 @@ public record DataRow(
             final List<Map<String, Map<String, RefsLinkedToValue>>> refsLinkedToValues = Optional.ofNullable(dataRows)
                     .map(DataRows::getRefsLinkedTo)
                     .orElse(List.of());
-            Map<String, Map<String, RefsLinkedToValue>> refsLinkedto = refsLinkedToValues.contains(i)?refsLinkedToValues
-                    .get(i):Map.of();
+            Map<String, Map<String, RefsLinkedToValue>> refsLinkedto = i < refsLinkedToValues.size() ? refsLinkedToValues
+                    .get(i) : Map.of();
             for (Map.Entry<String, Map<String, RefsLinkedToValue>> refsLinkedtoEntryByReference : refsLinkedto.entrySet()) {
                 String reference = refsLinkedtoEntryByReference.getKey();
                 Map<String, RefsLinkedToValue> refsLinkedtoByComponent = refsLinkedTo.computeIfAbsent(reference, k -> new HashMap<>());

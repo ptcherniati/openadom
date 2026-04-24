@@ -78,6 +78,7 @@ public record DataRowResult(
                             refsLinkedMap.getOrDefault(referenceName, Map.of());
                     Map<Object, Object> naturalKeysDisplay = referenceEntry.getValue().values().stream()
                             .map(RefsLinkedToValue::hierarchicalKey)
+                            .filter(Objects::nonNull)
                             // Extraire la naturalKey depuis la hierarchicalKey (ex: "tr_case_study_cstKcss1" → "css1")
                             .map(hierarchicalKey -> hierarchicalKey.getSql().replaceAll(".*[a-z]K", ""))
                             .map(naturalKey -> {
@@ -102,8 +103,8 @@ public record DataRowResult(
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (existing, replacement) -> existing))
                 : Map.of();
         return new DataRowResult(dataRow.rowId(),
-                dataRow.naturalKey().getSql(),
-                dataRow.hierarchicalKey().getSql(),
+                dataRow.naturalKey() != null ? dataRow.naturalKey().getSql() : null,
+                dataRow.hierarchicalKey() != null ? dataRow.hierarchicalKey().getSql() : null,
                 rows,
                 dataRow.refsLinked(),
                 dataRow.refsLinkedTo(),

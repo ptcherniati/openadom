@@ -77,32 +77,39 @@ public final class FileChunkSource implements Source<Path> {
 
         try (BufferedReader reader = Files.newBufferedReader(inputFile, StandardCharsets.UTF_8)) {
             String line;
-            BufferedWriter writer = null;
             Path chunkPath = null;
             int linesInCurrentChunk = 0;
+            BufferedWriter writer = null;
 
-            while ((line = reader.readLine()) != null) {
-                if (writer == null) {
-                    chunkPath = chunksDir.resolve(String.format("chunk_%04d.csv", chunkIndex));
-                    writer    = Files.newBufferedWriter(chunkPath, StandardCharsets.UTF_8);
-                    linesInCurrentChunk = 0;
+            try {
+                while ((line = reader.readLine()) != null) {
+                    if (writer == null) {
+                        chunkPath = chunksDir.resolve(String.format("chunk_%04d.csv", chunkIndex));
+                        writer = Files.newBufferedWriter(chunkPath, StandardCharsets.UTF_8);
+                        linesInCurrentChunk = 0;
+                    }
+                    writer.write(line);
+                    writer.newLine();
+                    linesInCurrentChunk++;
+
+                    if (linesInCurrentChunk >= chunkSizeLines) {
+                        writer.close();
+                        writer = null;
+                        chunks.add(buildChunk(chunkIndex, chunkPath, correlationId));
+                        chunkIndex++;
+                        linesInCurrentChunk = 0;
+                    }
                 }
-                writer.write(line);
-                writer.newLine();
-                linesInCurrentChunk++;
 
-                if (linesInCurrentChunk >= chunkSizeLines) {
+                if (writer != null) {
                     writer.close();
+                    writer = null;
                     chunks.add(buildChunk(chunkIndex, chunkPath, correlationId));
-                    chunkIndex++;
-                    writer              = null;
-                    linesInCurrentChunk = 0;
                 }
-            }
-
-            if (writer != null) {
-                writer.close();
-                chunks.add(buildChunk(chunkIndex, chunkPath, correlationId));
+            } finally {
+                if (writer != null) {
+                    writer.close();
+                }
             }
         }
         return chunks;

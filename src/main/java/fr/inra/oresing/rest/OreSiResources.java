@@ -155,6 +155,8 @@ public class OreSiResources {
     public static final String ERROR_EMPTY_FILE = "EmptyFile";
     public static final String HEADER_ATTACHMENT_FILENAME_S_CSV = "attachment; filename=%s.csv";
     public static final String HEADER_PRAGMA = "Pragma";
+    private static final String PARAM_FILE_NAME = "fileName";
+    private static final String PARAM_DATA_NAME = "dataName";
     public static final String HEADER_EXPIRES = "Expires";
     public static final String EXPIRED_TIME = "0";
     public static final String HEADER_NO_CACHE = "no-cache";
@@ -1804,20 +1806,20 @@ public class OreSiResources {
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
-                            final ReactiveResult reactiveResult = new ReactiveTypeInfo("LOADED_DATA", Map.of("dataName", dataName, "fileName", fileName));
+                            final ReactiveResult reactiveResult = new ReactiveTypeInfo("LOADED_DATA", Map.of(PARAM_DATA_NAME, dataName, PARAM_FILE_NAME, fileName));
                             registerReactiveResult.add(reactiveResult, true);
                             rapport.add(reactiveResult);
                         }
                 );
             } catch (IOException e) {
-                final ReactiveTypeError reactiveTypeError = new ReactiveTypeError(Map.of("dataName", dataName, "fileName", fileName, "errorType", "ERROR_LOADING_DATA"));
+                final ReactiveTypeError reactiveTypeError = new ReactiveTypeError(Map.of(PARAM_DATA_NAME, dataName, PARAM_FILE_NAME, fileName, "errorType", "ERROR_LOADING_DATA"));
                 registerReactiveResult.add(reactiveTypeError, true);
                 throw new RuntimeException(e);
             } catch (InvalidDatasetContentException e) {
                 final ReactiveTypeError reactiveTypeError = new ReactiveTypeError(
                         Map.of(
-                                "dataName", dataName,
-                                "fileName", fileName,
+                                PARAM_DATA_NAME, dataName,
+                                PARAM_FILE_NAME, fileName,
                                 "errorType", e.getMessage(),
                                 "message", e.getErrors().stream().limit(1).map(firstError -> firstError.validationCheckResult().message()).findFirst().orElse(""),
                                 "params", e.getErrors().stream().limit(1).map(firstError -> firstError.validationCheckResult().messageParams()).findFirst().orElse(Map.of())
@@ -1878,7 +1880,7 @@ public class OreSiResources {
 
                                 @Override
                                 public void transferTo(File dest) throws IOException, IllegalStateException {
-
+                                    // No-op: in-memory file, transfer not supported
                                 }
                             };
                             createApplication(nameOrId, "uploadBundle", tmpConfigurationFile);
