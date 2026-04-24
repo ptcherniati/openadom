@@ -31,11 +31,9 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.DataFile;
 import fr.inra.oresing.domain.data.DataValue;
-import fr.inra.oresing.domain.data.deposit.bundle.RegisterReactiveResult;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResultRest;
 import fr.inra.oresing.domain.data.menu.MenuType;
-import fr.inra.oresing.domain.data.rapport.BundleReport;
 import fr.inra.oresing.domain.data.read.ouput.KeepAliveZipOutputStream;
 import fr.inra.oresing.domain.data.read.query.OutPut;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
@@ -52,7 +50,6 @@ import fr.inra.oresing.rest.data.publication.State;
 import fr.inra.oresing.rest.data.publication.StoreFile;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.exceptions.OreSiIOException;
-import fr.inra.oresing.rest.filesenderclient.BuildBundleReport;
 import fr.inra.oresing.rest.model.additionalfiles.CreateAdditionalFileRequest;
 import fr.inra.oresing.rest.model.additionalfiles.exceptions.BadAdditionalFileParamsSearchException;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
@@ -155,8 +152,6 @@ public class OreSiResources {
     public static final String ERROR_EMPTY_FILE = "EmptyFile";
     public static final String HEADER_ATTACHMENT_FILENAME_S_CSV = "attachment; filename=%s.csv";
     public static final String HEADER_PRAGMA = "Pragma";
-    private static final String PARAM_FILE_NAME = "fileName";
-    private static final String PARAM_DATA_NAME = "dataName";
     public static final String HEADER_EXPIRES = "Expires";
     public static final String EXPIRED_TIME = "0";
     public static final String HEADER_NO_CACHE = "no-cache";
@@ -166,7 +161,6 @@ public class OreSiResources {
     public static final String HEADER_APPLICATION_ZIP_CHARSET_UTF_8 = "application/zip;charset=UTF-8";
     public static final String LIST_DELIMITER = ",";
     public static final String IO_DELETE_ERROR = "Erreur lors de la suppression du fichier temporaire";
-    public static final String IO_ERROR_WRITE = "Error writing to one of the outputs";
     public static final DateTimeFormatter TIMESTAMP_FORMATER = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     public static final String EMAIL_ERROR = "Erreur lors de l'envoi du lien ZIP par e-mail";
     public static final String IO_ADDING_ERROR = "Error adding error file to ZIP";
@@ -177,12 +171,8 @@ public class OreSiResources {
     public static final String FR = "fr";
     public static final String EN = "en";
     public static final String TMP = "/tmp";
-    public static final String BAD_REPORT = "Le rapport est incomplet ou contient des erreurs. L'e-mail n'a pas été envoyé.";
-    public static final String BAD_BUNDLE = "Erreur lors de la création du bundle de téléchargement";
-    public static final String BUNDLE_NAME = "%s-%s-upload-bundle";
     public static final String DATA_ZIP = "%s-%s-data";
     public static final String DATA_SERVICE_PATH_PATTERN = "/applications/%s/data/%s";
-    private final ConcurrentHashMap<String, Boolean> runningBundleCreation = new ConcurrentHashMap<>();
     final UserRepository userRepository;
     final ServiceContainer serviceContainer;
     final LocaleResolver localeResolver;
@@ -224,7 +214,6 @@ public class OreSiResources {
     private final ChangeApplicationConfigurationUseCase changeApplicationConfigurationUseCase;
     private final BuildDataZipUseCase buildDataZipUseCase;
     private final SendZipLinkByMailUseCase sendZipLinkByMailUseCase;
-    private final WriteUploadBundleUseCase writeUploadBundleUseCase;
     private final ReadEntryUseCase readEntryUseCase;
     private final GetCurrentUserUseCase getCurrentUserUseCase;
     private final SendUploadErrorsMailUseCase sendUploadErrorsMailUseCase;
@@ -290,7 +279,6 @@ public class OreSiResources {
             ChangeApplicationConfigurationUseCase changeApplicationConfigurationUseCase,
             BuildDataZipUseCase buildDataZipUseCase,
             SendZipLinkByMailUseCase sendZipLinkByMailUseCase,
-            WriteUploadBundleUseCase writeUploadBundleUseCase,
             ReadEntryUseCase readEntryUseCase,
             GetCurrentUserUseCase getCurrentUserUseCase,
             SendUploadErrorsMailUseCase sendUploadErrorsMailUseCase,
@@ -347,7 +335,6 @@ public class OreSiResources {
         this.changeApplicationConfigurationUseCase = changeApplicationConfigurationUseCase;
         this.buildDataZipUseCase = buildDataZipUseCase;
         this.sendZipLinkByMailUseCase = sendZipLinkByMailUseCase;
-        this.writeUploadBundleUseCase = writeUploadBundleUseCase;
         this.readEntryUseCase = readEntryUseCase;
         this.getCurrentUserUseCase = getCurrentUserUseCase;
         this.sendUploadErrorsMailUseCase = sendUploadErrorsMailUseCase;
@@ -1469,432 +1456,6 @@ public class OreSiResources {
                                             final String dataType) {
         return buidSynthesis(nameOrId, dataType, null);
     }
-
-
-    private ResponseEntity<?> getUploadBundle(
-            @PathVariable("nameOrId") String nameOrId,
-            @RequestParam(value = "withData", required = false, defaultValue = "false") boolean withData,
-            @RequestParam(value = "locale", required = false) Locale locale,
-            HttpServletRequest request) {
-
-        OreSiUser user = userRepository.findById(OreSiApiRequestContext.getRequestClient().id());
-        if (runningBundleCreation.get(user.getLogin()) != null) {
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body("Opération déjà en cours");
-        } else {
-            runningBundleCreation.put(user.getLogin(), true);
-        }
-
-        String instanceUrl = String.format("%s://%s:%s",
-                request.getScheme(),
-                request.getServerName(),
-                request.getServerPort()
-        );
-
-        String fileName = BUNDLE_NAME.formatted(nameOrId, LocalDateTime.now().format(TIMESTAMP_FORMATER));
-
-        SecurityContext securityContext = SecurityContextHolder.getContext();
-
-        heavyExecutorService.submit(() -> {
-            Path tempZipDirectory = null;
-            try {
-                SecurityContextHolder.setContext(securityContext);
-                tempZipDirectory = Files.createTempDirectory(Paths.get(TMP), fileName);
-
-                BuildBundleReport report = null;
-                try {
-                    report = writeUploadBundleUseCase.execute(instanceUrl, nameOrId, withData, locale, tempZipDirectory);
-                } catch (RuntimeException e) {
-                    log.error(IO_ERROR_WRITE, e);
-                }
-
-                if (report != null && report.referentielsEnErreur().isEmpty()) {
-                    try {
-                        Path zipFile = tempZipDirectory.resolveSibling(tempZipDirectory.getFileName() + ".zip");
-                        ZipUtils.zipDirectory(tempZipDirectory, zipFile);
-                        sendZipLinkByMailUseCase.execute(zipFile, report, user);
-                    } catch (IOException | RuntimeException e) {
-                        log.error(EMAIL_ERROR, e);
-                    }
-                } else {
-                    log.warn(BAD_REPORT);
-                }
-
-                try {
-                    removeRepository(tempZipDirectory);
-                    Files.deleteIfExists(tempZipDirectory);
-                } catch (IOException e) {
-                    log.error(IO_DELETE_ERROR, e);
-                }
-
-            } catch (IOException | RuntimeException e) {
-                if (tempZipDirectory != null) {
-                    try {
-                        addErrorFileToZip(tempZipDirectory, e);
-                    } catch (IOException ioe) {
-                        log.error(IO_ADDING_ERROR, ioe);
-                    }
-                }
-                log.error(BAD_BUNDLE, e);
-            } finally {
-                runningBundleCreation.remove(user.getLogin());
-            }
-        });
-
-        return ResponseEntity.ok().build();
-    }
-
-    private Flux<ReactiveResult> uploadBundle(
-            HttpServletRequest request,
-            @PathVariable String nameOrId,
-            @RequestParam("file") MultipartFile zipBundle) {
-
-        Locale locale = localeResolver.resolveLocale(request);
-        final String origin = request.getHeader("Origin");
-        final OreSiUser currentUser = getCurrentUserUseCase.execute();
-        final SecurityContext context = SecurityContextHolder.getContext();
-        return Flux.create(sink -> {
-            normalExecutorService.submit(() -> {
-                SecurityContextHolder.setContext(context);
-                File zipFile = null;
-                try {
-                    zipFile = getPhysicalFileOrCopy(zipBundle);
-                } catch (IOException e) {
-                    sink.error(new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e));
-                    return;
-                }
-                sink.next(new ReactiveTypeProgress(0L));
-                final Application application = getApplicationUseCase.execute(nameOrId);
-
-                BundleReport rapport = new BundleReport(locale, origin, application);
-
-                boolean completedSuccessfully = false;
-                try {
-                    ObjectMapper mapper = new ObjectMapper();
-                    File finalZipFile = zipFile;
-                    AtomicReference<Map<String, List<String>>> manifest = new AtomicReference<>();
-                    readEntryUseCase.execute(zipFile, DataService.MANIFEST_JSON,
-                            manifestStream -> {
-                                try {
-                                    manifest.set(mapper.readValue
-                                            (manifestStream,
-                                                    new TypeReference<Map<String, List<String>>>() {
-                                                    }
-                                            ));
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                    );
-
-                    int countFiles = manifest.get().values().stream()
-                            .mapToInt(List::size)
-                            .sum();
-
-                    AtomicReference<Map<String, List<String>>> references = new AtomicReference<>();
-                    readEntryUseCase.execute(zipFile, DataService.REFERENCES_JSON,
-                            referencesStream -> {
-                                try {
-                                    final Map<String, List<String>> reference = mapper.readValue
-                                            (referencesStream,
-                                                    new TypeReference<Map<String, List<String>>>() {
-                                                    }
-                                            );
-                                    references.set(reference);
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                    );
-                    @SuppressWarnings("unchecked")
-                    final RegisterReactiveResult registerReactiveResult = new RegisterReactiveResult((FluxSink<ReactiveResult<?>>) (Object) sink, countFiles, rapport);
-                    final ReactiveTypeInfo reactiveTypeInfo = new ReactiveTypeInfo("MANIFEST", Map.of("manifest", manifest));
-                    registerReactiveResult.add(reactiveTypeInfo, false);
-                    rapport.add(reactiveTypeInfo);
-                    int MAX_DB_CONCURRENCY = 30; // ou ton pool JDBC size
-                    readManifestAndSendMailTopological(
-                            manifest.get(),
-                            references.get(),
-                            registerReactiveResult,
-                            finalZipFile,
-                            locale,
-                            application,
-                            rapport,
-                            currentUser,
-                            MAX_DB_CONCURRENCY
-                    ).block();
-                    completedSuccessfully = true;
-                    // #58 - Reconstruire le cache des filtres uniquement pour les dataTypes importés par le bundle
-                    for (String dataName : manifest.get().keySet()) {
-                        serviceContainer.dataService().refreshFilterListCache(application, dataName);
-                    }
-                } catch (StreamReadException e) {
-                    sink.error(e);
-                } catch (DatabindException e) {
-                    sink.error(e);
-                } catch (IOException e) {
-                    sink.error(e);
-                } catch (RuntimeException e) {
-                    sink.error(e);
-                }
-                if (completedSuccessfully && !sink.isCancelled()) {
-                    sink.complete();
-                }
-            });
-        });
-    }
-
-    public Mono<Void> readManifestAndSendMailTopological(
-            Map<String, List<String>> manifest,
-            Map<String, List<String>> references,
-            RegisterReactiveResult registerReactiveResult,
-            File finalZipFile,
-            Locale locale,
-            Application application,
-            BundleReport rapport,
-            OreSiUser currentUser,
-            int MAX_DB_CONCURRENCY
-    ) {
-        SecurityContext secCtx = SecurityContextHolder.getContext();
-        Set<String> processed = ConcurrentHashMap.newKeySet();
-        Set<String> remaining = ConcurrentHashMap.newKeySet();
-        remaining.addAll(manifest.keySet());
-
-        Function<String, Mono<Void>> processReference = dataName ->
-                Flux.fromIterable(manifest.getOrDefault(dataName, List.of()))
-                        .flatMap(fileName ->
-                                Mono.create(sink -> {
-                                    try {
-                                        heavyExecutorService.submit(() -> {
-                                            SecurityContextHolder.setContext(secCtx);
-                                            try {
-                                                readManifestEntryAndLoadData(
-                                                        Map.entry(dataName, List.of(fileName)),
-                                                        registerReactiveResult,
-                                                        finalZipFile,
-                                                        locale,
-                                                        application,
-                                                        rapport
-                                                );
-                                                sink.success();
-                                            } catch (Exception e) {
-                                                sink.error(e);
-                                            }
-                                        });
-                                    } catch (RuntimeException e) {
-                                        sink.error(e);
-                                    }
-                                }), MAX_DB_CONCURRENCY
-                        )
-                        .then()
-                        .doOnSuccess(v -> {
-                            processed.add(dataName);
-                            log.info("Référence {} traitée. Processed: {}/{}", dataName, processed.size(), manifest.size());
-                        });
-
-        // Traitement par vagues en respectant les dépendances
-        return processBatchTopological(processed, remaining, processReference, references, MAX_DB_CONCURRENCY)
-                .then(Mono.fromRunnable(() -> {
-                    try {
-                        sendZipLinkByMailUseCase.execute(
-                                registerReactiveResult.bundleReport().attachmentFile(),
-                                registerReactiveResult.bundleReport(),
-                                currentUser
-                        );
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    } finally {
-                        registerReactiveResult.add(new ReactiveTypeProgress(1), false);
-                    }
-                }));
-    }
-
-    private Mono<Void> processBatchTopological(
-            Set<String> processed,
-            Set<String> remaining,
-            Function<String, Mono<Void>> processReference,
-            Map<String, List<String>> references,
-            int MAX_DB_CONCURRENCY) {
-
-        // Trouve les références "prêtes" (toutes leurs dépendances sont traitées)
-        List<String> ready;
-        synchronized (remaining) {
-            ready = remaining.stream()
-                    .filter(ref -> {
-                        List<String> deps = references.getOrDefault(ref, List.of())
-                                .stream()
-                                .filter(dep -> !dep.equals(ref)) // EXCLURE l'auto-référence
-                                .collect(Collectors.toList());
-                        boolean allDepsProcessed = deps.isEmpty() || processed.containsAll(deps);
-                        if (allDepsProcessed) {
-                            log.debug("Référence {} est prête (dépendances externes: {})", ref, deps);
-                        }
-                        return allDepsProcessed;
-                    })
-                    .limit(MAX_DB_CONCURRENCY)
-                    .collect(Collectors.toList());
-        }
-
-        // Si aucune référence n'est prête, on a terminé (ou il y a un cycle)
-        if (ready.isEmpty()) {
-            if (!remaining.isEmpty()) {
-                log.error("Cycle détecté ou dépendances non satisfaites pour: {}", remaining);
-                throw new RuntimeException("Cycle détecté dans les dépendances: " + remaining);
-            }
-            log.info("Toutes les références ont été traitées");
-            return Mono.empty();
-        }
-
-        log.info("Traitement de la vague: {} (concurrence: {})", ready, ready.size());
-
-        // Traite cette vague en parallèle
-        return Flux.fromIterable(ready)
-                .flatMap(processReference, MAX_DB_CONCURRENCY)
-                .then(Mono.defer(() -> {
-                    // Retire les références traitées
-                    synchronized (remaining) {
-                        remaining.removeAll(ready);
-                    }
-                    // Récursion : traite la vague suivante
-                    return processBatchTopological(processed, remaining, processReference, references, MAX_DB_CONCURRENCY);
-                }));
-    }
-
-
-    private void readManifestEntryAndLoadData(
-            Map.Entry<String, List<String>> entry,
-            RegisterReactiveResult registerReactiveResult,
-            File finalZipFile,
-            Locale locale,
-            Application application,
-            BundleReport rapport) {
-        String dataName = entry.getKey();
-        log.info(dataName);
-        entry.getValue().forEach(fileName -> {
-            try {
-                readEntryUseCase.execute(finalZipFile, "%s/%s".formatted(dataName, fileName),
-                        fileToUpload -> {
-
-                            final String[] split = fileName.split("\\.");
-                            File tempFile = null;
-                            try {
-                                tempFile = File.createTempFile(split[0], split[1]);
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                            tempFile.deleteOnExit();
-                            try (OutputStream out = new FileOutputStream(tempFile);
-                                 InputStream in = fileToUpload) {
-                                in.transferTo(out); // Transfert direct du flux, pas de gestion de byte[] manuelle
-                            } catch (FileNotFoundException e) {
-                                throw new RuntimeException(e);
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                            try {
-                                final DataVersioningResult data = createDataUseCase.execute(
-                                        locale,
-                                        application.getName(),
-                                        dataName,
-                                        fileToUpload == null ? null : new DataFile(
-                                                tempFile,
-                                                (long) tempFile.length(),
-                                                fileName
-                                        ),
-                                        false,
-                                        false
-                                );
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                            final ReactiveResult reactiveResult = new ReactiveTypeInfo("LOADED_DATA", Map.of(PARAM_DATA_NAME, dataName, PARAM_FILE_NAME, fileName));
-                            registerReactiveResult.add(reactiveResult, true);
-                            rapport.add(reactiveResult);
-                        }
-                );
-            } catch (IOException e) {
-                final ReactiveTypeError reactiveTypeError = new ReactiveTypeError(Map.of(PARAM_DATA_NAME, dataName, PARAM_FILE_NAME, fileName, "errorType", "ERROR_LOADING_DATA"));
-                registerReactiveResult.add(reactiveTypeError, true);
-                throw new RuntimeException(e);
-            } catch (InvalidDatasetContentException e) {
-                final ReactiveTypeError reactiveTypeError = new ReactiveTypeError(
-                        Map.of(
-                                PARAM_DATA_NAME, dataName,
-                                PARAM_FILE_NAME, fileName,
-                                "errorType", e.getMessage(),
-                                "message", e.getErrors().stream().limit(1).map(firstError -> firstError.validationCheckResult().message()).findFirst().orElse(""),
-                                "params", e.getErrors().stream().limit(1).map(firstError -> firstError.validationCheckResult().messageParams()).findFirst().orElse(Map.of())
-                        )
-                );
-                registerReactiveResult.add(reactiveTypeError, true);
-            }
-        });
-    }
-
-    private Application getOrLoadApplication(String nameOrId, File zipFile) {
-        AtomicReference<Application> application = null;
-        try {
-            application.set(getApplicationUseCase.execute(nameOrId));
-        } catch (Exception e) {
-            try {
-                readEntryUseCase.execute(zipFile, DataService.MANIFEST_JSON,
-                        configurationFile -> {
-                            MultipartFile tmpConfigurationFile = new MultipartFile() {
-                                @Override
-                                public String getName() {
-                                    return DataService.CONFIGURATION_FILE;
-                                }
-
-                                @Override
-                                public String getOriginalFilename() {
-                                    return DataService.CONFIGURATION_FILE;
-                                }
-
-                                @Override
-                                public String getContentType() {
-                                    return "application/x-yaml";
-                                }
-
-                                @Override
-                                public boolean isEmpty() {
-                                    return false;
-                                }
-
-                                @Override
-                                public long getSize() {
-                                    try {
-                                        return configurationFile.available();
-                                    } catch (IOException ex) {
-                                        return 0L;
-                                    }
-                                }
-
-                                @Override
-                                public byte[] getBytes() throws IOException {
-                                    return configurationFile.readAllBytes();
-                                }
-
-                                @Override
-                                public InputStream getInputStream() throws IOException {
-                                    return configurationFile;
-                                }
-
-                                @Override
-                                public void transferTo(File dest) throws IOException, IllegalStateException {
-                                    // No-op: in-memory file, transfer not supported
-                                }
-                            };
-                            createApplication(nameOrId, "uploadBundle", tmpConfigurationFile);
-                            application.set(getApplicationUseCase.execute(nameOrId));
-                        }
-                );
-
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-        return application.get();
-    }
-
     private StreamingResponseBody getStreamingResponseBody(Flux<ReactiveResult> reactiveResultFlux) {
         return outputStream -> {
             reactiveResultFlux

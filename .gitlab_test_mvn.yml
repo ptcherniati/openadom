@@ -100,3 +100,6 @@ test_use-cases:
 
 test_no-tags:
   <<: *test_template
+
+test_integration_bundle:
+  <<: *docker_test_template

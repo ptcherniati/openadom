@@ -100,3 +100,8 @@ COMMENT ON SCHEMA oa_metrics IS
 
 COMMENT ON TABLE oa_metrics.workflow_log IS
     'Une row par workflow finalise ( succes , echec , rejet rate-limit ). Consomme par le dashboard admin et Grafana.';
+-- ── Droits applicatifs ─────────────────────────────────────────────────────
+GRANT USAGE ON SCHEMA oa_metrics TO "openAdomTechUser";
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA oa_metrics TO "openAdomTechUser";
+ALTER DEFAULT PRIVILEGES IN SCHEMA oa_metrics
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "openAdomTechUser";
