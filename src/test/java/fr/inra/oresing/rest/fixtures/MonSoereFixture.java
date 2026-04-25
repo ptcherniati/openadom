@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static fr.inra.oresing.rest.Fixtures.testZip;
-import static fr.inra.oresing.rest.OreSiResourcesTest.registerFile;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
@@ -523,21 +522,26 @@ public record MonSoereFixture(Fixtures fixtures, MockMvc mockMvc, UserRepository
     }
 
     /**
-     * Génère les fixtures Cypress en utilisant la méthode statique {@link fr.inra.oresing.rest.OreSiResourcesTest#registerFile}.
-     * Délègue à {@link #checkAndRegisterResults(CypressFixtureWriter)} avec {@code null}.
+     * Vérifie les résponses API monsore sans écrire aucun fichier UI.
+     *
+     * <p>Utiliser {@link #checkAndRegisterResults(CypressFixtureWriter)} avec un writer non-null
+     * (via {@link fr.inra.oresing.rest.CypressFixtureGeneratorTest}) pour produire des fixtures
+     * sanitisées destinées à Cypress.
      */
     public Stream<? extends DynamicNode> checkAndRegisterResults() {
         return checkAndRegisterResults(null);
     }
 
     /**
-     * Génère les fixtures Cypress.
+     * Vérifie les réponses API monsore et, si {@code writer} est non-null, génère les fichiers
+     * de fixtures Cypress avec normalisation des UUID et des timestamps.
      *
-     * <p>Si {@code writer} est non-null, les fichiers sont écrits via ce writer (avec normalisation
-     * des UUID et chemin de base configurable). Sinon, la méthode statique
-     * {@link fr.inra.oresing.rest.OreSiResourcesTest#registerFile} est utilisée (comportement historique).
+     * <p>Quand {@code writer} est {@code null} (test ordinaire), aucun fichier n'est écrit :
+     * les réponses API sont uniquement vérifiées. La génération des fichiers UI est réservée au
+     * {@link fr.inra.oresing.rest.CypressFixtureGeneratorTest} (tag
+     * {@value fr.inra.oresing.rest.CypressFixtureGeneratorTest#TAG}).
      *
-     * @param writer writer nullable ; si non-null, prend le dessus sur {@code registerFile}
+     * @param writer writer nullable ; si non-null, les fichiers sont écrits avec sanitisation
      */
     public Stream<? extends DynamicNode> checkAndRegisterResults(CypressFixtureWriter writer) {
         return Stream.of(
@@ -592,14 +596,18 @@ public record MonSoereFixture(Fixtures fixtures, MockMvc mockMvc, UserRepository
     }
 
     /**
-     * Écrit le contenu via le {@link CypressFixtureWriter} si présent, sinon utilise
-     * {@link fr.inra.oresing.rest.OreSiResourcesTest#registerFile} (compatibilité ascendante).
+     * Écrit le contenu via le {@link CypressFixtureWriter} si présent.
+     *
+     * <p>Si {@code writer} est {@code null}, aucun fichier n'est produit : le test normal
+     * vérifie uniquement les réponses API sans générer de fichiers UI non sanitisés qui
+     * divergeraient de ceux enregistrés par {@link fr.inra.oresing.rest.CypressFixtureGeneratorTest}.
      */
     private void writeOrRegister(CypressFixtureWriter writer, String path, String content) throws IOException {
         if (writer != null) {
             writer.write(path, content);
-        } else {
-            registerFile(path, content);
         }
+        // Sans writer (test normal), on n'écrit aucun fichier : les fichiers UI doivent être
+        // produits exclusivement via CypressFixtureGeneratorTest (tag GENERATE_CYPRESS_FIXTURES)
+        // pour garantir la sanitisation des UUID et timestamps.
     }
 }
