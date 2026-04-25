@@ -122,4 +122,29 @@ public class ImportRateLimiter {
     void shutdown() {
         userSlots.clear();
     }
+
+    /**
+     * Quota maximum d'imports concurrents par utilisateur.
+     * Lecture seule , exposé pour le dashboard de configuration.
+     */
+    public int getMaxConcurrentPerUser() {
+        return maxConcurrentPerUser;
+    }
+
+    /**
+     * Snapshot des slots actuellement reservés par utilisateur.
+     * Cle = userId , valeur = nombre de slots utilisés ( 0 .. max ).
+     * Les utilisateurs sans slot actif ne sont pas inclus dans la map
+     * pour ne pas faire grossir la reponse inutilement.
+     */
+    public Map<String, Integer> snapshotUsedSlots() {
+        Map<String, Integer> snapshot = new java.util.HashMap<>();
+        userSlots.forEach((userId, sem) -> {
+            int used = maxConcurrentPerUser - sem.availablePermits();
+            if (used > 0) {
+                snapshot.put(userId, used);
+            }
+        });
+        return snapshot;
+    }
 }

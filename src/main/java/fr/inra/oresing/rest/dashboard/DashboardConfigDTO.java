@@ -51,7 +51,11 @@ public record DashboardConfigDTO(
             int maxConcurrentImportsPerUser,
             @Schema(description = "Quota d'extractions concurrentes par utilisateur ( -1 si non plafonne )",
                     example = "5")
-            int maxConcurrentExtractionsPerUser) { }
+            int maxConcurrentExtractionsPerUser,
+            @Schema(description = "Snapshot des slots d'import actuellement reserves par utilisateur. "
+                    + "Cle = userId , valeur = nombre de slots utilises. Les utilisateurs "
+                    + "sans slot actif ne sont pas inclus. Lecture courante a l'instant T.")
+            Map<String, Integer> usedImportSlotsByUser) { }
 
     @Schema(name = "DashboardConfig.Runtime")
     public record RuntimeInfo(

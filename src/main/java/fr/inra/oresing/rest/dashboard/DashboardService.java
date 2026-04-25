@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.workflow.cascade.ImportRateLimiter;
 import fr.inra.oresing.workflow.cascade.config.ImportProperties;
 import fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry;
 import fr.inra.oresing.workflow.cascade.history.WorkflowSnapshot;
@@ -50,10 +51,8 @@ public class DashboardService {
     private final NamedParameterJdbcTemplate jdbc;
     private final AuthenticationService authenticationService;
     private final ImportProperties importProperties;
+    private final ImportRateLimiter importRateLimiter;
     private final ObjectMapper objectMapper = new ObjectMapper();
-
-    @Value("${app.import.max-concurrent-per-user:3}")
-    private int maxConcurrentImportsPerUser;
 
     @Value("${app.extract.max-concurrent-per-user:-1}")
     private int maxConcurrentExtractionsPerUser;
@@ -251,8 +250,9 @@ public class DashboardService {
                 importProperties.getProcessedTempDir());
 
         DashboardConfigDTO.RateLimitConfig rateLimitCfg = new DashboardConfigDTO.RateLimitConfig(
-                maxConcurrentImportsPerUser,
-                maxConcurrentExtractionsPerUser);
+                importRateLimiter.getMaxConcurrentPerUser(),
+                maxConcurrentExtractionsPerUser,
+                importRateLimiter.snapshotUsedSlots());
 
         DashboardConfigDTO.RuntimeInfo runtime = new DashboardConfigDTO.RuntimeInfo(
                 configuredCascadeVersion,
