@@ -5,8 +5,10 @@ import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.workflow.cascade.cleanup.WorkflowTempCleanup;
 import fr.inra.oresing.workflow.cascade.config.ImportProperties;
+import fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry;
 import fr.inra.oresing.workflow.cascade.history.WorkflowLogEntry;
 import fr.inra.oresing.workflow.cascade.history.WorkflowLogWriter;
+import fr.inra.oresing.workflow.cascade.history.WorkflowSnapshot;
 import fr.inra.oresing.workflow.cascade.metrics.OpenadomMetrics;
 import fr.inra.oresing.workflow.cascade.progress.ImportProgressReporter;
 import fr.inrae.ore.cascade.api.workflow.builder.WorkflowBuilder;
@@ -56,6 +58,7 @@ public class CascadeImportPipeline {
     private final OpenadomMetrics         metrics;
     private final WorkflowLogWriter       logWriter;
     private final AuthenticationService   authenticationService;
+    private final WorkflowActiveRegistry  activeRegistry;
 
     public CascadeImportPipeline(
             ImportProperties       importProperties,
@@ -64,7 +67,8 @@ public class CascadeImportPipeline {
             ImportRateLimiter      importRateLimiter,
             OpenadomMetrics        metrics,
             WorkflowLogWriter      logWriter,
-            AuthenticationService  authenticationService) {
+            AuthenticationService  authenticationService,
+            WorkflowActiveRegistry activeRegistry) {
         this.importProperties      = importProperties;
         this.progressReporter      = progressReporter;
         this.tempCleanup           = tempCleanup;
@@ -72,6 +76,7 @@ public class CascadeImportPipeline {
         this.metrics               = metrics;
         this.logWriter             = logWriter;
         this.authenticationService = authenticationService;
+        this.activeRegistry        = activeRegistry;
     }
 
     /**
@@ -112,6 +117,14 @@ public class CascadeImportPipeline {
             // metrics best-effort uniquement
         }
 
+        // #62 - Publie la progression en temps réel dans WorkflowActiveRegistry
+        // pour que /api/dashboard/workflows/in-progress ( oa-live ) puisse
+        // afficher ce workflow dès son démarrage. Le finally garantit le
+        // retrait du registry même en cas d'erreur ou d'annulation.
+        final UUID corrUuid = safeUuid(correlationId);
+        final UUID userUuid = safeUuid(userId);
+        registerWorkflowStart(corrUuid, userUuid, userLogin, applicationName, dataType,
+                resourceName, startedAt, fileSizeBytes);
         try {
             final Path uploadedPath;
             try {
@@ -133,10 +146,16 @@ public class CascadeImportPipeline {
 
             FileChunkSource source = new FileChunkSource(uploadedPath, chunkSizeLines, chunksDir);
 
+            // #62 - Décorateur autour du reporter existant : on tee les
+            // appels onLinesProcessed vers le registry pour alimenter
+            // recordsProcessed / chunksProcessed en temps réel.
+            ImportProgressReporter teeingReporter = buildRegistryAwareReporter(
+                    progressReporter, corrUuid, fileSizeBytes);
+
             DataImporterTransformation transformation = new DataImporterTransformation(
                     dataImporter,
                     importProperties,
-                    progressReporter,
+                    teeingReporter,
                     processedDir,
                     correlationId);
 
@@ -156,6 +175,9 @@ public class CascadeImportPipeline {
                     .build();
 
             try {
+                // Phase : traitement ( chunking + transformation + merge ).
+                updateWorkflowPhase(corrUuid, WorkflowLogEntry.STATUS_PROCESSING, fileSizeBytes);
+
                 WorkflowResult result = workflow.execute();
                 if (result.status() == ProcessingStatus.FAILED) {
                     String firstError = result.errors().isEmpty()
@@ -177,6 +199,9 @@ public class CascadeImportPipeline {
 
                 log.info("[{}] Workflow cascade termine : processed={}, chunks={}, duration={}",
                         correlationId, result.recordsProcessed(), result.chunksProcessed(), result.duration());
+
+                // Phase : finalisation ( écriture errors + chargement DB ).
+                updateWorkflowPhase(corrUuid, WorkflowLogEntry.STATUS_FINALIZING, fileSizeBytes);
 
                 dataImporter.treatErrors();
                 referenceValueRepository.storeAll(sink.getMergedPath());
@@ -207,6 +232,120 @@ public class CascadeImportPipeline {
             }
         } finally {
             importRateLimiter.release(userId);
+            // #62 - Toujours retirer le snapshot du registry , quel que soit
+            // le chemin de sortie ( succès , erreur , annulation ). Sans ce
+            // finally , un workflow planté laisserait un fantôme indéfiniment
+            // visible dans oa-live.
+            if (corrUuid != null) {
+                activeRegistry.finish(corrUuid);
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- //
+    //  WorkflowActiveRegistry : helpers de publication temps réel       //
+    // ---------------------------------------------------------------- //
+
+    private void registerWorkflowStart(
+            UUID corrUuid, UUID userUuid, String userLogin,
+            String applicationName, String dataType, String resourceName,
+            Instant startedAt, long fileSizeBytes) {
+        if (corrUuid == null) {
+            return;
+        }
+        try {
+            activeRegistry.start(new WorkflowSnapshot(
+                    corrUuid,
+                    WorkflowLogEntry.TYPE_IMPORT,
+                    userUuid,
+                    userLogin,
+                    applicationName,
+                    dataType,
+                    resourceName,
+                    startedAt,
+                    WorkflowLogEntry.STATUS_UPLOADING,
+                    0L,            // recordsProcessed
+                    0L,            // recordsFailed
+                    0,             // chunksProcessed
+                    0.0,           // progressPercentage
+                    fileSizeBytes,
+                    List.of()));   // errors ( aucune au démarrage )
+        } catch (RuntimeException e) {
+            // Best-effort : un échec de publication ne doit pas casser l'import.
+            log.warn("[{}] WorkflowActiveRegistry.start a échoué : {}", corrUuid, e.getMessage());
+        }
+    }
+
+    /**
+     * Met à jour la phase courante ( UPLOADING / CHUNKING / PROCESSING /
+     * FINALIZING ) sans toucher aux compteurs de records , maintenus à jour
+     * par {@link #buildRegistryAwareReporter} via les events de progression.
+     *
+     * <p>Note : {@link WorkflowActiveRegistry#start} utilise putIfAbsent et
+     * ne remplace pas une entrée existante. On retire donc l'ancienne
+     * entrée puis on en réinsère une avec la nouvelle phase.
+     */
+    private void updateWorkflowPhase(UUID corrUuid, String phase, long fileSizeBytes) {
+        if (corrUuid == null) {
+            return;
+        }
+        try {
+            activeRegistry.find(corrUuid)
+                    .filter(s -> !phase.equals(s.status()))
+                    .ifPresent(snapshot -> {
+                        activeRegistry.finish(corrUuid);
+                        activeRegistry.start(new WorkflowSnapshot(
+                                snapshot.correlationId(),
+                                snapshot.workflowType(),
+                                snapshot.userId(),
+                                snapshot.userLogin(),
+                                snapshot.applicationName(),
+                                snapshot.dataType(),
+                                snapshot.resourceName(),
+                                snapshot.startTime(),
+                                phase,
+                                snapshot.recordsProcessed(),
+                                snapshot.recordsFailed(),
+                                snapshot.chunksProcessed(),
+                                snapshot.progressPercentage(),
+                                fileSizeBytes,
+                                snapshot.errors()));
+                    });
+        } catch (RuntimeException e) {
+            log.warn("[{}] WorkflowActiveRegistry phase update échouée : {}", corrUuid, e.getMessage());
+        }
+    }
+
+    /**
+     * Décorateur autour du {@link ImportProgressReporter} existant : forwarde
+     * les appels au reporter d'origine ( logs , métriques ) puis met à jour
+     * le snapshot dans {@link WorkflowActiveRegistry} pour que oa-live voie
+     * progresser recordsProcessed et chunksProcessed en temps réel.
+     */
+    private ImportProgressReporter buildRegistryAwareReporter(
+            ImportProgressReporter delegate, UUID corrUuid, long fileSizeBytes) {
+        final java.util.concurrent.atomic.AtomicLong totalRecords = new java.util.concurrent.atomic.AtomicLong();
+        final java.util.concurrent.atomic.AtomicInteger totalChunks = new java.util.concurrent.atomic.AtomicInteger();
+        return (cid, delta) -> {
+            try {
+                delegate.onLinesProcessed(cid, delta);
+            } finally {
+                if (corrUuid != null) {
+                    long records = totalRecords.addAndGet(delta);
+                    int chunks = totalChunks.incrementAndGet();
+                    activeRegistry.update(corrUuid, records, 0L, chunks, null, fileSizeBytes);
+                }
+            }
+        };
+    }
+
+    /** Convertit en UUID en silence , null si format invalide. */
+    private static UUID safeUuid(String raw) {
+        if (raw == null) return null;
+        try {
+            return UUID.fromString(raw);
+        } catch (IllegalArgumentException e) {
+            return null;
         }
     }
 

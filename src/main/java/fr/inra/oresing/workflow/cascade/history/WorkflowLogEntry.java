@@ -61,4 +61,12 @@ public record WorkflowLogEntry(
     public static final String STATUS_FAILED        = "FAILED";
     public static final String STATUS_CANCELLED     = "CANCELLED";
     public static final String STATUS_RATE_LIMITED  = "RATE_LIMITED";
+
+    // Phases in-progress , publiées dans WorkflowActiveRegistry pour oa-live.
+    // Ne sont jamais persistées dans oa_metrics.workflow_log ( qui ne reçoit
+    // que les états terminaux ci-dessus ).
+    public static final String STATUS_UPLOADING     = "UPLOADING";
+    public static final String STATUS_CHUNKING      = "CHUNKING";
+    public static final String STATUS_PROCESSING    = "PROCESSING";
+    public static final String STATUS_FINALIZING    = "FINALIZING";
 }
