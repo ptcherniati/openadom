@@ -522,26 +522,84 @@ public record MonSoereFixture(Fixtures fixtures, MockMvc mockMvc, UserRepository
         return authConnection;
     }
 
+    /**
+     * Génère les fixtures Cypress en utilisant la méthode statique {@link fr.inra.oresing.rest.OreSiResourcesTest#registerFile}.
+     * Délègue à {@link #checkAndRegisterResults(CypressFixtureWriter)} avec {@code null}.
+     */
     public Stream<? extends DynamicNode> checkAndRegisterResults() {
-        return Stream.of(dynamicTest("check and load Configuration", () -> {
+        return checkAndRegisterResults(null);
+    }
 
-            String getMonsoere = mockMvc.perform(get("/api/v1/applications/monsoresimple")
-                            .header("Authorization", "Bearer " + fixtures.getMonsoresimpleConnection().jwt())
-                            .accept(MediaType.APPLICATION_JSON)).
-                    andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
-            registerFile("ui/cypress/fixtures/applications/ore/monsore/monsoere.json", getMonsoere);
-        }), dynamicContainer("check and load References", getMonsoreReferentielFiles().keySet().stream().map(s -> dynamicTest("check and load Reference %s".formatted(s), () -> {
-            String getReference = mockMvc.perform(get("/api/v1/applications/monsoresimple/data/{reference}/json", s)
-                            .header("Authorization", "Bearer " + fixtures.getMonsoresimpleConnection().jwt()
-                            ).accept(MediaType.APPLICATION_JSON)).
-                    andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
-            registerFile("ui/cypress/fixtures/applications/ore/monsore/references/%s.json".formatted(s), getReference);
-        }))), dynamicTest("check and load pem", () -> {
-            String getPem = mockMvc.perform(get("/api/v1/applications/monsoresimple/data/pem/json")
-                            .header("Authorization", "Bearer " + fixtures.getMonsoresimpleConnection().jwt())
-                            .accept(MediaType.APPLICATION_JSON)).
-                    andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
-            registerFile("ui/cypress/fixtures/applications/ore/monsore/datatypes/pem.json", getPem);
-        }));
+    /**
+     * Génère les fixtures Cypress.
+     *
+     * <p>Si {@code writer} est non-null, les fichiers sont écrits via ce writer (avec normalisation
+     * des UUID et chemin de base configurable). Sinon, la méthode statique
+     * {@link fr.inra.oresing.rest.OreSiResourcesTest#registerFile} est utilisée (comportement historique).
+     *
+     * @param writer writer nullable ; si non-null, prend le dessus sur {@code registerFile}
+     */
+    public Stream<? extends DynamicNode> checkAndRegisterResults(CypressFixtureWriter writer) {
+        return Stream.of(
+                dynamicTest("check and load Configuration", () -> {
+                    String getMonsoere = mockMvc.perform(get("/api/v1/applications/monsoresimple")
+                                    .header("Authorization", "Bearer " + fixtures.getMonsoresimpleConnection().jwt())
+                                    .accept(MediaType.APPLICATION_JSON))
+                            .andExpect(status().is2xxSuccessful())
+                            .andReturn().getResponse().getContentAsString();
+                    writeOrRegister(writer, "ui/cypress/fixtures/applications/ore/monsore/monsoere.json", getMonsoere);
+                }),
+                dynamicContainer("check and load References",
+                        getMonsoreReferentielFiles().keySet().stream().map(s ->
+                                dynamicTest("check and load Reference %s".formatted(s), () -> {
+                                    String getReference = mockMvc.perform(
+                                                    get("/api/v1/applications/monsoresimple/data/{reference}/json", s)
+                                                            .header("Authorization", "Bearer " + fixtures.getMonsoresimpleConnection().jwt())
+                                                            .accept(MediaType.APPLICATION_JSON))
+                                            .andExpect(status().is2xxSuccessful())
+                                            .andReturn().getResponse().getContentAsString();
+                                    writeOrRegister(writer,
+                                            "ui/cypress/fixtures/applications/ore/monsore/references/%s.json".formatted(s),
+                                            getReference);
+                                }))),
+                dynamicTest("check and load pem", () -> {
+                    String getPem = mockMvc.perform(get("/api/v1/applications/monsoresimple/data/pem/json")
+                                    .header("Authorization", "Bearer " + fixtures.getMonsoresimpleConnection().jwt())
+                                    .accept(MediaType.APPLICATION_JSON))
+                            .andExpect(status().is2xxSuccessful())
+                            .andReturn().getResponse().getContentAsString();
+                    writeOrRegister(writer, "ui/cypress/fixtures/applications/ore/monsore/datatypes/pem.json", getPem);
+                }),
+                dynamicTest("check and load ore application description", () -> {
+                    String getApps = mockMvc.perform(asyncDispatch(
+                                    mockMvc.perform(get("/api/v1/applications")
+                                                    .header("Authorization", "Bearer " + fixtures.getMonsoresimpleConnection().jwt())
+                                                    .accept(MediaType.APPLICATION_NDJSON_VALUE)
+                                                    .param("filter", "ALL"))
+                                            .andExpect(status().is2xxSuccessful())
+                                            .andExpect(request().asyncStarted())
+                                            .andReturn()))
+                            .andReturn().getResponse().getContentAsString();
+                    writeOrRegister(writer,
+                            "ui/cypress/fixtures/applications/ore/ore_application_description.json", getApps);
+                }),
+                dynamicTest("write aliases.json", () -> {
+                    if (writer != null) {
+                        writer.writeAliases("ui/cypress/fixtures/applications/ore/aliases.json");
+                    }
+                })
+        );
+    }
+
+    /**
+     * Écrit le contenu via le {@link CypressFixtureWriter} si présent, sinon utilise
+     * {@link fr.inra.oresing.rest.OreSiResourcesTest#registerFile} (compatibilité ascendante).
+     */
+    private void writeOrRegister(CypressFixtureWriter writer, String path, String content) throws IOException {
+        if (writer != null) {
+            writer.write(path, content);
+        } else {
+            registerFile(path, content);
+        }
     }
 }

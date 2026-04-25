@@ -90,12 +90,29 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
     @Autowired
     private MeterRegistry meterRegistry;
 
+    /**
+     * Écrit {@code jsonContent} dans {@code filePath}.
+     *
+     * <p>Le chemin est interprété comme relatif au répertoire défini par la propriété système
+     * {@value fr.inra.oresing.rest.fixtures.CypressFixtureWriter#BASE_DIR_PROPERTY}, ou au
+     * répertoire de travail courant du JVM si cette propriété n'est pas définie.
+     * Les répertoires parents sont créés à la volée si nécessaire.
+     *
+     * @param filePath    chemin relatif du fichier cible
+     * @param jsonContent contenu à écrire
+     */
     public static void registerFile(final String filePath, final String jsonContent) throws IOException {
-        final File errorsFile = new File(filePath);
-        System.out.println("register file " + errorsFile.getAbsolutePath());
-        final BufferedWriter writer = new BufferedWriter(new FileWriter(errorsFile));
-        writer.write(jsonContent);
-        writer.close();
+        String baseDirProp = System.getProperty(fr.inra.oresing.rest.fixtures.CypressFixtureWriter.BASE_DIR_PROPERTY);
+        final File errorsFile = baseDirProp != null
+                ? new File(baseDirProp, filePath)
+                : new File(filePath);
+        log.info("register file {}", errorsFile.getAbsolutePath());
+        if (errorsFile.getParentFile() != null) {
+            errorsFile.getParentFile().mkdirs();
+        }
+        try (final BufferedWriter writer = new BufferedWriter(new FileWriter(errorsFile))) {
+            writer.write(jsonContent);
+        }
     }
 
     private static InputStream changeToV2(final InputStream inputStream) throws IOException {
