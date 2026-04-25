@@ -78,7 +78,13 @@ public final class DataImporterTransformation implements Transformation<Path, Pa
 
             Files.deleteIfExists(chunkFile);
 
-            return new Chunk<>(chunk.chunkIndex(), List.of(processedPath), chunk.metadata());
+            // logicalRecordCount = lignes reellement traitees pour ce chunk.
+            // MetricsChunkInterceptor le lit pour cumuler le total dans
+            // WorkflowResult.recordsProcessed.
+            return new Chunk<>(
+                    chunk.chunkIndex(),
+                    List.of(processedPath),
+                    chunk.metadata().withLogicalRecordCount(dataLinesProcessed.get()));
 
         } catch (IOException e) {
             throw new UncheckedIOException(

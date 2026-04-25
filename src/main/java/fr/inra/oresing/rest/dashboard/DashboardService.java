@@ -182,7 +182,8 @@ public class DashboardService {
                 rs.getLong("records_failed"),
                 rs.getInt("chunks_processed"),
                 (Double) rs.getObject("progress_percentage"),
-                rs.getLong("bytes_total"));
+                rs.getLong("bytes_total"),
+                0L);
     }
 
     @SuppressWarnings("unchecked")

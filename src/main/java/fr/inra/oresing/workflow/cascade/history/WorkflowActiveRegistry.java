@@ -61,6 +61,17 @@ public class WorkflowActiveRegistry {
                         progressPercentage, bytesTotal));
     }
 
+    /**
+     * Records the total number of records expected for a workflow once
+     * known ( typically after the file has been counted ). Allows oa-live
+     * to switch the progress bar from indeterminate to determinate.
+     * No-op if the entry is not registered.
+     */
+    public void setRecordsTotal(UUID correlationId, long recordsTotal) {
+        byCorrelationId.computeIfPresent(correlationId, (id, cur) ->
+                cur.withRecordsTotal(recordsTotal));
+    }
+
     /** Removes the entry from the registry once the workflow is over. */
     public void finish(UUID correlationId) {
         WorkflowSnapshot removed = byCorrelationId.remove(correlationId);

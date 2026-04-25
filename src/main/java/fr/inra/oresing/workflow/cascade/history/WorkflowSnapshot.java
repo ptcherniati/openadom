@@ -31,6 +31,10 @@ public record WorkflowSnapshot(
         int chunksProcessed,
         Double progressPercentage,
         long bytesTotal,
+        // Total estimé/comptabilisé en début de workflow ; permet à oa-live
+        // de basculer la progress bar de l'état indéterminé à déterminé.
+        // 0 = inconnu , l'UI doit alors fallback sur l'animation indéterminée.
+        long recordsTotal,
         List<String> errors) {
 
     /** Convenience helper : time elapsed since start in milliseconds. */
@@ -49,6 +53,15 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, errors);
+                progressPercentage, bytesTotal, recordsTotal, errors);
+    }
+
+    /** Permet de mettre à jour le total une fois le comptage effectué. */
+    public WorkflowSnapshot withRecordsTotal(long recordsTotal) {
+        return new WorkflowSnapshot(
+                correlationId, workflowType, userId, userLogin,
+                applicationName, dataType, resourceName, startTime,
+                status, recordsProcessed, recordsFailed, chunksProcessed,
+                progressPercentage, bytesTotal, recordsTotal, errors);
     }
 }

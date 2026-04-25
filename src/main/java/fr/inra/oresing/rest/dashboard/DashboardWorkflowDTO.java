@@ -72,7 +72,11 @@ public record DashboardWorkflowDTO(
         Double progressPercentage,
 
         @Schema(description = "Cumulative bytes written to disk / streamed to client")
-        long bytesTotal) {
+        long bytesTotal,
+
+        @Schema(description = "Total records expected ( header excluded ) ; 0 if unknown. "
+                + "Permet à l'UI de basculer la progress bar en mode déterminé.")
+        long recordsTotal) {
 
     public static DashboardWorkflowDTO fromSnapshot(fr.inra.oresing.workflow.cascade.history.WorkflowSnapshot s) {
         return new DashboardWorkflowDTO(
@@ -81,7 +85,7 @@ public record DashboardWorkflowDTO(
                 s.startTime(), null, null,
                 s.status(),
                 s.recordsProcessed(), s.recordsFailed(), s.chunksProcessed(),
-                s.progressPercentage(), s.bytesTotal());
+                s.progressPercentage(), s.bytesTotal(), s.recordsTotal());
     }
 
     /**

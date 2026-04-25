@@ -95,7 +95,7 @@ public final class FileChunkSource implements Source<Path> {
                     if (linesInCurrentChunk >= chunkSizeLines) {
                         writer.close();
                         writer = null;
-                        chunks.add(buildChunk(chunkIndex, chunkPath, correlationId));
+                        chunks.add(buildChunk(chunkIndex, chunkPath, correlationId, linesInCurrentChunk));
                         chunkIndex++;
                         linesInCurrentChunk = 0;
                     }
@@ -104,7 +104,7 @@ public final class FileChunkSource implements Source<Path> {
                 if (writer != null) {
                     writer.close();
                     writer = null;
-                    chunks.add(buildChunk(chunkIndex, chunkPath, correlationId));
+                    chunks.add(buildChunk(chunkIndex, chunkPath, correlationId, linesInCurrentChunk));
                 }
             } finally {
                 if (writer != null) {
@@ -115,8 +115,12 @@ public final class FileChunkSource implements Source<Path> {
         return chunks;
     }
 
-    private Chunk<Path> buildChunk(int index, Path path, String correlationId) {
-        ChunkMetadata metadata = new ChunkMetadata(correlationId, sourceName, List.of(), Instant.now());
+    private Chunk<Path> buildChunk(int index, Path path, String correlationId, int linesInChunk) {
+        // logicalRecordCount = vraies lignes du chunk ( pas 1 pour 1 path ).
+        // Permet a MetricsChunkInterceptor de calculer recordsReceived / Processed
+        // en lignes reelles , et a result.recordsProcessed() d'etre correct.
+        ChunkMetadata metadata = new ChunkMetadata(
+                correlationId, sourceName, List.of(), Instant.now(), (long) linesInChunk);
         return new Chunk<>(index, List.of(path), metadata);
     }
 }

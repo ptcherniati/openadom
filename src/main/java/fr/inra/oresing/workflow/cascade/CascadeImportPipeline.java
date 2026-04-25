@@ -135,6 +135,15 @@ public class CascadeImportPipeline {
                 throw new UnsupportedOperationException("Failed to prepare workflow", e);
             }
 
+            // #62 - Compte les lignes du fichier ( deja sans en-tete ) pour
+            // permettre a oa-live de basculer la barre de progression en
+            // mode determine. Best-effort : si le comptage echoue , on
+            // laisse recordsTotal a 0 ( fallback animation indeterminee ).
+            long recordsTotal = countLines(uploadedPath);
+            if (recordsTotal > 0 && corrUuid != null) {
+                activeRegistry.setRecordsTotal(corrUuid, recordsTotal);
+            }
+
             final int chunkSizeLines = importProperties.getChunkSizeLines();
             final int parallelism    = importProperties.getParallelism();
             final int maxErrors      = importProperties.getMaxErrorsThreshold();
@@ -146,11 +155,18 @@ public class CascadeImportPipeline {
 
             FileChunkSource source = new FileChunkSource(uploadedPath, chunkSizeLines, chunksDir);
 
+            // #62 - Compteurs intermediaires utilises uniquement pour pousser
+            // la progression dans WorkflowActiveRegistry ( oa-live ). La
+            // valeur finale persistee est lue depuis WorkflowResult ( cascade
+            // tient deja le compte correct grace a Chunk.recordCount() ).
+            final java.util.concurrent.atomic.AtomicLong liveRecords  = new java.util.concurrent.atomic.AtomicLong();
+            final java.util.concurrent.atomic.AtomicInteger liveChunks = new java.util.concurrent.atomic.AtomicInteger();
+
             // #62 - Décorateur autour du reporter existant : on tee les
             // appels onLinesProcessed vers le registry pour alimenter
             // recordsProcessed / chunksProcessed en temps réel.
             ImportProgressReporter teeingReporter = buildRegistryAwareReporter(
-                    progressReporter, corrUuid, fileSizeBytes);
+                    progressReporter, corrUuid, fileSizeBytes, liveRecords, liveChunks);
 
             DataImporterTransformation transformation = new DataImporterTransformation(
                     dataImporter,
@@ -269,6 +285,7 @@ public class CascadeImportPipeline {
                     0,             // chunksProcessed
                     0.0,           // progressPercentage
                     fileSizeBytes,
+                    0L,            // recordsTotal ( inconnu tant que le fichier n'est pas compté )
                     List.of()));   // errors ( aucune au démarrage )
         } catch (RuntimeException e) {
             // Best-effort : un échec de publication ne doit pas casser l'import.
@@ -309,6 +326,7 @@ public class CascadeImportPipeline {
                                 snapshot.chunksProcessed(),
                                 snapshot.progressPercentage(),
                                 fileSizeBytes,
+                                snapshot.recordsTotal(),
                                 snapshot.errors()));
                     });
         } catch (RuntimeException e) {
@@ -323,20 +341,34 @@ public class CascadeImportPipeline {
      * progresser recordsProcessed et chunksProcessed en temps réel.
      */
     private ImportProgressReporter buildRegistryAwareReporter(
-            ImportProgressReporter delegate, UUID corrUuid, long fileSizeBytes) {
-        final java.util.concurrent.atomic.AtomicLong totalRecords = new java.util.concurrent.atomic.AtomicLong();
-        final java.util.concurrent.atomic.AtomicInteger totalChunks = new java.util.concurrent.atomic.AtomicInteger();
+            ImportProgressReporter delegate, UUID corrUuid, long fileSizeBytes,
+            java.util.concurrent.atomic.AtomicLong liveRecords,
+            java.util.concurrent.atomic.AtomicInteger liveChunks) {
         return (cid, delta) -> {
             try {
                 delegate.onLinesProcessed(cid, delta);
             } finally {
                 if (corrUuid != null) {
-                    long records = totalRecords.addAndGet(delta);
-                    int chunks = totalChunks.incrementAndGet();
+                    long records = liveRecords.addAndGet(delta);
+                    int chunks = liveChunks.incrementAndGet();
                     activeRegistry.update(corrUuid, records, 0L, chunks, null, fileSizeBytes);
                 }
             }
         };
+    }
+
+    /**
+     * Compte les lignes du fichier ( deja sans en-tete ) pour alimenter
+     * recordsTotal. Best-effort : en cas d'erreur I/O on retourne 0L et
+     * oa-live retombe sur la barre indeterminee.
+     */
+    private static long countLines(Path path) {
+        try (java.util.stream.Stream<String> lines = Files.lines(path)) {
+            return lines.count();
+        } catch (IOException e) {
+            log.warn("Comptage des lignes impossible pour {} : {}", path, e.getMessage());
+            return 0L;
+        }
     }
 
     /** Convertit en UUID en silence , null si format invalide. */
