@@ -2,7 +2,9 @@ package fr.inra.oresing.rest.dashboard;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -10,6 +12,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 /**
@@ -111,5 +115,64 @@ public class DashboardController {
         return service.findDetail(correlationId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @Operation(
+        summary = "Annuler un workflow en cours",
+        description = """
+                Signale une demande d'annulation au {@code ChunkCancellationRegistry}
+                interne de cascade. L'appel est **asynchrone** : il retourne dès que
+                le drapeau d'annulation est posé. Le workflow se finalise ensuite
+                en statut {@code CANCELLED} lorsque tous les chunks en cours
+                terminent leur traitement (les chunks en attente lèvent une
+                {@code ChunkCancelledException} à leur prochain check).
+
+                **Autorisation** :
+                * un administrateur ({@code openAdomAdmin}) peut annuler n'importe
+                  quel workflow ;
+                * un utilisateur non-admin ne peut annuler que les workflows qu'il
+                  a lui-même initiés.
+
+                Les requêtes provenant d'un utilisateur ni admin ni propriétaire
+                renvoient **404** — délibérément la même réponse que pour un
+                workflow inexistant — afin d'empêcher l'énumération d'identifiants
+                de corrélation.
+                """,
+        tags = {"Dashboard"})
+    @ApiResponses({
+        @ApiResponse(responseCode = "200",
+            description = "Demande d'annulation acceptée. Le corps indique si "
+                    + "le drapeau a été posé pour la première fois (signalled=true) "
+                    + "ou si le workflow était déjà en cours d'annulation (false).",
+            content = @Content(
+                    schema = @Schema(implementation = DashboardService.CancelResult.class),
+                    examples = {
+                        @ExampleObject(name = "Première demande",
+                                value = "{\"signalled\": true}"),
+                        @ExampleObject(name = "Workflow déjà en cours d'annulation",
+                                value = "{\"signalled\": false}")
+                    })),
+        @ApiResponse(responseCode = "401",
+            description = "JWT absent ou invalide"),
+        @ApiResponse(responseCode = "404",
+            description = "Aucun workflow actif avec cet identifiant de corrélation, "
+                    + "ou le workflow n'est ni visible ni détenu par l'appelant")
+    })
+    @DeleteMapping("/{correlationId}")
+    public ResponseEntity<DashboardService.CancelResult> cancel(
+            @Parameter(
+                description = "Identifiant de corrélation du workflow (UUID v4)",
+                in = ParameterIn.PATH,
+                required = true,
+                examples = {
+                    @ExampleObject(name = "UUID v4",
+                            value = "f3c6a7b2-1d8e-4a9f-91c5-7e2c0a4b3d11")
+                })
+            @PathVariable UUID correlationId) {
+        try {
+            return ResponseEntity.ok(service.cancelWorkflow(correlationId));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

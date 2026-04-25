@@ -8,6 +8,7 @@ import fr.inra.oresing.workflow.cascade.config.ImportProperties;
 import fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry;
 import fr.inra.oresing.workflow.cascade.history.WorkflowSnapshot;
 import fr.inrae.ore.cascade.core.execution.ExecutionResourceManager;
+import fr.inrae.ore.cascade.core.monitoring.WorkflowMonitoringService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -261,5 +262,57 @@ public class DashboardService {
                 Map.of());
 
         return new DashboardConfigDTO(importCfg, rateLimitCfg, runtime);
+    }
+
+    // ---------------------------------------------------------------- //
+    //  cancel ( admin OR owner )                                       //
+    // ---------------------------------------------------------------- //
+
+    /**
+     * Result of a cancel attempt , surfaced as the HTTP response body.
+     *
+     * @param signalled true if the cancel signal was registered for the
+     *                  first time ( cascade has updated its internal
+     *                  ChunkCancellationRegistry ; chunks already running
+     *                  finish , pending chunks throw at their next
+     *                  cancellation check )
+     */
+    public record CancelResult(boolean signalled) { }
+
+    /**
+     * Cancels an in-progress workflow.
+     *
+     * <p>Authorisation : the caller must be either openAdomAdmin , or the
+     * owner of the workflow ( same userId on the snapshot ). Otherwise we
+     * deliberately return 404 to prevent id enumeration ( instead of 403
+     * which would confirm the workflow exists ).
+     *
+     * <p>Async : the call returns as soon as the cancellation flag is
+     * registered. The actual finalisation in CANCELLED status happens
+     * later , when chunks observe the flag.
+     *
+     * @return result with {@code signalled = true} if the cancellation
+     *         flag was set for the first time , {@code false} if the
+     *         workflow was already cancelling
+     * @throws java.util.NoSuchElementException if no active workflow
+     *         matches {@code correlationId} or it is not visible to the
+     *         caller
+     */
+    public CancelResult cancelWorkflow(UUID correlationId) {
+        CurrentUserRoles me = authenticationService.getCurrentUserRoles();
+        WorkflowSnapshot snap = registry.find(correlationId)
+                .orElseThrow(() -> new java.util.NoSuchElementException(
+                        "Workflow not found : " + correlationId));
+        boolean owner = me.userId() != null && me.userId().equals(snap.userId());
+        if (!me.isOpenAdomAdmin() && !owner) {
+            // Same response shape as "not found" to avoid leaking which
+            // workflows exist to non-owner non-admin users.
+            throw new java.util.NoSuchElementException(
+                    "Workflow not found : " + correlationId);
+        }
+        boolean signalled = WorkflowMonitoringService.getDefault()
+                .cancel(correlationId.toString(),
+                        "Cancelled by " + (me.userLogin() != null ? me.userLogin() : me.userId()));
+        return new CancelResult(signalled);
     }
 }
