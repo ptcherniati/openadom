@@ -68,5 +68,5 @@ public record WorkflowLogEntry(
     public static final String STATUS_UPLOADING     = "UPLOADING";
     public static final String STATUS_CHUNKING      = "CHUNKING";
     public static final String STATUS_PROCESSING    = "PROCESSING";
-    public static final String STATUS_FINALIZING    = "FINALIZING";
+    public static final String STATUS_LOADING_DB    = "LOADING_DB";
 }

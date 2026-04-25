@@ -56,7 +56,8 @@ public record DashboardWorkflowDTO(
         Long durationMs,
 
         @Schema(description = "Current status",
-                allowableValues = {"IN_PROGRESS", "COMPLETED", "FAILED", "CANCELLED", "RATE_LIMITED"})
+                allowableValues = {"IN_PROGRESS", "UPLOADING", "CHUNKING", "PROCESSING", "LOADING_DB",
+                        "COMPLETED", "FAILED", "CANCELLED", "RATE_LIMITED"})
         String status,
 
         @Schema(description = "Records / rows processed so far")

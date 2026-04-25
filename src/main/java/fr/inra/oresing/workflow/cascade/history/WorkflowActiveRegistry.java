@@ -117,7 +117,7 @@ public class WorkflowActiveRegistry implements WorkflowListener {
     /**
      * Replaces the workflow snapshot in-place ( phase update ) without
      * touching the chunks map. Useful for transitions like
-     * UPLOADING -> CHUNKING -> PROCESSING -> FINALIZING where the
+     * UPLOADING -> CHUNKING -> PROCESSING -> LOADING_DB where the
      * caller wants to keep the live chunks data.
      */
     public void replace(WorkflowSnapshot snapshot) {

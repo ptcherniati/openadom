@@ -216,9 +216,11 @@ public class CascadeImportPipeline {
                 log.info("[{}] Workflow cascade termine : processed={}, chunks={}, duration={}",
                         correlationId, result.recordsProcessed(), result.chunksProcessed(), result.duration());
 
-                // Phase : finalisation ( écriture errors + chargement DB ).
-                updateWorkflowPhase(corrUuid, WorkflowLogEntry.STATUS_FINALIZING, fileSizeBytes);
-
+                // Phase : chargement effectif en base ( ecriture des erreurs
+                // collectees + COPY PostgreSQL ). Sur gros fichiers c'est la
+                // partie la plus longue ; on l'expose explicitement pour que
+                // l'utilisateur voie le progres et ne croie pas a un blocage.
+                updateWorkflowPhase(corrUuid, WorkflowLogEntry.STATUS_LOADING_DB, fileSizeBytes);
                 dataImporter.treatErrors();
                 referenceValueRepository.storeAll(sink.getMergedPath());
 
@@ -296,7 +298,7 @@ public class CascadeImportPipeline {
 
     /**
      * Met à jour la phase courante ( UPLOADING / CHUNKING / PROCESSING /
-     * FINALIZING ) sans toucher aux compteurs de records , maintenus à jour
+     * LOADING_DB ) sans toucher aux compteurs de records , maintenus à jour
      * par {@link #buildRegistryAwareReporter} via les events de progression.
      *
      * <p>Note : {@link WorkflowActiveRegistry#start} utilise putIfAbsent et
