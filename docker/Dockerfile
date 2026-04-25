@@ -11,7 +11,10 @@ WORKDIR /app
 COPY . /app
 
 # Run the Maven build
-RUN mvn --batch-mode clean install -Dmaven.test.skip=true
+# -U force la re-verification des artefacts ( contourne le cache negatif
+# .lastUpdated qui peut faire echouer la resolution juste apres une
+# nouvelle release du registre INRAE ).
+RUN mvn --batch-mode -U clean install -Dmaven.test.skip=true
 
 RUN ls -la /app/target/
 

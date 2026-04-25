@@ -4,12 +4,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.workflow.cascade.config.ImportProperties;
 import fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry;
 import fr.inra.oresing.workflow.cascade.history.WorkflowSnapshot;
+import fr.inrae.ore.cascade.core.execution.ExecutionResourceManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.sql.ResultSet;
@@ -44,7 +48,17 @@ public class DashboardService {
     private final WorkflowActiveRegistry registry;
     private final NamedParameterJdbcTemplate jdbc;
     private final AuthenticationService authenticationService;
+    private final ImportProperties importProperties;
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Value("${app.import.max-concurrent-per-user:3}")
+    private int maxConcurrentImportsPerUser;
+
+    @Value("${app.extract.max-concurrent-per-user:-1}")
+    private int maxConcurrentExtractionsPerUser;
+
+    @Value("${cascade.version:unknown}")
+    private String configuredCascadeVersion;
 
     // ---------------------------------------------------------------- //
     //  in-progress                                                     //
@@ -183,7 +197,8 @@ public class DashboardService {
                 rs.getInt("chunks_processed"),
                 (Double) rs.getObject("progress_percentage"),
                 rs.getLong("bytes_total"),
-                0L);
+                0L,
+                List.of());
     }
 
     @SuppressWarnings("unchecked")
@@ -214,5 +229,37 @@ public class DashboardService {
 
     private static int clamp(int v, int min, int max) {
         return Math.max(min, Math.min(max, v));
+    }
+
+    // ---------------------------------------------------------------- //
+    //  config ( admin only )                                           //
+    // ---------------------------------------------------------------- //
+
+    public DashboardConfigDTO getConfig() {
+        CurrentUserRoles me = authenticationService.getCurrentUserRoles();
+        if (!me.isOpenAdomAdmin()) {
+            throw new AccessDeniedException("Reserved to openAdomAdmin users");
+        }
+
+        DashboardConfigDTO.ImportConfig importCfg = new DashboardConfigDTO.ImportConfig(
+                importProperties.getChunkSizeLines(),
+                importProperties.getParallelism(),
+                importProperties.getProgressBatchSize(),
+                importProperties.getMaxErrorsThreshold(),
+                importProperties.getChunksTempDir(),
+                importProperties.getProcessedTempDir());
+
+        DashboardConfigDTO.RateLimitConfig rateLimitCfg = new DashboardConfigDTO.RateLimitConfig(
+                maxConcurrentImportsPerUser,
+                maxConcurrentExtractionsPerUser);
+
+        DashboardConfigDTO.RuntimeInfo runtime = new DashboardConfigDTO.RuntimeInfo(
+                configuredCascadeVersion,
+                Runtime.version().feature() + "." + Runtime.version().interim(),
+                ExecutionResourceManager.useVirtualThreads(),
+                registry.size(),
+                Map.of());
+
+        return new DashboardConfigDTO(importCfg, rateLimitCfg, runtime);
     }
 }

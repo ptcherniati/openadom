@@ -76,16 +76,59 @@ public record DashboardWorkflowDTO(
 
         @Schema(description = "Total records expected ( header excluded ) ; 0 if unknown. "
                 + "Permet à l'UI de basculer la progress bar en mode déterminé.")
-        long recordsTotal) {
+        long recordsTotal,
+
+        @Schema(description = "Etat live des chunks composant le workflow ( drill-down "
+                + "oa-live ). Vide quand le workflow ne s'expose pas par chunks ou tant "
+                + "qu'aucun chunk n'a demarre.")
+        List<ChunkDTO> chunks) {
 
     public static DashboardWorkflowDTO fromSnapshot(fr.inra.oresing.workflow.cascade.history.WorkflowSnapshot s) {
+        List<ChunkDTO> chunkDtos = s.chunks() == null
+                ? List.of()
+                : s.chunks().stream().map(ChunkDTO::fromSnapshot).toList();
         return new DashboardWorkflowDTO(
                 s.correlationId(), s.workflowType(), s.userId(), s.userLogin(),
                 s.applicationName(), s.dataType(), s.resourceName(),
                 s.startTime(), null, null,
                 s.status(),
                 s.recordsProcessed(), s.recordsFailed(), s.chunksProcessed(),
-                s.progressPercentage(), s.bytesTotal(), s.recordsTotal());
+                s.progressPercentage(), s.bytesTotal(), s.recordsTotal(),
+                chunkDtos);
+    }
+
+    /** Per-chunk DTO mirroring {@link fr.inra.oresing.workflow.cascade.history.ChunkSnapshot}. */
+    @Schema(name = "DashboardChunk",
+            description = "Per-chunk live state for the oa-live drill-down view")
+    public record ChunkDTO(
+            @Schema(description = "Chunk index ( 0 , 1 , 2 , ... )")
+            int chunkIndex,
+            @Schema(description = "Chunk status",
+                    allowableValues = {"RUNNING", "COMPLETED", "FAILED", "CANCELLED"})
+            String status,
+            @Schema(description = "Lignes deja traitees pour ce chunk")
+            long recordsProcessed,
+            @Schema(description = "Total de lignes attendues pour ce chunk ; 0 si inconnu")
+            long recordsTotal,
+            @Schema(description = "Pourcentage 0..100 ; null si recordsTotal inconnu")
+            Double progressPercentage,
+            @Schema(description = "Thread / virtual thread qui traite le chunk")
+            String workerName,
+            @Schema(description = "Demarrage du chunk ( ISO-8601 )")
+            Instant startTime,
+            @Schema(description = "Fin du chunk - null tant que le chunk tourne")
+            Instant endTime,
+            @Schema(description = "Message d'erreur si status = FAILED")
+            String errorMessage) {
+
+        public static ChunkDTO fromSnapshot(fr.inra.oresing.workflow.cascade.history.ChunkSnapshot c) {
+            return new ChunkDTO(
+                    c.chunkIndex(), c.status(),
+                    c.recordsProcessed(), c.recordsTotal(),
+                    c.progressPercentage(),
+                    c.workerName(), c.startTime(), c.endTime(),
+                    c.errorMessage());
+        }
     }
 
     /**

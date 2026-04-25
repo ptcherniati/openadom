@@ -286,7 +286,8 @@ public class CascadeImportPipeline {
                     0.0,           // progressPercentage
                     fileSizeBytes,
                     0L,            // recordsTotal ( inconnu tant que le fichier n'est pas compté )
-                    List.of()));   // errors ( aucune au démarrage )
+                    List.of(),     // errors ( aucune au démarrage )
+                    List.of()));   // chunks ( injectes par le registry au read-time )
         } catch (RuntimeException e) {
             // Best-effort : un échec de publication ne doit pas casser l'import.
             log.warn("[{}] WorkflowActiveRegistry.start a échoué : {}", corrUuid, e.getMessage());
@@ -310,8 +311,11 @@ public class CascadeImportPipeline {
             activeRegistry.find(corrUuid)
                     .filter(s -> !phase.equals(s.status()))
                     .ifPresent(snapshot -> {
-                        activeRegistry.finish(corrUuid);
-                        activeRegistry.start(new WorkflowSnapshot(
+                        // Remplacement in-place ; les chunks ne sont pas
+                        // dans le snapshot ( injectes au read-time par le
+                        // registry ) , donc on n'a pas besoin de les
+                        // recopier ici.
+                        activeRegistry.replace(new WorkflowSnapshot(
                                 snapshot.correlationId(),
                                 snapshot.workflowType(),
                                 snapshot.userId(),
@@ -327,7 +331,8 @@ public class CascadeImportPipeline {
                                 snapshot.progressPercentage(),
                                 fileSizeBytes,
                                 snapshot.recordsTotal(),
-                                snapshot.errors()));
+                                snapshot.errors(),
+                                List.of()));
                     });
         } catch (RuntimeException e) {
             log.warn("[{}] WorkflowActiveRegistry phase update échouée : {}", corrUuid, e.getMessage());
@@ -336,9 +341,12 @@ public class CascadeImportPipeline {
 
     /**
      * Décorateur autour du {@link ImportProgressReporter} existant : forwarde
-     * les appels au reporter d'origine ( logs , métriques ) puis met à jour
-     * le snapshot dans {@link WorkflowActiveRegistry} pour que oa-live voie
-     * progresser recordsProcessed et chunksProcessed en temps réel.
+     * les appels au reporter d'origine ( logs , métriques ) , publie le
+     * delta sur {@link fr.inrae.ore.cascade.model.progress.ProgressContext}
+     * pour que les interceptors cascade voient la progression intra-chunk ,
+     * puis met à jour le snapshot dans {@link WorkflowActiveRegistry} pour
+     * que oa-live voie progresser recordsProcessed et chunksProcessed en
+     * temps réel.
      */
     private ImportProgressReporter buildRegistryAwareReporter(
             ImportProgressReporter delegate, UUID corrUuid, long fileSizeBytes,
@@ -348,6 +356,10 @@ public class CascadeImportPipeline {
             try {
                 delegate.onLinesProcessed(cid, delta);
             } finally {
+                // Emet vers les interceptors cascade ( best effort : si
+                // l'orchestrator n'a pas bind d'emetteur , c'est un NOOP ).
+                fr.inrae.ore.cascade.model.progress.ProgressContext.current().emit(delta);
+
                 if (corrUuid != null) {
                     long records = liveRecords.addAndGet(delta);
                     int chunks = liveChunks.incrementAndGet();

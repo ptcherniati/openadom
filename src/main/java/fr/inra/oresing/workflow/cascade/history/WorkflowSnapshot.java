@@ -35,7 +35,14 @@ public record WorkflowSnapshot(
         // de basculer la progress bar de l'état indéterminé à déterminé.
         // 0 = inconnu , l'UI doit alors fallback sur l'animation indéterminée.
         long recordsTotal,
-        List<String> errors) {
+        List<String> errors,
+        /**
+         * Snapshot live des chunks composant ce workflow ( pour le drill-down
+         * oa-live ). Vide quand le workflow ne s'expose pas par chunks ( ex.
+         * extractions ) ou tant qu'aucun ChunkStart n'est arrive. Les
+         * elements sont tries par chunkIndex croissant.
+         */
+        List<ChunkSnapshot> chunks) {
 
     /** Convenience helper : time elapsed since start in milliseconds. */
     public long elapsedMillis(Instant now) {
@@ -53,7 +60,7 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, recordsTotal, errors);
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks);
     }
 
     /** Permet de mettre à jour le total une fois le comptage effectué. */
@@ -62,6 +69,15 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, recordsTotal, errors);
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks);
+    }
+
+    /** Remplace la liste des chunks ( utilise par le registry au moment de l'expose ). */
+    public WorkflowSnapshot withChunks(List<ChunkSnapshot> chunks) {
+        return new WorkflowSnapshot(
+                correlationId, workflowType, userId, userLogin,
+                applicationName, dataType, resourceName, startTime,
+                status, recordsProcessed, recordsFailed, chunksProcessed,
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks);
     }
 }
