@@ -293,9 +293,26 @@ public class ApplicationService {
         newApplication.setId(oldApplicationId);
 
         if (configuration != null) {
-            // Cas mise à jour : on préserve la structure des données de l'ancienne configuration
+            // Cas mise à jour : on préserve la structure des données et des
+            // fichiers additionnels de l'ancienne configuration ; ce contrat
+            // existe pour les chemins en aval qui itèrent {@code Application#getData()}
+            // ( ex. {@code AuthorizationService} ). La levée de cette préservation
+            // pour les modifications structurelles ( renommage / suppression /
+            // ajout de datatype , de composant , de naturalKey , de submission )
+            // est traitée dans le chantier "datatype vide ⇒ tout autorisé"
+            // ( use-case séparé ).
             newApplication.setData(new ArrayList<>(configuration.dataDescription().keySet()));
-            newApplication.setConfiguration(configuration);
+            // NOTE : la ligne précédente {@code newApplication.setConfiguration(configuration)}
+            // a été supprimée volontairement. Elle écrasait la configuration
+            // fraîchement parsée du YAML uploadé par celle de l'ancienne
+            // application , empêchant {@code MigrationService.executeMigration}
+            // de détecter un quelconque changement et bloquant l'application
+            // des updates non structurelles ( {@code applicationDescription.comment} ,
+            // {@code Internationalizations.tags} , {@code OA_i18n} ). Régression
+            // introduite par le commit {@code 12ee48f} lors du renommage de
+            // la variable {@code application => oldApplication} : avant ce
+            // commit l'instruction était un self-assign inoffensif , après
+            // elle est devenue un écrasement.
             final Optional<Set<String>> additionalsFiles = Optional.ofNullable(configuration.additionalFiles())
                     .map(Map::keySet);
             if (additionalsFiles.isPresent()) {
