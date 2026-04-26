@@ -29,8 +29,8 @@ import java.util.concurrent.Semaphore;
  * importer ). Quotas isolés = experience utilisateur correcte.
  *
  * <p>Quota par defaut : 3 imports concurrents par utilisateur.
- * Configurable via {@code app.import.max-concurrent-per-user} ou
- * l'env var {@code APP_IMPORT_MAX_CONCURRENT_PER_USER}.
+ * Configurable via {@code cascade.import.max-concurrent-per-user} ou
+ * l'env var {@code CASCADE_IMPORT_MAX_CONCURRENT_PER_USER}.
  */
 @Slf4j
 @Service
@@ -43,7 +43,7 @@ public class ImportRateLimiter {
     private final AuthenticationService authenticationService;
 
     public ImportRateLimiter(
-            @Value("${app.import.max-concurrent-per-user:3}") final int maxConcurrentPerUser,
+            @Value("${cascade.import.max-concurrent-per-user:3}") final int maxConcurrentPerUser,
             OpenadomMetrics metrics,
             WorkflowLogWriter logWriter,
             AuthenticationService authenticationService) {

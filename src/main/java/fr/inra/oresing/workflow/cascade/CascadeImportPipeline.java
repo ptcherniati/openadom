@@ -144,16 +144,22 @@ public class CascadeImportPipeline {
                 activeRegistry.setRecordsTotal(corrUuid, recordsTotal);
             }
 
-            final int chunkSizeLines = importProperties.getChunkSizeLines();
-            final int parallelism    = importProperties.getParallelism();
-            final int maxErrors      = importProperties.getMaxErrorsThreshold();
+            final int chunkSizeLines       = importProperties.getChunkSizeLines();
+            final int parallelism          = importProperties.getParallelism();
+            final int maxErrors            = importProperties.getMaxErrorsThreshold();
+            final int collectorChunkSize   = importProperties.getCollectorChunkSize();
+            final boolean enableMetrics    = importProperties.isEnableMetrics();
 
             final Path chunksDir    = Paths.get(importProperties.getChunksTempDir(), userId, correlationId);
             final Path processedDir = Paths.get(importProperties.getProcessedTempDir(), correlationId);
             final Path mergedPath   = Paths.get(System.getProperty("java.io.tmpdir"),
                                                 "openadom-import-" + correlationId + ".csv");
 
-            FileChunkSource source = new FileChunkSource(uploadedPath, chunkSizeLines, chunksDir);
+            // FileChunkSource lit la taille de chunk depuis WorkflowConfig
+            // ( hook Source.onWorkflowStart ) ; le constructeur ne reçoit
+            // qu'une valeur de fallback , la valeur effective vient de
+            // .sourceChunkSize() ci-dessous.
+            FileChunkSource source = new FileChunkSource(uploadedPath, chunksDir, chunkSizeLines);
 
             // #62 - Compteurs intermediaires utilises uniquement pour pousser
             // la progression dans WorkflowActiveRegistry ( oa-live ). La
@@ -177,18 +183,24 @@ public class CascadeImportPipeline {
 
             MergingFileSink sink = new MergingFileSink(mergedPath);
 
-            log.info("[{}] Demarrage import : user={}, file={}, chunkSize={}, parallelism={}, maxErrors={}",
-                    correlationId, userId, uploadedPath.getFileName(), chunkSizeLines, parallelism, maxErrors);
+            log.info("[{}] Demarrage import : user={}, file={}, chunkSize={}, parallelism={}, maxErrors={}, metrics={}",
+                    correlationId, userId, uploadedPath.getFileName(), chunkSizeLines, parallelism, maxErrors, enableMetrics);
 
-            Workflow workflow = WorkflowBuilder.create()
-                    .forUser(userId)
-                    .from(source)
-                    .transform(transformation)
-                    .to(sink)
-                    .withCorrelationId(correlationId)
-                    .withParallelism(parallelism)
-                    .withMaxErrors(maxErrors)
-                    .build();
+            fr.inrae.ore.cascade.model.workflow.builder.WorkflowPipelineConfig builder =
+                    WorkflowBuilder.create()
+                            .forUser(userId)
+                            .from(source)
+                            .transform(transformation)
+                            .to(sink)
+                            .withCorrelationId(correlationId)
+                            .withParallelism(parallelism)
+                            .withSourceChunkSize(chunkSizeLines)
+                            .withCollectorChunkSize(collectorChunkSize)
+                            .withMaxErrors(maxErrors);
+            if (enableMetrics) {
+                builder = builder.enableMetrics();
+            }
+            Workflow workflow = builder.build();
 
             try {
                 // Phase : traitement ( chunking + transformation + merge ).

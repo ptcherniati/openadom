@@ -41,8 +41,8 @@ public class ExtractionRateLimiter {
     private UserRateLimiter             limiter;
 
     public ExtractionRateLimiter(
-            @Value("${app.extraction.max-concurrent-per-user:5}") final int maxConcurrentPerUser,
-            @Value("${app.extraction.acquire-timeout-seconds:0}") final long acquireTimeoutSeconds,
+            @Value("${cascade.extraction.max-concurrent-per-user:5}") final int maxConcurrentPerUser,
+            @Value("${cascade.extraction.acquire-timeout-seconds:0}") final long acquireTimeoutSeconds,
             OpenadomMetrics metrics,
             WorkflowLogWriter logWriter,
             AuthenticationService authenticationService) {

@@ -54,7 +54,7 @@ public class DashboardService {
     private final ImportRateLimiter importRateLimiter;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${app.extract.max-concurrent-per-user:-1}")
+    @Value("${cascade.extraction.max-concurrent-per-user:-1}")
     private int maxConcurrentExtractionsPerUser;
 
     @Value("${cascade.version:unknown}")
@@ -261,7 +261,43 @@ public class DashboardService {
                 registry.size(),
                 Map.of());
 
-        return new DashboardConfigDTO(importCfg, rateLimitCfg, runtime);
+        // Snapshots live des pools cascade. Si le singleton n'existe pas
+        // encore ( aucun workflow n'a tourne ) on retourne une liste vide
+        // au lieu de forcer la creation : evite les surprises de
+        // configuration ( la creation lit les system properties de cascade ).
+        java.util.List<DashboardConfigDTO.CascadePool> pools = ExecutionResourceManager.isInitialized()
+                ? ExecutionResourceManager.getInstance().snapshotPools().stream()
+                        .map(p -> new DashboardConfigDTO.CascadePool(
+                                p.stage(), p.threadNamePrefix(),
+                                p.configuredThreads(), p.activeCount(), p.poolSize(),
+                                p.queueSize(), p.queueCapacity(),
+                                p.taskCount(), p.completedTaskCount(),
+                                p.virtualThreads()))
+                        .toList()
+                : java.util.List.of();
+
+        // Defauts cascade ( WorkflowConfig.defaults() ).
+        fr.inrae.ore.cascade.model.workflow.WorkflowConfig wfDefaults =
+                fr.inrae.ore.cascade.model.workflow.WorkflowConfig.defaults();
+        fr.inrae.ore.cascade.model.ratelimit.RateLimitConfig rlDefaults = wfDefaults.rateLimit();
+        DashboardConfigDTO.CascadeDefaults cascadeDefaults = new DashboardConfigDTO.CascadeDefaults(
+                wfDefaults.sourceChunkSize(),
+                wfDefaults.collectorChunkSize(),
+                wfDefaults.maxErrors(),
+                wfDefaults.enableMetrics(),
+                wfDefaults.defaultParallelism(),
+                wfDefaults.sourceParallelism(),
+                wfDefaults.transformParallelism(),
+                wfDefaults.sinkParallelism(),
+                wfDefaults.sourceQueueSize(),
+                wfDefaults.transformQueueSize(),
+                wfDefaults.sinkQueueSize(),
+                rlDefaults.maxWorkflowsPerUser(),
+                rlDefaults.acquireTimeoutSeconds(),
+                rlDefaults.rejectionPolicy() != null ? rlDefaults.rejectionPolicy().name() : null,
+                rlDefaults.enabled());
+
+        return new DashboardConfigDTO(importCfg, rateLimitCfg, runtime, pools, cascadeDefaults);
     }
 
     // ---------------------------------------------------------------- //
