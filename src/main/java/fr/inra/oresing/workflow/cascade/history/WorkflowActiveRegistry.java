@@ -175,8 +175,14 @@ public class WorkflowActiveRegistry implements WorkflowListener {
 
     @Override
     public void onChunkStart(WorkflowEvents.ChunkStartEvent e) {
+        log.debug("[{}] onChunkStart : chunk #{} expects {} records on {}",
+                e.correlationId(), e.chunkIndex(), e.recordsExpected(), e.workerName());
         UUID corrId = safeUuid(e.correlationId());
-        if (corrId == null) return;
+        if (corrId == null) {
+            log.warn("onChunkStart : correlationId '{}' is not a valid UUID , chunk skipped",
+                    e.correlationId());
+            return;
+        }
         chunksByCorrelationId
                 .computeIfAbsent(corrId, k -> new ConcurrentHashMap<>())
                 .put(e.chunkIndex(), new ChunkSnapshot(

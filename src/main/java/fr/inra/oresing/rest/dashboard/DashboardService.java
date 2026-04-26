@@ -57,8 +57,18 @@ public class DashboardService {
     @Value("${cascade.extraction.max-concurrent-per-user:-1}")
     private int maxConcurrentExtractionsPerUser;
 
-    @Value("${cascade.version:unknown}")
-    private String configuredCascadeVersion;
+    /**
+     * Lit la version réelle de la lib cascade depuis le MANIFEST de son
+     * JAR ( {@code Implementation-Version} renseigné par Maven au build ).
+     * Permet d'éviter le piège "cascade.version" Spring property qu'il
+     * fallait synchroniser à la main avec le pom backend ; ici la valeur
+     * affichée est toujours celle de la classe effectivement chargée.
+     */
+    private static String resolveCascadeVersion() {
+        String fromManifest = fr.inrae.ore.cascade.model.workflow.WorkflowConfig
+                .class.getPackage().getImplementationVersion();
+        return fromManifest != null ? fromManifest : "unknown";
+    }
 
     // ---------------------------------------------------------------- //
     //  in-progress                                                     //
@@ -255,7 +265,7 @@ public class DashboardService {
                 importRateLimiter.snapshotUsedSlots());
 
         DashboardConfigDTO.RuntimeInfo runtime = new DashboardConfigDTO.RuntimeInfo(
-                configuredCascadeVersion,
+                resolveCascadeVersion(),
                 Runtime.version().feature() + "." + Runtime.version().interim(),
                 ExecutionResourceManager.useVirtualThreads(),
                 registry.size(),
