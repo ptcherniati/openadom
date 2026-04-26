@@ -74,13 +74,18 @@ public class MigrationConfiguration {
                                 ValueObjectDefinitionBuilder
                                         .valueObjectDefinition(InternationalizationData.class)
                                         .withIgnoredProperties(
+                                                // Toutes les propriétés ci-dessous portent des libellés
+                                                // i18n ( pas de DDL associée ). Aucune n'est diffée par
+                                                // Javers : la nouvelle valeur traverse silencieusement
+                                                // {@code MigrationService.executeMigration} puis est
+                                                // persistée par {@code repository.application().store()}.
                                                 "validations",
                                                 "exceptions",
                                                 "components",
                                                 "submissions",
-                                                "i18n"  // On ignore, seul i18nDisplayPattern compte
+                                                "i18n",
+                                                "i18nDisplayPattern"
                                         )
-                                        // On garde uniquement "i18nDisplayPattern"
                                         .build()
                         )
                         .build();
