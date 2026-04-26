@@ -59,6 +59,10 @@ public record DashboardConfigDTO(
             @Schema(description = "Quota d'extractions concurrentes par utilisateur ( -1 si non plafonne )",
                     example = "5")
             int maxConcurrentExtractionsPerUser,
+            @Schema(description = "Timeout d'acquisition d'un slot d'extraction ( secondes ). "
+                    + "0 = rejet immediat , > 0 = blocage borne avant abandon.",
+                    example = "0")
+            long extractionAcquireTimeoutSeconds,
             @Schema(description = "Snapshot des slots d'import actuellement reserves par utilisateur. "
                     + "Cle = userId , valeur = nombre de slots utilises. Les utilisateurs "
                     + "sans slot actif ne sont pas inclus. Lecture courante a l'instant T.")

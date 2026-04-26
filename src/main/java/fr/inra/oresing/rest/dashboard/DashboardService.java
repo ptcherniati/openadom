@@ -57,6 +57,9 @@ public class DashboardService {
     @Value("${cascade.extraction.max-concurrent-per-user:-1}")
     private int maxConcurrentExtractionsPerUser;
 
+    @Value("${cascade.extraction.acquire-timeout-seconds:0}")
+    private long extractionAcquireTimeoutSeconds;
+
     /**
      * Lit la version réelle de la lib cascade depuis le MANIFEST de son
      * JAR ( {@code Implementation-Version} renseigné par Maven au build ).
@@ -262,6 +265,7 @@ public class DashboardService {
         DashboardConfigDTO.RateLimitConfig rateLimitCfg = new DashboardConfigDTO.RateLimitConfig(
                 importRateLimiter.getMaxConcurrentPerUser(),
                 maxConcurrentExtractionsPerUser,
+                extractionAcquireTimeoutSeconds,
                 importRateLimiter.snapshotUsedSlots());
 
         DashboardConfigDTO.RuntimeInfo runtime = new DashboardConfigDTO.RuntimeInfo(
