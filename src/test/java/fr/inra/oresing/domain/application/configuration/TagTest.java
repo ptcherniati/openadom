@@ -38,6 +38,21 @@ class TagTest {
     }
 
     @Test
+    void testFilterTagBuilder() {
+        Tag.FilterTag tag = TagBuilder.filterTag();
+        Assertions.assertEquals(Tag.TagDefinitions.FILTER_TAG, tag.tagDefinition());
+    }
+
+    @Test
+    void testFilterTagFromBuildTag() {
+        // Le parsing YAML => Java passe par Tag.buildTag(String) ; vérifie
+        // que la chaîne "__FILTER__" produit bien un FilterTag.
+        Tag tag = Tag.buildTag(Tag.FilterTag.FILTER_PATTERN);
+        Assertions.assertInstanceOf(Tag.FilterTag.class, tag);
+        Assertions.assertEquals(Tag.TagDefinitions.FILTER_TAG, tag.tagDefinition());
+    }
+
+    @Test
     void testDomainTagBuilder() {
         Tag.DomainTag tag = TagBuilder.domainTag("mytag");
         Assertions.assertEquals(Tag.TagDefinitions.DOMAIN_TAG, tag.tagDefinition());

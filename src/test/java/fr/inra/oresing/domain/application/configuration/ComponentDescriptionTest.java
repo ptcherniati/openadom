@@ -194,4 +194,29 @@ class ComponentDescriptionTest {
         Assertions.assertEquals("header", component.exportHeaderName());
         Assertions.assertEquals("subScope", component.submissionAuthorizationScope());
     }
+
+    @Test
+    void isFilterable_returnsTrueWhenFilterTagPresent() {
+        CheckerDescription checker = CheckerDescriptionBuilder.stringChecker().build();
+        BasicComponent component = ComponentDescriptionBuilder.basicComponent()
+                .componentKey("myComponent")
+                .tags(Set.of(TagBuilder.filterTag()))
+                .checker(checker)
+                .build();
+
+        Assertions.assertTrue(component.isFilterable());
+    }
+
+    @Test
+    void isFilterable_returnsFalseWhenFilterTagAbsent() {
+        // Couverture des cas mixtes : tags non vide mais sans FilterTag.
+        CheckerDescription checker = CheckerDescriptionBuilder.stringChecker().build();
+        BasicComponent component = ComponentDescriptionBuilder.basicComponent()
+                .componentKey("myComponent")
+                .tags(Set.of(TagBuilder.dataTag(), TagBuilder.orderTag(3)))
+                .checker(checker)
+                .build();
+
+        Assertions.assertFalse(component.isFilterable());
+    }
 }

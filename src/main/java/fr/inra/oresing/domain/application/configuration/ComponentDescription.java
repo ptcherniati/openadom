@@ -71,6 +71,16 @@ public sealed interface ComponentDescription permits BasicComponent, ComputedCom
                 .isPresent();
     }
 
+    /**
+     * Vrai ssi la colonne porte le tag {@code __FILTER__} dans
+     * {@code OA_tags} ; signal opt-in que le frontend traduit en
+     * activation d'un filtre de recherche interactif sur cette colonne
+     * ( cf. {@link Tag.FilterTag} ).
+     */
+    default boolean isFilterable() {
+        return tags().stream().anyMatch(Tag.FilterTag.class::isInstance);
+    }
+
     default Boolean isHiddenOrHasLangRestriction(String locale) {
         return hasLangRestriction(locale) ||
                 isHidden();

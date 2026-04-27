@@ -72,6 +72,7 @@ public sealed interface Tag {
         DATA_TAG(DataTag.DATA_TAG, w -> DataTag.instance(), DataTag.getTagPattern()),
         REFFERENCE_TAG(ReferenceTag.REFFERENCE_TAG, w -> ReferenceTag.instance(), ReferenceTag.getTagPattern()),
         ORDER_TAG(OrderTag.ORDER_TAG, OrderTag::buildOrderTag, OrderTag.getTagPattern()),
+        FILTER_TAG(FilterTag.FILTER_TAG, w -> FilterTag.instance(), FilterTag.getTagPattern()),
         NO_TAG(NoTag.NO_TAG, w -> NoTag.instance(), NoTag.getTagPattern()),
         DOMAIN_TAG(DomainTag.DOMAIN_TAG, DomainTag::buildDomainTag, DomainTag.getTagPattern());
         final Predicate<String> isA;
@@ -107,7 +108,7 @@ public sealed interface Tag {
         }
     }
 
-    sealed interface DefinedTag extends Tag permits DataTag, HiddenTag, NoTag, OrderTag, ReferenceTag {
+    sealed interface DefinedTag extends Tag permits DataTag, FilterTag, HiddenTag, NoTag, OrderTag, ReferenceTag {
 
     }
 
@@ -165,6 +166,36 @@ public sealed interface Tag {
 
         public static String getTagPattern() {
             return REFERENCE_PATTERN;
+        }
+    }
+
+    /**
+     * Tag opt-in posé sur une colonne dans {@code OA_tags} pour activer
+     * un filtre de recherche interactif côté frontend , même si le
+     * checker de la colonne ne serait pas filtrable par défaut
+     * ( typiquement {@link fr.inra.oresing.domain.application.configuration.checker.CheckerDescription.CheckerDescriptionType#StringChecker} ).
+     *
+     * <p>Pas de paramètre : le tag est strictement {@code __FILTER__}.
+     * Les {@link Tag tags} étant déjà sérialisés dans la
+     * {@link Configuration} JSON envoyée au frontend , aucun champ DTO
+     * dérivé n'est nécessaire ; le frontend teste directement
+     * {@code tagDefinition === "FILTER_TAG"} , à l'image de ce qui est
+     * fait pour {@link OrderTag} et {@link HiddenTag}.
+     */
+    record FilterTag(TagDefinitions tagDefinition) implements DefinedTag {
+        public static final String FILTER_PATTERN = "__FILTER__";
+        public static final Predicate<String> FILTER_TAG = FILTER_PATTERN::equals;
+
+        public FilterTag() {
+            this(TagDefinitions.FILTER_TAG);
+        }
+
+        public static FilterTag instance() {
+            return new FilterTag();
+        }
+
+        public static String getTagPattern() {
+            return FILTER_PATTERN;
         }
     }
 
