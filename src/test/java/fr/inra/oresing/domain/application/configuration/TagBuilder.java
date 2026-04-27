@@ -22,8 +22,12 @@ public class TagBuilder {
         return new Tag.OrderTag(order);
     }
 
-    public static Tag.FilterTag filterTag() {
-        return Tag.FilterTag.instance();
+    public static Tag.FilterTextTag filterTextTag() {
+        return Tag.FilterTextTag.instance();
+    }
+
+    public static Tag.FilterListTag filterListTag() {
+        return Tag.FilterListTag.instance();
     }
 
     public static Tag.DomainTag domainTag(String tagName) {

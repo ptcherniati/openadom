@@ -72,13 +72,65 @@ public sealed interface ComponentDescription permits BasicComponent, ComputedCom
     }
 
     /**
-     * Vrai ssi la colonne porte le tag {@code __FILTER__} dans
-     * {@code OA_tags} ; signal opt-in que le frontend traduit en
-     * activation d'un filtre de recherche interactif sur cette colonne
-     * ( cf. {@link Tag.FilterTag} ).
+     * Vrai ssi la colonne est filtrable au sens "tag {@code __FILTER_*__} posé ET
+     * compatible avec le checker" : porteuse de {@link Tag.FilterTextTag} ou
+     * {@link Tag.FilterListTag} , et non couverte par un filtre natif ( Date , Integer ,
+     * Float , Boolean , Reference - voir {@link #hasNativeFilter()} ) , et non masquée
+     * par {@link Tag.HiddenTag}.
+     *
+     * <p>Sert au frontend à décider s'il rend un champ filtre pour la colonne. La
+     * distinction texte vs liste se fait via {@link #isFilterableAsText()}.
      */
     default boolean isFilterable() {
-        return tags().stream().anyMatch(Tag.FilterTag.class::isInstance);
+        return isFilterableAsText() || isFilterableAsList();
+    }
+
+    /**
+     * Vrai ssi la colonne porte {@link Tag.FilterTextTag} et que le tag n'est pas
+     * neutralisé par la règle d'exclusion ( voir {@link #hasFilterTagSuppressed()} ).
+     */
+    default boolean isFilterableAsText() {
+        return !hasFilterTagSuppressed()
+                && tags().stream().anyMatch(Tag.FilterTextTag.class::isInstance);
+    }
+
+    /**
+     * Vrai ssi la colonne porte {@link Tag.FilterListTag} et que le tag n'est pas
+     * neutralisé par la règle d'exclusion. Implicite au front quand
+     * {@link #isFilterable()} est vrai et {@link #isFilterableAsText()} est faux ;
+     * exposé séparément pour la lisibilité des tests.
+     */
+    default boolean isFilterableAsList() {
+        return !hasFilterTagSuppressed()
+                && tags().stream().anyMatch(Tag.FilterListTag.class::isInstance);
+    }
+
+    /**
+     * Règle d'exclusion : un tag {@code __FILTER_*__} est ignoré si la colonne est
+     * masquée ( {@link Tag.HiddenTag} ) ou si son checker dispose déjà d'un filtre
+     * natif rendu automatiquement par l'UI ( Date , Integer , Float , Boolean ,
+     * Reference ). Dans ces cas , poser le tag dans le YAML reste tolerant ( pas
+     * d'erreur de chargement ) mais l'UI n'en tient pas compte.
+     */
+    default boolean hasFilterTagSuppressed() {
+        return isHidden() || hasNativeFilter();
+    }
+
+    /**
+     * Vrai ssi le checker de la colonne est un de ceux pour lesquels l'UI rend
+     * d'emblée un filtre adapté ( intervalle , toggle , dropdown référence ).
+     * Ces filtres natifs priment sur les tags {@code __FILTER_TEXT__} /
+     * {@code __FILTER_LIST__} qui n'apporteraient qu'un doublon.
+     */
+    default boolean hasNativeFilter() {
+        return Optional.ofNullable(checker())
+                .map(CheckerDescription::type)
+                .map(type -> switch (type) {
+                    case BooleanChecker, DateChecker, FloatChecker, IntegerChecker,
+                         ReferenceChecker -> true;
+                    case ComputationChecker, GroovyExpressionChecker, StringChecker -> false;
+                })
+                .orElse(false);
     }
 
     default Boolean isHiddenOrHasLangRestriction(String locale) {
