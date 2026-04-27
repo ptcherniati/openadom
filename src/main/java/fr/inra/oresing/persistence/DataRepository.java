@@ -870,22 +870,30 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     }
 
     /**
-     * Variante allégée de {@link #getColumnDistinctValues} pour les colonnes
-     * {@code __FILTER_TEXT__} : on n'a pas besoin des valeurs distinctes ( le
-     * filtre est libre côté UI , pas une dropdown ) , uniquement de savoir
-     * si la colonne contient des valeurs vides pour conditionner l'affichage
-     * du bouton *"+ (vide)"* dans le {@code TextFilter}.
+     * Variante de {@link #getColumnDistinctValues} dimensionnée pour les
+     * colonnes {@code __FILTER_TEXT__} :
+     * <ul>
+     *   <li>détecte si la colonne contient des valeurs vides
+     *       ( {@link ColumnDistinctValues#hasEmpty()} ) pour conditionner
+     *       le bouton *"+ (vide)"* du frontend ;
+     *   <li>récupère jusqu'à 2 valeurs distinctes non-null. Si exactement
+     *       1 , on la renvoie ( pour permettre l'auto-select dans le
+     *       TextFilter , aligné sur ListFilter / ReferenceFilter ) ;
+     *       sinon on renvoie une liste vide ( on ne souhaite pas envoyer
+     *       la liste complète des valeurs pour une recherche libre ).
+     * </ul>
      *
-     * <p>Requête {@code EXISTS} bornée à un row , beaucoup plus rapide que
-     * le {@code DISTINCT} complet sur les grosses colonnes.
+     * <p>Le surcoût par rapport à un simple {@code EXISTS} reste très
+     * faible : {@code DISTINCT ... LIMIT 2} sort dès le second row trouvé.
+     * Le résultat est mis en cache au niveau du datatype par
+     * {@code DataService.filterListAsJson} ( cache déjà existant ).
      *
      * @param dataName     nom du datatype ( = referenceType en base )
      * @param componentKey clé de la colonne à interroger
      * @param multiplicity multiplicité de la colonne ( gouverne la forme
-     *                     du test d'absence )
-     * @return entrée {@link ColumnDistinctValues} avec {@link
-     *         ColumnDistinctValues#values()} vide et {@link
-     *         ColumnDistinctValues#hasEmpty()} renseigné
+     *                     SQL d'absence et de dépliage )
+     * @return entrée {@link ColumnDistinctValues} avec {@code values} de
+     *         taille 0 ou 1 , et {@code hasEmpty} renseigné
      */
     public ColumnDistinctValues getColumnHasEmpty(
             final String dataName,
@@ -897,7 +905,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         //         d'élément à filtrer ) , ou si l'un des éléments est null.
         //         jsonb_array_length renvoie NULL pour un non-array ;
         //         coalesce sur 0.
-        final String predicate = switch (multiplicity) {
+        final String emptyPredicate = switch (multiplicity) {
             case ONE -> "rv.refvalues #>> ARRAY[:componentKey] IS NULL";
             case MANY -> """
                     COALESCE(jsonb_array_length(rv.refvalues -> :componentKey), 0) = 0
@@ -906,20 +914,48 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         WHERE elt = 'null'::jsonb
                     )""";
         };
-        final String query = """
+        final String hasEmptyQuery = """
                 SELECT EXISTS (
                     SELECT 1 FROM %1$s.referencevalue rv
                     WHERE rv.referencetype = :dataName
                       AND ( %2$s )
                     LIMIT 1
                 ) AS has_empty
-                """.formatted(getSchema().getSqlIdentifier(), predicate);
+                """.formatted(getSchema().getSqlIdentifier(), emptyPredicate);
         final Boolean hasEmpty = getNamedParameterJdbcTemplate().queryForObject(
-                query,
+                hasEmptyQuery,
                 Map.of("dataName", dataName, "componentKey", componentKey),
                 Boolean.class);
+
+        // Sondage des 2 premières valeurs distinctes non-null pour détecter
+        // un éventuel "single value" ( auto-select côté UI ).
+        final String unfold = switch (multiplicity) {
+            case ONE -> "rv.refvalues #>> ARRAY[:componentKey]";
+            case MANY -> "jsonb_array_elements_text(COALESCE(rv.refvalues -> :componentKey, '[]'::jsonb))";
+        };
+        final String fromClause = multiplicity == Multiplicity.ONE
+                ? "%1$s.referencevalue rv".formatted(getSchema().getSqlIdentifier())
+                : "%1$s.referencevalue rv, LATERAL %2$s AS v".formatted(getSchema().getSqlIdentifier(), unfold);
+        final String selectExpr = multiplicity == Multiplicity.ONE ? unfold + " AS v" : "v";
+        final String previewQuery = """
+                SELECT DISTINCT %1$s
+                FROM %2$s
+                WHERE rv.referencetype = :dataName
+                  AND ( %3$s ) IS NOT NULL
+                LIMIT 2
+                """.formatted(selectExpr, fromClause,
+                multiplicity == Multiplicity.ONE ? unfold : "v");
+        final List<String> preview = getNamedParameterJdbcTemplate().query(
+                previewQuery,
+                Map.of("dataName", dataName, "componentKey", componentKey),
+                (rs, rowNum) -> rs.getString(1));
+        // Une seule valeur distincte non-null -> on la transmet au front
+        // pour l'auto-select. Sinon on renvoie une liste vide ( pas de
+        // sens de prébourrer le champ texte avec plusieurs valeurs ).
+        final List<String> values = preview.size() == 1 ? List.copyOf(preview) : List.of();
+
         return new ColumnDistinctValues(
-                componentKey, List.of(), false, Boolean.TRUE.equals(hasEmpty));
+                componentKey, values, false, Boolean.TRUE.equals(hasEmpty));
     }
 
     @Override
