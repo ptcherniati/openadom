@@ -121,6 +121,21 @@ public record StandardDataDescription(
                 .orElse(false);
     }
 
+    /**
+     * Symétrique de {@link #isHidden()} pour le tag {@code __FILTER__}.
+     * Au niveau du datatype / référentiel le tag n'a pas d'usage métier
+     * direct ( il est consommé colonne par colonne via
+     * {@link ComponentDescription#isFilterable()} ) , mais la méthode
+     * existe pour que Jackson sérialise la propriété {@code filterable}
+     * de manière cohérente avec {@code hidden} dans la
+     * {@link Configuration} JSON exposée au frontend.
+     */
+    public boolean isFilterable() {
+        return Optional.ofNullable(tags())
+                .map(tags -> tags.stream().anyMatch(Tag.FilterTag.class::isInstance))
+                .orElse(false);
+    }
+
     public Optional<Submission.SubmissionScope> findSubmissionScope() {
         return Optional.ofNullable(submission())
                 .map(Submission::submissionScope);

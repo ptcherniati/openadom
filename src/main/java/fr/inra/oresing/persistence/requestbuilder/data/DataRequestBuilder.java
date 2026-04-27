@@ -36,6 +36,40 @@ public class DataRequestBuilder {
                 .orElse(null);
     }
 
+    /**
+     * Échappe une valeur saisie par l'utilisateur destinée à être insérée
+     * comme littéral à l'intérieur d'une chaîne JSONPath ( la partie entre
+     * guillemets dans {@code @ == "<valeur>"} ).
+     *
+     * <p>Trois sources d'erreur sont neutralisées :
+     * <ol>
+     *   <li>{@code \} et {@code "} casseraient la chaîne JSONPath -> erreur
+     *       de syntaxe SQL côté Postgres -> HTTP 500.
+     *   <li>{@code '} casserait le littéral SQL externe ( wrapper
+     *       {@code 'exists(...)'} ) ; déjà couvert par {@link #sanitize}.
+     *   <li>{@code %} serait interprété comme spécificateur de format par
+     *       le second appel à {@link String#formatted} effectué dans
+     *       {@link SelectRequest#build()} ( la template laisse encore
+     *       {@code %1$s/%2$s/%3$s} pour ORDER BY / OFFSET / LIMIT ) ,
+     *       provoquant {@code UnknownFormatConversionException}. La saisie
+     *       utilisateur n'est jamais censée être une chaîne de format ;
+     *       on double les {@code %} pour qu'ils ressortent littéraux après
+     *       le second format.
+     * </ol>
+     *
+     * <p>L'ordre des remplacements est volontaire : on traite d'abord
+     * {@code \} ( pour ne pas redoubler les {@code \} introduits ensuite
+     * pour échapper {@code "} ) , puis le reste.
+     */
+    static String sanitizeJsonPathStringValue(final String value) {
+        return Optional.ofNullable(value)
+                .map(s -> s.replace("\\", "\\\\"))
+                .map(s -> s.replace("\"", "\\\""))
+                .map(s -> s.replace("'", "''"))
+                .map(s -> s.replace("%", "%%"))
+                .orElse(null);
+    }
+
     public static SqlRequest buildSelectRequest(final DownloadDatasetQuery downloadDatasetQuery) {
         final DataRequestBuilder dataTypeRequestBuilder = new DataRequestBuilder(downloadDatasetQuery);
         return dataTypeRequestBuilder.buildRequestSelect();
@@ -209,7 +243,7 @@ public class DataRequestBuilder {
                             """.formatted(
                             sanitize(componentKey),
                             filters.stream()
-                                    .map(filter -> "@ == \"%s\"".formatted(sanitize(filter)))
+                                    .map(filter -> "@ == \"%s\"".formatted(sanitizeJsonPathStringValue(filter)))
                                     .collect(Collectors.joining(DELIMITER_OR))
                     );
                     case MANY -> """
@@ -217,7 +251,7 @@ public class DataRequestBuilder {
                             """.formatted(
                             sanitize(componentKey),
                             filters.stream()
-                                    .map(filter -> "@ == \"%s\"".formatted(sanitize(filter)))
+                                    .map(filter -> "@ == \"%s\"".formatted(sanitizeJsonPathStringValue(filter)))
                                     .collect(Collectors.joining(DELIMITER_OR))
                     );
                 };
@@ -231,7 +265,7 @@ public class DataRequestBuilder {
                             """.formatted(
                             sanitize(componentKey),
                             filters.stream()
-                                    .map(filter -> "@ == \"%1$s\" || @ like_regex \"%1$s\" flag \"i\" ".formatted(sanitize(filter)))
+                                    .map(filter -> "@ == \"%1$s\" || @ like_regex \"%1$s\" flag \"i\" ".formatted(sanitizeJsonPathStringValue(filter)))
                                     .collect(Collectors.joining(DELIMITER_OR))
                     );
                     case MANY -> """
@@ -239,7 +273,7 @@ public class DataRequestBuilder {
                             """.formatted(
                             sanitize(componentKey),
                             filters.stream()
-                                    .map(filter -> "@ == \"%1$s\" OR @ like_regex \"%1$s\" flag i ".formatted(sanitize(filter)))
+                                    .map(filter -> "@ == \"%1$s\" OR @ like_regex \"%1$s\" flag i ".formatted(sanitizeJsonPathStringValue(filter)))
                                     .collect(Collectors.joining(DELIMITER_OR))
                     );
                 };

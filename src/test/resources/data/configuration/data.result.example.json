@@ -36,6 +36,7 @@
           "isParent" : true
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : true,
         "referenceCheckerType" : "tr_type_zone_etude_tze",
@@ -56,6 +57,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -76,6 +78,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -96,6 +99,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -132,6 +136,7 @@
           "data" : null
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : true,
         "referenceCheckerType" : "tr_zone_etude_zet",
@@ -153,6 +158,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -173,6 +179,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -201,6 +208,7 @@
           "isParent" : true
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : true,
         "referenceCheckerType" : "tr_zone_etude_zet",
@@ -224,6 +232,7 @@
       "component" : "zet_chemin_parent"
     } ],
     "migrations" : null,
+    "filterable" : false,
     "hidden" : false,
     "order" : 9999
   },
@@ -253,6 +262,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -273,6 +283,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -293,6 +304,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -313,6 +325,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -333,6 +346,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -344,6 +358,7 @@
     "validations" : { },
     "depends" : [ ],
     "migrations" : null,
+    "filterable" : false,
     "hidden" : false,
     "order" : 9999
   },
@@ -381,6 +396,7 @@
           "duration" : "1 Day"
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -406,6 +422,7 @@
           "pattern" : null
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -417,6 +434,7 @@
     "validations" : { },
     "depends" : [ ],
     "migrations" : null,
+    "filterable" : false,
     "hidden" : false,
     "order" : 9999
   },
@@ -449,6 +467,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -469,6 +488,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -489,6 +509,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -509,6 +530,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -529,6 +551,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -540,6 +563,7 @@
     "validations" : { },
     "depends" : [ ],
     "migrations" : null,
+    "filterable" : false,
     "hidden" : false,
     "order" : 9999
   },
@@ -574,6 +598,7 @@
           "pattern" : null
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -596,6 +621,7 @@
         "reference" : "tr_propriete_taxon_ptx",
         "referenceColumnToLookForHeader" : "ptx_propriete",
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "referenceCheckerType" : "StringChecker",
         "chartDescription" : null,
@@ -607,6 +633,7 @@
     "validations" : { },
     "depends" : [ ],
     "migrations" : null,
+    "filterable" : false,
     "hidden" : false,
     "order" : 9999
   },
@@ -642,6 +669,7 @@
           "min" : 0,
           "max" : 2
         },
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -667,6 +695,7 @@
           "min" : 0.0,
           "max" : 500.0
         },
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -704,6 +733,7 @@
           "data" : null
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -725,6 +755,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -749,6 +780,7 @@
           "max" : 500.0
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -774,6 +806,7 @@
           "max" : 10
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -799,6 +832,7 @@
         },
         "exportHeaderName" : "dat_start_date",
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -824,6 +858,7 @@
           "min" : 0,
           "max" : 2
         },
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -849,6 +884,7 @@
           "min" : 0.0,
           "max" : 500.0
         },
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -878,6 +914,7 @@
         },
         "exportHeaderName" : "dat_type_site",
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -903,6 +940,7 @@
         },
         "exportHeaderName" : "dat_end_date",
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -928,6 +966,7 @@
           "max" : 10
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -974,6 +1013,7 @@
               "max" : 500.0
             },
             "submissionAuthorizationScope" : null,
+            "filterable" : false,
             "hidden" : false,
             "reference" : false,
             "referenceCheckerType" : "StringChecker",
@@ -999,6 +1039,7 @@
               "max" : 10
             },
             "submissionAuthorizationScope" : null,
+            "filterable" : false,
             "hidden" : false,
             "reference" : false,
             "referenceCheckerType" : "StringChecker",
@@ -1026,6 +1067,7 @@
               "min" : 0.0,
               "max" : 500.0
             },
+            "filterable" : false,
             "hidden" : false,
             "reference" : false,
             "referenceCheckerType" : "StringChecker",
@@ -1051,6 +1093,7 @@
               "min" : 0,
               "max" : 2
             },
+            "filterable" : false,
             "hidden" : false,
             "reference" : false,
             "referenceCheckerType" : "StringChecker",
@@ -1059,6 +1102,7 @@
           }
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -1080,6 +1124,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -1106,6 +1151,7 @@
         },
         "exportHeaderName" : "dat_site",
         "submissionAuthorizationScope" : "tr_zone_etude_zet",
+        "filterable" : false,
         "hidden" : false,
         "reference" : true,
         "referenceCheckerType" : "tr_zone_etude_zet",
@@ -1131,6 +1177,7 @@
           "max" : 500.0
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -1177,6 +1224,7 @@
               "max" : 500.0
             },
             "submissionAuthorizationScope" : null,
+            "filterable" : false,
             "hidden" : false,
             "reference" : false,
             "referenceCheckerType" : "StringChecker",
@@ -1202,6 +1250,7 @@
               "max" : 10
             },
             "submissionAuthorizationScope" : null,
+            "filterable" : false,
             "hidden" : false,
             "reference" : false,
             "referenceCheckerType" : "StringChecker",
@@ -1229,6 +1278,7 @@
               "min" : 0.0,
               "max" : 500.0
             },
+            "filterable" : false,
             "hidden" : false,
             "reference" : false,
             "referenceCheckerType" : "StringChecker",
@@ -1254,6 +1304,7 @@
               "min" : 0,
               "max" : 2
             },
+            "filterable" : false,
             "hidden" : false,
             "reference" : false,
             "referenceCheckerType" : "StringChecker",
@@ -1262,6 +1313,7 @@
           }
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -1423,6 +1475,7 @@
       "component" : "dat_site"
     } ],
     "migrations" : null,
+    "filterable" : false,
     "hidden" : false,
     "order" : 9999
   },
@@ -1460,6 +1513,7 @@
           "duration" : "1 Day"
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -1485,6 +1539,7 @@
           "pattern" : "SPE_.*"
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -1514,6 +1569,7 @@
           "data" : null
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -1538,6 +1594,7 @@
           "isTrue" : false
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : true,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -1558,6 +1615,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -1586,6 +1644,7 @@
           "isParent" : true
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : true,
         "referenceCheckerType" : "tr_zone_etude_zet",
@@ -1614,6 +1673,7 @@
           "duration" : null
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -1649,6 +1709,7 @@
           "max" : 2000.0
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -1669,6 +1730,7 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -1705,6 +1767,7 @@
           "data" : null
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -1732,6 +1795,7 @@
           "max" : 10
         },
         "submissionAuthorizationScope" : null,
+        "filterable" : false,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
@@ -1747,6 +1811,7 @@
       "component" : "spe_site"
     } ],
     "migrations" : null,
+    "filterable" : false,
     "hidden" : false,
     "order" : 9999
   }

@@ -176,6 +176,7 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
                     case DATA_TAG -> Tag.DataTag.instance();
                     case REFFERENCE_TAG -> Tag.ReferenceTag.instance();
                     case HIDDEN_TAG -> Tag.HiddenTag.instance();
+                    case FILTER_TAG -> Tag.FilterTag.instance();
                     case ORDER_TAG ->
                             getCaseInsensitive(node, "tagOrder")
                                     .map(JsonNode::asInt)
