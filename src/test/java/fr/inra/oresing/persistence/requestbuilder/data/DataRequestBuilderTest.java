@@ -75,4 +75,57 @@ class DataRequestBuilderTest {
         Assertions.assertEquals("a%%b\\\"c''d\\\\e",
                 DataRequestBuilder.sanitizeJsonPathStringValue(input));
     }
+
+    // ─── Convention "(vide)" : filtre = null -> JSONPath @ == null ───────────
+
+    @Test
+    void buildEqualityPredicate_returnsAtNullForNullValue() {
+        // Décision §5.7 : null sur le wire signifie "valeur absente / vide".
+        // Le JSONPath produit doit être `@ == null` , sans guillemets , pour
+        // matcher le littéral JSON null en base.
+        Assertions.assertEquals("@ == null",
+                DataRequestBuilder.buildEqualityPredicate(null));
+    }
+
+    @Test
+    void buildEqualityPredicate_quotesAndEscapesStringValue() {
+        Assertions.assertEquals("@ == \"foo\"",
+                DataRequestBuilder.buildEqualityPredicate("foo"));
+        // Vérifie que le sanitizer est bien appliqué ( évite régression sur
+        // le bug % corrigé dans f91481f ).
+        Assertions.assertEquals("@ == \"a%%b\"",
+                DataRequestBuilder.buildEqualityPredicate("a%b"));
+    }
+
+    @Test
+    void buildReferencePredicate_handlesHierarchyForNonNull() {
+        // Sur les références , l'égalité est complétée d'un `starts with` qui
+        // matche les descendants ( "foo" matche "foo" et "foo.bar" ).
+        String result = DataRequestBuilder.buildReferencePredicate("foo");
+        Assertions.assertTrue(result.contains("@ == \"foo\""), result);
+        Assertions.assertTrue(result.contains("@ starts with \"foo.\""), result);
+    }
+
+    @Test
+    void buildReferencePredicate_returnsAtNullForNullValue() {
+        // Pour null , pas de `starts with` ( une branche d'arbre vide n'a
+        // pas de sens ) , on retombe sur l'égalité null pure.
+        Assertions.assertEquals("@ == null",
+                DataRequestBuilder.buildReferencePredicate(null));
+    }
+
+    @Test
+    void buildRegexpPredicate_handlesNullValue() {
+        // Pour null , like_regex n'a pas de sens ; on retombe sur l'égalité.
+        Assertions.assertEquals("@ == null",
+                DataRequestBuilder.buildRegexpPredicate(null));
+    }
+
+    @Test
+    void buildRegexpPredicate_combinesEqualityAndLikeRegexForNonNull() {
+        String result = DataRequestBuilder.buildRegexpPredicate("OPTMix");
+        Assertions.assertTrue(result.contains("@ == \"OPTMix\""), result);
+        Assertions.assertTrue(result.contains("@ like_regex \"OPTMix\""), result);
+        Assertions.assertTrue(result.contains("flag \"i\""), result);
+    }
 }

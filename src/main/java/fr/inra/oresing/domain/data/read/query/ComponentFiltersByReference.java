@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.data.read.query;
 
-import com.google.common.base.Strings;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
 import org.apache.commons.collections4.CollectionUtils;
@@ -19,7 +18,11 @@ public record ComponentFiltersByReference(
         if (componentKey == null) {
             throw new BadDownloadDatasetQuery(MISSING_COMPONENT_KEY_FOR_SEARCH);
         }
-        if (CollectionUtils.isEmpty(filters) || filters.stream().anyMatch(Strings::isNullOrEmpty)) {
+        // null accepté ( convention "(vide)" §5.7 - filtre référence
+        // peut sélectionner les lignes sans valeur pour la colonne ) ,
+        // chaine vide rejetée.
+        if (CollectionUtils.isEmpty(filters)
+                || filters.stream().anyMatch(s -> s != null && s.isEmpty())) {
             throw new BadDownloadDatasetQuery(MISSING_FILTER);
         }
     }

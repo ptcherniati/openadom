@@ -70,6 +70,50 @@ public class DataRequestBuilder {
                 .orElse(null);
     }
 
+    /**
+     * Construit le prédicat JSONPath d'égalité d'une valeur de filtre. Une
+     * valeur {@code null} ( convention "(vide)" décidée en §5.7 du rapport
+     * FILTER_TEXT_LIST.md ) est traduite en {@code @ == null} ; toute autre
+     * valeur est échappée via {@link #sanitizeJsonPathStringValue} et
+     * comparée comme chaine. Centralisé pour que tous les sites de filtrage
+     * texte ( PlainText , Regexp , Reference ) traitent {@code null} de
+     * façon cohérente.
+     */
+    static String buildEqualityPredicate(final String filter) {
+        return filter == null
+                ? "@ == null"
+                : "@ == \"%s\"".formatted(sanitizeJsonPathStringValue(filter));
+    }
+
+    /**
+     * Variante de {@link #buildEqualityPredicate} pour les filtres référence ,
+     * qui acceptent en plus les correspondances hiérarchiques ( clé qui
+     * commence par {@code "<filter>."} - matche tous les descendants ). Une
+     * valeur {@code null} reste traitée comme {@code @ == null} ; on ne
+     * compose pas le {@code starts with} pour {@code null} parce qu'une
+     * branche d'arbre n'a pas de sens vide.
+     */
+    static String buildReferencePredicate(final String filter) {
+        return filter == null
+                ? "@ == null"
+                : "@ == \"%1$s\"  || @ starts with \"%2$s\"".formatted(filter, filter + ".");
+    }
+
+    /**
+     * Variante de {@link #buildEqualityPredicate} pour les filtres regexp
+     * ( recherche LIKE , insensible à la casse ). La valeur a déjà été
+     * échappée des méta-regex côté frontend ; on l'utilise telle quelle
+     * dans {@code like_regex}. Pour {@code null} , {@code like_regex} n'a
+     * pas de sens , on retombe sur l'égalité null.
+     */
+    static String buildRegexpPredicate(final String filter) {
+        if (filter == null) {
+            return "@ == null";
+        }
+        final String safe = sanitizeJsonPathStringValue(filter);
+        return "@ == \"%1$s\" || @ like_regex \"%1$s\" flag \"i\" ".formatted(safe);
+    }
+
     public static SqlRequest buildSelectRequest(final DownloadDatasetQuery downloadDatasetQuery) {
         final DataRequestBuilder dataTypeRequestBuilder = new DataRequestBuilder(downloadDatasetQuery);
         return dataTypeRequestBuilder.buildRequestSelect();
@@ -211,11 +255,7 @@ public class DataRequestBuilder {
                             """.formatted(
                             sanitize(componentKey),
                             filters.stream()
-                                        .map(filter -> "@ == \"%1$s\"  || @ starts with \"%2$s\""
-                                            .formatted(
-                                                    filter,
-                                                    filter + ".")
-                                    )
+                                    .map(DataRequestBuilder::buildReferencePredicate)
                                     .collect(Collectors.joining(DELIMITER_OR))
 
                     );
@@ -224,11 +264,7 @@ public class DataRequestBuilder {
                             """.formatted(
                             sanitize(componentKey),
                             filters.stream()
-                                    .map(filter -> "@ == \"%1$s\"  || @ starts with \"%2$s\""
-                                            .formatted(
-                                                    filter,
-                                                    filter + ".")
-                                    )
+                                    .map(DataRequestBuilder::buildReferencePredicate)
                                     .collect(Collectors.joining(DELIMITER_OR))
 
                     );
@@ -243,7 +279,7 @@ public class DataRequestBuilder {
                             """.formatted(
                             sanitize(componentKey),
                             filters.stream()
-                                    .map(filter -> "@ == \"%s\"".formatted(sanitizeJsonPathStringValue(filter)))
+                                    .map(DataRequestBuilder::buildEqualityPredicate)
                                     .collect(Collectors.joining(DELIMITER_OR))
                     );
                     case MANY -> """
@@ -251,7 +287,7 @@ public class DataRequestBuilder {
                             """.formatted(
                             sanitize(componentKey),
                             filters.stream()
-                                    .map(filter -> "@ == \"%s\"".formatted(sanitizeJsonPathStringValue(filter)))
+                                    .map(DataRequestBuilder::buildEqualityPredicate)
                                     .collect(Collectors.joining(DELIMITER_OR))
                     );
                 };
@@ -265,7 +301,7 @@ public class DataRequestBuilder {
                             """.formatted(
                             sanitize(componentKey),
                             filters.stream()
-                                    .map(filter -> "@ == \"%1$s\" || @ like_regex \"%1$s\" flag \"i\" ".formatted(sanitizeJsonPathStringValue(filter)))
+                                    .map(DataRequestBuilder::buildRegexpPredicate)
                                     .collect(Collectors.joining(DELIMITER_OR))
                     );
                     case MANY -> """
@@ -273,7 +309,7 @@ public class DataRequestBuilder {
                             """.formatted(
                             sanitize(componentKey),
                             filters.stream()
-                                    .map(filter -> "@ == \"%1$s\" OR @ like_regex \"%1$s\" flag i ".formatted(sanitizeJsonPathStringValue(filter)))
+                                    .map(DataRequestBuilder::buildRegexpPredicate)
                                     .collect(Collectors.joining(DELIMITER_OR))
                     );
                 };
