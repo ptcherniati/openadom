@@ -860,7 +860,66 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         final List<String> capped = truncated
                 ? List.copyOf(values.subList(0, ColumnDistinctValues.DISTINCT_VALUES_LIMIT))
                 : List.copyOf(values);
-        return new ColumnDistinctValues(componentKey, capped, truncated);
+        // hasEmpty est dérivable de capped : si null y figure , la colonne
+        // contient au moins une valeur vide. Comme on a fait ORDER BY ASC
+        // NULLS LAST , un null éventuel est en fin de liste ; pour MANY ,
+        // null peut apparaitre n'importe où ( jsonb_array_elements_text
+        // ne distingue pas les positions ) - on scanne intégralement.
+        final boolean hasEmpty = capped.stream().anyMatch(v -> v == null);
+        return new ColumnDistinctValues(componentKey, capped, truncated, hasEmpty);
+    }
+
+    /**
+     * Variante allégée de {@link #getColumnDistinctValues} pour les colonnes
+     * {@code __FILTER_TEXT__} : on n'a pas besoin des valeurs distinctes ( le
+     * filtre est libre côté UI , pas une dropdown ) , uniquement de savoir
+     * si la colonne contient des valeurs vides pour conditionner l'affichage
+     * du bouton *"+ (vide)"* dans le {@code TextFilter}.
+     *
+     * <p>Requête {@code EXISTS} bornée à un row , beaucoup plus rapide que
+     * le {@code DISTINCT} complet sur les grosses colonnes.
+     *
+     * @param dataName     nom du datatype ( = referenceType en base )
+     * @param componentKey clé de la colonne à interroger
+     * @param multiplicity multiplicité de la colonne ( gouverne la forme
+     *                     du test d'absence )
+     * @return entrée {@link ColumnDistinctValues} avec {@link
+     *         ColumnDistinctValues#values()} vide et {@link
+     *         ColumnDistinctValues#hasEmpty()} renseigné
+     */
+    public ColumnDistinctValues getColumnHasEmpty(
+            final String dataName,
+            final String componentKey,
+            final Multiplicity multiplicity) {
+        // ONE  : null si la valeur scalaire est null ( ou si la clé
+        //         absente de l'objet -> #>> renvoie aussi NULL )
+        // MANY : on considère "vide" si le tableau est null/absent ( pas
+        //         d'élément à filtrer ) , ou si l'un des éléments est null.
+        //         jsonb_array_length renvoie NULL pour un non-array ;
+        //         coalesce sur 0.
+        final String predicate = switch (multiplicity) {
+            case ONE -> "rv.refvalues #>> ARRAY[:componentKey] IS NULL";
+            case MANY -> """
+                    COALESCE(jsonb_array_length(rv.refvalues -> :componentKey), 0) = 0
+                    OR EXISTS (
+                        SELECT 1 FROM jsonb_array_elements(rv.refvalues -> :componentKey) elt
+                        WHERE elt = 'null'::jsonb
+                    )""";
+        };
+        final String query = """
+                SELECT EXISTS (
+                    SELECT 1 FROM %1$s.referencevalue rv
+                    WHERE rv.referencetype = :dataName
+                      AND ( %2$s )
+                    LIMIT 1
+                ) AS has_empty
+                """.formatted(getSchema().getSqlIdentifier(), predicate);
+        final Boolean hasEmpty = getNamedParameterJdbcTemplate().queryForObject(
+                query,
+                Map.of("dataName", dataName, "componentKey", componentKey),
+                Boolean.class);
+        return new ColumnDistinctValues(
+                componentKey, List.of(), false, Boolean.TRUE.equals(hasEmpty));
     }
 
     @Override

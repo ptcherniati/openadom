@@ -966,19 +966,28 @@ private PlatformTransactionManager transactionManager;
             result.addAll(filterLists);
         }
 
-        // 2. Valeurs distinctes des colonnes __FILTER_LIST__ ( nouveau )
+        // 2. Pour chaque colonne filtrable opt-in :
+        //    - __FILTER_LIST__  -> valeurs distinctes complètes ( DISTINCT )
+        //    - __FILTER_TEXT__  -> uniquement le drapeau hasEmpty ( EXISTS ) ,
+        //      values reste vide. Permet au front de conditionner le bouton
+        //      "(vide)" sans payer le coût d'un DISTINCT inutile.
         application.findData(refType).ifPresent(dataDescription ->
                 dataDescription.componentDescriptions().values().stream()
-                        .filter(ComponentDescription::isFilterableAsList)
+                        .filter(c -> c.isFilterableAsList() || c.isFilterableAsText())
                         .forEach(component -> {
                             try {
                                 final var multiplicity = component.checker() != null
                                         ? component.checker().multiplicity()
                                         : fr.inra.oresing.domain.checker.Multiplicity.ONE;
-                                result.add(dataRepo.getColumnDistinctValues(
-                                        refType, component.componentKey(), multiplicity));
+                                if (component.isFilterableAsList()) {
+                                    result.add(dataRepo.getColumnDistinctValues(
+                                            refType, component.componentKey(), multiplicity));
+                                } else {
+                                    result.add(dataRepo.getColumnHasEmpty(
+                                            refType, component.componentKey(), multiplicity));
+                                }
                             } catch (Exception e) {
-                                log.warn("Failed to load distinct values for {}::{} - dropdown will be empty",
+                                log.warn("Failed to load filter metadata for {}::{} - dropdown / hasEmpty defaults",
                                         refType, component.componentKey(), e);
                             }
                         }));
