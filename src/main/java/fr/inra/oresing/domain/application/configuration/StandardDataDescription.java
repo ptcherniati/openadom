@@ -122,17 +122,40 @@ public record StandardDataDescription(
     }
 
     /**
-     * Symétrique de {@link #isHidden()} pour le tag {@code __FILTER__}.
-     * Au niveau du datatype / référentiel le tag n'a pas d'usage métier
-     * direct ( il est consommé colonne par colonne via
-     * {@link ComponentDescription#isFilterable()} ) , mais la méthode
-     * existe pour que Jackson sérialise la propriété {@code filterable}
-     * de manière cohérente avec {@code hidden} dans la
-     * {@link Configuration} JSON exposée au frontend.
+     * Symétrique de {@link #isHidden()} pour les tags de filtrage. Au niveau du
+     * datatype / référentiel le tag n'a pas d'usage métier direct ( il est consommé
+     * colonne par colonne via {@link ComponentDescription#isFilterable()} ) , mais la
+     * méthode existe pour que Jackson sérialise la propriété {@code filterable} de
+     * manière cohérente avec {@code hidden} dans la {@link Configuration} JSON
+     * exposée au frontend.
+     *
+     * <p>La distinction texte vs liste se fait colonne par colonne ; au niveau du
+     * datatype on n'expose qu'un booléen union ( "au moins une colonne porte un
+     * filtre opt-in" ), suffisant pour les tests d'éligibilité côté front.
      */
     public boolean isFilterable() {
         return Optional.ofNullable(tags())
                 .map(tags -> tags.stream().anyMatch(Tag.FilterTag.class::isInstance))
+                .orElse(false);
+    }
+
+    /**
+     * Symétrique de {@link #isFilterable()} pour le sous-type {@link Tag.FilterTextTag}.
+     * Sérialisé par Jackson dans la {@link Configuration} JSON pour cohérence avec les
+     * propriétés équivalentes côté {@link ComponentDescription}. Cas d'usage côté
+     * datatype : marginal ( les filtres opt-in sont consommés colonne par colonne ) ,
+     * mais on expose pour ne pas casser la symétrie du payload.
+     */
+    public boolean isFilterableAsText() {
+        return Optional.ofNullable(tags())
+                .map(tags -> tags.stream().anyMatch(Tag.FilterTextTag.class::isInstance))
+                .orElse(false);
+    }
+
+    /** Symétrique pour {@link Tag.FilterListTag}. */
+    public boolean isFilterableAsList() {
+        return Optional.ofNullable(tags())
+                .map(tags -> tags.stream().anyMatch(Tag.FilterListTag.class::isInstance))
                 .orElse(false);
     }
 

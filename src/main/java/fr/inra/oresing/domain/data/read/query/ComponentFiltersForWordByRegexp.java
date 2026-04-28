@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.data.read.query;
 
-import com.google.common.base.Strings;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
 import org.apache.commons.collections4.CollectionUtils;
@@ -19,7 +18,10 @@ public record ComponentFiltersForWordByRegexp(
         if (componentKey == null) {
             throw new BadDownloadDatasetQuery(MISSING_COMPONENT_KEY_FOR_SEARCH);
         }
-        if (CollectionUtils.isEmpty(filters) || filters.stream().anyMatch(Strings::isNullOrEmpty)) {
+        // Idem PlainText : null accepté ( convention "(vide)" §5.7 ) ,
+        // chaine vide rejetée ( saisie utilisateur incomplète ).
+        if (CollectionUtils.isEmpty(filters)
+                || filters.stream().anyMatch(s -> s != null && s.isEmpty())) {
             throw new BadDownloadDatasetQuery(MISSING_FORMAT_FOR_FILTER);
         }
     }

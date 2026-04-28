@@ -38,18 +38,39 @@ class TagTest {
     }
 
     @Test
-    void testFilterTagBuilder() {
-        Tag.FilterTag tag = TagBuilder.filterTag();
-        Assertions.assertEquals(Tag.TagDefinitions.FILTER_TAG, tag.tagDefinition());
+    void testFilterTextTagBuilder() {
+        Tag.FilterTextTag tag = TagBuilder.filterTextTag();
+        Assertions.assertEquals(Tag.TagDefinitions.FILTER_TEXT_TAG, tag.tagDefinition());
     }
 
     @Test
-    void testFilterTagFromBuildTag() {
+    void testFilterListTagBuilder() {
+        Tag.FilterListTag tag = TagBuilder.filterListTag();
+        Assertions.assertEquals(Tag.TagDefinitions.FILTER_LIST_TAG, tag.tagDefinition());
+    }
+
+    @Test
+    void testFilterTextTagFromBuildTag() {
         // Le parsing YAML => Java passe par Tag.buildTag(String) ; vérifie
-        // que la chaîne "__FILTER__" produit bien un FilterTag.
-        Tag tag = Tag.buildTag(Tag.FilterTag.FILTER_PATTERN);
-        Assertions.assertInstanceOf(Tag.FilterTag.class, tag);
-        Assertions.assertEquals(Tag.TagDefinitions.FILTER_TAG, tag.tagDefinition());
+        // que la chaîne "__FILTER_TEXT__" produit bien un FilterTextTag.
+        Tag tag = Tag.buildTag(Tag.FilterTextTag.FILTER_TEXT_PATTERN);
+        Assertions.assertInstanceOf(Tag.FilterTextTag.class, tag);
+        Assertions.assertEquals(Tag.TagDefinitions.FILTER_TEXT_TAG, tag.tagDefinition());
+    }
+
+    @Test
+    void testFilterListTagFromBuildTag() {
+        Tag tag = Tag.buildTag(Tag.FilterListTag.FILTER_LIST_PATTERN);
+        Assertions.assertInstanceOf(Tag.FilterListTag.class, tag);
+        Assertions.assertEquals(Tag.TagDefinitions.FILTER_LIST_TAG, tag.tagDefinition());
+    }
+
+    @Test
+    void testFilterTagSealedHierarchy() {
+        // Les deux records concrets doivent être des FilterTag : permet aux
+        // callers de tester "est-ce un filtre" sans énumérer chaque sous-type.
+        Assertions.assertInstanceOf(Tag.FilterTag.class, TagBuilder.filterTextTag());
+        Assertions.assertInstanceOf(Tag.FilterTag.class, TagBuilder.filterListTag());
     }
 
     @Test

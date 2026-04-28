@@ -72,7 +72,8 @@ public sealed interface Tag {
         DATA_TAG(DataTag.DATA_TAG, w -> DataTag.instance(), DataTag.getTagPattern()),
         REFFERENCE_TAG(ReferenceTag.REFFERENCE_TAG, w -> ReferenceTag.instance(), ReferenceTag.getTagPattern()),
         ORDER_TAG(OrderTag.ORDER_TAG, OrderTag::buildOrderTag, OrderTag.getTagPattern()),
-        FILTER_TAG(FilterTag.FILTER_TAG, w -> FilterTag.instance(), FilterTag.getTagPattern()),
+        FILTER_TEXT_TAG(FilterTextTag.FILTER_TEXT_TAG, w -> FilterTextTag.instance(), FilterTextTag.getTagPattern()),
+        FILTER_LIST_TAG(FilterListTag.FILTER_LIST_TAG, w -> FilterListTag.instance(), FilterListTag.getTagPattern()),
         NO_TAG(NoTag.NO_TAG, w -> NoTag.instance(), NoTag.getTagPattern()),
         DOMAIN_TAG(DomainTag.DOMAIN_TAG, DomainTag::buildDomainTag, DomainTag.getTagPattern());
         final Predicate<String> isA;
@@ -110,6 +111,15 @@ public sealed interface Tag {
 
     sealed interface DefinedTag extends Tag permits DataTag, FilterTag, HiddenTag, NoTag, OrderTag, ReferenceTag {
 
+    }
+
+    /**
+     * Marqueur commun aux deux tags de filtrage utilisateur ( {@link FilterTextTag} et
+     * {@link FilterListTag} ). Permet aux callers de tester "est-ce un filtre quel que
+     * soit son mode" sans énumérer chaque sous-type ; les détails du mode ( texte vs
+     * liste de valeurs distinctes ) restent portés par chaque record concret.
+     */
+    sealed interface FilterTag extends DefinedTag permits FilterTextTag, FilterListTag {
     }
 
     record DomainTag(TagDefinitions tagDefinition, String tagName) implements Tag {
@@ -170,32 +180,69 @@ public sealed interface Tag {
     }
 
     /**
-     * Tag opt-in posé sur une colonne dans {@code OA_tags} pour activer
-     * un filtre de recherche interactif côté frontend , même si le
-     * checker de la colonne ne serait pas filtrable par défaut
-     * ( typiquement {@link fr.inra.oresing.domain.application.configuration.checker.CheckerDescription.CheckerDescriptionType#StringChecker} ).
+     * Tag opt-in posé sur une colonne dans {@code OA_tags} pour activer un filtre
+     * de recherche **texte libre** côté frontend ( recherche LIKE insensible à la
+     * casse via {@code @ like_regex ... flag "i"} en JSONPath PostgreSQL ).
      *
-     * <p>Pas de paramètre : le tag est strictement {@code __FILTER__}.
-     * Les {@link Tag tags} étant déjà sérialisés dans la
-     * {@link Configuration} JSON envoyée au frontend , aucun champ DTO
-     * dérivé n'est nécessaire ; le frontend teste directement
-     * {@code tagDefinition === "FILTER_TAG"} , à l'image de ce qui est
-     * fait pour {@link OrderTag} et {@link HiddenTag}.
+     * <p>Cible : colonnes texte ouvertes ( commentaires , codes libres , identifiants
+     * externes... ) où l'utilisateur ne connait pas la valeur exacte mais une portion.
+     *
+     * <p>Ignoré silencieusement ( log INFO ) si la colonne porte aussi {@link HiddenTag}
+     * ou un checker disposant déjà d'un filtre natif ( Date , Integer , Float , Boolean ,
+     * Reference ). Voir
+     * {@link ComponentDescription#isFilterableAsText()} pour la règle exacte.
+     *
+     * <p>Sérialisation : le frontend teste {@code tagDefinition === "FILTER_TEXT_TAG"}
+     * sur l'objet {@link Tag} déjà exposé dans la {@link Configuration} JSON.
      */
-    record FilterTag(TagDefinitions tagDefinition) implements DefinedTag {
-        public static final String FILTER_PATTERN = "__FILTER__";
-        public static final Predicate<String> FILTER_TAG = FILTER_PATTERN::equals;
+    record FilterTextTag(TagDefinitions tagDefinition) implements FilterTag {
+        public static final String FILTER_TEXT_PATTERN = "__FILTER_TEXT__";
+        public static final Predicate<String> FILTER_TEXT_TAG = FILTER_TEXT_PATTERN::equals;
 
-        public FilterTag() {
-            this(TagDefinitions.FILTER_TAG);
+        public FilterTextTag() {
+            this(TagDefinitions.FILTER_TEXT_TAG);
         }
 
-        public static FilterTag instance() {
-            return new FilterTag();
+        public static FilterTextTag instance() {
+            return new FilterTextTag();
         }
 
         public static String getTagPattern() {
-            return FILTER_PATTERN;
+            return FILTER_TEXT_PATTERN;
+        }
+    }
+
+    /**
+     * Tag opt-in posé sur une colonne dans {@code OA_tags} pour activer un filtre
+     * **dropdown searchable** côté frontend , alimenté par les valeurs distinctes
+     * effectivement présentes dans la colonne ( cf. {@code ColumnDistinctValues} ).
+     *
+     * <p>Cible : colonnes à vocabulaire fini ( modalités , types , traitements... ) où
+     * l'utilisateur sélectionne dans une liste fermée plutôt que de saisir librement.
+     *
+     * <p>Mêmes règles d'exclusion que {@link FilterTextTag} : ignoré si {@link HiddenTag}
+     * ou checker à filtre natif. Voir {@link ComponentDescription#isFilterableAsList()}.
+     *
+     * <p>Limite côté backend : la liste des valeurs distinctes est tronquée à 10 000
+     * entrées pour borner le coût de la dropdown. Au-delà , un drapeau
+     * {@code truncated: true} est remonté au frontend qui affiche un bandeau.
+     *
+     * <p>Sérialisation : le frontend teste {@code tagDefinition === "FILTER_LIST_TAG"}.
+     */
+    record FilterListTag(TagDefinitions tagDefinition) implements FilterTag {
+        public static final String FILTER_LIST_PATTERN = "__FILTER_LIST__";
+        public static final Predicate<String> FILTER_LIST_TAG = FILTER_LIST_PATTERN::equals;
+
+        public FilterListTag() {
+            this(TagDefinitions.FILTER_LIST_TAG);
+        }
+
+        public static FilterListTag instance() {
+            return new FilterListTag();
+        }
+
+        public static String getTagPattern() {
+            return FILTER_LIST_PATTERN;
         }
     }
 

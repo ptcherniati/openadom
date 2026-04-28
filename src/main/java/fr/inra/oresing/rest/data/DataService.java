@@ -931,16 +931,74 @@ private PlatformTransactionManager transactionManager;
 
         // Cache miss : exécuter la requête SQL, sérialiser en JSON, et stocker
         log.info("filterList cache miss for {}, loading from database", cacheKey);
-        List<FilterList> list = repository.getRepository(application).data().getFilterList(refType)
-                .collectList()
-                .block();
-        return serializeAndCache(cacheKey, list != null ? list : List.of());
+        List<FilterListEntry> entries = computeFilterListEntries(application, refType);
+        return serializeAndCache(cacheKey, entries);
     }
 
     /**
-     * Sérialise la liste de FilterList en JSON et la stocke dans le cache.
+     * Calcule la liste complète des entrées du payload {@code /filters} pour un
+     * couple {@code (application, refType)} :
+     * <ul>
+     *   <li>les {@link FilterList} produits par la requête historique
+     *       ( valeurs de {@code ReferenceChecker} liées au datatype ) ;
+     *   <li>les {@link ColumnDistinctValues} pour chaque colonne marquée
+     *       {@code __FILTER_LIST__} dans le YAML.
+     * </ul>
+     *
+     * <p>Les deux types cohabitent dans le même {@link FilterListEntry} ; le
+     * frontend les distingue via la propriété {@code @class} du payload JSON.
+     *
+     * <p>Conçu pour ne jamais lever : en cas d'erreur SQL sur une colonne
+     * particulière , on logge et on saute la colonne plutôt que de faire
+     * échouer l'endpoint complet ( on préfère afficher la dropdown vide à
+     * un blocage UI ).
      */
-    private String serializeAndCache(String cacheKey, List<FilterList> list) {
+    private List<FilterListEntry> computeFilterListEntries(
+            final Application application, final String refType) {
+        final List<FilterListEntry> result = new java.util.ArrayList<>();
+        final var dataRepo = repository.getRepository(application).data();
+
+        // 1. Filtres référence ( historique - inchangé )
+        final List<FilterList> filterLists = dataRepo.getFilterList(refType)
+                .collectList()
+                .block();
+        if (filterLists != null) {
+            result.addAll(filterLists);
+        }
+
+        // 2. Pour chaque colonne filtrable opt-in :
+        //    - __FILTER_LIST__  -> valeurs distinctes complètes ( DISTINCT )
+        //    - __FILTER_TEXT__  -> uniquement le drapeau hasEmpty ( EXISTS ) ,
+        //      values reste vide. Permet au front de conditionner le bouton
+        //      "(vide)" sans payer le coût d'un DISTINCT inutile.
+        application.findData(refType).ifPresent(dataDescription ->
+                dataDescription.componentDescriptions().values().stream()
+                        .filter(c -> c.isFilterableAsList() || c.isFilterableAsText())
+                        .forEach(component -> {
+                            try {
+                                final var multiplicity = component.checker() != null
+                                        ? component.checker().multiplicity()
+                                        : fr.inra.oresing.domain.checker.Multiplicity.ONE;
+                                if (component.isFilterableAsList()) {
+                                    result.add(dataRepo.getColumnDistinctValues(
+                                            refType, component.componentKey(), multiplicity));
+                                } else {
+                                    result.add(dataRepo.getColumnHasEmpty(
+                                            refType, component.componentKey(), multiplicity));
+                                }
+                            } catch (Exception e) {
+                                log.warn("Failed to load filter metadata for {}::{} - dropdown / hasEmpty defaults",
+                                        refType, component.componentKey(), e);
+                            }
+                        }));
+
+        return result;
+    }
+
+    /**
+     * Sérialise la liste d'entrées en JSON et la stocke dans le cache.
+     */
+    private String serializeAndCache(String cacheKey, List<FilterListEntry> list) {
         try {
             String json = cacheObjectMapper.writeValueAsString(list);
             if (filterListCache.size() >= FILTER_LIST_CACHE_MAX_ENTRIES) {
@@ -967,15 +1025,18 @@ private PlatformTransactionManager transactionManager;
     public void refreshFilterListCache(final Application application, final String refType) {
         log.info("filterList cache refresh started for {}::{}", application.getName(), refType);
         String cacheKey = application.getName() + "::" + refType;
-        repository.getRepository(application).data().getFilterList(refType)
-                .collectList()
-                .doOnNext(list -> {
-                    serializeAndCache(cacheKey, list);
+        // Réutilise computeFilterListEntries() qui agrège les FilterList ( SQL
+        // historique ) et les ColumnDistinctValues ( colonnes __FILTER_LIST__ ).
+        // L'opération reste asynchrone via Mono.fromCallable + boundedElastic.
+        reactor.core.publisher.Mono.fromCallable(() -> computeFilterListEntries(application, refType))
+                .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
+                .doOnNext(entries -> {
+                    serializeAndCache(cacheKey, entries);
                     log.info("filterList cache refreshed for {}", cacheKey);
                 })
-                .doOnError(error -> {
-                    log.warn("Failed to refresh filterList cache for {}::{}", application.getName(), refType, error);
-                })
+                .doOnError(error -> log.warn(
+                        "Failed to refresh filterList cache for {}::{}",
+                        application.getName(), refType, error))
                 .subscribe();
     }
 

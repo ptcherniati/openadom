@@ -196,27 +196,96 @@ class ComponentDescriptionTest {
     }
 
     @Test
-    void isFilterable_returnsTrueWhenFilterTagPresent() {
-        CheckerDescription checker = CheckerDescriptionBuilder.stringChecker().build();
+    void isFilterableAsText_trueWhenFilterTextTagPresentOnStringChecker() {
         BasicComponent component = ComponentDescriptionBuilder.basicComponent()
-                .componentKey("myComponent")
-                .tags(Set.of(TagBuilder.filterTag()))
-                .checker(checker)
+                .componentKey("c")
+                .tags(Set.of(TagBuilder.filterTextTag()))
+                .checker(CheckerDescriptionBuilder.stringChecker().build())
                 .build();
 
+        Assertions.assertTrue(component.isFilterableAsText());
+        Assertions.assertFalse(component.isFilterableAsList());
         Assertions.assertTrue(component.isFilterable());
     }
 
     @Test
-    void isFilterable_returnsFalseWhenFilterTagAbsent() {
-        // Couverture des cas mixtes : tags non vide mais sans FilterTag.
-        CheckerDescription checker = CheckerDescriptionBuilder.stringChecker().build();
+    void isFilterableAsList_trueWhenFilterListTagPresentOnStringChecker() {
         BasicComponent component = ComponentDescriptionBuilder.basicComponent()
-                .componentKey("myComponent")
+                .componentKey("c")
+                .tags(Set.of(TagBuilder.filterListTag()))
+                .checker(CheckerDescriptionBuilder.stringChecker().build())
+                .build();
+
+        Assertions.assertFalse(component.isFilterableAsText());
+        Assertions.assertTrue(component.isFilterableAsList());
+        Assertions.assertTrue(component.isFilterable());
+    }
+
+    @Test
+    void isFilterable_falseWhenNoFilterTag() {
+        // Couverture des cas mixtes : tags non vide mais sans tag de filtre.
+        BasicComponent component = ComponentDescriptionBuilder.basicComponent()
+                .componentKey("c")
                 .tags(Set.of(TagBuilder.dataTag(), TagBuilder.orderTag(3)))
-                .checker(checker)
+                .checker(CheckerDescriptionBuilder.stringChecker().build())
                 .build();
 
         Assertions.assertFalse(component.isFilterable());
+        Assertions.assertFalse(component.isFilterableAsText());
+        Assertions.assertFalse(component.isFilterableAsList());
+    }
+
+    @Test
+    void filterTagSuppressed_byHiddenTag() {
+        // Règle d'exclusion §7 : la colonne masquée annule tout filtre opt-in.
+        BasicComponent component = ComponentDescriptionBuilder.basicComponent()
+                .componentKey("c")
+                .tags(Set.of(TagBuilder.filterTextTag(), TagBuilder.hiddenTag()))
+                .checker(CheckerDescriptionBuilder.stringChecker().build())
+                .build();
+
+        Assertions.assertTrue(component.hasFilterTagSuppressed());
+        Assertions.assertFalse(component.isFilterableAsText());
+        Assertions.assertFalse(component.isFilterable());
+    }
+
+    @Test
+    void filterTagSuppressed_byNativeFilterChecker_integer() {
+        // Règle d'exclusion §7 : un filtre natif ( intervalle numérique ) prime.
+        BasicComponent component = ComponentDescriptionBuilder.basicComponent()
+                .componentKey("c")
+                .tags(Set.of(TagBuilder.filterListTag()))
+                .checker(CheckerDescriptionBuilder.integerChecker().build())
+                .build();
+
+        Assertions.assertTrue(component.hasFilterTagSuppressed());
+        Assertions.assertFalse(component.isFilterableAsList());
+        Assertions.assertFalse(component.isFilterable());
+    }
+
+    @Test
+    void filterTagSuppressed_byNativeFilterChecker_reference() {
+        // Cas typique de l'image #271 : __FILTER_TEXT__ posé par erreur sur une
+        // colonne référence. La dropdown référence native prime , le tag est ignoré.
+        BasicComponent component = ComponentDescriptionBuilder.basicComponent()
+                .componentKey("c")
+                .tags(Set.of(TagBuilder.filterTextTag()))
+                .checker(CheckerDescriptionBuilder.referenceChecker().refType("tr_treatment").build())
+                .build();
+
+        Assertions.assertTrue(component.hasNativeFilter());
+        Assertions.assertFalse(component.isFilterableAsText());
+        Assertions.assertFalse(component.isFilterable());
+    }
+
+    @Test
+    void hasNativeFilter_falseForOpenTextCheckers() {
+        // Les checkers texte ouverts ( String , Computation , Groovy ) n'ont pas
+        // de filtre natif et acceptent les deux tags opt-in.
+        Assertions.assertFalse(ComponentDescriptionBuilder.basicComponent()
+                .componentKey("c")
+                .checker(CheckerDescriptionBuilder.stringChecker().build())
+                .build()
+                .hasNativeFilter());
     }
 }
