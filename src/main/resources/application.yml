@@ -106,8 +106,11 @@ allowed:
 # Doit rester alignée avec le timer d'inactivité côté frontend
 # ( SessionService ), qui lit cette valeur via l'endpoint public
 # GET /api/v1/session/config.
+# Default: 300s (5min) - facilite le test runtime de l'expiration de
+# session. À surcharger via la variable d'env JWT_EXPIRATION dans le
+# .env du déploiement (ex: 3600 en prod).
 jwt:
-  expiration: ${JWT_EXPIRATION:3600}
+  expiration: ${JWT_EXPIRATION:300}
 
 springdoc:
   swagger-ui:
