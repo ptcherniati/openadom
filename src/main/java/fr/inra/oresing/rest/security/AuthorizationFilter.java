@@ -37,6 +37,9 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
@@ -70,6 +73,26 @@ public class AuthorizationFilter extends GenericFilterBean {
     private final JWTExtractor jWTExtractor;
     private final ServiceContainer serviceContainer;
 
+    /**
+     * Repository utilisé pour persister le {@link SecurityContext} sous
+     * forme d'attribut de requête. Doit être de la même classe que celui
+     * configuré dans {@link SecurityConfig} ( cf.
+     * {@code .securityContextRepository(new RequestAttributeSecurityContextRepository())} ).
+     *
+     * <p><b>Pourquoi</b> : sans ça , l'authentification posée par ce filtre
+     * dans le {@code SecurityContextHolder} ( ThreadLocal ) n'est pas
+     * persistée pour l'{@code ASYNC} dispatch des contrôleurs renvoyant
+     * un {@code Flux<>}. Le {@link org.springframework.security.web.context.SecurityContextHolderFilter}
+     * de Spring Security re-tourne au dispatch ASYNC , recharge depuis
+     * le repository , trouve un contexte vide , et l'{@code AnonymousAuthenticationFilter}
+     * marque la requête anonyme → 403 → /error → 500 ( "Failed to write
+     * request" parce que le {@code Content-Type: application/x-ndjson}
+     * du Flux est déjà fixé et Spring n'a pas de converter NDJSON pour
+     * les ProblemDetail ).
+     */
+    private final RequestAttributeSecurityContextRepository securityContextRepository =
+            new RequestAttributeSecurityContextRepository();
+
     @Autowired
     public AuthorizationFilter(
             ServiceContainer serviceContainer,
@@ -89,6 +112,11 @@ public class AuthorizationFilter extends GenericFilterBean {
         String path = request.getRequestURI();
         OreSiAuthenticationToken authenticationToken = OreSiApiRequestContext.getAuthenticationToken();
         if (authenticationToken != null) {
+            // #62 - Idempotent : si une passe précédente a déjà rempli le
+            // SecurityContextHolder mais n'a pas pu sauver dans le
+            // request-attribute repository , on rattrape ici pour que
+            // l'ASYNC dispatch retrouve l'authentification.
+            saveSecurityContextToRequest(request, response);
             chain.doFilter(request, response);
             return;
         }
@@ -129,6 +157,11 @@ public class AuthorizationFilter extends GenericFilterBean {
         try {
             OreSiAuthenticationToken token = buildAuthentication(request, response);
             OreSiApiRequestContext.setAuthenticationToken(token);
+            // #62 - Persiste le SecurityContext en tant qu'attribut de requête
+            // pour que l'ASYNC dispatch ( contrôleurs Flux<>) retrouve
+            // l'authentification quand le SecurityContextHolderFilter
+            // re-charge depuis le repository ; sinon : anonymous -> 403 -> 500.
+            saveSecurityContextToRequest(request, response);
         } catch (AuthenticationFailure e) {
             ResponseEntity<String> handle = exceptionHandler.handle(e);
             response.setStatus(handle.getStatusCode().value());
@@ -147,6 +180,25 @@ public class AuthorizationFilter extends GenericFilterBean {
             return;
         }
         chain.doFilter(request, response);
+    }
+
+    /**
+     * Sauvegarde le {@link SecurityContext} courant ( fraîchement rempli
+     * par {@link OreSiApiRequestContext#setAuthenticationToken} ) dans
+     * un attribut de la requête , via le {@link RequestAttributeSecurityContextRepository}.
+     *
+     * <p>Indispensable pour que l'authentification survive à l'{@code ASYNC}
+     * dispatch des contrôleurs renvoyant un {@code Flux<>} ; sans ça , le
+     * {@link org.springframework.security.web.context.SecurityContextHolderFilter}
+     * recharge un contexte vide depuis le repository pendant l'async
+     * dispatch , l'{@link org.springframework.security.web.authentication.AnonymousAuthenticationFilter}
+     * marque la requête anonyme , et la chaîne tombe en 403 puis 500.
+     */
+    private void saveSecurityContextToRequest(HttpServletRequest request, HttpServletResponse response) {
+        SecurityContext context = SecurityContextHolder.getContext();
+        if (context != null && context.getAuthentication() != null) {
+            securityContextRepository.saveContext(context, request, response);
+        }
     }
 
     private void writeJsonAuthError(HttpServletResponse response, AuthenticationException ex) throws IOException {
