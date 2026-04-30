@@ -761,27 +761,53 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                     GROUP BY child.hierarchicalkey
                 ),
                 referenceByReftype AS (
+                    -- Fix bug filtre Site != colonne Site : on lit les infos
+                    -- d'identification ( id , naturalKey , hierarchicalKey ) et
+                    -- les labels d'affichage ( __display_* ) sur la referencevalue
+                    -- du LEAF lui-meme et plus sur pg.parents->0 ( le premier
+                    -- ancetre ). L'ancien code etait herite du commit f3d0516
+                    -- "Duplication de nodes dans les filtre #52" qui , pour
+                    -- dedupliquer les entrees de la dropdown , avait remplace
+                    -- cg.hk par parents->0->>'hierarchicalKey' ; mais ce choix
+                    -- masquait completement les leaves : on affichait le label
+                    -- du parent ( ex : "Grandes cultures..." ) dans la dropdown
+                    -- alors que la colonne du tableau affiche le leaf
+                    -- ( ex : "estrees-mons" ) , et la naturalKey envoyee au
+                    -- predicat de filtre ( buildReferencePredicate dans
+                    -- DataRequestBuilder ) etait celle du parent qui ne matche
+                    -- aucune ligne ( les refvalues stockent la naturalKey du
+                    -- leaf , pas du parent ).
+                    --
+                    -- Le champ 'parents' est desormais peuple avec les vraies
+                    -- donnees parent au lieu d'un tableau vide hardcode , afin
+                    -- que le composant FilterListSelect cote frontend ( vue
+                    -- arborescente actuellement commentee dans
+                    -- FiltersDataCollapse.vue avec un TODO explicite ) puisse
+                    -- etre rebranche sans modifier ce SQL.
                     SELECT
                         cg.listName AS "listName",
                         jsonb_build_object(
                             'listName', cg.listName,
                             'refsLinkeds', jsonb_agg(
                                 distinct jsonb_build_object(
-                                    'id', pg.parents->0->>'id',
-                                    'naturalKey', pg.parents->0->>'naturalKey',
-                                    '__display_default', pg.parents->0->>'__display_default',
-                                    '__display_fr', pg.parents->0->>'__display_fr',
-                                    '__display_en', pg.parents->0->>'__display_en',
-                                    'referenceType', cg.listName,
-                                    'hierarchicalKey', pg.parents->0->>'hierarchicalKey',
-                                    'isHierarchique', hf.is_hierarchique,
-                                    'components', cg.components,
-                                    'parents', '[]'::jsonb
+                                    'id',                leaf.id,
+                                    'naturalKey',        leaf.naturalkey::text,
+                                    '__display_default', leaf.refvalues->'__display_default',
+                                    '__display_fr',      leaf.refvalues->'__display_fr',
+                                    '__display_en',      leaf.refvalues->'__display_en',
+                                    'referenceType',     cg.listName,
+                                    'hierarchicalKey',   leaf.hierarchicalkey::text,
+                                    'isHierarchique',    hf.is_hierarchique,
+                                    'components',        cg.components,
+                                    'parents',           COALESCE(pg.parents, '[]'::jsonb)
                                 )
                             )
                         ) AS ref_object
                     FROM components_grouped cg
-                    JOIN parents_grouped pg ON pg.child_hkey = cg.hk
+                    JOIN %1$s.referencevalue leaf
+                         ON leaf.referencetype  = cg.listName
+                        AND leaf.hierarchicalkey = cg.hk
+                    LEFT JOIN parents_grouped pg ON pg.child_hkey = cg.hk
                     JOIN hierarchique_flags hf ON hf.listName = cg.listName
                     GROUP BY cg.listName
                     ORDER BY cg.listName
