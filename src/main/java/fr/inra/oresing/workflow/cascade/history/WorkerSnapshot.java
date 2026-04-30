@@ -42,6 +42,9 @@ public record WorkerSnapshot(
         /** Wall-clock duration of the most recently finished chunk , null if none yet . */
         Duration lastChunkDuration,
 
+        /** Rolling average duration over the last finished chunks ( up to 10 ) , null if none yet . */
+        Duration avgChunkDuration,
+
         /** Last time this worker emitted any event ( start , progress , end ) . */
         Instant  lastActivity) {
 }

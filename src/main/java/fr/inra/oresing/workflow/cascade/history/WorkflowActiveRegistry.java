@@ -222,6 +222,25 @@ public class WorkflowActiveRegistry implements WorkflowListener {
             lastDuration = Duration.between(lastFinished.startTime(), lastFinished.endTime());
         }
 
+        // Rolling average over the last 10 finished chunks of this worker .
+        // Smooths the per-tick jitter when chunks complete fast , while still
+        // tracking long-term throughput drifts ( e.g. degradation when the
+        // DB starts thrashing ) .
+        List<Duration> recentDurations = entries.stream()
+                .filter(c -> c.endTime() != null && c.startTime() != null)
+                .sorted(Comparator.comparing(ChunkSnapshot::endTime).reversed())
+                .limit(10)
+                .map(c -> Duration.between(c.startTime(), c.endTime()))
+                .toList();
+        Duration avgDuration = null;
+        if (!recentDurations.isEmpty()) {
+            long avgNanos = (long) recentDurations.stream()
+                    .mapToLong(Duration::toNanos)
+                    .average()
+                    .orElse(0d);
+            avgDuration = Duration.ofNanos(avgNanos);
+        }
+
         Instant lastActivity = entries.stream()
                 .flatMap(c -> java.util.stream.Stream.of(c.startTime(), c.endTime()))
                 .filter(java.util.Objects::nonNull)
@@ -244,6 +263,7 @@ public class WorkflowActiveRegistry implements WorkflowListener {
                 curPct,
                 entries.size(),
                 lastDuration,
+                avgDuration,
                 lastActivity);
     }
 

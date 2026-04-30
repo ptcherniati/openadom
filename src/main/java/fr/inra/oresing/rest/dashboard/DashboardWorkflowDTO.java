@@ -170,17 +170,20 @@ public record DashboardWorkflowDTO(
             int chunkCount,
             @Schema(description = "Wall-clock duration of the most recently finished chunk in milliseconds ; null if none yet")
             Long lastChunkDurationMs,
+            @Schema(description = "Rolling average duration over the last finished chunks ( up to 10 ) in milliseconds ; null if none yet")
+            Long avgChunkDurationMs,
             @Schema(description = "Last time this worker emitted any event ( ISO-8601 )")
             Instant lastActivity) {
 
         public static WorkerDTO fromSnapshot(fr.inra.oresing.workflow.cascade.history.WorkerSnapshot w) {
-            Long durMs = w.lastChunkDuration() == null ? null : w.lastChunkDuration().toMillis();
+            Long lastMs = w.lastChunkDuration() == null ? null : w.lastChunkDuration().toMillis();
+            Long avgMs  = w.avgChunkDuration()  == null ? null : w.avgChunkDuration().toMillis();
             return new WorkerDTO(
                     w.stage(), w.name(), w.status(), w.currentChunk(),
                     w.currentChunkRecordsProcessed(),
                     w.currentChunkRecordsTotal(),
                     w.currentChunkProgressPercentage(),
-                    w.chunkCount(), durMs, w.lastActivity());
+                    w.chunkCount(), lastMs, avgMs, w.lastActivity());
         }
     }
 
