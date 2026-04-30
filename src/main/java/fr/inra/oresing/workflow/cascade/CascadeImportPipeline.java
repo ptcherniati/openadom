@@ -242,15 +242,21 @@ public class CascadeImportPipeline {
 
             // Publie le parallélisme effectif dans le registry pour que
             // l'en-tête de la vue Workers de oa-live affiche le nombre de
-            // threads par stage . Le sink est forcé à 1 quand
-            // DIRECT_COPY + PER_CONNECTION_TEMP ; sinon il suit
-            // {@code parallelism} ( valeur par défaut effective ).
-            int sinkSlots = (directCopy && importProperties.getStagingStrategy()
-                    == ImportProperties.StagingStrategy.PER_CONNECTION_TEMP) ? 1 : parallelism;
+            // threads par stage . Source de verite = cascade : on lit les
+            // overrides cascade.pool.{stage} ( -D ) ou CASCADE_POOL_{STAGE}
+            // ( env ) , qui prennent precedence sur la valeur du builder
+            // workflow . Sans override on retombe sur {@code parallelism}.
+            // Le sink est forcé à 1 quand DIRECT_COPY + PER_CONNECTION_TEMP.
+            int sourceSlots    = resolvePoolSize("source",    parallelism);
+            int transformSlots = resolvePoolSize("transform", parallelism);
+            int sinkSlots      = (directCopy && importProperties.getStagingStrategy()
+                    == ImportProperties.StagingStrategy.PER_CONNECTION_TEMP)
+                    ? 1
+                    : resolvePoolSize("sink", parallelism);
             if (corrUuid != null) {
                 activeRegistry.setParallelism(corrUuid,
                         new fr.inra.oresing.workflow.cascade.history.ParallelismSnapshot(
-                                1, parallelism, sinkSlots));
+                                sourceSlots, transformSlots, sinkSlots));
             }
 
             try {
@@ -468,6 +474,36 @@ public class CascadeImportPipeline {
     }
 
     /** Convertit en UUID en silence , null si format invalide. */
+    /**
+     * Resolves the effective pool size for a cascade stage , honoring the
+     * same precedence cascade itself uses :
+     *   1. -Dcascade.pool.{stage}=N  ( JVM system property )
+     *   2. CASCADE_POOL_{STAGE}=N    ( environment variable )
+     *   3. fallback                  ( workflow-level parallelism )
+     * Mirrors {@code ExecutionResourceManager#resolveParallelism} so the
+     * dashboard header reflects the real pool size when an override is
+     * set , instead of the workflow default.
+     */
+    private static int resolvePoolSize(String stage, int fallback) {
+        String prop = System.getProperty("cascade.pool." + stage);
+        Integer v = parsePositiveInt(prop);
+        if (v != null) return v;
+        String env = System.getenv("CASCADE_POOL_" + stage.toUpperCase());
+        v = parsePositiveInt(env);
+        if (v != null) return v;
+        return fallback;
+    }
+
+    private static Integer parsePositiveInt(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            int n = Integer.parseInt(raw.trim());
+            return n > 0 ? n : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     private static UUID safeUuid(String raw) {
         if (raw == null) return null;
         try {
