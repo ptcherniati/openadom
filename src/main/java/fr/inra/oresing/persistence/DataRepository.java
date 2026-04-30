@@ -40,6 +40,7 @@ import java.sql.Array;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -137,29 +138,39 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
         return getNamedParameterJdbcTemplate().getJdbcTemplate().execute(
                 (ConnectionCallback<List<UUID>>) connection -> {
+                    // the original code switched the pooled connection to
+                    // autoCommit=false and never restored it , and used
+                    // createStatement() without try-with-resources four times
+                    // ( leak of 4 Statement handles per import ). Restored
+                    // properly in finally so the connection returns to the
+                    // Hikari pool with its original state.
+                    final boolean originalAutoCommit = connection.getAutoCommit();
                     connection.setAutoCommit(false);
+                    boolean committed = false;
                     try {
-                        connection.setAutoCommit(false);
                         PGConnection pgConn = connection.unwrap(PGConnection.class);
                         CopyManager copyManager = pgConn.getCopyAPI();
-                        connection.createStatement().execute(
-                                "CREATE TEMP TABLE referencevalue_import (data jsonb) ON COMMIT DROP"
-                        );
+
+                        try (Statement stmt = connection.createStatement()) {
+                            stmt.execute("CREATE TEMP TABLE referencevalue_import (data jsonb) ON COMMIT DROP");
+                        }
 
                         try (BufferedReader reader = Files.newBufferedReader(finalCsvFile, StandardCharsets.UTF_8)) {
-                            long rowsInserted = copyManager.copyIn("COPY referencevalue_import (data) FROM STDIN  ",
-                                    reader);
+                            long rowsInserted = copyManager.copyIn(
+                                    "COPY referencevalue_import (data) FROM STDIN  ", reader);
                             log.info("Inserted {} rows using COPY", rowsInserted);
                         }
 
-                        connection.createStatement().execute("""
-                                DELETE FROM %1$s.reference_reference
-                                WHERE referenceid IN (
-                                    SELECT (data->>'id')::uuid 
-                                    FROM referencevalue_import
-                                )
-                                """
-                                .formatted(getSchema().getName()));
+                        try (Statement stmt = connection.createStatement()) {
+                            stmt.execute("""
+                                    DELETE FROM %1$s.reference_reference
+                                    WHERE referenceid IN (
+                                        SELECT (data->>'id')::uuid
+                                        FROM referencevalue_import
+                                    )
+                                    """.formatted(getSchema().getName()));
+                        }
+
                         String insertSql = String.format("""
                                         INSERT INTO %1$s (%2$s)
                                         SELECT %2$s
@@ -169,7 +180,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                             data
                                         )
                                         ON CONFLICT ON CONSTRAINT "hierarchicalKey_uniqueness"
-                                        DO UPDATE SET 
+                                        DO UPDATE SET
                                             updateDate = current_timestamp,
                                             hierarchicalKey = EXCLUDED.hierarchicalKey,
                                             naturalKey = EXCLUDED.naturalKey,
@@ -188,13 +199,12 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                             while (rs.next()) {
                                 insertedIds.add((UUID) rs.getObject("id"));
                             }
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
                         }
+
                         getNamedParameterJdbcTemplate().query("""
                                  SELECT DISTINCT
-                                     referenceid, referencesby  
-                                FROM 
+                                     referenceid, referencesby
+                                FROM
                                     referencevalue_import s,
                                     JSON_TABLE(s.data, '$.refslinkedto.*.*.*' columns (
                                          referenceid UUID PATH '$.id',
@@ -205,26 +215,37 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                             final UUID referencesby = rs.getObject(2, UUID.class);
                         });
 
-                        connection.createStatement().execute("""
-                                INSERT INTO %1$s.reference_reference(referenceid, referencesby)
-                                SELECT DISTINCT                                    
-                                 (s.data->>'id')::uuid referenceid,
-                                 referencesby::uuid
-                                FROM
-                                 referencevalue_import s,
-                                     JSON_TABLE (
-                                         s.data, '$.refslinkedto.*.*.*.uuids' COLUMNS (
-                                         NESTED PATH '$[*]' COLUMNS(
-                                                 referencesby  TEXT PATH '$')
-                                             )
-                                     ) as joins;
-                                """
-                                .formatted(getSchema().getName())
-                        );
+                        try (Statement stmt = connection.createStatement()) {
+                            stmt.execute("""
+                                    INSERT INTO %1$s.reference_reference(referenceid, referencesby)
+                                    SELECT DISTINCT
+                                     (s.data->>'id')::uuid referenceid,
+                                     referencesby::uuid
+                                    FROM
+                                     referencevalue_import s,
+                                         JSON_TABLE (
+                                             s.data, '$.refslinkedto.*.*.*.uuids' COLUMNS (
+                                             NESTED PATH '$[*]' COLUMNS(
+                                                     referencesby  TEXT PATH '$')
+                                                 )
+                                         ) as joins;
+                                    """.formatted(getSchema().getName()));
+                        }
+
                         connection.commit();
+                        committed = true;
                         return insertedIds;
                     } catch (IOException e) {
                         throw new RuntimeException(e);
+                    } finally {
+                        if (!committed) {
+                            try { connection.rollback(); } catch (SQLException ignored) { /* best effort */ }
+                        }
+                        try {
+                            connection.setAutoCommit(originalAutoCommit);
+                        } catch (SQLException ignored) {
+                            // connection may already be returned/closed by Hikari
+                        }
                     }
                 });
     }
