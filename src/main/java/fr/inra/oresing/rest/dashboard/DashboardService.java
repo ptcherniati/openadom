@@ -48,6 +48,7 @@ public class DashboardService {
     private static final int DEFAULT_LIMIT = 100;
 
     private final WorkflowActiveRegistry registry;
+    private final fr.inra.oresing.workflow.cascade.pipeline.PipelineRegistry pipelineRegistry;
     private final NamedParameterJdbcTemplate jdbc;
     private final AuthenticationService authenticationService;
     private final ImportProperties importProperties;
@@ -186,6 +187,32 @@ public class DashboardService {
             return Optional.empty();                             // 404 , not 403 , to avoid id enumeration
         }
         return Optional.of(d);
+    }
+
+    // ---------------------------------------------------------------- //
+    //  pipeline ( cascade 1.9.0 )                                      //
+    // ---------------------------------------------------------------- //
+
+    /**
+     * Returns the live cascade pipeline snapshot for a workflow
+     * ( source / transform / sink workers + queues + recent events ) .
+     * Same row-level authorisation as {@link #findDetail} : admin sees
+     * everything , non-admin only their own workflows ; unmatched ids
+     * return empty so the controller emits a 404 .
+     */
+    public Optional<PipelineDTO> pipeline(UUID correlationId) {
+        CurrentUserRoles me = authenticationService.getCurrentUserRoles();
+        boolean admin = me.isOpenAdomAdmin();
+        UUID myUserId = me.userId();
+
+        // The pipeline view is live-only : check the workflow is still
+        // in the active registry and that the caller may see it .
+        Optional<WorkflowSnapshot> live = registry.find(correlationId);
+        if (live.isEmpty()) return Optional.empty();
+        if (!admin && !live.get().userId().equals(myUserId)) {
+            return Optional.empty();
+        }
+        return pipelineRegistry.snapshot(correlationId).map(PipelineDTO::from);
     }
 
     // ---------------------------------------------------------------- //

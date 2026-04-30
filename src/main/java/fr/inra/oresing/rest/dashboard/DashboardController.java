@@ -118,6 +118,28 @@ public class DashboardController {
     }
 
     @Operation(
+        summary = "Live cascade pipeline state",
+        description = "Returns the current pipeline snapshot ( source / transform / sink "
+                + "workers , queue depths , recent flow events , rolling throughput ) for "
+                + "the running workflow . Powered by cascade 1.9.0 push events . Returns "
+                + "404 once the workflow has finished ( history endpoint exposes the final "
+                + "outcome ) .")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Pipeline snapshot",
+            content = @Content(schema = @Schema(implementation = PipelineDTO.class))),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
+        @ApiResponse(responseCode = "404", description = "No active workflow with this id , or not visible to this user")
+    })
+    @GetMapping("/{correlationId}/pipeline")
+    public ResponseEntity<PipelineDTO> pipeline(
+            @Parameter(description = "Correlation id of the workflow ( UUID )")
+            @PathVariable UUID correlationId) {
+        return service.pipeline(correlationId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @Operation(
         summary = "Annuler un workflow en cours",
         description = """
                 Signale une demande d'annulation au {@code ChunkCancellationRegistry}
