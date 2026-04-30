@@ -27,6 +27,15 @@ public record WorkerSnapshot(
         /** Index of the chunk currently being processed , null when IDLE . */
         Integer  currentChunk,
 
+        /** Records already processed within the current chunk ( 0 when IDLE ) . */
+        long     currentChunkRecordsProcessed,
+
+        /** Total records expected for the current chunk ( 0 when IDLE or unknown ) . */
+        long     currentChunkRecordsTotal,
+
+        /** Convenience 0..100 progress for the current chunk ; null when unknown / IDLE . */
+        Double   currentChunkProgressPercentage,
+
         /** Counter of chunks already handled by this worker ( includes the current one when RUNNING ) . */
         int      chunkCount,
 

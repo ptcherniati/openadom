@@ -230,12 +230,18 @@ public class WorkflowActiveRegistry implements WorkflowListener {
 
         String status        = running != null ? "RUNNING" : "IDLE";
         Integer currentChunk = running != null ? running.chunkIndex() : null;
+        long curProcessed    = running != null ? running.recordsProcessed() : 0L;
+        long curTotal        = running != null ? running.recordsTotal()     : 0L;
+        Double curPct        = running != null ? running.progressPercentage() : null;
 
         return new WorkerSnapshot(
                 "TRANSFORM",
                 name,
                 status,
                 currentChunk,
+                curProcessed,
+                curTotal,
+                curPct,
                 entries.size(),
                 lastDuration,
                 lastActivity);

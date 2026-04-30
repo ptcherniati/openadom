@@ -160,6 +160,12 @@ public record DashboardWorkflowDTO(
             String status,
             @Schema(description = "Index of the chunk currently being processed ; null when IDLE")
             Integer currentChunk,
+            @Schema(description = "Records already processed within the current chunk ( 0 when IDLE )")
+            long currentChunkRecordsProcessed,
+            @Schema(description = "Total records expected for the current chunk ( 0 when IDLE or unknown )")
+            long currentChunkRecordsTotal,
+            @Schema(description = "Progress percentage 0..100 of the current chunk ; null when unknown / IDLE")
+            Double currentChunkProgressPercentage,
             @Schema(description = "Counter of chunks already handled by this worker")
             int chunkCount,
             @Schema(description = "Wall-clock duration of the most recently finished chunk in milliseconds ; null if none yet")
@@ -171,6 +177,9 @@ public record DashboardWorkflowDTO(
             Long durMs = w.lastChunkDuration() == null ? null : w.lastChunkDuration().toMillis();
             return new WorkerDTO(
                     w.stage(), w.name(), w.status(), w.currentChunk(),
+                    w.currentChunkRecordsProcessed(),
+                    w.currentChunkRecordsTotal(),
+                    w.currentChunkProgressPercentage(),
                     w.chunkCount(), durMs, w.lastActivity());
         }
     }
