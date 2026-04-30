@@ -218,26 +218,27 @@ public class CascadeImportPipeline {
                             .withParallelism(parallelism)
                             .withSourceChunkSize(chunkSizeLines)
                             .withCollectorChunkSize(collectorChunkSize)
-                            .withMaxErrors(maxErrors);
+                            .withMaxErrors(maxErrors)
+                            .withExecutionMode(importProperties.getExecutionMode())
+                            .directWriteParallel(importProperties.isDirectWriteParallel())
+                            .withStreamingMode(importProperties.getStreamingMode());
+
+            // Sticky-connection guard : DIRECT_COPY + PER_CONNECTION_TEMP must
+            // run the sink on a single thread because PgConnection is not
+            // thread-safe and the same connection holds the TEMP table .
+            if (directCopy && importProperties.getStagingStrategy() == ImportProperties.StagingStrategy.PER_CONNECTION_TEMP) {
+                if (parallelism > 1) {
+                    log.warn("[{}] DIRECT_COPY + PER_CONNECTION_TEMP force sinkParallelism=1 ( connexion sticky unique ) ; "
+                            + "parallelism={} reste honoré pour le transform mais le sink est sériel",
+                            correlationId, parallelism);
+                }
+                builder = builder.withSinkParallelism(1);
+            }
+
             if (enableMetrics) {
                 builder = builder.enableMetrics();
             }
             Workflow workflow = builder.build();
-
-            // Apply 1.7.0 cascade flags via the surrounding WorkflowConfig
-            // so the executor can dispatch on executionMode and honour
-            // directWriteParallel / streamingMode / sinkParallelism.
-            //
-            // Sticky-connection note : when sinkStrategy = DIRECT_COPY with
-            // PER_CONNECTION_TEMP staging , sinkParallelism MUST be 1
-            // ( PgConnection is not thread-safe ) ; we force it here .
-            if (directCopy && importProperties.getStagingStrategy() == ImportProperties.StagingStrategy.PER_CONNECTION_TEMP) {
-                if (parallelism > 1) {
-                    log.warn("[{}] DIRECT_COPY + PER_CONNECTION_TEMP forces sinkParallelism=1 ( single sticky connection ) ; "
-                            + "configured parallelism={} is honoured for transform but sink is serial",
-                            correlationId, parallelism);
-                }
-            }
 
             try {
                 // Phase : traitement ( chunking + transformation + merge ).
