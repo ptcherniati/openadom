@@ -39,8 +39,6 @@ public record DashboardConfigDTO(
     public record ImportConfig(
             @Schema(description = "Lignes par chunk", example = "1000")
             int chunkSizeLines,
-            @Schema(description = "Nombre de workers cascade en parallele", example = "2")
-            int parallelism,
             @Schema(description = "Granularite des notifications de progression ( en lignes )",
                     example = "100")
             int progressBatchSize,

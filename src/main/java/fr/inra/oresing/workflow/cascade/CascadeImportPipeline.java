@@ -51,6 +51,15 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 @Service
 public class CascadeImportPipeline {
 
+    /**
+     * Fallback per-stage pool size when no override is set via
+     * {@code -Dcascade.pool.{stage}=N} or {@code CASCADE_POOL_{STAGE}=N} .
+     * Mirrors the {@code WorkflowConfig.defaults().defaultParallelism()}
+     * value of cascade ( 4 ) so the dashboard header is consistent with
+     * what cascade actually allocates.
+     */
+    private static final int DEFAULT_PARALLELISM = 4;
+
     private final ImportProperties        importProperties;
     private final ImportProgressReporter  progressReporter;
     private final WorkflowTempCleanup     tempCleanup;
@@ -155,8 +164,15 @@ public class CascadeImportPipeline {
                 activeRegistry.setRecordsTotal(corrUuid, recordsTotal);
             }
 
+            // Cascade-level pool sizes ( source / transform / sink ) sont
+            // resolus via les env vars CASCADE_POOL_{STAGE} ( ou les
+            // proprietes JVM cascade.pool.{stage} ) avec fallback sur le
+            // default cascade ( 4 ) . openAdom n'expose plus de bouton
+            // global parallelism : la source de verite est cascade.
             final int chunkSizeLines       = importProperties.getChunkSizeLines();
-            final int parallelism          = importProperties.getParallelism();
+            final int sourcePoolSize       = resolvePoolSize("source",    DEFAULT_PARALLELISM);
+            final int transformPoolSize    = resolvePoolSize("transform", DEFAULT_PARALLELISM);
+            final int rawSinkPoolSize      = resolvePoolSize("sink",      DEFAULT_PARALLELISM);
             final int maxErrors            = importProperties.getMaxErrorsThreshold();
             final int collectorChunkSize   = importProperties.getCollectorChunkSize();
             final boolean enableMetrics    = importProperties.isEnableMetrics();
@@ -202,10 +218,11 @@ public class CascadeImportPipeline {
                     ? CascadeSinkFactory.directCopy(referenceValueRepository, importProperties)
                     : new MergingFileSink(mergedPath);
 
-            log.info("[{}] Demarrage import : user={}, file={}, chunkSize={}, parallelism={}, maxErrors={}, metrics={}, "
-                    + "sinkStrategy={}, executionMode={}, directWriteParallel={}, streamingMode={}",
-                    correlationId, userId, uploadedPath.getFileName(), chunkSizeLines, parallelism, maxErrors, enableMetrics,
-                    strategy, importProperties.getExecutionMode(),
+            log.info("[{}] Demarrage import : user={}, file={}, chunkSize={}, pools=[source={},transform={},sink={}], "
+                    + "maxErrors={}, metrics={}, sinkStrategy={}, executionMode={}, directWriteParallel={}, streamingMode={}",
+                    correlationId, userId, uploadedPath.getFileName(), chunkSizeLines,
+                    sourcePoolSize, transformPoolSize, rawSinkPoolSize,
+                    maxErrors, enableMetrics, strategy, importProperties.getExecutionMode(),
                     importProperties.isDirectWriteParallel(), importProperties.getStreamingMode());
 
             fr.inrae.ore.cascade.model.workflow.builder.WorkflowPipelineConfig builder =
@@ -215,7 +232,6 @@ public class CascadeImportPipeline {
                             .transform(transformation)
                             .to(sink)
                             .withCorrelationId(correlationId)
-                            .withParallelism(parallelism)
                             .withSourceChunkSize(chunkSizeLines)
                             .withCollectorChunkSize(collectorChunkSize)
                             .withMaxErrors(maxErrors)
@@ -226,11 +242,13 @@ public class CascadeImportPipeline {
             // Sticky-connection guard : DIRECT_COPY + PER_CONNECTION_TEMP must
             // run the sink on a single thread because PgConnection is not
             // thread-safe and the same connection holds the TEMP table .
-            if (directCopy && importProperties.getStagingStrategy() == ImportProperties.StagingStrategy.PER_CONNECTION_TEMP) {
-                if (parallelism > 1) {
+            boolean stickyConnection = directCopy
+                    && importProperties.getStagingStrategy() == ImportProperties.StagingStrategy.PER_CONNECTION_TEMP;
+            if (stickyConnection) {
+                if (rawSinkPoolSize > 1) {
                     log.warn("[{}] DIRECT_COPY + PER_CONNECTION_TEMP force sinkParallelism=1 ( connexion sticky unique ) ; "
-                            + "parallelism={} reste honoré pour le transform mais le sink est sériel",
-                            correlationId, parallelism);
+                            + "CASCADE_POOL_SINK={} reste configure mais le sink est sériel",
+                            correlationId, rawSinkPoolSize);
                 }
                 builder = builder.withSinkParallelism(1);
             }
@@ -242,21 +260,13 @@ public class CascadeImportPipeline {
 
             // Publie le parallélisme effectif dans le registry pour que
             // l'en-tête de la vue Workers de oa-live affiche le nombre de
-            // threads par stage . Source de verite = cascade : on lit les
-            // overrides cascade.pool.{stage} ( -D ) ou CASCADE_POOL_{STAGE}
-            // ( env ) , qui prennent precedence sur la valeur du builder
-            // workflow . Sans override on retombe sur {@code parallelism}.
-            // Le sink est forcé à 1 quand DIRECT_COPY + PER_CONNECTION_TEMP.
-            int sourceSlots    = resolvePoolSize("source",    parallelism);
-            int transformSlots = resolvePoolSize("transform", parallelism);
-            int sinkSlots      = (directCopy && importProperties.getStagingStrategy()
-                    == ImportProperties.StagingStrategy.PER_CONNECTION_TEMP)
-                    ? 1
-                    : resolvePoolSize("sink", parallelism);
+            // threads par stage . Le sink est forcé à 1 quand
+            // DIRECT_COPY + PER_CONNECTION_TEMP.
+            int sinkSlots = stickyConnection ? 1 : rawSinkPoolSize;
             if (corrUuid != null) {
                 activeRegistry.setParallelism(corrUuid,
                         new fr.inra.oresing.workflow.cascade.history.ParallelismSnapshot(
-                                sourceSlots, transformSlots, sinkSlots));
+                                sourcePoolSize, transformPoolSize, sinkSlots));
             }
 
             try {

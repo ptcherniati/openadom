@@ -17,9 +17,6 @@ public class ImportProperties {
     /** Nombre de lignes CSV par chunk. */
     private int chunkSizeLines = 1000;
 
-    /** Niveau de parallélisme appliqué aux Transformations cascade ( workers ). */
-    private int parallelism = 2;
-
     /** Granularité des notifications de progression ( en lignes ). */
     private int progressBatchSize = 100;
 
@@ -105,7 +102,6 @@ public class ImportProperties {
     }
 
     public int getChunkSizeLines()        { return chunkSizeLines; }
-    public int getParallelism()           { return parallelism; }
     public int getProgressBatchSize()     { return progressBatchSize; }
     public int getMaxErrorsThreshold()    { return maxErrorsThreshold; }
     public String getChunksTempDir()      { return chunksTempDir; }
@@ -123,7 +119,6 @@ public class ImportProperties {
     public boolean isSkipCsvReencoding() { return skipCsvReencoding; }
 
     public void setChunkSizeLines(int v)      { this.chunkSizeLines = v; }
-    public void setParallelism(int v)         { this.parallelism = v; }
     public void setProgressBatchSize(int v)   { this.progressBatchSize = v; }
     public void setMaxErrorsThreshold(int v)  { this.maxErrorsThreshold = v; }
     public void setChunksTempDir(String v)    { this.chunksTempDir = v; }

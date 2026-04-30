@@ -258,7 +258,6 @@ public class DashboardService {
 
         DashboardConfigDTO.ImportConfig importCfg = new DashboardConfigDTO.ImportConfig(
                 importProperties.getChunkSizeLines(),
-                importProperties.getParallelism(),
                 importProperties.getProgressBatchSize(),
                 importProperties.getMaxErrorsThreshold(),
                 importProperties.getChunksTempDir(),
