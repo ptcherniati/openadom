@@ -211,7 +211,9 @@ public class DashboardService {
                 (Double) rs.getObject("progress_percentage"),
                 rs.getLong("bytes_total"),
                 0L,
-                List.of());
+                List.of(),
+                List.of(),
+                null);
     }
 
     @SuppressWarnings("unchecked")

@@ -82,12 +82,28 @@ public record DashboardWorkflowDTO(
         @Schema(description = "Etat live des chunks composant le workflow ( drill-down "
                 + "oa-live ). Vide quand le workflow ne s'expose pas par chunks ou tant "
                 + "qu'aucun chunk n'a demarre.")
-        List<ChunkDTO> chunks) {
+        List<ChunkDTO> chunks,
+
+        @Schema(description = "Vue agrégée par worker ( 1 ligne par thread ). Stable "
+                + "même quand le nombre de chunks explose ; remplace l'usage du tableau "
+                + "chunks pour la vue Workers de oa-live.")
+        List<WorkerDTO> workers,
+
+        @Schema(description = "Parallélisme effectif par stage ( source / transform / "
+                + "sink ) tel que résolu par le builder cascade. Null pour les workflows "
+                + "non chunkés.")
+        ParallelismDTO parallelism) {
 
     public static DashboardWorkflowDTO fromSnapshot(fr.inra.oresing.workflow.cascade.history.WorkflowSnapshot s) {
         List<ChunkDTO> chunkDtos = s.chunks() == null
                 ? List.of()
                 : s.chunks().stream().map(ChunkDTO::fromSnapshot).toList();
+        List<WorkerDTO> workerDtos = s.workers() == null
+                ? List.of()
+                : s.workers().stream().map(WorkerDTO::fromSnapshot).toList();
+        ParallelismDTO parallelism = s.parallelism() == null
+                ? null
+                : ParallelismDTO.fromSnapshot(s.parallelism());
         return new DashboardWorkflowDTO(
                 s.correlationId(), s.workflowType(), s.userId(), s.userLogin(),
                 s.applicationName(), s.dataType(), s.resourceName(),
@@ -95,7 +111,7 @@ public record DashboardWorkflowDTO(
                 s.status(),
                 s.recordsProcessed(), s.recordsFailed(), s.chunksProcessed(),
                 s.progressPercentage(), s.bytesTotal(), s.recordsTotal(),
-                chunkDtos);
+                chunkDtos, workerDtos, parallelism);
     }
 
     /** Per-chunk DTO mirroring {@link fr.inra.oresing.workflow.cascade.history.ChunkSnapshot}. */
@@ -129,6 +145,45 @@ public record DashboardWorkflowDTO(
                     c.progressPercentage(),
                     c.workerName(), c.startTime(), c.endTime(),
                     c.errorMessage());
+        }
+    }
+
+    /** Per-worker DTO mirroring {@link fr.inra.oresing.workflow.cascade.history.WorkerSnapshot}. */
+    @Schema(name = "DashboardWorker",
+            description = "Per-worker live state for the oa-live Workers view")
+    public record WorkerDTO(
+            @Schema(description = "SOURCE | TRANSFORM | SINK")
+            String stage,
+            @Schema(description = "Worker thread name ( e.g. transform-1 )")
+            String name,
+            @Schema(description = "RUNNING | IDLE | FAILED")
+            String status,
+            @Schema(description = "Index of the chunk currently being processed ; null when IDLE")
+            Integer currentChunk,
+            @Schema(description = "Counter of chunks already handled by this worker")
+            int chunkCount,
+            @Schema(description = "Wall-clock duration of the most recently finished chunk in milliseconds ; null if none yet")
+            Long lastChunkDurationMs,
+            @Schema(description = "Last time this worker emitted any event ( ISO-8601 )")
+            Instant lastActivity) {
+
+        public static WorkerDTO fromSnapshot(fr.inra.oresing.workflow.cascade.history.WorkerSnapshot w) {
+            Long durMs = w.lastChunkDuration() == null ? null : w.lastChunkDuration().toMillis();
+            return new WorkerDTO(
+                    w.stage(), w.name(), w.status(), w.currentChunk(),
+                    w.chunkCount(), durMs, w.lastActivity());
+        }
+    }
+
+    /** Parallelism summary mirroring {@link fr.inra.oresing.workflow.cascade.history.ParallelismSnapshot}. */
+    @Schema(name = "DashboardParallelism",
+            description = "Per-stage parallelism summary shown in the oa-live Workers view header")
+    public record ParallelismDTO(
+            int source,
+            int transform,
+            int sink) {
+        public static ParallelismDTO fromSnapshot(fr.inra.oresing.workflow.cascade.history.ParallelismSnapshot p) {
+            return new ParallelismDTO(p.source(), p.transform(), p.sink());
         }
     }
 

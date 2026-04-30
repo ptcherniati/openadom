@@ -42,14 +42,26 @@ public record WorkflowSnapshot(
          * extractions ) ou tant qu'aucun ChunkStart n'est arrive. Les
          * elements sont tries par chunkIndex croissant.
          */
-        List<ChunkSnapshot> chunks) {
+        List<ChunkSnapshot> chunks,
+        /**
+         * Vue agrégée par worker ( 1 ligne par thread ) , dérivée des chunks
+         * au read-time par {@link WorkflowActiveRegistry} . Stable même
+         * quand le nombre de chunks explose .
+         */
+        List<WorkerSnapshot> workers,
+        /**
+         * Parallélisme effectif par stage ( source / transform / sink ) ,
+         * affiché dans le header de la vue Workers oa-live . Null pour les
+         * workflows qui ne s'exposent pas par stages ( extractions ) .
+         */
+        ParallelismSnapshot parallelism) {
 
     /** Convenience helper : time elapsed since start in milliseconds. */
     public long elapsedMillis(Instant now) {
         return now.toEpochMilli() - startTime.toEpochMilli();
     }
 
-    /** Builder-ish ‘with’ helper for progress bumps. */
+    /** Builder-ish 'with' helper for progress bumps. */
     public WorkflowSnapshot withProgress(
             long recordsProcessed,
             long recordsFailed,
@@ -60,7 +72,7 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, recordsTotal, errors, chunks);
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism);
     }
 
     /** Permet de mettre à jour le total une fois le comptage effectué. */
@@ -69,7 +81,7 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, recordsTotal, errors, chunks);
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism);
     }
 
     /** Remplace la liste des chunks ( utilise par le registry au moment de l'expose ). */
@@ -78,6 +90,24 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, recordsTotal, errors, chunks);
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism);
+    }
+
+    /** Met à jour le bloc de parallélisme effectif ( source / transform / sink ). */
+    public WorkflowSnapshot withParallelism(ParallelismSnapshot parallelism) {
+        return new WorkflowSnapshot(
+                correlationId, workflowType, userId, userLogin,
+                applicationName, dataType, resourceName, startTime,
+                status, recordsProcessed, recordsFailed, chunksProcessed,
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism);
+    }
+
+    /** Remplace la liste des workers ( utilise par le registry au moment de l'expose ). */
+    public WorkflowSnapshot withWorkers(List<WorkerSnapshot> workers) {
+        return new WorkflowSnapshot(
+                correlationId, workflowType, userId, userLogin,
+                applicationName, dataType, resourceName, startTime,
+                status, recordsProcessed, recordsFailed, chunksProcessed,
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism);
     }
 }

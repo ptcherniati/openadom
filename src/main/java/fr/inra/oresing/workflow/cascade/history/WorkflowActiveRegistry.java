@@ -8,9 +8,13 @@ import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -104,6 +108,18 @@ public class WorkflowActiveRegistry implements WorkflowListener {
                 cur.withRecordsTotal(recordsTotal));
     }
 
+    /**
+     * Records the resolved parallelism block ( source / transform / sink )
+     * for a workflow once the executor has decided which thread pools to
+     * use . Called by {@link fr.inra.oresing.workflow.cascade.CascadeImportPipeline}
+     * right after the {@link fr.inrae.ore.cascade.model.workflow.WorkflowConfig}
+     * is finalised . No-op if the entry is not registered .
+     */
+    public void setParallelism(UUID correlationId, ParallelismSnapshot parallelism) {
+        byCorrelationId.computeIfPresent(correlationId, (id, cur) ->
+                cur.withParallelism(parallelism));
+    }
+
     /** Removes the entry from the registry once the workflow is over. */
     public void finish(UUID correlationId) {
         WorkflowSnapshot removed = byCorrelationId.remove(correlationId);
@@ -155,18 +171,74 @@ public class WorkflowActiveRegistry implements WorkflowListener {
 
     /**
      * Replaces {@code WorkflowSnapshot.chunks} with the live chunk state
-     * tracked via cascade listeners. Called at every read so the chunks
-     * field is always fresh.
+     * tracked via cascade listeners . Called at every read so the chunks
+     * field is always fresh . Also computes the per-worker aggregated view
+     * ( {@link WorkerSnapshot} ) so the dashboard does not have to group
+     * client-side .
      */
     private WorkflowSnapshot injectChunks(WorkflowSnapshot s) {
         ConcurrentMap<Integer, ChunkSnapshot> chunks = chunksByCorrelationId.get(s.correlationId());
         if (chunks == null || chunks.isEmpty()) {
-            return s.withChunks(List.of());
+            return s.withChunks(List.of()).withWorkers(List.of());
         }
         List<ChunkSnapshot> sorted = chunks.values().stream()
                 .sorted(Comparator.comparingInt(ChunkSnapshot::chunkIndex))
                 .toList();
-        return s.withChunks(sorted);
+        return s.withChunks(sorted).withWorkers(aggregateWorkers(sorted));
+    }
+
+    /**
+     * Aggregates {@link ChunkSnapshot} entries into one {@link WorkerSnapshot}
+     * per distinct {@code workerName} . Cascade currently only emits chunk
+     * events for the transform stage , so all entries are tagged
+     * {@code TRANSFORM} . The list is sorted by worker name so the UI grid
+     * stays stable across refreshes .
+     */
+    private static List<WorkerSnapshot> aggregateWorkers(List<ChunkSnapshot> chunks) {
+        Map<String, List<ChunkSnapshot>> byWorker = new LinkedHashMap<>();
+        for (ChunkSnapshot c : chunks) {
+            String name = c.workerName();
+            if (name == null || name.isBlank()) continue;
+            byWorker.computeIfAbsent(name, k -> new java.util.ArrayList<>()).add(c);
+        }
+        return byWorker.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(e -> buildWorkerSnapshot(e.getKey(), e.getValue()))
+                .toList();
+    }
+
+    private static WorkerSnapshot buildWorkerSnapshot(String name, List<ChunkSnapshot> entries) {
+        ChunkSnapshot running = entries.stream()
+                .filter(c -> "RUNNING".equals(c.status()))
+                .findFirst().orElse(null);
+
+        ChunkSnapshot lastFinished = entries.stream()
+                .filter(c -> c.endTime() != null)
+                .max(Comparator.comparing(ChunkSnapshot::endTime))
+                .orElse(null);
+
+        Duration lastDuration = null;
+        if (lastFinished != null && lastFinished.startTime() != null) {
+            lastDuration = Duration.between(lastFinished.startTime(), lastFinished.endTime());
+        }
+
+        Instant lastActivity = entries.stream()
+                .flatMap(c -> java.util.stream.Stream.of(c.startTime(), c.endTime()))
+                .filter(java.util.Objects::nonNull)
+                .max(Comparator.naturalOrder())
+                .orElse(null);
+
+        String status        = running != null ? "RUNNING" : "IDLE";
+        Integer currentChunk = running != null ? running.chunkIndex() : null;
+
+        return new WorkerSnapshot(
+                "TRANSFORM",
+                name,
+                status,
+                currentChunk,
+                entries.size(),
+                lastDuration,
+                lastActivity);
     }
 
     // ----------------------------------------------------------------

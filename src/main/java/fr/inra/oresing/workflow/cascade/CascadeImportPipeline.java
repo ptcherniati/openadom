@@ -240,6 +240,19 @@ public class CascadeImportPipeline {
             }
             Workflow workflow = builder.build();
 
+            // Publie le parallélisme effectif dans le registry pour que
+            // l'en-tête de la vue Workers de oa-live affiche le nombre de
+            // threads par stage . Le sink est forcé à 1 quand
+            // DIRECT_COPY + PER_CONNECTION_TEMP ; sinon il suit
+            // {@code parallelism} ( valeur par défaut effective ).
+            int sinkSlots = (directCopy && importProperties.getStagingStrategy()
+                    == ImportProperties.StagingStrategy.PER_CONNECTION_TEMP) ? 1 : parallelism;
+            if (corrUuid != null) {
+                activeRegistry.setParallelism(corrUuid,
+                        new fr.inra.oresing.workflow.cascade.history.ParallelismSnapshot(
+                                1, parallelism, sinkSlots));
+            }
+
             try {
                 // Phase : traitement ( chunking + transformation + merge ).
                 updateWorkflowPhase(corrUuid, WorkflowLogEntry.STATUS_PROCESSING, fileSizeBytes);
@@ -354,7 +367,9 @@ public class CascadeImportPipeline {
                     fileSizeBytes,
                     0L,            // recordsTotal ( inconnu tant que le fichier n'est pas compté )
                     List.of(),     // errors ( aucune au démarrage )
-                    List.of()));   // chunks ( injectes par le registry au read-time )
+                    List.of(),     // chunks ( injectes par le registry au read-time )
+                    List.of(),     // workers ( injectes par le registry au read-time )
+                    null));        // parallelism ( renseigne par setParallelism plus tard )
         } catch (RuntimeException e) {
             // Best-effort : un échec de publication ne doit pas casser l'import.
             log.warn("[{}] WorkflowActiveRegistry.start a échoué : {}", corrUuid, e.getMessage());
@@ -399,7 +414,9 @@ public class CascadeImportPipeline {
                                 fileSizeBytes,
                                 snapshot.recordsTotal(),
                                 snapshot.errors(),
-                                List.of()));
+                                List.of(),
+                                List.of(),
+                                snapshot.parallelism()));
                     });
         } catch (RuntimeException e) {
             log.warn("[{}] WorkflowActiveRegistry phase update échouée : {}", corrUuid, e.getMessage());
