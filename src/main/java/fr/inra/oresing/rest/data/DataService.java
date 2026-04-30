@@ -116,7 +116,22 @@ public class DataService {
         this.backupExecutor = backupExecutor;
     }
 
-    @Transactional()
+    /**
+     * Plus de {@code @Transactional} ici : l'import passe par le pipeline
+     * cascade ( 90+ s sur gros fichiers ) suivi de
+     * {@code DataRepository.storeAll(...)} qui gere sa propre transaction
+     * via {@link org.springframework.jdbc.core.ConnectionCallback} .
+     *
+     * <p>Avant ce changement , Spring AOP ouvrait une connexion Hikari au
+     * debut d'addData et la maintenait inutilisee pendant toute la phase
+     * cascade ( ~90 s ) avant de la passer a storeAll. Hikari leak detection
+     * triggait a 30 s ( faux positif , long-running ) , et chaque import
+     * concurrent gelait 1 connexion du pool pour rien.
+     *
+     * <p>Atomicite : storeAll est transactionnel ( COPY -> INSERT … ON
+     * CONFLICT -> COMMIT ) ; setRoleForClient ouvre sa propre tx courte
+     * via la methode chainee. Plus besoin d'enveloppe globale.
+     */
     public UUID addData(final Application application,
                         final String dataName,
                         final DataFile file) throws IOException {
@@ -137,7 +152,9 @@ public class DataService {
         );
 
         final DataImporter referenceImporter = new DataImporter(referenceImporterContext);
-        Path path = referenceImporter.prepareContextForDataTreatment(FileBomResolver.of(file));
+        // Honour cascade.import.skip-csv-reencoding ( default false ) .
+        boolean skipReencoding = cascadeImportPipeline.getImportProperties().isSkipCsvReencoding();
+        Path path = referenceImporter.prepareContextForDataTreatment(FileBomResolver.of(file), skipReencoding);
         final String userId = serviceContainer.authenticationService().getCurrentUser().getId().toString();
         cascadeImportPipeline.execute(
                 referenceImporter,

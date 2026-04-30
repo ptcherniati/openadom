@@ -81,7 +81,7 @@ public class VersioningService {
                 uploadState = EmailService.UPLOAD_STATE.UPLOADED;
             }
             if (withEmail) {
-                serviceContainer.emailService().sendUpoadSuccessMail(application, dataName, fileName, uploadState, locale, dataVersioningResult, serviceContainer.authenticationService().getCurrentUser());
+                safeSendUploadSuccessMail(application, dataName, fileName, uploadState, locale, dataVersioningResult);
                 return dataVersioningResult;
             }
         }
@@ -93,10 +93,36 @@ public class VersioningService {
         final List<ApplicationResult.DataSynthesis> dataSynthesis = Optional.ofNullable(serviceContainer.dataService().getReferenceSynthesis(application)).orElseGet(List::of);
         DataVersioningResult dataVersioningResult = DataVersioningResult.of(nameOrId, dataName, state.binaryFile().getId(), dataSynthesis);
         if (withEmail) {
-            serviceContainer.emailService().sendUpoadSuccessMail(application, dataName, fileName, uploadState, locale, dataVersioningResult, serviceContainer.authenticationService().getCurrentUser());
+            safeSendUploadSuccessMail(application, dataName, fileName, uploadState, locale, dataVersioningResult);
         }
         return dataVersioningResult;
 
+    }
+
+    /**
+     * Sends the post-import notification mail without ever propagating an
+     * exception. Mail failure is best-effort : an unreachable SMTP server
+     * ( the previous behaviour caused MailSendException to bubble up ,
+     * tripping the surrounding @Transactional and rolling back the entire
+     * import - dropping the workflow_log row for big files like the
+     * 274 706-line case ) must NOT abort a successful upload.
+     */
+    private void safeSendUploadSuccessMail(Application application,
+                                           String dataName,
+                                           String fileName,
+                                           EmailService.UPLOAD_STATE uploadState,
+                                           Locale locale,
+                                           DataVersioningResult dataVersioningResult) {
+        try {
+            serviceContainer.emailService().sendUpoadSuccessMail(
+                    application, dataName, fileName, uploadState, locale,
+                    dataVersioningResult,
+                    serviceContainer.authenticationService().getCurrentUser());
+        } catch (RuntimeException mailFailure) {
+            log.warn("Notification mail post-import failed (non blocking) for application={} dataName={} fileName={} : {}",
+                    application != null ? application.getName() : null, dataName, fileName,
+                    mailFailure.getMessage());
+        }
     }
 
     private UUID publishData(String dataName, FileOrUUID fileOrUUID, Application application, State state) throws IOException {

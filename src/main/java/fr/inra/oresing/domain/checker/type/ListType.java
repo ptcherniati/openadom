@@ -18,6 +18,15 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public non-sealed class ListType<F extends FieldType<?>> implements FieldType<List<F>> {
+
+    /**
+     * shared ObjectMapper. Each serialize() / serializeAddArray()
+     * previously instantiated a new mapper per call ; on a 274 706-line
+     * import that is millions of throwaway ObjectMappers. ObjectMapper is
+     * thread-safe once configured.
+     */
+    private static final ObjectMapper SHARED_MAPPER = new ObjectMapper();
+
     public static final ListType<StringType> EMPTY_LIST = new ListType<>(StringType.getStringTypeFromStringValue(""));
     final Supplier<ListType<F>> clone;
     @Getter
@@ -94,7 +103,7 @@ public non-sealed class ListType<F extends FieldType<?>> implements FieldType<Li
 
     @Override
     public void serialize(final JsonGenerator gen) throws IOException {
-        final ObjectMapper mapper = new ObjectMapper();
+        final ObjectMapper mapper = SHARED_MAPPER; // reused
         final ArrayNode arrayNode = mapper.createArrayNode();
         for (final F ft : value) {
             ft.serializeAddArray(arrayNode);
@@ -104,7 +113,7 @@ public non-sealed class ListType<F extends FieldType<?>> implements FieldType<Li
 
     @Override
     public void serialize(final JsonGenerator gen, final String key) throws IOException {
-        final ObjectMapper mapper = new ObjectMapper();
+        final ObjectMapper mapper = SHARED_MAPPER; // reused
         final ArrayNode arrayNode = mapper.createArrayNode();
         for (final F ft : value) {
             ft.serializeAddArray(arrayNode);
@@ -115,7 +124,7 @@ public non-sealed class ListType<F extends FieldType<?>> implements FieldType<Li
 
     @Override
     public void serializeAddArray(final ArrayNode arrayNode) {
-        final ObjectMapper mapper = new ObjectMapper();
+        final ObjectMapper mapper = SHARED_MAPPER; // reused
         final ArrayNode an = mapper.createArrayNode();
         for (final F ft : value) {
             ft.serializeAddArray(an);

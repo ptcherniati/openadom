@@ -29,4 +29,26 @@ public class LoggingImportProgressReporter implements ImportProgressReporter {
                 .addAndGet(delta);
         log.debug("[{}] +{} lignes traitées (total : {})", correlationId, delta, total);
     }
+
+    /**
+     * Releases the per-correlationId counter when the workflow ends.
+     *
+     * <p>without this purge , {@code totals} grew unbounded across the
+     * JVM lifetime ( one AtomicLong per workflow forever ) and was a
+     * confirmed leak source contributing to the 1st->2nd deposit
+     * degradation. Called from
+     * {@code CascadeImportPipeline.execute()} 's finally block.
+     */
+    public long release(String correlationId) {
+        if (correlationId == null) {
+            return 0L;
+        }
+        AtomicLong removed = totals.remove(correlationId);
+        return removed != null ? removed.get() : 0L;
+    }
+
+    /** Returns the number of correlation IDs currently retained ( diagnostics ). */
+    public int trackedCount() {
+        return totals.size();
+    }
 }

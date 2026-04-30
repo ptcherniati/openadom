@@ -42,6 +42,7 @@ public record AsynchroneFileImporterContext(
         ConcurrentHashMap<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids,
         ConcurrentHashMap<Ltree, List<RowWithReferenceDatum>> missingParentLine,
         ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences,
+        ImmutableMap<HkPatternKey, UUID> storedReferencesByHkPattern,
         SetMultimap<Ltree, Long> encounteredHierarchicalKeysForConflictDetection, //asynchronous
         Set<Column> columnsWithPatternColumns,
         Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey,
@@ -49,6 +50,15 @@ public record AsynchroneFileImporterContext(
         BuildColumns buildColumns,
         ReportErrors allErrors,
         DataHeaderReader dataHeaderReader) {
+
+    /**
+     * Cle composite ( hierarchicalKey , patternColumnName ) pour le lookup
+     * O(1) dans {@link #getIdForSameHierarchicalKeyInDatabase} . Avant ce
+     * fix , chaque appel parcourait l'ImmutableMap entier en O(N) ; sur un
+     * referentiel deja peuple de 100k lignes + un import 274k lignes , c'etait
+     * l'un des hot path les plus chers du pipeline.
+     */
+    public record HkPatternKey(Ltree hierarchicalKey, String patternColumnName) {}
     public static final String COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR = "__";
 
     /**
@@ -73,6 +83,26 @@ public record AsynchroneFileImporterContext(
 
         BuildColumns result = BuildColumns.buildColumns(componentDescriptionEntryByComputedType, referenceValueRepository);
 
+        ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences =
+                referenceValueRepository.getDataIdPerKeys(constants.refType());
+
+        // B4 / #5 : index O(1) pour {@link #getIdForSameHierarchicalKeyInDatabase}.
+        // Cette methode est appelee par ligne par DataTransformer ; sur un
+        // referentiel deja peuple de N lignes et un import de M lignes ,
+        // l'ancien stream().filter() faisait O(N x M) operations. L'index
+        // ramene chaque lookup a O(1) au prix d'un seul parcours initial.
+        // En cas de collisions ( meme HK + pattern , peu probable mais
+        // possible historiquement ) on garde la PREMIERE occurrence ,
+        // identique au .findFirst() de l'ancien stream.
+        Map<HkPatternKey, UUID> hkIndexTmp = new HashMap<>(storedReferences.size() * 2);
+        for (Map.Entry<DataValue.LineIdentityColumnName, UUID> entry : storedReferences.entrySet()) {
+            DataValue.LineIdentityColumnName k = entry.getKey();
+            hkIndexTmp.putIfAbsent(
+                    new HkPatternKey(k.hierarchicalKey(), k.patternColomnName()),
+                    entry.getValue());
+        }
+        ImmutableMap<HkPatternKey, UUID> hkIndex = ImmutableMap.copyOf(hkIndexTmp);
+
         return new AsynchroneFileImporterContext(
                 constants,
                 publishContextBuilder,
@@ -81,7 +111,8 @@ public record AsynchroneFileImporterContext(
                 jsonRowMapper,
                 new ConcurrentHashMap<>(),
                 new ConcurrentHashMap<>(),
-                referenceValueRepository.getDataIdPerKeys(constants.refType()),
+                storedReferences,
+                hkIndex,
                 Multimaps.synchronizedSetMultimap(HashMultimap.create()),
                 new HashSet<>(),
                 displayNamesByReferenceAndNaturalKey,
@@ -172,16 +203,14 @@ public record AsynchroneFileImporterContext(
     }
 
     public Optional<UUID> getIdForSameHierarchicalKeyInDatabase(final Ltree hierarchicalKey, String patternColumnName) {
-        if (storedReferences() == null) {
+        // O(1) lookup via storedReferencesByHkPattern ( index pre-calcule
+        // dans of(...) ) au lieu de l'ancien stream().filter() O(N) execute
+        // par ligne du CSV importe. Voir B4 / #5 dans PERF_AUDIT_LOCAL.md.
+        if (storedReferencesByHkPattern() == null) {
             return Optional.empty();
         }
-        return storedReferences().entrySet().stream()
-                .filter(entry ->
-                        entry.getKey().hierarchicalKey().equals(hierarchicalKey) &&
-                        entry.getKey().patternColomnName().equals(patternColumnName)
-                )
-                .map(Map.Entry::getValue)
-                .findFirst();
+        return Optional.ofNullable(
+                storedReferencesByHkPattern().get(new HkPatternKey(hierarchicalKey, patternColumnName)));
     }
 
     public String getDisplayNamesByReferenceAndNaturalKey(final String referencedColumn, final String naturalKey, final String locale) {

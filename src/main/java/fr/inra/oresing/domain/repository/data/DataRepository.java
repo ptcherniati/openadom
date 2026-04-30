@@ -31,7 +31,15 @@ public interface DataRepository {
     @Transactional(readOnly = true)
     Stream<DataValue> findAllByReferenceTypeWithReferencingReferencesStream(final String refType, final MultiValueMap<String, String> params);
 
-    List<UUID> storeAll(Path finalCsvFile);
+    /**
+     * Charge le fichier CSV final ( produit par le pipeline cascade ) dans
+     * la table cible via COPY + INSERT … ON CONFLICT.
+     *
+     * <p>Pas de retour : le RETURNING id de l'INSERT a ete supprime ( resultat
+     * jamais utilise par les appelants -> economise serialisation /
+     * transport / heap pour 280k+ rows par import ).
+     */
+    void storeAll(Path finalCsvFile);
 
     void removeByFileId(UUID id);
 

@@ -109,6 +109,25 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         return getSchema().referenceValue();
     }
 
+    /**
+     * Exposes the application schema name for callers outside this package
+     * ( e.g. {@code CascadeSinkFactory} ) . The base
+     * {@link JsonTableInApplicationSchemaRepositoryTemplate#getSchema()} is
+     * {@code protected} ; this accessor delegates to it .
+     */
+    public String getSchemaName() {
+        return getSchema().getName();
+    }
+
+    /**
+     * Exposes the underlying {@link javax.sql.DataSource} used by this
+     * repository . Useful to build cascade {@code Sink}s ( e.g. the
+     * {@code StagingPostgresSink} which needs a DataSource at construction ) .
+     */
+    public javax.sql.DataSource getDataSource() {
+        return getNamedParameterJdbcTemplate().getJdbcTemplate().getDataSource();
+    }
+
     @Override
     protected String getUpsertQuery() {
         return """
@@ -129,21 +148,29 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         );
     }
 
+    /**
+     * Taille de batch pour l'INSERT bulk depuis la TEMP table {@code
+     * referencevalue_import} vers la table cible. Decoupage en N batches
+     * via {@code DELETE ... RETURNING} dans une CTE pour eviter les couts
+     * d'OFFSET et permettre des checkpoints PG plus frequents +
+     * libere les pages locks entre batches.
+     *
+     * <p>Configurable via {@code -Dapp.import.bulkInsertBatchSize=N}.
+     */
+    private static final int BULK_INSERT_BATCH_SIZE =
+            Integer.getInteger("app.import.bulkInsertBatchSize", 50_000);
+
     @Override
-    public List<UUID> storeAll(final Path finalCsvFile) {
-        // 7. Colonnes pour l'insertion
+    public void storeAll(final Path finalCsvFile) {
         final String columns = Arrays.stream(ORDERED_COLUMNS)
                 .map(String::toLowerCase)
                 .collect(Collectors.joining(","));
 
-        return getNamedParameterJdbcTemplate().getJdbcTemplate().execute(
-                (ConnectionCallback<List<UUID>>) connection -> {
-                    // the original code switched the pooled connection to
-                    // autoCommit=false and never restored it , and used
-                    // createStatement() without try-with-resources four times
-                    // ( leak of 4 Statement handles per import ). Restored
-                    // properly in finally so the connection returns to the
-                    // Hikari pool with its original state.
+        getNamedParameterJdbcTemplate().getJdbcTemplate().execute(
+                (ConnectionCallback<Void>) connection -> {
+                    // setAutoCommit jamais restaure par l'ancien code + 4
+                    // Statement createStatement() sans try-with-resources
+                    // ( leak ). Restoration en finally.
                     final boolean originalAutoCommit = connection.getAutoCommit();
                     connection.setAutoCommit(false);
                     boolean committed = false;
@@ -155,12 +182,22 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                             stmt.execute("CREATE TEMP TABLE referencevalue_import (data jsonb) ON COMMIT DROP");
                         }
 
+                        long copiedRows;
+                        long copyStart = System.nanoTime();
                         try (BufferedReader reader = Files.newBufferedReader(finalCsvFile, StandardCharsets.UTF_8)) {
-                            long rowsInserted = copyManager.copyIn(
+                            copiedRows = copyManager.copyIn(
                                     "COPY referencevalue_import (data) FROM STDIN  ", reader);
-                            log.info("Inserted {} rows using COPY", rowsInserted);
                         }
+                        long copyMs = (System.nanoTime() - copyStart) / 1_000_000L;
+                        log.info("storeAll : COPY phase loaded {} rows into temp table in {} ms", copiedRows, copyMs);
 
+                        // Reconstruction reference_reference :
+                        //   1. supprimer les liens existants pour les ids importes
+                        //   2. les re-creer depuis le jsonb des nouvelles donnees
+                        // Important : ces 2 etapes lisent referencevalue_import
+                        // donc DOIVENT s'executer AVANT l'INSERT bulk batche
+                        // ci-dessous ( qui consomme la temp table via DELETE
+                        // RETURNING ).
                         try (Statement stmt = connection.createStatement()) {
                             stmt.execute("""
                                     DELETE FROM %1$s.reference_reference
@@ -170,50 +207,6 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                     )
                                     """.formatted(getSchema().getName()));
                         }
-
-                        String insertSql = String.format("""
-                                        INSERT INTO %1$s (%2$s)
-                                        SELECT %2$s
-                                        FROM referencevalue_import,
-                                        jsonb_populate_record(
-                                            NULL::%1$s,
-                                            data
-                                        )
-                                        ON CONFLICT ON CONSTRAINT "hierarchicalKey_uniqueness"
-                                        DO UPDATE SET
-                                            updateDate = current_timestamp,
-                                            hierarchicalKey = EXCLUDED.hierarchicalKey,
-                                            naturalKey = EXCLUDED.naturalKey,
-                                            refsLinkedTo = EXCLUDED.refsLinkedTo,
-                                            refValues = EXCLUDED.refValues,
-                                            binaryFile = EXCLUDED.binaryFile,
-                                            "authorization" = EXCLUDED."authorization"
-                                        RETURNING id;
-                                        """,
-                                getTable().getSqlIdentifier(), columns
-                        );
-
-                        List<UUID> insertedIds = new ArrayList<>();
-                        try (PreparedStatement ps = connection.prepareStatement(insertSql);
-                             ResultSet rs = ps.executeQuery()) {
-                            while (rs.next()) {
-                                insertedIds.add((UUID) rs.getObject("id"));
-                            }
-                        }
-
-                        getNamedParameterJdbcTemplate().query("""
-                                 SELECT DISTINCT
-                                     referenceid, referencesby
-                                FROM
-                                    referencevalue_import s,
-                                    JSON_TABLE(s.data, '$.refslinkedto.*.*.*' columns (
-                                         referenceid UUID PATH '$.id',
-                                         NESTED PATH '$.uuids' COLUMNS(referencesby  UUID PATH '$')
-                                        )
-                                    ) as joins;""", rs -> {
-                            final UUID referenceid = rs.getObject(1, UUID.class);
-                            final UUID referencesby = rs.getObject(2, UUID.class);
-                        });
 
                         try (Statement stmt = connection.createStatement()) {
                             stmt.execute("""
@@ -232,9 +225,59 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                     """.formatted(getSchema().getName()));
                         }
 
+                        // INSERT decoupe en batches. Au lieu d'1 INSERT massif
+                        // qui tient des locks sur 280k+ rows + force la pending
+                        // list GIN a flusher d'un coup en fin de tx ,
+                        // boucler tant qu'il reste des rows dans la TEMP table.
+                        // CTE atomique : DELETE des N premieres lignes
+                        // ( par ctid ) , RETURNING data , INSERT vers la cible.
+                        // Pas d'OFFSET ( cher ) , pas de double-traitement
+                        // ( DELETE retire les rows traitees ).
+                        String insertBatchSql = String.format("""
+                                        WITH batch AS (
+                                            DELETE FROM referencevalue_import
+                                            WHERE ctid IN (
+                                                SELECT ctid FROM referencevalue_import LIMIT %3$d
+                                            )
+                                            RETURNING data
+                                        )
+                                        INSERT INTO %1$s (%2$s)
+                                        SELECT %2$s
+                                        FROM batch ,
+                                             jsonb_populate_record( NULL::%1$s , data )
+                                        ON CONFLICT ON CONSTRAINT "hierarchicalKey_uniqueness"
+                                        DO UPDATE SET
+                                            updateDate    = current_timestamp,
+                                            hierarchicalKey = EXCLUDED.hierarchicalKey,
+                                            naturalKey    = EXCLUDED.naturalKey,
+                                            refsLinkedTo  = EXCLUDED.refsLinkedTo,
+                                            refValues     = EXCLUDED.refValues,
+                                            binaryFile    = EXCLUDED.binaryFile,
+                                            "authorization" = EXCLUDED."authorization"
+                                        """,
+                                getTable().getSqlIdentifier(), columns, BULK_INSERT_BATCH_SIZE
+                        );
+
+                        long insertStart = System.nanoTime();
+                        long totalUpserted = 0L;
+                        int batchCount = 0;
+                        try (PreparedStatement ps = connection.prepareStatement(insertBatchSql)) {
+                            while (true) {
+                                int affected = ps.executeUpdate();
+                                if (affected <= 0) {
+                                    break;
+                                }
+                                totalUpserted += affected;
+                                batchCount++;
+                            }
+                        }
+                        long insertMs = (System.nanoTime() - insertStart) / 1_000_000L;
+                        log.info("storeAll : INSERT phase upserted {} rows in {} batches ( batch size = {} ) in {} ms",
+                                totalUpserted, batchCount, BULK_INSERT_BATCH_SIZE, insertMs);
+
                         connection.commit();
                         committed = true;
-                        return insertedIds;
+                        return null;
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     } finally {

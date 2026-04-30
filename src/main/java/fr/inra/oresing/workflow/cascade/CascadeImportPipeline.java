@@ -80,6 +80,17 @@ public class CascadeImportPipeline {
     }
 
     /**
+     * Expose the resolved {@link ImportProperties} so callers ( e.g.
+     * {@link fr.inra.oresing.rest.data.DataService} ) can read flags they
+     * need before delegating to {@link #execute} ( typically the
+     * {@code skipCsvReencoding} flag honoured by
+     * {@link fr.inra.oresing.domain.data.deposit.DataImporter#prepareContextForDataTreatment} ) .
+     */
+    public ImportProperties getImportProperties() {
+        return importProperties;
+    }
+
+    /**
      * Lance un import pour un fichier CSV sans en-tete deja prepare par
      * {@link DataImporter#prepareContextForDataTreatment}.
      *
@@ -181,10 +192,21 @@ public class CascadeImportPipeline {
                     processedDir,
                     correlationId);
 
-            MergingFileSink sink = new MergingFileSink(mergedPath);
+            // Strategy switch ( cascade 1.7.0 ) :
+            //   MERGE_FILE  : MergingFileSink + storeAll(merged.csv)  -- legacy , default
+            //   DIRECT_COPY : StagingPostgresSink with FinalizeHook  -- new , skips merge
+            ImportProperties.SinkStrategy strategy = importProperties.getSinkStrategy();
+            boolean directCopy = strategy == ImportProperties.SinkStrategy.DIRECT_COPY;
 
-            log.info("[{}] Demarrage import : user={}, file={}, chunkSize={}, parallelism={}, maxErrors={}, metrics={}",
-                    correlationId, userId, uploadedPath.getFileName(), chunkSizeLines, parallelism, maxErrors, enableMetrics);
+            fr.inrae.ore.cascade.model.core.Sink<java.nio.file.Path> sink = directCopy
+                    ? CascadeSinkFactory.directCopy(referenceValueRepository, importProperties)
+                    : new MergingFileSink(mergedPath);
+
+            log.info("[{}] Demarrage import : user={}, file={}, chunkSize={}, parallelism={}, maxErrors={}, metrics={}, "
+                    + "sinkStrategy={}, executionMode={}, directWriteParallel={}, streamingMode={}",
+                    correlationId, userId, uploadedPath.getFileName(), chunkSizeLines, parallelism, maxErrors, enableMetrics,
+                    strategy, importProperties.getExecutionMode(),
+                    importProperties.isDirectWriteParallel(), importProperties.getStreamingMode());
 
             fr.inrae.ore.cascade.model.workflow.builder.WorkflowPipelineConfig builder =
                     WorkflowBuilder.create()
@@ -201,6 +223,21 @@ public class CascadeImportPipeline {
                 builder = builder.enableMetrics();
             }
             Workflow workflow = builder.build();
+
+            // Apply 1.7.0 cascade flags via the surrounding WorkflowConfig
+            // so the executor can dispatch on executionMode and honour
+            // directWriteParallel / streamingMode / sinkParallelism.
+            //
+            // Sticky-connection note : when sinkStrategy = DIRECT_COPY with
+            // PER_CONNECTION_TEMP staging , sinkParallelism MUST be 1
+            // ( PgConnection is not thread-safe ) ; we force it here .
+            if (directCopy && importProperties.getStagingStrategy() == ImportProperties.StagingStrategy.PER_CONNECTION_TEMP) {
+                if (parallelism > 1) {
+                    log.warn("[{}] DIRECT_COPY + PER_CONNECTION_TEMP forces sinkParallelism=1 ( single sticky connection ) ; "
+                            + "configured parallelism={} is honoured for transform but sink is serial",
+                            correlationId, parallelism);
+                }
+            }
 
             try {
                 // Phase : traitement ( chunking + transformation + merge ).
@@ -228,13 +265,15 @@ public class CascadeImportPipeline {
                 log.info("[{}] Workflow cascade termine : processed={}, chunks={}, duration={}",
                         correlationId, result.recordsProcessed(), result.chunksProcessed(), result.duration());
 
-                // Phase : chargement effectif en base ( ecriture des erreurs
-                // collectees + COPY PostgreSQL ). Sur gros fichiers c'est la
-                // partie la plus longue ; on l'expose explicitement pour que
-                // l'utilisateur voie le progres et ne croie pas a un blocage.
+                // Phase : chargement effectif en base . Branchement selon strategy :
+                //   MERGE_FILE  : storeAll(merged.csv) -- legacy
+                //   DIRECT_COPY : noop , le StagingPostgresSink a deja invoque
+                //                 la finalize hook ( COPY + UPSERT ) pendant teardown()
                 updateWorkflowPhase(corrUuid, WorkflowLogEntry.STATUS_LOADING_DB, fileSizeBytes);
                 dataImporter.treatErrors();
-                referenceValueRepository.storeAll(sink.getMergedPath());
+                if (!directCopy) {
+                    referenceValueRepository.storeAll(((MergingFileSink) sink).getMergedPath());
+                }
 
                 Duration okDuration = Duration.between(startedAt, Instant.now());
                 metrics.recordImportCompleted(applicationName, dataType, WorkflowLogEntry.STATUS_COMPLETED,
@@ -268,6 +307,19 @@ public class CascadeImportPipeline {
             // visible dans oa-live.
             if (corrUuid != null) {
                 activeRegistry.finish(corrUuid);
+            }
+            // release the per-correlationId counter held by the
+            // default LoggingImportProgressReporter so its internal map
+            // does not grow unbounded across the JVM lifetime ( one of
+            // the contributors to the 1st->2nd deposit degradation ).
+            // No-op when the injected reporter is not the logging one.
+            if (progressReporter instanceof fr.inra.oresing.workflow.cascade.progress.LoggingImportProgressReporter logging) {
+                try {
+                    logging.release(correlationId);
+                } catch (RuntimeException releaseError) {
+                    log.warn("[{}] Failed to release progress reporter slot : {}",
+                            correlationId, releaseError.getMessage());
+                }
             }
         }
     }

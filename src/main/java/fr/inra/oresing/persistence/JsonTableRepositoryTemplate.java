@@ -47,18 +47,20 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
         // 5min48 pour 100
         // 5min50 pour 500
         // 6min21 pour 1000
-        String s = namedParameterJdbcTemplate.queryForObject("select CURRENT_USER::TEXT;", Map.of(), String.class);
+        // the SELECT CURRENT_USER round-trip per call was a leftover
+        // debug query - removed.
         return Iterators.partition(stream.iterator(), 50);
     }
 
     public List<UUID> storeAll(final Stream<T> stream) {
-        String s = namedParameterJdbcTemplate.queryForObject("select CURRENT_USER::TEXT;", Map.of(), String.class);
+        // two SELECT round-trips ( CURRENT_USER + per-entity login )
+        // removed. The login was assigned to a local that was never used ;
+        // the result was dead weight on the hot path of every storeAll().
         final String query = getUpsertQuery();
         final List<UUID> uuids = new LinkedList<>();
         partition(stream).forEachRemaining(entities -> {
             entities.forEach(e -> {
                 if (e.getId() == null) {
-                    String a = namedParameterJdbcTemplate.queryForObject("select login from oresiuser where id::TEXT=CURRENT_USER::TEXT;", Map.of(), String.class);
                     e.setId(UUID.randomUUID());
                 }
             });

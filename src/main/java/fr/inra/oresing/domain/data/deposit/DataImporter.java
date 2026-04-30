@@ -7,6 +7,7 @@ import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.checker.LineChecker;
+import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
@@ -51,6 +52,18 @@ public class DataImporter {
 
 
     public static final String HIERARCHICALKEY_SEPARATOR = "K";
+
+    /**
+     * shared JsonRowMapper instance reused for the entire JVM lifetime.
+     * The previous code did {@code new JsonRowMapper<>().toJson(...)} once
+     * per CSV line ; on a 274 706-line import that allocated 274 k Jackson
+     * ObjectMappers + 274 k JavaTimeModule + 274 k AfterburnerModule
+     * registrations - the single biggest GC pressure observed in the audit.
+     * JsonRowMapper is stateless and thread-safe ( wraps a configured
+     * ObjectMapper that itself is thread-safe once configured ).
+     */
+    private static final JsonRowMapper<Object> SHARED_JSON_ROW_MAPPER = new JsonRowMapper<>();
+
     private final AsynchroneFileImporterContext dataImporterContext;
     private final RecursionStrategy recursionStrategy;
     private final DataTransformer dataTransformer;
@@ -78,28 +91,87 @@ public class DataImporter {
         return dataImporterContext;
     }
 
+    /**
+     * Backward-compatible overload : delegates to the 2-arg version with
+     * {@code skipCsvReencoding=false} ( safe default - re-encodes via
+     * CSVPrinter ) .
+     */
     public Path prepareContextForDataTreatment(final FileBomResolver csv) throws IOException {
+        return prepareContextForDataTreatment(csv, false);
+    }
+
+    /**
+     * Configures the importer context from the CSV headers ( always
+     * required ) and writes the data body to a temp file used by the
+     * cascade pipeline as input .
+     *
+     * <p>Two modes of body writing :
+     * <ul>
+     *   <li>{@code skipCsvReencoding = false} ( default ) : re-encode every
+     *       record via {@link CSVPrinter} . Handles cells containing the
+     *       delimiter , double quotes , or embedded newlines correctly by
+     *       quoting them on output . Slower but safe .</li>
+     *   <li>{@code skipCsvReencoding = true} : assume the input CSV is
+     *       already free of multi-line cells / unescaped quotes . Iterate
+     *       records , join values with the delimiter , write the line .
+     *       Faster ( 1-3 s saved on a 274k-line file ) but unsafe if the
+     *       assumption breaks ; an importer using this flag MUST validate
+     *       the source format upstream .</li>
+     * </ul>
+     *
+     * <p>The header consumption + line-checker setup ( required by the
+     * downstream {@link DataImporter#doDataTreatment} pipeline ) runs in
+     * BOTH modes — the flag only affects the body-write phase .
+     *
+     * @param csv                input CSV ( header + data rows )
+     * @param skipCsvReencoding  see above
+     * @return path to the headerless data temp file consumed by cascade
+     */
+    public Path prepareContextForDataTreatment(final FileBomResolver csv, final boolean skipCsvReencoding) throws IOException {
         final String dataForChunkedTreatment = getDataImporterContext().isRecursive() ? "notSplitableDataForChunkedTreatment_" : "dataForChunkedTreatment_";
         Path tempFile = Files.createTempFile(dataForChunkedTreatment, ".tmp");
         tempFile.toFile().deleteOnExit();
-        final CSVFormat csvFormat = CSVFormat.Builder.create(CSVFormat.DEFAULT).setDelimiter(getDataImporterContext().contextConstants().dataConfiguration().separator()).setSkipHeaderRecord(true).get();
+        final CSVFormat csvFormat = CSVFormat.Builder.create(CSVFormat.DEFAULT)
+                .setDelimiter(getDataImporterContext().contextConstants().dataConfiguration().separator())
+                .setSkipHeaderRecord(true)
+                .get();
         final CSVParser csvParser = CSVParser.parse(csv, StandardCharsets.UTF_8, csvFormat);
         final Iterator<CSVRecord> linesIterator = csvParser.iterator();
+
+        // === Setup context ( ALWAYS executed ) ===
         getDataImporterContext().dataHeaderReader().readHeader(linesIterator);
         getDataImporterContext().withPatternColumn();
-        getDataImporterContext().setTransformedLineCheckers(getRecursionStrategy(), csvReader.buildLineCheckers(getDataImporterContext().dataHeaderReader().constantValues().values()));
-        // #499 - Utiliser CSVPrinter pour re-serialiser les records : il
-        // ré-entoure automatiquement les champs contenant le délimiteur ,
-        // des guillemets ou des retours ligne. Une reconstruction manuelle
-        // ( writer.write( record.get(i) ) ) écrivait le contenu BRUT , ce
-        // qui faisait fuiter les retours ligne internes des cellules
-        // multi-lignes comme de vrais retours ligne physiques dans le
-        // fichier de sortie , cassant ensuite la lecture par chunks et le
-        // re-parsing en aval.
-        try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8);
-             CSVPrinter printer = new CSVPrinter(writer, csvFormat)) {
-            while (linesIterator.hasNext()) {
-                printer.printRecord(linesIterator.next());
+        getDataImporterContext().setTransformedLineCheckers(getRecursionStrategy(),
+                csvReader.buildLineCheckers(getDataImporterContext().dataHeaderReader().constantValues().values()));
+
+        // === Body write ===
+        try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8)) {
+            if (skipCsvReencoding) {
+                // FAST path : trust the input format , avoid CSVPrinter overhead .
+                // Saves ~1-3 s on a 274k-line file . Hazardous if cells contain
+                // the delimiter / quotes / newlines : the body lines would be
+                // unparseable downstream . Use only when the source is known
+                // clean ( machine-generated exports , validated upstream ) .
+                final char sep = getDataImporterContext().contextConstants().dataConfiguration().separator();
+                while (linesIterator.hasNext()) {
+                    CSVRecord r = linesIterator.next();
+                    int n = r.size();
+                    for (int i = 0; i < n; i++) {
+                        if (i > 0) writer.write(sep);
+                        writer.write(r.get(i));
+                    }
+                    writer.newLine();
+                }
+            } else {
+                // SAFE path : re-encode via CSVPrinter ( default ) .
+                // #499 - quotes cells containing the delimiter , double
+                // quotes , or embedded newlines so the chunker downstream
+                // can split lines safely .
+                try (CSVPrinter printer = new CSVPrinter(writer, csvFormat)) {
+                    while (linesIterator.hasNext()) {
+                        printer.printRecord(linesIterator.next());
+                    }
+                }
             }
         }
         return tempFile;
@@ -133,6 +205,15 @@ public class DataImporter {
             final Stream<CSVRecord> csvRecordStream = Streams.stream(csvParser);
             final Integer firstRowLine = getDataImporterContext().contextConstants().dataConfiguration().firstRowLine();
             final Function<CSVRecord, Stream<RowWithReferenceDatum>> csvRecordToReferenceDatumFn = csvRecord -> csvReader.csvRecordToRowWithReferenceDatum((ImmutableList<String>) getDataImporterContext().publishContextBuilder().headerRow, csvRecord, firstRowLine, chunkNumber, chunkSizeLines);
+            // Clone du set de checkers UNE FOIS par chunk ( au lieu d'une
+            // fois par checker par ligne ). Le set issu du context est
+            // partage entre tous les chunks parallelises ; le clone garantit
+            // l'isolation thread-safe sans surcoût per-row.
+            final Set<LineChecker<? extends FieldType<?>>> chunkLineCheckers =
+                    getDataImporterContext().transformedLineCheckers().stream()
+                            .map(LineChecker::copy)
+                            .map(c -> (LineChecker<? extends FieldType<?>>) c)
+                            .collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new));
             csvRecordStream
                     .map(csvRecord -> {
                         dataLinesProcessed.getAndIncrement();
@@ -151,7 +232,7 @@ public class DataImporter {
                     .map(rowWithReferenceDatum -> dataValidator.check(
                                     dataTransformer::computeKeys,
                                     recursionStrategy, rowWithReferenceDatum,
-                                    getDataImporterContext().transformedLineCheckers(),
+                                    chunkLineCheckers,
                                     getDataImporterContext().publishContextBuilder()
                             )
                     ).flatMap(List::stream)
@@ -213,7 +294,8 @@ public class DataImporter {
     }
 
     private String convertToCSVLine(DataValue dataValue) {
-        String json = new JsonRowMapper<>().toJson(dataValue);
+        // reuse the shared JsonRowMapper instead of allocating one per row.
+        String json = SHARED_JSON_ROW_MAPPER.toJson(dataValue);
         return fixTimescopeFormat(json);
     }
 

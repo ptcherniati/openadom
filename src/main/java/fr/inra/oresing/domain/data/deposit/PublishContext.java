@@ -49,6 +49,26 @@ public record PublishContext(
         List<String> headerRow;
         RowInfos rowInfos;
 
+        /**
+         * Cache de la partie statique du contexte Groovy ( tout sauf
+         * {@code currentRow} / {@code currentRowNumber} ) , calcule a la
+         * premiere invocation de {@link #getGroovyContextForReferences} et
+         * reutilise pour toutes les lignes suivantes.
+         *
+         * <p>Avant ce fix , la methode reconstruisait l'integralite de la
+         * map ( references , referencesValues , application , dataI18n , ... )
+         * pour chaque ligne du CSV - ~16 entries dont 2 maps construites
+         * par parcours des references chargees. Sur 274k lignes c'etait
+         * un des hot paths les plus couteux du pipeline transform.
+         *
+         * <p>Cle = identite Set ( {@code System.identityHashCode} ) du
+         * groovyReferences passe en parametre - le caller passe le meme
+         * set sur tous les appels d'un meme workflow , l'identityHashCode
+         * suffit a invalider correctement si l'API change un jour.
+         */
+        private volatile Map<String, Object> cachedStaticContext;
+        private volatile int                 cachedStaticContextKey;
+
         public PublishContextBuilder(Application application, String dataName, final FileOrUUID fileOrUUID, Function<String, List<DataValue>> getDatavaluesByReference) {
             super();
             this.application = application;
@@ -94,6 +114,37 @@ public record PublishContext(
                 final Set<String> groovyReferences,
                 RowInfos rowInfos
         ) {
+            // Calcul / lookup du staticContext memorise pour ce builder + ce
+            // groovyReferences set. La cle d'invalidation est l'identite du
+            // set ( meme reference d'objet -> meme contenu , garanti par
+            // l'appelant qui passe le set du context a chaque ligne ).
+            final int cacheKey = (groovyReferences == null) ? 0 : System.identityHashCode(groovyReferences);
+            Map<String, Object> staticCtx = cachedStaticContext;
+            if (staticCtx == null || cachedStaticContextKey != cacheKey) {
+                staticCtx = buildStaticGroovyContext(groovyReferences);
+                cachedStaticContext   = staticCtx;
+                cachedStaticContextKey = cacheKey;
+            }
+            // Partie dynamique : currentRow + currentRowNumber par ligne.
+            // Si rowInfos est null ( cas rare ) , on retourne le static tel
+            // quel sans surcharger - mais on copie pour ne pas exposer une
+            // map qui serait par erreur mutee par le caller.
+            if (rowInfos == null) {
+                return staticCtx;
+            }
+            ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
+            builder.putAll(staticCtx);
+            Optional.ofNullable(rowInfos).map(PublishContext.RowInfos::currentRow).ifPresent(currentRow -> builder.put("currentRow", currentRow));
+            Optional.ofNullable(rowInfos).map(PublishContext.RowInfos::currentRowNumber).ifPresent(currentRowNumber -> builder.put("currentRowNumber", currentRowNumber));
+            return builder.build();
+        }
+
+        /**
+         * Construit la partie statique ( par-workflow ) du contexte Groovy.
+         * Appelee une seule fois par PublishContextBuilder ( memorise dans
+         * {@link #cachedStaticContext} ) puis reutilisee a chaque ligne.
+         */
+        private Map<String, Object> buildStaticGroovyContext(final Set<String> groovyReferences) {
             ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
             if (groovyReferences != null) {
                 final Map<String, List<LineChecker.LineTransformer.ReferenceValueDecorator>> references = new HashMap<>();
@@ -118,8 +169,6 @@ public record PublishContext(
             Optional.of(this).map(PublishContext.PublishContextBuilder::build).map(PublishContext::headerInfos).map(PublishContext.HeaderInfos::preHeaderRow).ifPresent(preHeaderRow -> builder.put("preHeaderRow", preHeaderRow));
             Optional.of(this).map(PublishContext.PublishContextBuilder::build).map(PublishContext::headerInfos).map(PublishContext.HeaderInfos::headerRow).ifPresent(headerRow -> builder.put("headerRow", headerRow));
             Optional.of(this).map(PublishContext.PublishContextBuilder::build).map(PublishContext::headerInfos).map(PublishContext.HeaderInfos::postHeaderRow).ifPresent(postHeaderRow -> builder.put("postHeaderRow", postHeaderRow));
-            Optional.ofNullable(rowInfos).map(PublishContext.RowInfos::currentRow).ifPresent(currentRow -> builder.put("currentRow", currentRow));
-            Optional.ofNullable(rowInfos).map(PublishContext.RowInfos::currentRowNumber).ifPresent(currentRowNumber -> builder.put("currentRowNumber", currentRowNumber));
             Optional.of(this).map(PublishContext.PublishContextBuilder::getDataName).ifPresent(dataName -> builder.put("dataName", dataName));
             Optional.of(this).map(PublishContext.PublishContextBuilder::getApplicationName).ifPresent(applicationName -> builder.put("applicationName", applicationName));
             Optional.of(this).map(PublishContext.PublishContextBuilder::getDataName)

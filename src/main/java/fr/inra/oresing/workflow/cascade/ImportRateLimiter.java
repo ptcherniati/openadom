@@ -110,12 +110,28 @@ public class ImportRateLimiter {
     /**
      * Libere le slot reserve par {@link #acquireOrThrow(String)}. A appeler
      * systematiquement dans un bloc {@code finally}.
+     *
+     * <p>when the user has no remaining active slot we evict the
+     * Semaphore from the map. Without this purge , every login that ever
+     * imported a file would keep a Semaphore for the JVM lifetime - a
+     * confirmed slow leak. The eviction is atomic via {@code compute}
+     * so a concurrent {@link #acquireOrThrow} cannot lose a permit.
      */
     public void release(String userId) {
-        Semaphore sem = userSlots.get(userId);
-        if (sem != null) {
-            sem.release();
+        if (userId == null) {
+            return;
         }
+        userSlots.compute(userId, (uid, sem) -> {
+            if (sem == null) {
+                return null;
+            }
+            sem.release();
+            // Evict only if the user currently holds zero permits ( all
+            // released ). Concurrent acquireOrThrow that arrives during
+            // this compute() will block on the lock , then either re-create
+            // the semaphore ( evicted case ) or reuse the surviving one.
+            return sem.availablePermits() >= maxConcurrentPerUser ? null : sem;
+        });
     }
 
     @PreDestroy

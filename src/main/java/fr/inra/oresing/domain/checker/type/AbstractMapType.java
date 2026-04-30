@@ -14,6 +14,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 public abstract non-sealed class AbstractMapType<K, V> implements FieldType<Map<K, V>> {
+
+    /**
+     * shared ObjectMapper. The previous code allocated a new one on
+     * every serialize() call ( twice per cell : line 46 + line 77 ) , which
+     * on a 274 706-line import with ~10 cells of Map type per row produced
+     * ~5 million ObjectMapper instances + their internal Jackson
+     * registrations. ObjectMapper is thread-safe once configured.
+     */
+    private static final ObjectMapper SHARED_MAPPER = new ObjectMapper();
+
     private final Map<K, V> value;
 
     protected AbstractMapType(Map<K, V> value) {
@@ -43,7 +53,8 @@ public abstract non-sealed class AbstractMapType<K, V> implements FieldType<Map<
 
     @Override
     public void serialize(final JsonGenerator gen, final String key) throws IOException {
-        final ObjectMapper mapper = new ObjectMapper();
+        // reuse SHARED_MAPPER instead of allocating per call.
+        final ObjectMapper mapper = SHARED_MAPPER;
         final ObjectNode mapNode = mapper.createObjectNode();
         for (final Map.Entry<K, V> kvEntry : value.entrySet()) {
             switch (kvEntry.getValue()) {
@@ -74,7 +85,8 @@ public abstract non-sealed class AbstractMapType<K, V> implements FieldType<Map<
 
     @Override
     public void serializeAddArray(final ArrayNode arrayNode) {
-        final ObjectMapper mapper = new ObjectMapper();
+        // reuse SHARED_MAPPER instead of allocating per call.
+        final ObjectMapper mapper = SHARED_MAPPER;
         final ObjectNode mapNode = mapper.createObjectNode();
         for (final Map.Entry<K, V> kvEntry : value.entrySet()) {
             mapNode.set((String) kvEntry.getKey(), (JsonNode) kvEntry.getValue());

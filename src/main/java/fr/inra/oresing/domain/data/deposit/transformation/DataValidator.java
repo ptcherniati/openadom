@@ -216,9 +216,17 @@ public class DataValidator {
         final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo = new HashMap<>();
         final ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder = ImmutableList.builder();
         final DataDatum referenceDatum = DataDatum.copyOf(referenceDatumBeforeChecking);
+        // Avant ce fix , chaque ligne du CSV declenchait un lineChecker.copy()
+        // par checker ( ~30 checkers x 274k lignes = 8M clones par import ).
+        // Le set passe en parametre est desormais clone UNE FOIS par chunk
+        // par DataImporter.doDataTreatment ; on l'utilise directement ici.
+        // L'isolation entre chunks est preservee ( chaque chunk a son set
+        // clone ) ; l'isolation entre lignes au sein d'un chunk est assuree
+        // par checkLineForChecker qui appelle manyChecker.value().getValue().clear()
+        // au debut , et par OneChecker.check(value) qui re-clone le
+        // FieldType ( interne ).
         for (final LineChecker lineChecker : transformedLineCheckers) {
-            final LineChecker copiedLineChecker = lineChecker.copy();
-            final List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = checkLineForChecker(recursionStrategy, rowWithReferenceDatum, publishContextBuilder, copiedLineChecker, referenceDatumBeforeChecking, refsLinkedTo, referenceDatum, allCheckerErrorsBuilder);
+            final List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = checkLineForChecker(recursionStrategy, rowWithReferenceDatum, publishContextBuilder, lineChecker, referenceDatumBeforeChecking, refsLinkedTo, referenceDatum, allCheckerErrorsBuilder);
             if (referenceDatumAfterCheckings != null) return referenceDatumAfterCheckings;
         }
         refsLinkedTo.putAll(rowWithReferenceDatum.refsLinkedTo());
