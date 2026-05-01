@@ -132,6 +132,11 @@ public final class CascadeSinkFactory {
                 .copyColumns(copyCols)
                 .delimiter('\t')
                 .nullString("\\N")
+                // openADOM streame du JSONB raw ( une ligne par enregistrement )
+                // dans la colonne "data" ; FORMAT TEXT preserve les guillemets
+                // internes ( CSV mode les interprete comme delimiteurs de
+                // champ et corrompt le JSON ) .
+                .format(WriteMode.CopyFormat.TEXT)
                 .done();
 
         // cascade 1.8.0 fluent API : SinkBuilder.create().<T>stagingPostgres()
