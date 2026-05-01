@@ -267,6 +267,13 @@ public class CascadeImportPipeline {
                 activeRegistry.setParallelism(corrUuid,
                         new fr.inra.oresing.workflow.cascade.history.ParallelismSnapshot(
                                 sourcePoolSize, transformPoolSize, sinkSlots));
+                activeRegistry.setStrategy(corrUuid,
+                        new fr.inra.oresing.workflow.cascade.history.StrategySnapshot(
+                                strategy.name(),
+                                directCopy ? importProperties.getStagingStrategy().name() : null,
+                                importProperties.getExecutionMode().name(),
+                                importProperties.getStreamingMode().name(),
+                                importProperties.isDirectWriteParallel()));
             }
 
             try {
@@ -385,7 +392,8 @@ public class CascadeImportPipeline {
                     List.of(),     // errors ( aucune au démarrage )
                     List.of(),     // chunks ( injectes par le registry au read-time )
                     List.of(),     // workers ( injectes par le registry au read-time )
-                    null));        // parallelism ( renseigne par setParallelism plus tard )
+                    null,          // parallelism ( renseigne par setParallelism plus tard )
+                    null));        // strategy ( renseigne par setStrategy plus tard )
         } catch (RuntimeException e) {
             // Best-effort : un échec de publication ne doit pas casser l'import.
             log.warn("[{}] WorkflowActiveRegistry.start a échoué : {}", corrUuid, e.getMessage());
@@ -432,7 +440,8 @@ public class CascadeImportPipeline {
                                 snapshot.errors(),
                                 List.of(),
                                 List.of(),
-                                snapshot.parallelism()));
+                                snapshot.parallelism(),
+                                snapshot.strategy()));
                     });
         } catch (RuntimeException e) {
             log.warn("[{}] WorkflowActiveRegistry phase update échouée : {}", corrUuid, e.getMessage());

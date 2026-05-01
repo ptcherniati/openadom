@@ -92,7 +92,12 @@ public record DashboardWorkflowDTO(
         @Schema(description = "Parallélisme effectif par stage ( source / transform / "
                 + "sink ) tel que résolu par le builder cascade. Null pour les workflows "
                 + "non chunkés.")
-        ParallelismDTO parallelism) {
+        ParallelismDTO parallelism,
+
+        @Schema(description = "Cascade strategy effectivement utilisée pour ce workflow "
+                + "( sinkStrategy , stagingStrategy , executionMode , streamingMode , "
+                + "directWriteParallel ). Null pour les workflows non chunkés.")
+        StrategyDTO strategy) {
 
     public static DashboardWorkflowDTO fromSnapshot(fr.inra.oresing.workflow.cascade.history.WorkflowSnapshot s) {
         List<ChunkDTO> chunkDtos = s.chunks() == null
@@ -104,6 +109,9 @@ public record DashboardWorkflowDTO(
         ParallelismDTO parallelism = s.parallelism() == null
                 ? null
                 : ParallelismDTO.fromSnapshot(s.parallelism());
+        StrategyDTO strategy = s.strategy() == null
+                ? null
+                : StrategyDTO.fromSnapshot(s.strategy());
         return new DashboardWorkflowDTO(
                 s.correlationId(), s.workflowType(), s.userId(), s.userLogin(),
                 s.applicationName(), s.dataType(), s.resourceName(),
@@ -111,7 +119,7 @@ public record DashboardWorkflowDTO(
                 s.status(),
                 s.recordsProcessed(), s.recordsFailed(), s.chunksProcessed(),
                 s.progressPercentage(), s.bytesTotal(), s.recordsTotal(),
-                chunkDtos, workerDtos, parallelism);
+                chunkDtos, workerDtos, parallelism, strategy);
     }
 
     /** Per-chunk DTO mirroring {@link fr.inra.oresing.workflow.cascade.history.ChunkSnapshot}. */
@@ -196,6 +204,26 @@ public record DashboardWorkflowDTO(
             int sink) {
         public static ParallelismDTO fromSnapshot(fr.inra.oresing.workflow.cascade.history.ParallelismSnapshot p) {
             return new ParallelismDTO(p.source(), p.transform(), p.sink());
+        }
+    }
+
+    /** Cascade strategy summary mirroring {@link fr.inra.oresing.workflow.cascade.history.StrategySnapshot}. */
+    @Schema(name = "DashboardStrategy",
+            description = "Cascade strategy summary shown in the oa-live Workers view header")
+    public record StrategyDTO(
+            @Schema(description = "Sink strategy : MERGE_FILE | DIRECT_COPY")
+            String  sinkStrategy,
+            @Schema(description = "Staging strategy : PER_CONNECTION_TEMP | SHARED_UNLOGGED ; null when sinkStrategy = MERGE_FILE")
+            String  stagingStrategy,
+            @Schema(description = "Workflow execution mode : SYNC | ASYNC")
+            String  executionMode,
+            @Schema(description = "Streaming mode between transform and sink : BUFFERED | BACKPRESSURED")
+            String  streamingMode,
+            @Schema(description = "True when sink writes are parallelised on the SYNC path")
+            boolean directWriteParallel) {
+        public static StrategyDTO fromSnapshot(fr.inra.oresing.workflow.cascade.history.StrategySnapshot s) {
+            return new StrategyDTO(s.sinkStrategy(), s.stagingStrategy(),
+                    s.executionMode(), s.streamingMode(), s.directWriteParallel());
         }
     }
 

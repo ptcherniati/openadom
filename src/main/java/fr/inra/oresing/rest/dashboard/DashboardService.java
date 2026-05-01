@@ -240,6 +240,7 @@ public class DashboardService {
                 0L,
                 List.of(),
                 List.of(),
+                null,
                 null);
     }
 

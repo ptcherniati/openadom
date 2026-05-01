@@ -136,6 +136,19 @@ public class WorkflowActiveRegistry implements WorkflowListener {
                 cur.withParallelism(parallelism));
     }
 
+    /**
+     * Records the resolved cascade strategy ( sinkStrategy ,
+     * stagingStrategy , executionMode , streamingMode ,
+     * directWriteParallel ) for a workflow . Called by
+     * {@link fr.inra.oresing.workflow.cascade.CascadeImportPipeline}
+     * right after the {@link fr.inrae.ore.cascade.model.workflow.WorkflowConfig}
+     * is finalised . No-op if the entry is not registered .
+     */
+    public void setStrategy(UUID correlationId, StrategySnapshot strategy) {
+        byCorrelationId.computeIfPresent(correlationId, (id, cur) ->
+                cur.withStrategy(strategy));
+    }
+
     /** Removes the entry from the registry once the workflow is over. */
     public void finish(UUID correlationId) {
         WorkflowSnapshot removed = byCorrelationId.remove(correlationId);
