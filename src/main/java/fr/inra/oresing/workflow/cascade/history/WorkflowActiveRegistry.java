@@ -69,6 +69,16 @@ public class WorkflowActiveRegistry implements WorkflowListener {
             new ConcurrentHashMap<>();
 
     /**
+     * Per-workflow sliding window of recent {@link SinkChunkRecord}
+     * entries ( cap 1000 most recent ) , populated on every
+     * {@code SinkChunkWritten} event . Powers the SINK drill-down
+     * modal in oa-live ( "list of chunks loaded into DB" ) .
+     */
+    private static final int SINK_CHUNKS_WINDOW = 1000;
+    private final ConcurrentMap<UUID, java.util.Deque<SinkChunkRecord>> sinkChunksByCid =
+            new ConcurrentHashMap<>();
+
+    /**
      * Subscribes this registry as a cascade listener at startup so that
      * onChunkStart / onChunkProgress / onChunkEnd events feed the
      * per-chunk drill-down.
@@ -155,6 +165,7 @@ public class WorkflowActiveRegistry implements WorkflowListener {
         chunksByCorrelationId.remove(correlationId);
         sourceWorkersByCid.remove(correlationId);
         sinkWorkersByCid.remove(correlationId);
+        sinkChunksByCid.remove(correlationId);
         if (removed != null) {
             log.debug("Workflow unregistered : {} / {}",
                     removed.workflowType(), correlationId);
@@ -223,7 +234,16 @@ public class WorkflowActiveRegistry implements WorkflowListener {
         workers.addAll(aggregateTransformWorkers(sortedChunks));
         workers.addAll(stageWorkers(sinkWorkersByCid.get(s.correlationId()),   "SINK"));
 
-        return s.withChunks(sortedChunks).withWorkers(List.copyOf(workers));
+        // Sliding window des sink chunks - alimente la modal SINK
+        // ( drill-down "fichiers charges en base" ) .
+        java.util.Deque<SinkChunkRecord> sinkRecords = sinkChunksByCid.get(s.correlationId());
+        List<SinkChunkRecord> sinkChunksList = (sinkRecords == null || sinkRecords.isEmpty())
+                ? List.of()
+                : List.copyOf(sinkRecords);
+
+        return s.withChunks(sortedChunks)
+                .withWorkers(List.copyOf(workers))
+                .withSinkChunks(sinkChunksList);
     }
 
     /**
@@ -505,6 +525,25 @@ public class WorkflowActiveRegistry implements WorkflowListener {
         Long durMs = e.duration() != null ? e.duration().toMillis() : null;
         w.recordEnd(durMs);
         w.lastActivity = e.endTime() != null ? e.endTime() : Instant.now();
+
+        // Append to the sliding window for the SINK drill-down modal .
+        // Skip the synthetic chunkIndex=-1 entries ( writeFromDisk path )
+        // because the modal lists per-chunk loads only ; users see the
+        // batch-from-disk on the workers row counter instead .
+        if (e.chunkIndex() < 0) return;
+        java.util.Deque<SinkChunkRecord> records = sinkChunksByCid
+                .computeIfAbsent(corrId, k -> new java.util.concurrent.ConcurrentLinkedDeque<>());
+        records.addLast(new SinkChunkRecord(
+                e.chunkIndex(),
+                e.workerName(),
+                e.status() != null ? e.status().name() : "UNKNOWN",
+                durMs != null ? durMs : 0L,
+                e.endTime() != null ? e.endTime() : Instant.now(),
+                e.errorMessage()));
+        // Cap the deque ( cheap , bounded write rate ) .
+        while (records.size() > SINK_CHUNKS_WINDOW) {
+            records.pollFirst();
+        }
     }
 
     private static UUID safeUuid(String raw) {

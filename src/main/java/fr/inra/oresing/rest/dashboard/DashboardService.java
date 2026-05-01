@@ -241,7 +241,8 @@ public class DashboardService {
                 List.of(),
                 List.of(),
                 null,
-                null);
+                null,
+                List.of());
     }
 
     @SuppressWarnings("unchecked")

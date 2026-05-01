@@ -60,7 +60,15 @@ public record WorkflowSnapshot(
          * ( sinkStrategy / stagingStrategy / executionMode / ... ) .
          * Null pour les workflows non chunkes .
          */
-        StrategySnapshot strategy) {
+        StrategySnapshot strategy,
+        /**
+         * Sliding window des derniers chunks ecrits par le sink ( 1000
+         * max ) . Alimente la modal SINK du dashboard pour montrer la
+         * liste des chunks effectivement charges en base . Vide pour
+         * les workflows non chunkes ou tant qu'aucun chunk n'a ete
+         * ecrit .
+         */
+        List<SinkChunkRecord> sinkChunks) {
 
     /** Convenience helper : time elapsed since start in milliseconds. */
     public long elapsedMillis(Instant now) {
@@ -78,7 +86,7 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy);
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks);
     }
 
     /** Permet de mettre à jour le total une fois le comptage effectué. */
@@ -87,7 +95,7 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy);
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks);
     }
 
     /** Remplace la liste des chunks ( utilise par le registry au moment de l'expose ). */
@@ -96,7 +104,7 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy);
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks);
     }
 
     /** Met à jour le bloc de parallélisme effectif ( source / transform / sink ). */
@@ -105,7 +113,16 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy);
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks);
+    }
+
+    /** Remplace la liste des sink chunks ( utilise par le registry au moment de l'expose ). */
+    public WorkflowSnapshot withSinkChunks(List<SinkChunkRecord> sinkChunks) {
+        return new WorkflowSnapshot(
+                correlationId, workflowType, userId, userLogin,
+                applicationName, dataType, resourceName, startTime,
+                status, recordsProcessed, recordsFailed, chunksProcessed,
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks);
     }
 
     /** Met à jour le bloc de strategy cascade ( sinkStrategy , stagingStrategy , ... ). */
@@ -114,7 +131,7 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy);
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks);
     }
 
     /** Remplace la liste des workers ( utilise par le registry au moment de l'expose ). */
@@ -123,6 +140,6 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy);
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks);
     }
 }

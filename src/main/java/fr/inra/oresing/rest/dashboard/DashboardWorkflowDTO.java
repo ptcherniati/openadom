@@ -97,7 +97,13 @@ public record DashboardWorkflowDTO(
         @Schema(description = "Cascade strategy effectivement utilisée pour ce workflow "
                 + "( sinkStrategy , stagingStrategy , executionMode , streamingMode , "
                 + "directWriteParallel ). Null pour les workflows non chunkés.")
-        StrategyDTO strategy) {
+        StrategyDTO strategy,
+
+        @Schema(description = "Liste glissante des derniers chunks ecrits par le sink "
+                + "( cap 1000 ) . Alimente la modal SINK ( drill-down 'fichiers charges "
+                + "en base' ) . Vide pour les workflows non chunkes ou tant qu'aucun "
+                + "chunk n'a ete ecrit.")
+        List<SinkChunkDTO> sinkChunks) {
 
     public static DashboardWorkflowDTO fromSnapshot(fr.inra.oresing.workflow.cascade.history.WorkflowSnapshot s) {
         List<ChunkDTO> chunkDtos = s.chunks() == null
@@ -112,6 +118,9 @@ public record DashboardWorkflowDTO(
         StrategyDTO strategy = s.strategy() == null
                 ? null
                 : StrategyDTO.fromSnapshot(s.strategy());
+        List<SinkChunkDTO> sinkChunkDtos = s.sinkChunks() == null
+                ? List.of()
+                : s.sinkChunks().stream().map(SinkChunkDTO::fromRecord).toList();
         return new DashboardWorkflowDTO(
                 s.correlationId(), s.workflowType(), s.userId(), s.userLogin(),
                 s.applicationName(), s.dataType(), s.resourceName(),
@@ -119,7 +128,7 @@ public record DashboardWorkflowDTO(
                 s.status(),
                 s.recordsProcessed(), s.recordsFailed(), s.chunksProcessed(),
                 s.progressPercentage(), s.bytesTotal(), s.recordsTotal(),
-                chunkDtos, workerDtos, parallelism, strategy);
+                chunkDtos, workerDtos, parallelism, strategy, sinkChunkDtos);
     }
 
     /** Per-chunk DTO mirroring {@link fr.inra.oresing.workflow.cascade.history.ChunkSnapshot}. */
@@ -204,6 +213,22 @@ public record DashboardWorkflowDTO(
             int sink) {
         public static ParallelismDTO fromSnapshot(fr.inra.oresing.workflow.cascade.history.ParallelismSnapshot p) {
             return new ParallelismDTO(p.source(), p.transform(), p.sink());
+        }
+    }
+
+    /** Per-chunk sink-write record mirroring {@link fr.inra.oresing.workflow.cascade.history.SinkChunkRecord}. */
+    @Schema(name = "DashboardSinkChunk",
+            description = "Per-chunk sink-write record for the oa-live SINK drill-down modal")
+    public record SinkChunkDTO(
+            int     chunkIndex,
+            String  workerName,
+            String  status,
+            long    durationMs,
+            java.time.Instant at,
+            String  errorMessage) {
+        public static SinkChunkDTO fromRecord(fr.inra.oresing.workflow.cascade.history.SinkChunkRecord r) {
+            return new SinkChunkDTO(r.chunkIndex(), r.workerName(), r.status(),
+                    r.durationMs(), r.at(), r.errorMessage());
         }
     }
 
