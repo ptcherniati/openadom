@@ -53,6 +53,22 @@ public class WorkflowActiveRegistry implements WorkflowListener {
             new ConcurrentHashMap<>();
 
     /**
+     * Per-workflow per-worker SOURCE / SINK stats . Cascade 1.9.0+ emits
+     * chunk events ONLY for the transform stage ; source / sink stages
+     * publish dedicated lifecycle events
+     * ( {@code SourceFetchStart} / {@code SourceChunkEmitted} ,
+     *   {@code SinkChunkAccepted} / {@code SinkChunkWritten} ) . We
+     * accumulate them into lightweight {@link StageWorkerStat} entries so
+     * the {@link WorkerSnapshot} aggregation can emit one row per stage
+     * worker - and the oa-live Workers view shows the full pipeline ,
+     * not only transform .
+     */
+    private final ConcurrentMap<UUID, ConcurrentMap<String, StageWorkerStat>> sourceWorkersByCid =
+            new ConcurrentHashMap<>();
+    private final ConcurrentMap<UUID, ConcurrentMap<String, StageWorkerStat>> sinkWorkersByCid =
+            new ConcurrentHashMap<>();
+
+    /**
      * Subscribes this registry as a cascade listener at startup so that
      * onChunkStart / onChunkProgress / onChunkEnd events feed the
      * per-chunk drill-down.
@@ -124,6 +140,8 @@ public class WorkflowActiveRegistry implements WorkflowListener {
     public void finish(UUID correlationId) {
         WorkflowSnapshot removed = byCorrelationId.remove(correlationId);
         chunksByCorrelationId.remove(correlationId);
+        sourceWorkersByCid.remove(correlationId);
+        sinkWorkersByCid.remove(correlationId);
         if (removed != null) {
             log.debug("Workflow unregistered : {} / {}",
                     removed.workflowType(), correlationId);
@@ -178,23 +196,30 @@ public class WorkflowActiveRegistry implements WorkflowListener {
      */
     private WorkflowSnapshot injectChunks(WorkflowSnapshot s) {
         ConcurrentMap<Integer, ChunkSnapshot> chunks = chunksByCorrelationId.get(s.correlationId());
-        if (chunks == null || chunks.isEmpty()) {
-            return s.withChunks(List.of()).withWorkers(List.of());
-        }
-        List<ChunkSnapshot> sorted = chunks.values().stream()
-                .sorted(Comparator.comparingInt(ChunkSnapshot::chunkIndex))
-                .toList();
-        return s.withChunks(sorted).withWorkers(aggregateWorkers(sorted));
+        List<ChunkSnapshot> sortedChunks = (chunks == null || chunks.isEmpty())
+                ? List.of()
+                : chunks.values().stream()
+                        .sorted(Comparator.comparingInt(ChunkSnapshot::chunkIndex))
+                        .toList();
+
+        // 3 stages combined into a single ordered list ( SOURCE then
+        // TRANSFORM then SINK ) so the dashboard renders them in
+        // pipeline-natural order .
+        List<WorkerSnapshot> workers = new java.util.ArrayList<>();
+        workers.addAll(stageWorkers(sourceWorkersByCid.get(s.correlationId()), "SOURCE"));
+        workers.addAll(aggregateTransformWorkers(sortedChunks));
+        workers.addAll(stageWorkers(sinkWorkersByCid.get(s.correlationId()),   "SINK"));
+
+        return s.withChunks(sortedChunks).withWorkers(List.copyOf(workers));
     }
 
     /**
-     * Aggregates {@link ChunkSnapshot} entries into one {@link WorkerSnapshot}
-     * per distinct {@code workerName} . Cascade currently only emits chunk
-     * events for the transform stage , so all entries are tagged
-     * {@code TRANSFORM} . The list is sorted by worker name so the UI grid
-     * stays stable across refreshes .
+     * Aggregates {@link ChunkSnapshot} entries into one
+     * {@link WorkerSnapshot} per distinct {@code workerName} for the
+     * TRANSFORM stage . Renamed in 1.9.1 from {@code aggregateWorkers}
+     * to avoid confusion with the new source / sink aggregations .
      */
-    private static List<WorkerSnapshot> aggregateWorkers(List<ChunkSnapshot> chunks) {
+    private static List<WorkerSnapshot> aggregateTransformWorkers(List<ChunkSnapshot> chunks) {
         Map<String, List<ChunkSnapshot>> byWorker = new LinkedHashMap<>();
         for (ChunkSnapshot c : chunks) {
             String name = c.workerName();
@@ -267,6 +292,65 @@ public class WorkflowActiveRegistry implements WorkflowListener {
                 lastActivity);
     }
 
+    /**
+     * Builds {@link WorkerSnapshot} list for SOURCE / SINK stages from
+     * the lightweight {@link StageWorkerStat} accumulators . Sorted by
+     * worker name so the UI grid stays stable across refreshes .
+     */
+    private static List<WorkerSnapshot> stageWorkers(
+            ConcurrentMap<String, StageWorkerStat> stats, String stage) {
+        if (stats == null || stats.isEmpty()) return List.of();
+        return stats.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(e -> e.getValue().toSnapshot(stage, e.getKey()))
+                .toList();
+    }
+
+    /**
+     * Mutable per-worker accumulator for SOURCE / SINK stages . Updated
+     * from listener callbacks ; converted to an immutable
+     * {@link WorkerSnapshot} at read time .
+     */
+    static final class StageWorkerStat {
+        volatile String  status = "IDLE";
+        volatile Integer currentChunk;
+        volatile long    currentRecordsProcessed;
+        volatile long    currentRecordsTotal;
+        volatile int     chunksDone;
+        volatile Long    lastDurationMs;
+        volatile Instant lastActivity;
+        final java.util.Deque<Long> recentDurationsMs = new java.util.ArrayDeque<>();
+
+        synchronized void recordEnd(Long durationMs) {
+            chunksDone++;
+            status = "IDLE";
+            currentChunk = null;
+            currentRecordsProcessed = 0L;
+            currentRecordsTotal = 0L;
+            if (durationMs != null) {
+                lastDurationMs = durationMs;
+                recentDurationsMs.addLast(durationMs);
+                while (recentDurationsMs.size() > 10) recentDurationsMs.removeFirst();
+            }
+        }
+
+        synchronized WorkerSnapshot toSnapshot(String stage, String name) {
+            Long avgMs = recentDurationsMs.isEmpty()
+                    ? null
+                    : (long) recentDurationsMs.stream().mapToLong(Long::longValue).average().orElse(0d);
+            Double pct = (currentRecordsTotal > 0)
+                    ? Math.min(100d, (currentRecordsProcessed * 100d) / currentRecordsTotal)
+                    : null;
+            return new WorkerSnapshot(
+                    stage, name, status, currentChunk,
+                    currentRecordsProcessed, currentRecordsTotal, pct,
+                    chunksDone,
+                    lastDurationMs == null ? null : Duration.ofMillis(lastDurationMs),
+                    avgMs == null ? null : Duration.ofMillis(avgMs),
+                    lastActivity);
+        }
+    }
+
     // ----------------------------------------------------------------
     //  Cascade WorkflowListener implementation
     // ----------------------------------------------------------------
@@ -318,6 +402,62 @@ public class WorkflowActiveRegistry implements WorkflowListener {
         };
         chunks.computeIfPresent(e.chunkIndex(), (idx, cur) ->
                 cur.withEnd(status, e.recordsProcessed(), e.endTime(), e.errorMessage()));
+    }
+
+    // ----------------------------------------------------------------
+    //  SOURCE stage listener callbacks ( cascade 1.9.0 events )
+    // ----------------------------------------------------------------
+
+    @Override
+    public void onSourceFetchStart(WorkflowEvents.SourceFetchStartEvent e) {
+        UUID corrId = safeUuid(e.correlationId());
+        if (corrId == null || e.workerName() == null) return;
+        StageWorkerStat w = sourceWorkersByCid
+                .computeIfAbsent(corrId, k -> new ConcurrentHashMap<>())
+                .computeIfAbsent(e.workerName(), n -> new StageWorkerStat());
+        w.status = "RUNNING";
+        w.lastActivity = e.time();
+    }
+
+    @Override
+    public void onSourceChunkEmitted(WorkflowEvents.SourceChunkEmittedEvent e) {
+        UUID corrId = safeUuid(e.correlationId());
+        if (corrId == null || e.workerName() == null) return;
+        StageWorkerStat w = sourceWorkersByCid
+                .computeIfAbsent(corrId, k -> new ConcurrentHashMap<>())
+                .computeIfAbsent(e.workerName(), n -> new StageWorkerStat());
+        // Source has no chunk-end timing , so we just bump the counter
+        // and reset to IDLE . durationMs is unknown for the source path .
+        w.recordEnd(null);
+        w.lastActivity = e.time();
+    }
+
+    // ----------------------------------------------------------------
+    //  SINK stage listener callbacks ( cascade 1.9.0 events )
+    // ----------------------------------------------------------------
+
+    @Override
+    public void onSinkChunkAccepted(WorkflowEvents.SinkChunkAcceptedEvent e) {
+        UUID corrId = safeUuid(e.correlationId());
+        if (corrId == null || e.workerName() == null) return;
+        StageWorkerStat w = sinkWorkersByCid
+                .computeIfAbsent(corrId, k -> new ConcurrentHashMap<>())
+                .computeIfAbsent(e.workerName(), n -> new StageWorkerStat());
+        w.status = "RUNNING";
+        w.currentChunk = e.chunkIndex();
+        w.lastActivity = e.time();
+    }
+
+    @Override
+    public void onSinkChunkWritten(WorkflowEvents.SinkChunkWrittenEvent e) {
+        UUID corrId = safeUuid(e.correlationId());
+        if (corrId == null || e.workerName() == null) return;
+        StageWorkerStat w = sinkWorkersByCid
+                .computeIfAbsent(corrId, k -> new ConcurrentHashMap<>())
+                .computeIfAbsent(e.workerName(), n -> new StageWorkerStat());
+        Long durMs = e.duration() != null ? e.duration().toMillis() : null;
+        w.recordEnd(durMs);
+        w.lastActivity = e.endTime() != null ? e.endTime() : Instant.now();
     }
 
     private static UUID safeUuid(String raw) {
