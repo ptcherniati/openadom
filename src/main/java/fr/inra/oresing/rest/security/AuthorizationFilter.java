@@ -124,6 +124,27 @@ public class AuthorizationFilter extends GenericFilterBean {
             return;
         }
         if (path.endsWith("/logout")) {
+            // Sprint Sessions / monitoring : on tente l'authentification
+            // AVANT de cleaner la session afin que
+            // OreSiApiRequestContext.getRequestClient() soit disponible
+            // dans AuthenticationResources.logout() ; sans ca le registry
+            // de sessions ne pourrait pas marquer la session comme
+            // DISCONNECTED ( bug : dashboard montrait toujours l'user en
+            // ACTIVE apres logout ) .
+            //
+            // Logout reste idempotent : si le JWT est absent / invalide /
+            // expire , l'auth echoue silencieusement et on poursuit avec
+            // clearSession + chain.doFilter -> le controller renvoie OK
+            // ( comportement historique ) .
+            try {
+                OreSiAuthenticationToken token = buildAuthentication(request, response);
+                if (token != null) {
+                    OreSiApiRequestContext.setAuthenticationToken(token);
+                    saveSecurityContextToRequest(request, response);
+                }
+            } catch (Exception ignored) {
+                /* logout idempotent : on continue meme sans auth valide */
+            }
             jWTExtractor.clearSession(request, response);
             chain.doFilter(request, response);
             return;
