@@ -1,7 +1,11 @@
 package fr.inra.oresing.workflow.cascade;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
@@ -30,9 +34,28 @@ import java.util.stream.Collectors;
  */
 public final class StagingFinalizeSql {
 
+    private static final Logger log = LoggerFactory.getLogger(StagingFinalizeSql.class);
+
     /** Bulk-INSERT batch size ( rows ) . Override via {@code -Dapp.import.bulkInsertBatchSize=N} . */
     public static final int BULK_INSERT_BATCH_SIZE =
             Integer.getInteger("app.import.bulkInsertBatchSize", 50_000);
+
+    /**
+     * Per-batch query timeout ( seconds ) . Postgres tue la requete si elle
+     * depasse cette duree , ce qui declenche {@link SQLException} ,
+     * propage en {@code SinkException} cote cascade et rollback la
+     * transaction sticky ( les rows deja upsertees dans la table cible
+     * sont effacees atomiquement par le ROLLBACK ) .
+     *
+     * <p>Default 3600s ( 1h ) : marge tres large pour absorber la
+     * contention DB sous charge . Override via la JVM property
+     * {@code -Dapp.import.staging.upsert.batchTimeoutSeconds=N} .
+     *
+     * <p>0 = pas de timeout client-side ( delegue au {@code statement_timeout}
+     * Postgres-side configure par le DBA ) .
+     */
+    public static final int UPSERT_BATCH_TIMEOUT_SECONDS =
+            Integer.getInteger("app.import.staging.upsert.batchTimeoutSeconds", 3600);
 
     private StagingFinalizeSql() { }
 
@@ -122,11 +145,82 @@ public final class StagingFinalizeSql {
                 + "   binaryFile     = EXCLUDED.binaryFile,"
                 + "   \"authorization\" = EXCLUDED.\"authorization\"";
 
+        // CR-3 audit cascade-integration : la boucle UPSERT etait protegee
+        // uniquement par "affected <= 0" , ce qui ouvrait une porte sur :
+        //   - boucle infinie si DELETE n'a pas effectivement vide le staging
+        //     ( bug trigger , race MVCC tres rare , ou concurrent INSERT
+        //       sur SHARED_UNLOGGED ) ,
+        //   - hang infini si la query DB se bloque ( lock long , deadlock ) .
+        // Protection multi-couches :
+        //   ( 1 ) garde de progression monotone : on verifie que la staging
+        //         table retrecit reellement entre 2 iterations . Si ce n'est
+        //         pas le cas alors qu'on a affecte > 0 rows -> throw direct ,
+        //         pas besoin d'attendre un timeout cumule .
+        //   ( 2 ) per-batch query timeout ( JVM property , default 1h ) ,
+        //         couvre le cas DB hang sans introduire de cap arbitraire
+        //         sur la duree totale du finalize ( un import 50M lignes
+        //         pourra continuer aussi longtemps que necessaire ) .
+        // Cancel admin-side : un appel WorkflowMonitoringService.cancel(corrId)
+        // ne touche pas directement cette boucle ( elle ne lit pas le flag ) ,
+        // mais le timeout postgres OU l'admin qui kill la connection
+        // cote DB declenchera une SQLException ici , propagee en
+        // SinkException + rollback automatique de la transaction sticky .
+        long stagingPrev = countStagingRows(connection, stagingTable, correlationId, filtered);
         try (PreparedStatement ps = connection.prepareStatement(batchInsertSql)) {
-            while (true) {
+            if (UPSERT_BATCH_TIMEOUT_SECONDS > 0) {
+                ps.setQueryTimeout(UPSERT_BATCH_TIMEOUT_SECONDS);
+            }
+            int batchNum = 0;
+            long totalAffected = 0L;
+            while (stagingPrev > 0) {
+                batchNum++;
                 if (filtered) ps.setObject(1, UUID.fromString(correlationId));
                 int affected = ps.executeUpdate();
-                if (affected <= 0) break;
+                totalAffected += affected;
+
+                long stagingNow = countStagingRows(connection, stagingTable, correlationId, filtered);
+                if (log.isDebugEnabled()) {
+                    log.debug("StagingFinalize batch #{} : affected={} , staging {} -> {} ( total upserted {} )",
+                            batchNum, affected, stagingPrev, stagingNow, totalAffected);
+                }
+                if (affected <= 0 && stagingNow >= stagingPrev) {
+                    // Cas double : INSERT n'a rien fait ET staging n'a pas
+                    // diminue . Soit staging vide ( normal exit ) , soit
+                    // pathologique . Le while ( stagingPrev > 0 ) tranche :
+                    // on n'entre pas si staging deja vide en debut .
+                    break;
+                }
+                if (stagingNow >= stagingPrev) {
+                    throw new IllegalStateException(
+                            "StagingFinalize : staging table did not shrink "
+                                    + "( before=" + stagingPrev + " , after=" + stagingNow
+                                    + " , affected=" + affected + " , batch #" + batchNum
+                                    + " ) - aborting potential infinite-loop pattern");
+                }
+                stagingPrev = stagingNow;
+            }
+            log.info("StagingFinalize : completed in {} batches , {} rows upserted into target",
+                    batchNum, totalAffected);
+        }
+    }
+
+    /**
+     * Compte les rows restantes dans la staging table , filtrees sur
+     * correlation_id si on est en mode SHARED_UNLOGGED ( {@code filtered = true} ) .
+     *
+     * <p>Utilise comme garde de progression monotone par
+     * {@link #runFinalize} : si le compteur ne diminue pas entre deux
+     * batches alors qu'on a insere des rows , on est dans une boucle
+     * pathologique => abort .
+     */
+    private static long countStagingRows(Connection conn, String stagingTable,
+                                         String correlationId, boolean filtered) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM " + stagingTable
+                + (filtered ? " WHERE correlation_id = ?" : "");
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (filtered) ps.setObject(1, UUID.fromString(correlationId));
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getLong(1) : 0L;
             }
         }
     }
