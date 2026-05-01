@@ -405,6 +405,40 @@ public class WorkflowActiveRegistry implements WorkflowListener {
     }
 
     // ----------------------------------------------------------------
+    //  Workflow lifecycle ( cascade ) - reset stuck workers
+    // ----------------------------------------------------------------
+
+    /**
+     * Resets every still-RUNNING SOURCE / SINK worker to IDLE when
+     * cascade signals the workflow is over .
+     *
+     * <p>Background : {@code SourceInstrumentation} ( cascade 1.9.0+ )
+     * fires {@code SourceFetchStartEvent} before every spliterator
+     * {@code tryAdvance()} ; when the source is exhausted the
+     * underlying advance returns {@code false} without invoking the
+     * consumer , so the matching {@code SourceChunkEmittedEvent} is
+     * never fired and the source worker stays stuck in RUNNING . This
+     * handler closes the loop : at workflow end , any stale RUNNING
+     * worker is forced to IDLE so the dashboard does not display a
+     * "phantom" source / sink activity during the post-workflow
+     * {@code CHARGEMENT_DB} phase ( e.g. {@code storeAll} on
+     * MERGE_FILE ) .
+     */
+    @Override
+    public void onWorkflowEnd(WorkflowEvents.WorkflowEndEvent e) {
+        UUID corrId = safeUuid(e.correlationId());
+        if (corrId == null) return;
+        ConcurrentMap<String, StageWorkerStat> sources = sourceWorkersByCid.get(corrId);
+        if (sources != null) {
+            sources.values().forEach(w -> { w.status = "IDLE"; w.currentChunk = null; });
+        }
+        ConcurrentMap<String, StageWorkerStat> sinks = sinkWorkersByCid.get(corrId);
+        if (sinks != null) {
+            sinks.values().forEach(w -> { w.status = "IDLE"; w.currentChunk = null; });
+        }
+    }
+
+    // ----------------------------------------------------------------
     //  SOURCE stage listener callbacks ( cascade 1.9.0 events )
     // ----------------------------------------------------------------
 
