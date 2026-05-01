@@ -20,6 +20,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import fr.inra.oresing.monitoring.session.SessionInfo;
+import fr.inra.oresing.monitoring.session.UserSessionLogEntry;
+import fr.inra.oresing.monitoring.session.UserSessionLogWriter;
+import fr.inra.oresing.monitoring.session.UserSessionRegistry;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -46,6 +51,8 @@ public class AuthenticationResources {
 
     protected final AuthenticationService authenticationService;
     protected final JWTExtractor jwtExtractor;
+    protected final UserSessionRegistry sessionRegistry;
+    protected final UserSessionLogWriter sessionLogWriter;
 
     // #470 - Exposé au frontend via GET /api/v1/session/config pour que
     // SessionService aligne son timer d'inactivité sur le TTL serveur.
@@ -53,9 +60,13 @@ public class AuthenticationResources {
     private int jwtExpirationSeconds;
 
     public AuthenticationResources(AuthenticationService authenticationService,
-                                   JWTExtractor jwtExtractor) {
+                                   JWTExtractor jwtExtractor,
+                                   UserSessionRegistry sessionRegistry,
+                                   UserSessionLogWriter sessionLogWriter) {
         this.authenticationService = authenticationService;
-        this.jwtExtractor = jwtExtractor;
+        this.jwtExtractor          = jwtExtractor;
+        this.sessionRegistry       = sessionRegistry;
+        this.sessionLogWriter      = sessionLogWriter;
     }
 
     @Operation(
@@ -171,13 +182,20 @@ public class AuthenticationResources {
             }
     )
     @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
-    public LoginAdminResult login(final HttpServletResponse response, @RequestParam("login") final String login, @RequestParam("password") final String password) {
-        return Optional.ofNullable(SecurityContextHolder.getContext())
+    public LoginAdminResult login(final HttpServletRequest request,
+                                  final HttpServletResponse response,
+                                  @RequestParam("login") final String login,
+                                  @RequestParam("password") final String password) {
+        LoginAdminResult result = Optional.ofNullable(SecurityContextHolder.getContext())
                 .map(SecurityContext::getAuthentication)
                 .map(Authentication::getPrincipal)
                 .filter(LoginAdminResult.class::isInstance)
                 .map(LoginAdminResult.class::cast)
                 .orElse(null);
+        if (result != null) {
+            registerSession(request, result);
+        }
+        return result;
     }
 
     @Operation(
@@ -190,8 +208,93 @@ public class AuthenticationResources {
     @DeleteMapping("/logout")
     @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<String> logout(HttpServletResponse response) {
+        terminateCurrentUserSessions(SessionInfo.END_LOGOUT);
         return ResponseEntity
                 .ok("{\"message\": \"Disconnected\"}");
+    }
+
+    /**
+     * Cree et enregistre une nouvelle {@link SessionInfo} dans le registry
+     * in-memory + l'index par user . La duree de vie effective est
+     * {@code now + jwtExpirationSeconds} ; la session passera
+     * {@code DISCONNECTED / JWT_EXPIRED} a expiration sans intervention .
+     *
+     * <p>Best effort : un echec ici ne doit jamais empecher le login .
+     */
+    private void registerSession(HttpServletRequest request, LoginAdminResult result) {
+        try {
+            java.time.Instant now = java.time.Instant.now();
+            UUID userId = result.id();
+            String login = result.login();
+            String ip    = resolveClientIp(request);
+            String ua    = truncate(request.getHeader("User-Agent"), 500);
+            SessionInfo session = new SessionInfo(
+                    UUID.randomUUID(), userId, login, ip, ua,
+                    now,
+                    now.plusSeconds(jwtExpirationSeconds),
+                    null, null);
+            sessionRegistry.start(session);
+        } catch (RuntimeException ex) {
+            // L'observabilite est best-effort : on log mais on ne casse
+            // pas l'API .
+            org.slf4j.LoggerFactory.getLogger(AuthenticationResources.class)
+                    .warn("registerSession threw : {}", ex.getMessage());
+        }
+    }
+
+    /**
+     * Termine TOUTES les sessions ACTIVE du user authentifie courant
+     * avec la {@code reason} fournie ( typiquement
+     * {@code SessionInfo.END_LOGOUT} ) . Pour chaque session terminee ,
+     * empile l'entry dans le {@link UserSessionLogWriter} pour
+     * persistence async dans {@code oa_metrics.user_session_log} .
+     *
+     * <p>Multi-onglets : un logout ferme toutes les sessions ACTIVE de
+     * cet utilisateur cote dashboard . Les autres JWT du meme user
+     * restent techniquement valides ( JWT stateless ) jusqu'a leur
+     * expiration ; leur statut dashboard est aligne sur l'evenement
+     * logout pour coherence d'audit .
+     */
+    private void terminateCurrentUserSessions(String reason) {
+        try {
+            UUID userId = OreSiApiRequestContext.getRequestClient().id();
+            java.time.Instant now = java.time.Instant.now();
+            sessionRegistry.listAll(now).stream()
+                    .filter(s -> userId.equals(s.userId()))
+                    .filter(s -> s.endTime() == null)
+                    .forEach(s -> {
+                        java.util.Optional<SessionInfo> finished =
+                                sessionRegistry.finish(s.sessionId(), reason, now);
+                        finished.ifPresent(f -> sessionLogWriter.logAsync(UserSessionLogEntry.fromSession(f)));
+                    });
+        } catch (RuntimeException ex) {
+            org.slf4j.LoggerFactory.getLogger(AuthenticationResources.class)
+                    .warn("terminateCurrentUserSessions threw : {}", ex.getMessage());
+        }
+    }
+
+    /**
+     * Resolve l'IP du client en preferant {@code X-Forwarded-For} ( 1ere
+     * valeur de la liste , correspondant au client d'origine derriere les
+     * proxies / load-balancers ) , avec fallback sur
+     * {@link HttpServletRequest#getRemoteAddr} .
+     *
+     * <p>Note securite : le proxy nginx du deployement openadom est
+     * trusted ; en environnement non-trust on filtrerait par allowlist
+     * de proxies connus avant d'accepter le header .
+     */
+    private static String resolveClientIp(HttpServletRequest request) {
+        String xff = request.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isBlank()) {
+            int comma = xff.indexOf(',');
+            return (comma > 0 ? xff.substring(0, comma) : xff).trim();
+        }
+        return request.getRemoteAddr();
+    }
+
+    private static String truncate(String s, int max) {
+        if (s == null) return null;
+        return s.length() <= max ? s : s.substring(0, max);
     }
 
     @Operation(

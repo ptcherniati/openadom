@@ -49,6 +49,8 @@ public class DashboardService {
 
     private final WorkflowActiveRegistry registry;
     private final fr.inra.oresing.workflow.cascade.pipeline.PipelineRegistry pipelineRegistry;
+    private final fr.inra.oresing.monitoring.session.UserSessionRegistry sessionRegistry;
+    private final fr.inra.oresing.monitoring.session.UserSessionLogRepository sessionLogRepository;
     private final NamedParameterJdbcTemplate jdbc;
     private final AuthenticationService authenticationService;
     private final ImportProperties importProperties;
@@ -200,6 +202,44 @@ public class DashboardService {
      * everything , non-admin only their own workflows ; unmatched ids
      * return empty so the controller emits a 404 .
      */
+    // ---------------------------------------------------------------- //
+    //  sessions ( admin only )                                         //
+    // ---------------------------------------------------------------- //
+
+    /**
+     * Liste in-memory des sessions ACTIVE . Admin only ; les non-admin
+     * recoivent {@link AccessDeniedException} ( 403 ) .
+     */
+    public List<SessionDTO> listActiveSessions() {
+        requireAdmin();
+        java.time.Instant now = java.time.Instant.now();
+        return sessionRegistry.listActive(now).stream()
+                .map(s -> SessionDTO.fromSession(s, now))
+                .toList();
+    }
+
+    /**
+     * Pagination sur oa_metrics.user_session_log . Admin only .
+     */
+    public SessionDTO.Page listSessionsHistory(Integer limit, Integer offset,
+                                               String userLoginLike, String endReason) {
+        requireAdmin();
+        int l = clamp(Optional.ofNullable(limit).orElse(DEFAULT_LIMIT), 1, MAX_LIMIT);
+        int o = Math.max(0, Optional.ofNullable(offset).orElse(0));
+        java.util.List<fr.inra.oresing.monitoring.session.UserSessionLogEntry> rows =
+                sessionLogRepository.findHistory(null, userLoginLike, endReason, l, o);
+        long total = sessionLogRepository.count(null, userLoginLike, endReason);
+        List<SessionDTO> items = rows.stream().map(SessionDTO::fromLogEntry).toList();
+        return new SessionDTO.Page(items, total, l, o);
+    }
+
+    private void requireAdmin() {
+        CurrentUserRoles me = authenticationService.getCurrentUserRoles();
+        if (!me.isOpenAdomAdmin()) {
+            throw new AccessDeniedException("Reserved to openAdomAdmin users");
+        }
+    }
+
     public Optional<PipelineDTO> pipeline(UUID correlationId) {
         CurrentUserRoles me = authenticationService.getCurrentUserRoles();
         boolean admin = me.isOpenAdomAdmin();

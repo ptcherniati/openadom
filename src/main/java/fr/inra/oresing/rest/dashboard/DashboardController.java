@@ -139,6 +139,50 @@ public class DashboardController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // ---------------------------------------------------------------- //
+    //  Sessions ( onglet Sessions de oa-live , admin only )            //
+    // ---------------------------------------------------------------- //
+
+    @Operation(
+        summary = "Sessions utilisateurs ACTIVE",
+        description = "Liste in-memory des sessions ACTIVE ( JWT non expire et "
+                + "user pas encore deconnecte ) . Reservee aux admins "
+                + "( openAdomAdmin ) ; les autres recoivent 403 .")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Liste des sessions actives",
+            content = @Content(schema = @Schema(implementation = SessionDTO.class))),
+        @ApiResponse(responseCode = "401", description = "JWT absent ou invalide"),
+        @ApiResponse(responseCode = "403", description = "Reserve aux admins")
+    })
+    @GetMapping("/sessions/active")
+    public ResponseEntity<List<SessionDTO>> sessionsActive() {
+        return ResponseEntity.ok(service.listActiveSessions());
+    }
+
+    @Operation(
+        summary = "Historique des sessions utilisateurs",
+        description = "Pagination sur oa_metrics.user_session_log . Filtres "
+                + "optionnels : userLogin partial-match , endReason exacte . "
+                + "Reservee aux admins .")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Page d'historique",
+            content = @Content(schema = @Schema(implementation = SessionDTO.Page.class))),
+        @ApiResponse(responseCode = "401", description = "JWT absent ou invalide"),
+        @ApiResponse(responseCode = "403", description = "Reserve aux admins")
+    })
+    @GetMapping("/sessions/history")
+    public ResponseEntity<SessionDTO.Page> sessionsHistory(
+            @Parameter(description = "Max rows ( 1-500 , default 100 )")
+            @RequestParam(required = false) Integer limit,
+            @Parameter(description = "Offset ( default 0 )")
+            @RequestParam(required = false) Integer offset,
+            @Parameter(description = "Match ILIKE %x% sur user_login")
+            @RequestParam(required = false) String user,
+            @Parameter(description = "Filtre exact sur end_reason ( LOGOUT , JWT_EXPIRED , KICK )")
+            @RequestParam(required = false) String endReason) {
+        return ResponseEntity.ok(service.listSessionsHistory(limit, offset, user, endReason));
+    }
+
     @Operation(
         summary = "Annuler un workflow en cours",
         description = """
