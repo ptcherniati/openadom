@@ -119,33 +119,44 @@ public class CascadeImportPipeline {
         }
 
         // Quota par utilisateur : 429 Too Many Requests immediat si trop
-        // d'imports simultanes. Le slot est libere dans le finally.
+        // d'imports simultanes. Le slot est libere dans le finally
+        // ci-dessous . CR-2 audit : tout le code apres acquireOrThrow doit
+        // etre dans le try qui contient le finally release ; sinon une
+        // RuntimeException levee pendant l'init ( resolveCurrentLogin ,
+        // registerWorkflowStart , ... ) ferait fuir le slot rate-limit .
         importRateLimiter.acquireOrThrow(userId);
 
-        // Resolu une seule fois ici ( thread HTTP ) pour etre disponible dans
-        // tous les chemins de logImportEvent , y compris ceux rattrapant
-        // une exception apres un basculement de contexte.
-        final String userLogin = resolveCurrentLogin();
-
-        final Instant startedAt = Instant.now();
+        // Identifiants safe ( UUID + parsing local ) declares avant le
+        // try afin d'etre visibles dans le finally cleanup .
         final String correlationId = UUID.randomUUID().toString();
-        final String resourceName = headerlessCsv.getFileName().toString();
-        long fileSizeBytes = 0L;
-        try {
-            fileSizeBytes = Files.size(headerlessCsv);
-        } catch (IOException ignored) {
-            // metrics best-effort uniquement
-        }
+        final UUID   corrUuid      = safeUuid(correlationId);
 
-        // #62 - Publie la progression en temps réel dans WorkflowActiveRegistry
-        // pour que /api/dashboard/workflows/in-progress ( oa-live ) puisse
-        // afficher ce workflow dès son démarrage. Le finally garantit le
-        // retrait du registry même en cas d'erreur ou d'annulation.
-        final UUID corrUuid = safeUuid(correlationId);
-        final UUID userUuid = safeUuid(userId);
-        registerWorkflowStart(corrUuid, userUuid, userLogin, applicationName, dataType,
-                resourceName, startedAt, fileSizeBytes);
+        // Initialise hors du try uniquement quand l'expression est
+        // garantie sans throw . userLogin est inside-try parce que
+        // resolveCurrentLogin() peut lever une RuntimeException .
         try {
+            // Resolu une seule fois ici ( thread HTTP ) pour etre disponible dans
+            // tous les chemins de logImportEvent , y compris ceux rattrapant
+            // une exception apres un basculement de contexte.
+            final String userLogin = resolveCurrentLogin();
+
+            final Instant startedAt   = Instant.now();
+            final String  resourceName = headerlessCsv.getFileName().toString();
+            long          fileSizeBytes = 0L;
+            try {
+                fileSizeBytes = Files.size(headerlessCsv);
+            } catch (IOException ignored) {
+                // metrics best-effort uniquement
+            }
+
+            // #62 - Publie la progression en temps réel dans WorkflowActiveRegistry
+            // pour que /api/dashboard/workflows/in-progress ( oa-live ) puisse
+            // afficher ce workflow dès son démarrage. Le finally garantit le
+            // retrait du registry même en cas d'erreur ou d'annulation.
+            final UUID userUuid = safeUuid(userId);
+            registerWorkflowStart(corrUuid, userUuid, userLogin, applicationName, dataType,
+                    resourceName, startedAt, fileSizeBytes);
+
             final Path uploadedPath;
             try {
                 uploadedPath = uploadFile(headerlessCsv, userId, correlationId);
