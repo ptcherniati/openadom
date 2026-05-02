@@ -8,15 +8,14 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DisplayName("SinkConcurrencyEstimator")
+@DisplayName("SinkConcurrencyEstimator ( cascade 2.1.0 )")
 class SinkConcurrencyEstimatorTest {
 
     private Map<String, Object> base() {
         Map<String, Object> m = new HashMap<>();
         m.put("sinkStrategy", "MERGE_FILE");
         m.put("stagingStrategy", "PER_CONNECTION_TEMP");
-        m.put("executionMode", "SYNC");
-        m.put("directWriteParallel", false);
+        m.put("pipelineMode", "STAGED");
         m.put("pool.sink", 4);
         return m;
     }
@@ -40,12 +39,12 @@ class SinkConcurrencyEstimatorTest {
     }
 
     @Test
-    @DisplayName("DIRECT_COPY + SHARED_UNLOGGED + ASYNC = pool parallel")
-    void sharedAsync() {
+    @DisplayName("DIRECT_COPY + SHARED_UNLOGGED + STAGED = pool.sink workers")
+    void sharedStaged() {
         Map<String, Object> m = base();
         m.put("sinkStrategy", "DIRECT_COPY");
         m.put("stagingStrategy", "SHARED_UNLOGGED");
-        m.put("executionMode", "ASYNC");
+        m.put("pipelineMode", "STAGED");
         m.put("pool.sink", 8);
         var e = SinkConcurrencyEstimator.estimate(m);
         assertEquals(SinkConcurrencyEstimator.Mode.PARALLEL_POOL, e.mode());
@@ -53,13 +52,12 @@ class SinkConcurrencyEstimatorTest {
     }
 
     @Test
-    @DisplayName("DIRECT_COPY + SHARED_UNLOGGED + SYNC + dwp = pool parallel")
-    void sharedSyncDwp() {
+    @DisplayName("DIRECT_COPY + SHARED_UNLOGGED + PIPELINED = pool.sink workers")
+    void sharedPipelined() {
         Map<String, Object> m = base();
         m.put("sinkStrategy", "DIRECT_COPY");
         m.put("stagingStrategy", "SHARED_UNLOGGED");
-        m.put("executionMode", "SYNC");
-        m.put("directWriteParallel", true);
+        m.put("pipelineMode", "PIPELINED");
         m.put("pool.sink", 6);
         var e = SinkConcurrencyEstimator.estimate(m);
         assertEquals(SinkConcurrencyEstimator.Mode.PARALLEL_POOL, e.mode());
@@ -67,13 +65,25 @@ class SinkConcurrencyEstimatorTest {
     }
 
     @Test
-    @DisplayName("DIRECT_COPY + SHARED_UNLOGGED + SYNC sans dwp = 1")
-    void sharedSyncNoDwp() {
+    @DisplayName("DIRECT_COPY + PER_WORKFLOW_TABLE + PIPELINED = pool.sink workers")
+    void perWorkflowPipelined() {
+        Map<String, Object> m = base();
+        m.put("sinkStrategy", "DIRECT_COPY");
+        m.put("stagingStrategy", "PER_WORKFLOW_TABLE");
+        m.put("pipelineMode", "PIPELINED");
+        m.put("pool.sink", 4);
+        var e = SinkConcurrencyEstimator.estimate(m);
+        assertEquals(SinkConcurrencyEstimator.Mode.PARALLEL_POOL, e.mode());
+        assertEquals(4, e.effectiveSinks());
+    }
+
+    @Test
+    @DisplayName("DIRECT_COPY + SHARED_UNLOGGED + pool.sink=1 = SINGLE_FORCED")
+    void sharedSinglePool() {
         Map<String, Object> m = base();
         m.put("sinkStrategy", "DIRECT_COPY");
         m.put("stagingStrategy", "SHARED_UNLOGGED");
-        m.put("executionMode", "SYNC");
-        m.put("directWriteParallel", false);
+        m.put("pool.sink", 1);
         var e = SinkConcurrencyEstimator.estimate(m);
         assertEquals(SinkConcurrencyEstimator.Mode.SINGLE_FORCED, e.mode());
         assertEquals(1, e.effectiveSinks());
