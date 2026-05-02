@@ -99,8 +99,11 @@
 
         <env.CI_PROCESSOR_PROJECT_ID>19085</env.CI_PROCESSOR_PROJECT_ID>
         <jwt.version>0.12.6</jwt.version>
-        <flyway.version>11.7.2</flyway.version>
-        <flyway.database.version>10.16.0</flyway.database.version>
+        <!-- Flyway 11.13+ supporte Postgres 18 . Bump pour eliminer le warning
+             "Flyway upgrade recommended : PostgreSQL 18.3 is newer than this
+             version of Flyway and support has not been tested" . -->
+        <flyway.version>11.14.0</flyway.version>
+        <flyway.database.version>11.14.0</flyway.database.version>
         <flyway-spring-test.version>10.0.0</flyway-spring-test.version>
         <springdoc-openapi-starter-webmvc-ui.version>3.0.0</springdoc-openapi-starter-webmvc-ui.version>
         <common-csv.version>1.14.0</common-csv.version>
@@ -392,7 +395,7 @@
         <dependency>
             <groupId>fr.inrae.ore</groupId>
             <artifactId>cascade</artifactId>
-            <version>1.9.2</version>
+            <version>2.1.0</version>
         </dependency>
 
     </dependencies>

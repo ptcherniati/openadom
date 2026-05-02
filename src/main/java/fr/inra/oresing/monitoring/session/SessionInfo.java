@@ -30,6 +30,11 @@ import java.util.UUID;
  *                    JWT_EXPIRED sans tracker l'activite
  * @param endTime     null tant que la session est active
  * @param endReason   null tant qu'active ; sinon LOGOUT | JWT_EXPIRED | KICK
+ * @param jwtTokenHash hash SHA-256 ( hex ) du JWT remis au login ; null
+ *                    pour les sessions historiques sans capture du token .
+ *                    Sert au kick admin : le hash est blackliste et le
+ *                    AuthorizationFilter rejette les requetes ulterieures
+ *                    avec 401 TOKEN_REVOKED .
  */
 public record SessionInfo(
         UUID    sessionId,
@@ -40,7 +45,8 @@ public record SessionInfo(
         Instant loginTime,
         Instant expiresAt,
         Instant endTime,
-        String  endReason) {
+        String  endReason,
+        String  jwtTokenHash) {
 
     public static final String END_LOGOUT      = "LOGOUT";
     public static final String END_JWT_EXPIRED = "JWT_EXPIRED";
@@ -66,6 +72,6 @@ public record SessionInfo(
     /** Helper immutable pour terminer la session avec une raison . */
     public SessionInfo withEnd(Instant endTime, String reason) {
         return new SessionInfo(sessionId, userId, userLogin, ipAddress, userAgent,
-                loginTime, expiresAt, endTime, reason);
+                loginTime, expiresAt, endTime, reason, jwtTokenHash);
     }
 }

@@ -23,6 +23,7 @@ public record PipelineDTO(
         StageDTO source,
         StageDTO transform,
         StageDTO sink,
+        QueueDTO sourceInbox,
         QueueDTO transformInbox,
         QueueDTO sinkInbox,
         Integer totalChunks,
@@ -30,17 +31,44 @@ public record PipelineDTO(
         ThroughputDTO throughput) {
 
     public static PipelineDTO from(PipelineSnapshot s) {
+        return from(s, null, null, null);
+    }
+
+    /**
+     * Variante enrichie : les queues + tailles de pool ( SOURCE / TRANSFORM /
+     * SINK ) sont portees par le {@code PoolReloader} ( ThreadPoolExecutor )
+     * et permettent au frontend d'afficher des slots worker grises tant que
+     * cascade n'a pas encore propage le stage ( workers vide + parallelism=0
+     * tant qu'aucun event ) . Le caller injecte les 3 PoolSnapshots ; null
+     * accepte si pool indisponible ( mode test ) .
+     */
+    public static PipelineDTO from(PipelineSnapshot s,
+            fr.inra.oresing.workflow.cascade.config.PoolReloader.PoolSnapshot sourcePool,
+            fr.inra.oresing.workflow.cascade.config.PoolReloader.PoolSnapshot transformPool,
+            fr.inra.oresing.workflow.cascade.config.PoolReloader.PoolSnapshot sinkPool) {
+
+        QueueDTO sourceInbox = poolToQueueDTO(sourcePool);
         return new PipelineDTO(
                 s.correlationId(),
                 s.snapshotAt(),
-                StageDTO.from(s.source()),
-                StageDTO.from(s.transform()),
-                StageDTO.from(s.sink()),
+                StageDTO.from(s.source(),    sourcePool),
+                StageDTO.from(s.transform(), transformPool),
+                StageDTO.from(s.sink(),      sinkPool),
+                sourceInbox,
                 QueueDTO.from(s.transformInbox()),
                 QueueDTO.from(s.sinkInbox()),
                 s.totalChunks(),
                 s.recentEvents().stream().map(EventDTO::from).toList(),
                 ThroughputDTO.from(s.throughput()));
+    }
+
+    private static QueueDTO poolToQueueDTO(
+            fr.inra.oresing.workflow.cascade.config.PoolReloader.PoolSnapshot pool) {
+        if (pool == null) return null;
+        return new QueueDTO(pool.queueSize(), pool.queueCapacity(),
+                pool.queueCapacity() > 0
+                        ? (100.0 * pool.queueSize() / pool.queueCapacity())
+                        : 0.0);
     }
 
     @Schema(name = "PipelineStage")
@@ -49,11 +77,16 @@ public record PipelineDTO(
             int parallelism,
             int activeCount,
             long completedTaskCount,
+            @Schema(description = "Pool corePoolSize ( = parallelism configure cote cascade pool , utilise comme fallback quand le stage cascade n'a pas encore propage parallelism > 0 ) ; -1 si pool indisponible")
+            int poolCoreSize,
             List<WorkerDTO> workers) {
 
-        static StageDTO from(PipelineSnapshot.StagePool p) {
+        static StageDTO from(PipelineSnapshot.StagePool p,
+                fr.inra.oresing.workflow.cascade.config.PoolReloader.PoolSnapshot pool) {
+            int poolCore = pool != null ? pool.corePoolSize() : -1;
             return new StageDTO(p.stage(), p.parallelism(), p.activeCount(),
                     p.completedTaskCount(),
+                    poolCore,
                     p.workers().stream().map(WorkerDTO::from).toList());
         }
     }

@@ -93,16 +93,20 @@ public class AuthorizationFilter extends GenericFilterBean {
     private final RequestAttributeSecurityContextRepository securityContextRepository =
             new RequestAttributeSecurityContextRepository();
 
+    private final fr.inra.oresing.monitoring.session.JwtBlacklistRegistry jwtBlacklist;
+
     @Autowired
     public AuthorizationFilter(
             ServiceContainer serviceContainer,
             JsonRowMapper<?> jsonRowMapper,
             JWTExtractor jWTExtractor,
-            OreExceptionHandler exceptionHandler) {
+            OreExceptionHandler exceptionHandler,
+            fr.inra.oresing.monitoring.session.JwtBlacklistRegistry jwtBlacklist) {
         this.exceptionHandler = exceptionHandler;
         this.mapper = jsonRowMapper;
         this.jWTExtractor = jWTExtractor;
         this.serviceContainer = serviceContainer;
+        this.jwtBlacklist = jwtBlacklist;
     }
 
     @Override
@@ -223,7 +227,14 @@ public class AuthorizationFilter extends GenericFilterBean {
     }
 
     private void writeJsonAuthError(HttpServletResponse response, AuthenticationException ex) throws IOException {
-        String code = ex.getCause() instanceof io.jsonwebtoken.ExpiredJwtException ? "TOKEN_EXPIRED" : "TOKEN_INVALID";
+        String code;
+        if (ex.getCause() instanceof io.jsonwebtoken.ExpiredJwtException) {
+            code = "TOKEN_EXPIRED";
+        } else if (ex.getMessage() != null && ex.getMessage().contains("revoked by admin")) {
+            code = "TOKEN_REVOKED";
+        } else {
+            code = "TOKEN_INVALID";
+        }
         String message = ex.getMessage() == null ? "" : ex.getMessage().replace("\"", "\\\"");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
@@ -401,6 +412,15 @@ public class AuthorizationFilter extends GenericFilterBean {
             return null;
         }
         String jwtToken = authHeader.substring(7);
+        // Revocation check : un JWT inscrit dans la blacklist par un kick
+        // admin est rejete . On lance BadCredentialsException avec un
+        // message stable que writeJsonAuthError mappe en TOKEN_REVOKED ;
+        // le frontend ( interceptor axios global ) declenche alors la
+        // redirection vers la page de login .
+        String tokenHash = fr.inra.oresing.monitoring.session.JwtBlacklistRegistry.hash(jwtToken);
+        if (tokenHash != null && jwtBlacklist.contains(tokenHash)) {
+            throw new BadCredentialsException("Token revoked by admin kick");
+        }
         OreSiRequestClient requestClient = jWTExtractor.getRequestClientFromJwt(jwtToken);
         return new OreSiAuthenticationToken(
                 requestClient,

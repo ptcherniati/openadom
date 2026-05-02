@@ -11,7 +11,7 @@ import java.util.UUID;
 /**
  * Summary DTO returned by /api/dashboard/workflows/in-progress and
  * /api/dashboard/workflows/history. Mirrors {@link fr.inra.oresing.workflow.cascade.history.WorkflowSnapshot}
- * and the columns of oa_metrics.workflow_log.
+ * and the columns of oa_audit.workflow_log.
  *
  * <p>Fields that are only meaningful while a workflow is still running
  * ( progressPercentage , chunksProcessed ) or only after it ends
@@ -237,18 +237,16 @@ public record DashboardWorkflowDTO(
             description = "Cascade strategy summary shown in the oa-live Workers view header")
     public record StrategyDTO(
             @Schema(description = "Sink strategy : MERGE_FILE | DIRECT_COPY")
-            String  sinkStrategy,
-            @Schema(description = "Staging strategy : PER_CONNECTION_TEMP | SHARED_UNLOGGED ; null when sinkStrategy = MERGE_FILE")
-            String  stagingStrategy,
-            @Schema(description = "Workflow execution mode : SYNC | ASYNC")
-            String  executionMode,
-            @Schema(description = "Streaming mode between transform and sink : BUFFERED | BACKPRESSURED")
-            String  streamingMode,
-            @Schema(description = "True when sink writes are parallelised on the SYNC path")
-            boolean directWriteParallel) {
+            String sinkStrategy,
+            @Schema(description = "Staging strategy : PER_CONNECTION_TEMP | SHARED_UNLOGGED | PER_WORKFLOW_TABLE ; null when sinkStrategy = MERGE_FILE")
+            String stagingStrategy,
+            @Schema(description = "Cascade pipeline mode : STAGED | PIPELINED ( cascade 2.1.0 )")
+            String pipelineMode,
+            @Schema(description = "Number of concurrent sink workers")
+            int    sinkParallelism) {
         public static StrategyDTO fromSnapshot(fr.inra.oresing.workflow.cascade.history.StrategySnapshot s) {
             return new StrategyDTO(s.sinkStrategy(), s.stagingStrategy(),
-                    s.executionMode(), s.streamingMode(), s.directWriteParallel());
+                    s.pipelineMode(), s.sinkParallelism());
         }
     }
 

@@ -14,7 +14,7 @@ import java.util.Optional;
  *
  * <ol>
  *   <li>Detecte les sessions ACTIVE dont le JWT a expire et les persiste
- *       en {@code oa_metrics.user_session_log} avec
+ *       en {@code oa_audit.user_session_log} avec
  *       {@code endReason = JWT_EXPIRED} . Sans ce sweeper , les
  *       expirations resteraient uniquement en RAM et n'apparaitraient
  *       jamais dans l'historique .</li>

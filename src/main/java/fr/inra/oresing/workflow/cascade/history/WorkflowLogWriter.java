@@ -15,7 +15,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Writer asynchrone pour {@code oa_metrics.workflow_log}.
+ * Writer asynchrone pour {@code oa_audit.workflow_log}.
  *
  * <p>Principe :
  * <ul>

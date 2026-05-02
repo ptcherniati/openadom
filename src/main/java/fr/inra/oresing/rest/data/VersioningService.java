@@ -21,9 +21,14 @@ import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.*;
 import java.util.function.Function;
 
@@ -36,12 +41,19 @@ public class VersioningService {
     private final OreSiRepository repository;
     private final UserRepository userRepository;
     private final JsonRowMapper jsonRowMapper;
+    private final fr.inra.oresing.monitoring.compensation.CompensationLogService compensationLogService;
+    private final PlatformTransactionManager txManager;
 
-    public VersioningService(ServiceContainer serviceContainer, OreSiRepository repository, UserRepository userRepository, JsonRowMapper jsonRowMapper) {
+    public VersioningService(ServiceContainer serviceContainer, OreSiRepository repository,
+                             UserRepository userRepository, JsonRowMapper jsonRowMapper,
+                             fr.inra.oresing.monitoring.compensation.CompensationLogService compensationLogService,
+                             PlatformTransactionManager txManager) {
         this.serviceContainer = serviceContainer;
         this.repository = repository;
         this.userRepository = userRepository;
         this.jsonRowMapper = jsonRowMapper;
+        this.compensationLogService = compensationLogService;
+        this.txManager = txManager;
     }
 
     @Transactional
@@ -63,8 +75,59 @@ public class VersioningService {
                 .map(DataWriter.class::cast)
                 .orElse(null);
 
-        State state = getStoreFile(application, dataName, fileOrUUIDOpt.orElse(null), fileName, applicationDataWriter)
-                .loadOrCreateFile(file, binaryFileRepository(application), serviceContainer.binaryFileService());
+        // Le binaryfile + son fileData doivent etre committes AVANT que la
+        // cascade lance ses workers ( cascade ouvre des connexions fresh
+        // sur le pool , elles ne voient pas une row uncommitted dans la
+        // tx Spring courante -> referencevalue_binaryfile_fkey violation
+        // dans le FinalizeHook ) . On force REQUIRES_NEW : la sous-tx
+        // commit immediatement , le binaryfile devient visible cross-conn .
+        // Le compensation_log ( track plus bas , aussi REQUIRES_NEW ) garantit
+        // qu'un orphan sera nettoye en cas d'echec ulterieur ( cascade /
+        // publishData / mail ) , conformement au pattern outbox documente
+        // en tete de CompensationLogService .
+        TransactionTemplate storeFileTx = new TransactionTemplate(txManager);
+        storeFileTx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        State state = storeFileTx.execute(status -> {
+            try {
+                return getStoreFile(application, dataName, fileOrUUIDOpt.orElse(null), fileName, applicationDataWriter)
+                        .loadOrCreateFile(file, binaryFileRepository(application), serviceContainer.binaryFileService());
+            } catch (FileNotFoundException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
+
+        // Compensation log : binaryfile committe par REQUIRES_NEW dans
+        // BinaryFileService.storeFile -> visible cross-connection mais
+        // expose au risque d'orphan si la suite du flow ( cascade /
+        // publish ) echoue . On tracke l'op pour cleanup automatique
+        // ( finally + sweeper ) .
+        UUID compId = null;
+        BinaryFile newBinaryFile = state.binaryFile();
+        if (newBinaryFile != null && state instanceof UnPublishedVersions) {
+            try {
+                java.util.Map<String, Object> payload = new java.util.LinkedHashMap<>();
+                payload.put("fileName",   fileName);
+                payload.put("dataName",   dataName);
+                payload.put("appName",    application.getName());
+                payload.put("sizeBytes",  file != null ? file.fileSize() : null);
+                UUID userIdForCompLog = OreSiApiRequestContext.getRequestUserId();
+                String userLoginForCompLog = serviceContainer.authenticationService()
+                        .getCurrentUserRoles().userLogin();
+                compId = compensationLogService.record(
+                        fr.inra.oresing.monitoring.compensation.handlers.BinaryFileCompensationHandler.OP_TYPE,
+                        application.getName(),    // target_schema = nom application
+                        "binaryfile",
+                        newBinaryFile.getId().toString(),
+                        null,                     // correlationId : pas dispo a ce niveau ; cascade le set ailleurs
+                        userIdForCompLog,
+                        userLoginForCompLog,
+                        payload);
+            } catch (RuntimeException ex) {
+                log.warn("CompensationLog.record failed ( best-effort ) : {}", ex.getMessage());
+            }
+        }
+
+        try {
         EmailService.UPLOAD_STATE uploadState;
         if (state instanceof UnPublishedVersions unPublishedVersions) {
             FileOrUUID fileOrUUID = unPublishedVersions
@@ -82,6 +145,7 @@ public class VersioningService {
             }
             if (withEmail) {
                 safeSendUploadSuccessMail(application, dataName, fileName, uploadState, locale, dataVersioningResult);
+                if (compId != null) compensationLogService.confirm(compId);
                 return dataVersioningResult;
             }
         }
@@ -95,8 +159,23 @@ public class VersioningService {
         if (withEmail) {
             safeSendUploadSuccessMail(application, dataName, fileName, uploadState, locale, dataVersioningResult);
         }
+        if (compId != null) compensationLogService.confirm(compId);
         return dataVersioningResult;
 
+        } catch (RuntimeException | IOException ex) {
+            // Best-effort cleanup synchrone : tente la compensation immediatement
+            // ( smart-check protege contre data loss ) . Si fail , le sweeper
+            // rattrapera apres TTL .
+            if (compId != null) {
+                try {
+                    compensationLogService.compensateNow(compId);
+                } catch (RuntimeException compErr) {
+                    log.warn("compensateNow failed for {} ( sweeper will retry ) : {}",
+                            compId, compErr.getMessage());
+                }
+            }
+            throw ex;
+        }
     }
 
     /**

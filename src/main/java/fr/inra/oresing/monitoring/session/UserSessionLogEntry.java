@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Row immutable persistee dans {@code oa_metrics.user_session_log} .
+ * Row immutable persistee dans {@code oa_audit.user_session_log} .
  *
  * <p>Mirroir de la table SQL ( cf. {@code V5__user_session_log.sql} ) ;
  * conversion {@link #fromSession(SessionInfo)} centralisee pour eviter

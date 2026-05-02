@@ -193,7 +193,7 @@ public class AuthenticationResources {
                 .map(LoginAdminResult.class::cast)
                 .orElse(null);
         if (result != null) {
-            registerSession(request, result);
+            registerSession(request, response, result);
         }
         return result;
     }
@@ -221,18 +221,31 @@ public class AuthenticationResources {
      *
      * <p>Best effort : un echec ici ne doit jamais empecher le login .
      */
-    private void registerSession(HttpServletRequest request, LoginAdminResult result) {
+    private void registerSession(HttpServletRequest request,
+                                 jakarta.servlet.http.HttpServletResponse response,
+                                 LoginAdminResult result) {
         try {
             java.time.Instant now = java.time.Instant.now();
             UUID userId = result.id();
             String login = result.login();
             String ip    = resolveClientIp(request);
             String ua    = truncate(request.getHeader("User-Agent"), 500);
+            // AuthorizationFilter.buildLoginAuthentication a deja appele
+            // refreshJwtInResponse plus haut dans la chaine ; le JWT est
+            // donc disponible dans le header de la reponse a ce stade .
+            // On en extrait un hash SHA-256 stocke dans SessionInfo : le
+            // bouton kick admin pourra ainsi blacklister le token sans
+            // jamais avoir besoin du JWT brut .
+            String jwt = response.getHeader(fr.inra.oresing.rest.security.JWTExtractor.AUTHORIZATION);
+            if (jwt != null && jwt.startsWith(fr.inra.oresing.rest.security.JWTExtractor.BEARER_)) {
+                jwt = jwt.substring(fr.inra.oresing.rest.security.JWTExtractor.BEARER_.length());
+            }
+            String tokenHash = fr.inra.oresing.monitoring.session.JwtBlacklistRegistry.hash(jwt);
             SessionInfo session = new SessionInfo(
                     UUID.randomUUID(), userId, login, ip, ua,
                     now,
                     now.plusSeconds(jwtExpirationSeconds),
-                    null, null);
+                    null, null, tokenHash);
             sessionRegistry.start(session);
         } catch (RuntimeException ex) {
             // L'observabilite est best-effort : on log mais on ne casse
@@ -247,7 +260,7 @@ public class AuthenticationResources {
      * avec la {@code reason} fournie ( typiquement
      * {@code SessionInfo.END_LOGOUT} ) . Pour chaque session terminee ,
      * empile l'entry dans le {@link UserSessionLogWriter} pour
-     * persistence async dans {@code oa_metrics.user_session_log} .
+     * persistence async dans {@code oa_audit.user_session_log} .
      *
      * <p>Multi-onglets : un logout ferme toutes les sessions ACTIVE de
      * cet utilisateur cote dashboard . Les autres JWT du meme user

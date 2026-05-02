@@ -9,7 +9,7 @@ import java.util.UUID;
  * orchestrators and consumed by the oa-live dashboard through
  * /api/dashboard/workflows/in-progress .
  *
- * <p>The snapshot mirrors most columns of {@code oa_metrics.workflow_log} but
+ * <p>The snapshot mirrors most columns of {@code oa_audit.workflow_log} but
  * lives in memory only : once the workflow finishes , the entry is removed
  * from {@link WorkflowActiveRegistry} and the final row is persisted by
  * {@link WorkflowLogWriter}.

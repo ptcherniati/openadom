@@ -162,7 +162,8 @@ public class DataService {
                 path,
                 userId,
                 application.getName(),
-                refType
+                refType,
+                fileOrUUID == null ? null : fileOrUUID.fileid()
         );
         //final Path toMerge = referenceImporter.doDataTreatment(path, sharedContext, chunkInfo, workflowProperties, lifecycleManager);
         /*referenceImporter.treatErrors();

@@ -1,6 +1,6 @@
 package fr.inra.oresing.workflow.cascade.pipeline;
 
-import fr.inrae.ore.cascade.core.monitoring.WorkflowMonitoringService;
+import fr.inrae.ore.cascade.core.monitoring.WorkflowEventBus;
 import fr.inrae.ore.cascade.model.listener.WorkflowEvents;
 import fr.inrae.ore.cascade.model.listener.WorkflowListener;
 import jakarta.annotation.PostConstruct;
@@ -53,13 +53,13 @@ public class PipelineRegistry implements WorkflowListener {
 
     @PostConstruct
     void wire() {
-        WorkflowMonitoringService.getDefault().subscribe(this);
-        log.info("PipelineRegistry subscribed to cascade WorkflowMonitoringService");
+        WorkflowEventBus.getInstance().subscribe(this);
+        log.info("PipelineRegistry subscribed to cascade WorkflowEventBus");
     }
 
     @PreDestroy
     void unwire() {
-        WorkflowMonitoringService.getDefault().unsubscribe(this);
+        WorkflowEventBus.getInstance().unsubscribe(this);
     }
 
     /**
@@ -205,6 +205,30 @@ public class PipelineRegistry implements WorkflowListener {
             }
         }
         s.snapshotAt = e.time();
+
+        // Stale-RUNNING reset : SOURCE has no "fetch end" event when the
+        // spliterator advance returns false on EOF , so a source worker
+        // can stay RUNNING long past the actual end-of-stream . Heartbeat
+        // is the only periodic signal that lets us close that gap before
+        // workflow end .
+        long nowMs = (e.time() != null ? e.time() : Instant.now()).toEpochMilli();
+        resetStaleRunning(s.sourceWorkers, nowMs);
+        resetStaleRunning(s.sinkWorkers,   nowMs);
+    }
+
+    private static final long STALE_RUNNING_RESET_MS = 2_000L;
+
+    private static void resetStaleRunning(Map<String, WorkerStat> workers, long nowMs) {
+        for (WorkerStat w : workers.values()) {
+            if (!"RUNNING".equals(w.status)) continue;
+            if (w.lastActivity == null) continue;
+            if (nowMs - w.lastActivity.toEpochMilli() > STALE_RUNNING_RESET_MS) {
+                w.status = "IDLE";
+                w.currentChunk = null;
+                w.currentRecordsProcessed = 0L;
+                w.currentRecordsTotal = 0L;
+            }
+        }
     }
 
     // ----------------------------------------------------------------

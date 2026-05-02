@@ -15,7 +15,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Writer asynchrone pour {@code oa_metrics.user_session_log} . Pattern
+ * Writer asynchrone pour {@code oa_audit.user_session_log} . Pattern
  * identique a
  * {@link fr.inra.oresing.workflow.cascade.history.WorkflowLogWriter} :
  * queue bornee + thread daemon batch INSERT . L'observabilite ne doit

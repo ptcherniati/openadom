@@ -23,7 +23,7 @@ class UserSessionRegistryTest {
     private static SessionInfo session(UUID userId, String login, Instant loginTime, Duration ttl) {
         return new SessionInfo(
                 UUID.randomUUID(), userId, login, "127.0.0.1", "JUnit/UA",
-                loginTime, loginTime.plus(ttl), null, null);
+                loginTime, loginTime.plus(ttl), null, null, null);
     }
 
     @Test

@@ -2,6 +2,7 @@ package fr.inra.oresing.workflow.cascade;
 
 import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.workflow.cascade.config.ImportProperties;
+import fr.inra.oresing.workflow.cascade.staging.StagingMode;
 import fr.inrae.ore.cascade.api.builder.SinkBuilder;
 import fr.inrae.ore.cascade.api.defaults.db.RowSerializer;
 import fr.inrae.ore.cascade.api.defaults.db.staging.FinalizeHook;
@@ -14,6 +15,7 @@ import java.io.BufferedReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.UUID;
 
 /**
  * Factory de {@link Sink}s pour le pipeline d'import openADOM .
@@ -53,25 +55,49 @@ public final class CascadeSinkFactory {
      * pour 1.7.0 on garde {@code PER_CONNECTION_TEMP} comme défaut ) .
      */
     public static Sink<Path> directCopy(DataRepository referenceValueRepository,
-                                         ImportProperties props) {
+                                         ImportProperties props,
+                                         UUID correlationId) {
 
-        DataSource ds = referenceValueRepository.getDataSource();
-        if (ds == null) {
+        DataSource raw = referenceValueRepository.getDataSource();
+        if (raw == null) {
             throw new IllegalStateException("DataRepository did not expose a DataSource ; "
                     + "cannot build StagingPostgresSink");
         }
+        // FK-violation fix : cascade ouvre sa propre Connection via
+        // {@code dataSource.getConnection()} . Sans wrapping , cette
+        // connection ne fait PAS partie de la transaction Spring
+        // {@code @Transactional} courante . Resultat : les rows
+        // {@code binaryfile} fraichement INSERT-ees par
+        // {@code StoreFile.loadOrCreateFile} ne sont pas visibles cote
+        // cascade ( pas encore commit-ees ) , et le UPSERT vers
+        // {@code referencevalue} echoue avec la FK
+        // {@code referencevalue_binaryfile_fkey} .
+        //
+        // {@link TransactionAwareDataSourceProxy} renvoie une connection
+        // qui :
+        //   - delegue a la connection bound a la tx Spring courante si
+        //     une tx est active ,
+        //   - ignore les appels {@code commit / rollback / setAutoCommit}
+        //     ( Spring les gere a l'exit du @Transactional ) ,
+        //   - ignore le {@code close} ( la connection retourne au pool a
+        //     la fin de la tx ) .
+        //
+        // Net effet : cascade rejoint la tx Spring de createData /
+        // VersioningService et voit les binaryfile rows fraichement
+        // INSERT . Hors tx Spring ( ex. tests unitaires direct ) , la
+        // proxy delegue exactement comme avant .
+        DataSource ds = new org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy(raw);
 
-        StagingTableSpec spec = switch (props.getStagingStrategy()) {
-            case PER_CONNECTION_TEMP -> new StagingTableSpec.PerConnectionTemp(
-                    "referencevalue_import",
-                    "CREATE TEMP TABLE referencevalue_import (data jsonb) ON COMMIT DROP");
-            case SHARED_UNLOGGED -> new StagingTableSpec.SharedUnlogged(
-                    props.getStagingSharedTableName(),
-                    "correlation_id",
-                    "data",
-                    "created_at",
-                    props.getStagingSharedOrphanTtlMinutes());
-        };
+        // Strategy pattern : StagingMode encapsule cascade spec , copy
+        // columns , correlation_id filter , et hooks CREATE/DROP per-workflow .
+        // Toutes les decisions specifiques a la strategy sont concentrees
+        // dans une seule classe ( cf. {@link StagingMode} ) .
+        StagingMode mode = StagingMode.of(
+                props.getStagingStrategy(),
+                correlationId,
+                props.getStagingSharedTableName(),
+                props.getStagingSharedOrphanTtlMinutes());
+        StagingTableSpec spec = mode.cascadeSpec();
 
         // Pass-through serializer : the chunk's processed file already
         // contains one CSV jsonb-encoded line per logical row. We read
@@ -100,7 +126,12 @@ public final class CascadeSinkFactory {
         String idJsonPath     = "id";
 
         FinalizeHook hook = ctx -> {
-            String corridFilter = (spec instanceof StagingTableSpec.SharedUnlogged) ? ctx.correlationId() : null;
+            // Filter par correlation_id : SHARED_UNLOGGED ( table partagee
+            // multi-workflows ) + PER_WORKFLOW_TABLE ( tag cosmetique mais
+            // garde la symetrie avec cascade SharedUnlogged spec ) .
+            // PER_CONNECTION_TEMP : null ( table TEMP isolated ) .
+            String corridFilter = mode.correlationIdFilter(
+                    correlationId != null ? correlationId : safeUuid(ctx.correlationId()));
             StagingFinalizeSql.runFinalize(
                     ctx.connection(),
                     schemaName,
@@ -119,14 +150,11 @@ public final class CascadeSinkFactory {
         // The pass-through serializer prepends the correlationId prefix on
         // every physical line for SHARED_UNLOGGED ( cascade 1.8.0
         // RowSerializer contract supports multi-line records ) .
-        String copyCols = switch (props.getStagingStrategy()) {
-            case PER_CONNECTION_TEMP -> "data";
-            case SHARED_UNLOGGED     -> "correlation_id, data";
-        };
+        String copyCols = mode.copyColumns();
 
         // cascade 1.8.0 unified WriteMode hierarchy : StagingUpsert config
         // record encapsulates staging spec + finalize hook + COPY format .
-        WriteMode.StagingUpsert mode = WriteMode.stagingUpsert()
+        WriteMode.StagingUpsert writeMode = WriteMode.stagingUpsert()
                 .stagingSpec(spec)
                 .finalizeHook(hook)
                 .copyColumns(copyCols)
@@ -142,8 +170,14 @@ public final class CascadeSinkFactory {
         // cascade 1.8.0 fluent API : SinkBuilder.create().<T>stagingPostgres()
         return SinkBuilder.create().<Path>stagingPostgres()
                 .dataSource(ds)
-                .writeMode(mode)
+                .writeMode(writeMode)
                 .rowSerializer(passthrough)
                 .build();
+    }
+
+    /** Best-effort UUID parse ; null si malforme . */
+    private static UUID safeUuid(String s) {
+        if (s == null) return null;
+        try { return UUID.fromString(s); } catch (IllegalArgumentException e) { return null; }
     }
 }

@@ -69,7 +69,7 @@ public class DashboardController {
 
     @Operation(
         summary = "Paginated workflow history",
-        description = "Paginated list of finished workflows from oa_metrics.workflow_log. "
+        description = "Paginated list of finished workflows from oa_audit.workflow_log. "
                 + "Admin users see every row ; non-admin users are filtered to their own "
                 + "workflows on the SQL side. Sorted by start_time DESC.")
     @ApiResponses({
@@ -99,7 +99,7 @@ public class DashboardController {
         summary = "Workflow detail",
         description = "Full detail of a single workflow , identified by its correlation id. "
                 + "Looks up the in-memory registry first ( live data for running workflows ) , "
-                + "falls back on oa_metrics.workflow_log when the workflow has finished. "
+                + "falls back on oa_audit.workflow_log when the workflow has finished. "
                 + "Non-admin users can only fetch their own workflows ; others return 404 on "
                 + "purpose to prevent id enumeration.")
     @ApiResponses({
@@ -139,6 +139,60 @@ public class DashboardController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Operation(
+        summary = "Bloc CHARGEMENT FINAL",
+        description = "Snapshot temps reel de la phase chargement final ( cascade emit -> "
+                + "finalize -> rollback ) pour un workflow en cours . Decompose la duree totale "
+                + "en duree cascade ( emit chunks , debit fige a 100 % ) + duree finalize "
+                + "( UPSERT staging->final ou COPY merged.csv->final ) + duree rollback . "
+                + "Le frontend poll cet endpoint pendant que phase != COMPLETED / ROLLBACK_DONE .")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Snapshot du bloc CHARGEMENT FINAL",
+            content = @Content(schema = @Schema(implementation = FinalizeProgressDTO.class))),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
+        @ApiResponse(responseCode = "404", description = "No active workflow with this id , or not visible to this user")
+    })
+    @GetMapping("/{correlationId}/finalize")
+    public ResponseEntity<FinalizeProgressDTO> finalizeProgress(
+            @Parameter(description = "Correlation id of the workflow ( UUID )")
+            @PathVariable UUID correlationId) {
+        return service.finalizeProgress(correlationId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @Operation(
+        summary = "Agregat global CHARGEMENT FINAL",
+        description = "Resume des workflows actuellement actifs : combien en finalize , en "
+                + "rollback , total rows attendues / arrivees / staging restant , debit "
+                + "finalize cumule . Sert au bloc permanent en tete de la page Live . "
+                + "Non-admin = ses propres workflows uniquement .")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Agregat ( meme structure quand 0 workflow ; champs a 0 )",
+            content = @Content(schema = @Schema(implementation = FinalizeAggregateDTO.class))),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
+    })
+    @GetMapping("/finalize/aggregate")
+    public ResponseEntity<FinalizeAggregateDTO> finalizeAggregate() {
+        return ResponseEntity.ok(service.finalizeAggregate());
+    }
+
+    @Operation(
+        summary = "Pools cascade en idle ( supervision sans workflow )",
+        description = "Retourne la structure courante des pools cascade ( SOURCE / TRANSFORM "
+                + "/ SINK / ORDERING ) : parallelism configure , taille queue , profondeur "
+                + "courante . Permet a oa-live d'afficher le pipeline avec workers en "
+                + "placeholder repos meme quand aucun workflow ne tourne .")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Snapshot pools cascade",
+            content = @Content(schema = @Schema(implementation = PipelinePoolsDTO.class))),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
+    })
+    @GetMapping("/cascade/pools")
+    public ResponseEntity<PipelinePoolsDTO> cascadePools() {
+        return ResponseEntity.ok(service.cascadePools());
+    }
+
     // ---------------------------------------------------------------- //
     //  Sessions ( onglet Sessions de oa-live , admin only )            //
     // ---------------------------------------------------------------- //
@@ -161,7 +215,7 @@ public class DashboardController {
 
     @Operation(
         summary = "Historique des sessions utilisateurs",
-        description = "Pagination sur oa_metrics.user_session_log . Filtres "
+        description = "Pagination sur oa_audit.user_session_log . Filtres "
                 + "optionnels : userLogin partial-match , endReason exacte . "
                 + "Reservee aux admins .")
     @ApiResponses({
@@ -181,6 +235,82 @@ public class DashboardController {
             @Parameter(description = "Filtre exact sur end_reason ( LOGOUT , JWT_EXPIRED , KICK )")
             @RequestParam(required = false) String endReason) {
         return ResponseEntity.ok(service.listSessionsHistory(limit, offset, user, endReason));
+    }
+
+    @Operation(
+        summary = "Deconnecter une session ( vue dashboard )",
+        description = "Marque la session comme KICK dans le registry in-memory et "
+                + "ecrit la cloture dans oa_audit.user_session_log . **Cosmetique** : "
+                + "le JWT de l'utilisateur reste valide jusqu'a son expiration ; "
+                + "l'utilisateur disparait de l'onglet Sessions Active de oa-live "
+                + "mais peut continuer a appeler les endpoints API tant que son token "
+                + "n'a pas expire . Reservee aux admins ( openAdomAdmin ) .")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Session marquee deconnectee"),
+        @ApiResponse(responseCode = "401", description = "JWT absent ou invalide"),
+        @ApiResponse(responseCode = "403", description = "Reserve aux admins"),
+        @ApiResponse(responseCode = "404", description = "Session inconnue ou deja terminee")
+    })
+    @org.springframework.web.bind.annotation.PostMapping("/sessions/{sessionId}/disconnect")
+    public ResponseEntity<Void> disconnectSession(
+            @Parameter(description = "Identifiant interne de la session ( UUID )")
+            @PathVariable UUID sessionId) {
+        try {
+            service.disconnectSession(sessionId);
+            return ResponseEntity.noContent().build();
+        } catch (NoSuchElementException ex) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @Operation(
+        summary = "Lister la blacklist JWT",
+        description = "Retourne les tokens JWT actuellement revoques par un kick admin . "
+                + "Capacite max 100 ; les tokens expires sont purges automatiquement . "
+                + "Reservee aux admins .")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Liste blacklist"),
+        @ApiResponse(responseCode = "401", description = "JWT absent ou invalide"),
+        @ApiResponse(responseCode = "403", description = "Reserve aux admins")
+    })
+    @GetMapping("/blacklist")
+    public ResponseEntity<List<fr.inra.oresing.monitoring.session.JwtBlacklistRegistry.Entry>> listBlacklist() {
+        return ResponseEntity.ok(service.listBlacklist());
+    }
+
+    @Operation(
+        summary = "Retirer une entree blacklist",
+        description = "Annule un kick admin : le JWT correspondant redevient valide "
+                + "( jusqu'a son expiration naturelle ) . Reserve aux admins .")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Entree retiree"),
+        @ApiResponse(responseCode = "401", description = "JWT absent ou invalide"),
+        @ApiResponse(responseCode = "403", description = "Reserve aux admins"),
+        @ApiResponse(responseCode = "404", description = "Aucune entree avec ce hash")
+    })
+    @DeleteMapping("/blacklist/{tokenHash}")
+    public ResponseEntity<Void> removeBlacklistEntry(
+            @Parameter(description = "Hash SHA-256 hex du token a deblacklister")
+            @PathVariable String tokenHash) {
+        return service.removeBlacklistEntry(tokenHash)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
+    }
+
+    @Operation(
+        summary = "Vider la blacklist JWT",
+        description = "Supprime toutes les entrees de la blacklist . Toutes les "
+                + "sessions revoquees redeviennent valides jusqu'a leur expiration "
+                + "JWT naturelle . Reserve aux admins .")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Nombre d'entrees vidées"),
+        @ApiResponse(responseCode = "401", description = "JWT absent ou invalide"),
+        @ApiResponse(responseCode = "403", description = "Reserve aux admins")
+    })
+    @DeleteMapping("/blacklist")
+    public ResponseEntity<java.util.Map<String, Integer>> clearBlacklist() {
+        int n = service.clearBlacklist();
+        return ResponseEntity.ok(java.util.Map.of("cleared", n));
     }
 
     @Operation(

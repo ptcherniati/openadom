@@ -1,6 +1,6 @@
 package fr.inra.oresing.workflow.cascade.metrics;
 
-import fr.inrae.ore.cascade.core.monitoring.WorkflowMonitoringService;
+import fr.inrae.ore.cascade.core.monitoring.WorkflowEventBus;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>Les Gauges "in progress" sont enregistres au demarrage et
  * Micrometer les poll automatiquement :
  * <ul>
- *   <li>Import : valeur lue depuis {@link WorkflowMonitoringService}
+ *   <li>Import : valeur lue depuis {@link WorkflowEventBus}
  *       cascade ( zero code metier additionnel ).</li>
  *   <li>Extraction : valeur lue depuis des compteurs
  *       {@link AtomicInteger} locaux, alimentes via
@@ -79,7 +79,7 @@ public class OpenadomMetrics {
         try {
             // Import : nombre de workflows cascade actifs
             registry.gauge(IMPORT_PREFIX + "_in_progress", Tags.empty(),
-                    WorkflowMonitoringService.getInstance(),
+                    WorkflowEventBus.getInstance(),
                     service -> service.getAllActiveWorkflows().size());
 
             // Extraction : un gauge par type, alimente via AtomicInteger

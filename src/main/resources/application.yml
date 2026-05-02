@@ -147,7 +147,7 @@ app:
     processed-temp-dir: ${APP_IMPORT_PROCESSED_TEMP_DIR:/tmp/openadom-import/processed}
   # =========================
   # Observabilite workflows ( phase 2 , #62 )
-  # Stocke l'historique des imports/extractions dans oa_metrics.workflow_log.
+  # Stocke l'historique des imports/extractions dans oa_audit.workflow_log.
   # =========================
   metrics:
     # Duree de conservation des entries ( purge quotidienne a 3h )

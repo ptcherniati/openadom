@@ -1,6 +1,6 @@
 package fr.inra.oresing.workflow.cascade.history;
 
-import fr.inrae.ore.cascade.core.monitoring.WorkflowMonitoringService;
+import fr.inrae.ore.cascade.core.monitoring.WorkflowEventBus;
 import fr.inrae.ore.cascade.model.listener.WorkflowEvents;
 import fr.inrae.ore.cascade.model.listener.WorkflowListener;
 import jakarta.annotation.PostConstruct;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 /**
  * In-memory registry of workflows currently in progress.
  *
- * <p>The oa_metrics.workflow_log table only receives rows when a workflow
+ * <p>The oa_audit.workflow_log table only receives rows when a workflow
  * finishes ( COMPLETED / FAILED / CANCELLED / RATE_LIMITED ). For the
  * live dashboard oa-live we need a snapshot of running workflows with their
  * latest progress values ; that snapshot lives in this thread-safe registry.
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  *
  * <p>Per-chunk drill-down ( plan E ) : the registry subscribes itself as
  * a cascade {@link WorkflowListener} on
- * {@link WorkflowMonitoringService#getDefault()} ; the
+ * {@link WorkflowEventBus#getInstance()} ; the
  * {@code onChunkStart / onChunkProgress / onChunkEnd} hooks update a
  * separate per-workflow {@link ChunkSnapshot} map merged at read time.
  *
@@ -45,6 +45,28 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class WorkflowActiveRegistry implements WorkflowListener {
+
+    /**
+     * Lecteur live des tailles de pools cascade . Sert a remplacer , au
+     * moment du listing , la valeur {@link ParallelismSnapshot} figee au
+     * demarrage du workflow par la taille courante du pool ( permet a
+     * l'admin de voir les changements de pool size en temps reel dans le
+     * header oa-live ) . Optionnel : si null , la valeur figee est
+     * conservee ( comportement legacy ) .
+     */
+    private final fr.inra.oresing.workflow.cascade.config.PoolReloader poolReloader;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public WorkflowActiveRegistry(
+            @org.springframework.beans.factory.annotation.Autowired(required = false)
+            fr.inra.oresing.workflow.cascade.config.PoolReloader poolReloader) {
+        this.poolReloader = poolReloader;
+    }
+
+    /** Constructeur de test ( sans live pool reloader ) . */
+    public WorkflowActiveRegistry() {
+        this.poolReloader = null;
+    }
 
     private final ConcurrentMap<UUID, WorkflowSnapshot> byCorrelationId = new ConcurrentHashMap<>();
 
@@ -79,19 +101,113 @@ public class WorkflowActiveRegistry implements WorkflowListener {
             new ConcurrentHashMap<>();
 
     /**
+     * UUID du binaryfile source de l'import , publie par
+     * {@link fr.inra.oresing.rest.data.DataService} avant le demarrage de
+     * cascade . Utilise par {@link WorkflowMetadataCollector} pour enrichir
+     * {@code workflow_log.metadata.binaryFileId} et par
+     * {@link fr.inra.oresing.monitoring.integrity.IntegrityService} pour
+     * compter les rows {@code referencevalue WHERE binaryfile = ?} et
+     * detecter les imports incoherents .
+     */
+    private final ConcurrentMap<UUID, UUID> binaryFileIdByCid = new ConcurrentHashMap<>();
+
+    /**
+     * Phase de chargement final ( cascade emit -> finalize -> rollback ) .
+     * Alimente le bloc CHARGEMENT FINAL d'oa-live ( separe la mesure du
+     * debit cascade et du debit UPSERT/COPY final ) .
+     */
+    private final ConcurrentMap<UUID, FinalizePhaseSnapshot> finalizePhaseByCid =
+            new ConcurrentHashMap<>();
+
+    /**
+     * Compteurs in-memory des rows ecrites en staging et en finale par
+     * workflow . Mis a jour a chaud par les listeners cascade ( pas de
+     * SQL count par poll ) . Approximation acceptable : si une rollback
+     * survient , les compteurs ne sont pas decrementes ( frontend les
+     * masque automatiquement quand phase = ROLLBACK_DONE ) .
+     */
+    private final ConcurrentMap<UUID, java.util.concurrent.atomic.AtomicLong>
+            stagingRowsByCid = new ConcurrentHashMap<>();
+    private final ConcurrentMap<UUID, java.util.concurrent.atomic.AtomicLong>
+            finalRowsByCid = new ConcurrentHashMap<>();
+
+    public void addStagingRows(UUID correlationId, long delta) {
+        if (correlationId == null || delta <= 0) return;
+        stagingRowsByCid.computeIfAbsent(correlationId,
+                k -> new java.util.concurrent.atomic.AtomicLong()).addAndGet(delta);
+    }
+
+    public void addFinalRows(UUID correlationId, long delta) {
+        if (correlationId == null || delta <= 0) return;
+        finalRowsByCid.computeIfAbsent(correlationId,
+                k -> new java.util.concurrent.atomic.AtomicLong()).addAndGet(delta);
+    }
+
+    public long stagingRows(UUID correlationId) {
+        var c = stagingRowsByCid.get(correlationId);
+        return c == null ? 0L : c.get();
+    }
+
+    public long finalRows(UUID correlationId) {
+        var c = finalRowsByCid.get(correlationId);
+        return c == null ? 0L : c.get();
+    }
+
+    public void initFinalizePhase(UUID correlationId, Instant startedAt) {
+        if (correlationId == null) return;
+        finalizePhaseByCid.put(correlationId, FinalizePhaseSnapshot.starting(startedAt));
+    }
+
+    public void markCascadeFinished(UUID correlationId, Instant at) {
+        if (correlationId == null) return;
+        finalizePhaseByCid.computeIfPresent(correlationId, (k, cur) -> cur.withCascadeFinished(at));
+    }
+
+    public void markFinalizeFinished(UUID correlationId, Instant at) {
+        if (correlationId == null) return;
+        finalizePhaseByCid.computeIfPresent(correlationId, (k, cur) -> cur.withFinalizeFinished(at));
+    }
+
+    public void markRollbackStarted(UUID correlationId, Instant at, long rowsBefore, String error) {
+        if (correlationId == null) return;
+        finalizePhaseByCid.computeIfPresent(correlationId,
+                (k, cur) -> cur.withRollbackStarted(at, rowsBefore, error));
+    }
+
+    public void markRollbackFinished(UUID correlationId, Instant at) {
+        if (correlationId == null) return;
+        finalizePhaseByCid.computeIfPresent(correlationId, (k, cur) -> cur.withRollbackFinished(at));
+    }
+
+    public Optional<FinalizePhaseSnapshot> findFinalizePhase(UUID correlationId) {
+        return Optional.ofNullable(finalizePhaseByCid.get(correlationId));
+    }
+
+    /** Publie le binaryfile source d'un workflow d'import . */
+    public void setBinaryFileId(UUID correlationId, UUID binaryFileId) {
+        if (correlationId == null || binaryFileId == null) return;
+        binaryFileIdByCid.put(correlationId, binaryFileId);
+    }
+
+    /** Retourne le binaryfile source d'un workflow ou empty si non publie . */
+    public Optional<UUID> findBinaryFileId(UUID correlationId) {
+        return Optional.ofNullable(binaryFileIdByCid.get(correlationId));
+    }
+
+    /**
      * Subscribes this registry as a cascade listener at startup so that
      * onChunkStart / onChunkProgress / onChunkEnd events feed the
      * per-chunk drill-down.
      */
     @PostConstruct
     void wireCascadeListener() {
-        WorkflowMonitoringService.getDefault().subscribe(this);
-        log.info("WorkflowActiveRegistry subscribed to cascade WorkflowMonitoringService");
+        WorkflowEventBus.getInstance().subscribe(this);
+        log.info("WorkflowActiveRegistry subscribed to cascade WorkflowEventBus");
     }
 
     @PreDestroy
     void unwireCascadeListener() {
-        WorkflowMonitoringService.getDefault().unsubscribe(this);
+        WorkflowEventBus.getInstance().unsubscribe(this);
     }
 
     // ----------------------------------------------------------------
@@ -117,10 +233,24 @@ public class WorkflowActiveRegistry implements WorkflowListener {
             Double progressPercentage,
             long bytesTotal) {
 
-        byCorrelationId.computeIfPresent(correlationId, (id, cur) ->
+        WorkflowSnapshot snap = byCorrelationId.computeIfPresent(correlationId, (id, cur) ->
                 cur.withProgress(
                         recordsProcessed, recordsFailed, chunksProcessed,
                         progressPercentage, bytesTotal));
+
+        // Auto-bascule en phase FINALIZE_RUNNING des que cascade emit 100 %
+        // ( recordsProcessed >= recordsTotal ) . Pour DIRECT_COPY le finalize
+        // hook tourne dans cascade workflow.execute() ; sans ce hook la phase
+        // resterait CASCADE_RUNNING jusqu'au commit final , et la duree
+        // finalize serait egale a 0 ms . En marquant cascadeFinishedAt ici
+        // on capture le bon delimiteur entre emit et UPSERT .
+        if (snap != null && snap.recordsTotal() > 0
+                && recordsProcessed >= snap.recordsTotal()) {
+            finalizePhaseByCid.computeIfPresent(correlationId, (k, cur) ->
+                    cur.cascadeFinishedAt() == null
+                            ? cur.withCascadeFinished(java.time.Instant.now())
+                            : cur);
+        }
     }
 
     /**
@@ -166,6 +296,10 @@ public class WorkflowActiveRegistry implements WorkflowListener {
         sourceWorkersByCid.remove(correlationId);
         sinkWorkersByCid.remove(correlationId);
         sinkChunksByCid.remove(correlationId);
+        binaryFileIdByCid.remove(correlationId);
+        finalizePhaseByCid.remove(correlationId);
+        stagingRowsByCid.remove(correlationId);
+        finalRowsByCid.remove(correlationId);
         if (removed != null) {
             log.debug("Workflow unregistered : {} / {}",
                     removed.workflowType(), correlationId);
@@ -232,7 +366,32 @@ public class WorkflowActiveRegistry implements WorkflowListener {
         List<WorkerSnapshot> workers = new java.util.ArrayList<>();
         workers.addAll(stageWorkers(sourceWorkersByCid.get(s.correlationId()), "SOURCE"));
         workers.addAll(aggregateTransformWorkers(sortedChunks));
-        workers.addAll(stageWorkers(sinkWorkersByCid.get(s.correlationId()),   "SINK"));
+        List<WorkerSnapshot> sinkWorkers = stageWorkers(
+                sinkWorkersByCid.get(s.correlationId()), "SINK");
+        // Placeholders : si cascade n'a pas encore emit d'event sink pour
+        // ce workflow ( BUFFERED + ASYNC : sink ne demarre qu'apres tous
+        // chunks transform emis ; OU MERGE_FILE : sink filesystem inline
+        // sans events ) , on synthetise N entries SINK selon le parallelism
+        // configure ( {@code s.parallelism().sink()} ) . L'admin voit
+        // immediatement les 4 sinks pre-vus en attente plutot qu'1 ligne
+        // generique ambigue .
+        int sinkParallelism = s.parallelism() != null ? s.parallelism().sink() : 1;
+        java.util.Set<String> existingNames = sinkWorkers.stream()
+                .map(WorkerSnapshot::name).collect(java.util.stream.Collectors.toSet());
+        for (int i = 1; i <= sinkParallelism; i++) {
+            String name = "sink-" + i;
+            if (!existingNames.contains(name)) {
+                sinkWorkers = new java.util.ArrayList<>(sinkWorkers);
+                sinkWorkers.add(new WorkerSnapshot(
+                        "SINK", name, "IDLE", null,
+                        0L, 0L, null, 0, null, null, null));
+            }
+        }
+        // Trier par nom pour stabilite affichage ( sink-1 , sink-2 , ... ) .
+        sinkWorkers = sinkWorkers.stream()
+                .sorted(Comparator.comparing(WorkerSnapshot::name))
+                .toList();
+        workers.addAll(sinkWorkers);
 
         // Sliding window des sink chunks - alimente la modal SINK
         // ( drill-down "fichiers charges en base" ) .
@@ -241,9 +400,39 @@ public class WorkflowActiveRegistry implements WorkflowListener {
                 ? List.of()
                 : List.copyOf(sinkRecords);
 
-        return s.withChunks(sortedChunks)
+        // Override le parallelism figé par la taille pool live , de sorte
+        // que les changements de pool size faits via l'edition live de
+        // configuration soient visibles immediatement dans le header
+        // oa-live . sinkParallelism reste celui du workflow ( forcé à 1
+        // par PER_CONNECTION_TEMP ) car le pool sink peut etre 8 mais le
+        // workflow lui n'utilise qu'1 thread - afficher 8 serait
+        // trompeur .
+        WorkflowSnapshot withLiveParallelism = s;
+        if (poolReloader != null && s.parallelism() != null) {
+            int liveSource    = livePoolSize(fr.inra.oresing.workflow.cascade.config.PoolReloader.Stage.SOURCE,    s.parallelism().source());
+            int liveTransform = livePoolSize(fr.inra.oresing.workflow.cascade.config.PoolReloader.Stage.TRANSFORM, s.parallelism().transform());
+            // sink reste figé : voir commentaire ci-dessus
+            int sinkConfigured = s.parallelism().sink();
+            if (liveSource != s.parallelism().source() || liveTransform != s.parallelism().transform()) {
+                withLiveParallelism = s.withParallelism(new ParallelismSnapshot(
+                        liveSource, liveTransform, sinkConfigured));
+            }
+        }
+
+        return withLiveParallelism.withChunks(sortedChunks)
                 .withWorkers(List.copyOf(workers))
                 .withSinkChunks(sinkChunksList);
+    }
+
+    private int livePoolSize(fr.inra.oresing.workflow.cascade.config.PoolReloader.Stage stage,
+                             int fallback) {
+        try {
+            var snap = poolReloader.snapshot(stage);
+            int n = snap == null ? -1 : snap.corePoolSize();
+            return n > 0 ? n : fallback;
+        } catch (RuntimeException ex) {
+            return fallback;
+        }
     }
 
     /**
@@ -471,6 +660,51 @@ public class WorkflowActiveRegistry implements WorkflowListener {
         }
     }
 
+    /**
+     * Stale-RUNNING reset on heartbeat ( cascade fires {@code PoolHeartbeatEvent}
+     * every 1 s ) . Closes the gap between {@code SourceFetchStart} ( fired
+     * by {@code SourceInstrumentation} before every spliterator
+     * {@code tryAdvance()} ) and {@code SourceChunkEmitted} ( NOT fired
+     * when advance returns {@code false} on EOF ) : the source worker would
+     * otherwise stay {@code RUNNING} during the entire post-EOF finalize /
+     * CHARGEMENT_DB phase , long after it actually finished emitting .
+     *
+     * <p>Heuristic : a worker marked {@code RUNNING} whose last activity
+     * is older than {@link #STALE_RUNNING_RESET_MS} ms is forced back to
+     * {@code IDLE} . The threshold is well above the per-chunk timing of
+     * SOURCE / SINK in nominal mode ( fast sinks 12 ms , source fetch
+     * 50-200 ms ) so it does not fight the per-event tracker .
+     *
+     * <p>Applies to SOURCE and SINK only ; TRANSFORM is event-driven via
+     * the {@code ChunkStart} / {@code ChunkEnd} pair which always fires .
+     */
+    @Override
+    public void onPoolHeartbeat(WorkflowEvents.PoolHeartbeatEvent e) {
+        UUID corrId = safeUuid(e.correlationId());
+        if (corrId == null) return;
+        long nowMs = (e.time() != null ? e.time() : Instant.now()).toEpochMilli();
+        resetStaleRunning(sourceWorkersByCid.get(corrId), nowMs);
+        resetStaleRunning(sinkWorkersByCid.get(corrId),   nowMs);
+    }
+
+    /** Workers idle if no event seen for longer than this . */
+    private static final long STALE_RUNNING_RESET_MS = 2_000L;
+
+    private static void resetStaleRunning(ConcurrentMap<String, StageWorkerStat> workers,
+                                          long nowMs) {
+        if (workers == null) return;
+        for (StageWorkerStat w : workers.values()) {
+            if (!"RUNNING".equals(w.status)) continue;
+            if (w.lastActivity == null) continue;
+            if (nowMs - w.lastActivity.toEpochMilli() > STALE_RUNNING_RESET_MS) {
+                w.status = "IDLE";
+                w.currentChunk = null;
+                w.currentRecordsProcessed = 0L;
+                w.currentRecordsTotal = 0L;
+            }
+        }
+    }
+
     // ----------------------------------------------------------------
     //  SOURCE stage listener callbacks ( cascade 1.9.0 events )
     // ----------------------------------------------------------------
@@ -525,6 +759,14 @@ public class WorkflowActiveRegistry implements WorkflowListener {
         Long durMs = e.duration() != null ? e.duration().toMillis() : null;
         w.recordEnd(durMs);
         w.lastActivity = e.endTime() != null ? e.endTime() : Instant.now();
+
+        // Increment compteur staging in-memory : sink ecrit chunk -> staging
+        // table ( DIRECT_COPY ) ou chunk file ( MERGE_FILE qui sera ensuite
+        // mergee dans merged.csv puis chargee via storeAll ) . Approximation
+        // suffisante pour l'UI temps reel ( pas de SQL count par poll ) .
+        if (e.recordsWritten() > 0) {
+            addStagingRows(corrId, e.recordsWritten());
+        }
 
         // Append to the sliding window for the SINK drill-down modal .
         // Skip the synthetic chunkIndex=-1 entries ( writeFromDisk path )

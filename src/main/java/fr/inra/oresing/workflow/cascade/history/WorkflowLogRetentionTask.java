@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Tache periodique qui purge les entries anciennes de
- * {@code oa_metrics.workflow_log} pour respecter la retention configuree.
+ * {@code oa_audit.workflow_log} pour respecter la retention configuree.
  *
  * <p>Fenetre de retention pilotee par {@code app.metrics.retention-days}
  * ( defaut 30 , remplace par la variable d'environnement

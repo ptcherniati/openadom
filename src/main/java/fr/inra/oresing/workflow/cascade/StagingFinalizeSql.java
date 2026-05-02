@@ -89,6 +89,21 @@ public final class StagingFinalizeSql {
             String idJsonPath
     ) throws SQLException {
 
+        // Diagnostic : permet de detecter le scenario "cascade tourne hors
+        // tx Spring" qui cause des FK violations sur binaryfile non encore
+        // committe . Utile pour le post-mortem des erreurs intermittentes
+        // ( 1er upload OK , 2eme upload FK violation ) .
+        boolean inSpringTx = false;
+        try {
+            inSpringTx = org.springframework.transaction.support
+                    .TransactionSynchronizationManager.isActualTransactionActive();
+        } catch (NoClassDefFoundError | RuntimeException ignore) { /* hors contexte Spring : best-effort */ }
+        log.info("StagingFinalize start : thread={} , correlationId={} , autoCommit={} , inSpringTx={}",
+                Thread.currentThread().getName(),
+                correlationId == null ? "(none)" : correlationId.substring(0, Math.min(8, correlationId.length())),
+                connection.getAutoCommit(),
+                inSpringTx);
+
         String columnList = Arrays.stream(targetColumns)
                 .map(String::toLowerCase)
                 .collect(Collectors.joining(","));
@@ -160,7 +175,7 @@ public final class StagingFinalizeSql {
         //         couvre le cas DB hang sans introduire de cap arbitraire
         //         sur la duree totale du finalize ( un import 50M lignes
         //         pourra continuer aussi longtemps que necessaire ) .
-        // Cancel admin-side : un appel WorkflowMonitoringService.cancel(corrId)
+        // Cancel admin-side : un appel WorkflowEventBus.cancel(corrId)
         // ne touche pas directement cette boucle ( elle ne lit pas le flag ) ,
         // mais le timeout postgres OU l'admin qui kill la connection
         // cote DB declenchera une SQLException ici , propagee en

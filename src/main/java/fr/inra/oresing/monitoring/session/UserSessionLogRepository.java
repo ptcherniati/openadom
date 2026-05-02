@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Acces PostgreSQL a la table {@code oa_metrics.user_session_log} .
+ * Acces PostgreSQL a la table {@code oa_audit.user_session_log} .
  *
  * <p>Pattern identique a
  * {@link fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository} :
@@ -27,18 +27,15 @@ import java.util.Objects;
 @Repository
 public class UserSessionLogRepository {
 
+    // Wrapper SECURITY DEFINER ; voir V2__oa_audit_schema.sql .
     private static final String INSERT_SQL = """
-            INSERT INTO oa_metrics.user_session_log (
-                session_id, user_id, user_login, ip_address, user_agent,
-                login_time, logout_time, duration_ms, end_reason
-            ) VALUES ( ?, ?, ?, ?::inet, ?, ?, ?, ?, ? )
-            ON CONFLICT (session_id) DO NOTHING
+            SELECT oa_audit.record_user_session(
+                ?::uuid, ?::uuid, ?::text, ?::inet, ?::text,
+                ?::timestamptz, ?::timestamptz, ?::bigint, ?::text)
             """;
 
-    private static final String DELETE_OLDER_THAN_SQL = """
-            DELETE FROM oa_metrics.user_session_log
-            WHERE login_time < now() - (? || ' days')::interval
-            """;
+    private static final String DELETE_OLDER_THAN_SQL =
+            "SELECT oa_audit.delete_user_session_logs_older_than(?::int)";
 
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate named;
@@ -91,7 +88,7 @@ public class UserSessionLogRepository {
         StringBuilder sql = new StringBuilder("""
                 SELECT session_id, user_id, user_login, ip_address::text AS ip_address,
                        user_agent, login_time, logout_time, duration_ms, end_reason
-                  FROM oa_metrics.user_session_log
+                  FROM oa_audit.user_session_log
                  WHERE 1=1
                 """);
         MapSqlParameterSource p = new MapSqlParameterSource();
@@ -125,7 +122,7 @@ public class UserSessionLogRepository {
     }
 
     public long count(java.util.UUID userId, String userLoginLike, String endReason) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM oa_metrics.user_session_log WHERE 1=1 ");
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM oa_audit.user_session_log WHERE 1=1 ");
         MapSqlParameterSource p = new MapSqlParameterSource();
         if (userId != null) { sql.append(" AND user_id = :userId "); p.addValue("userId", userId); }
         if (userLoginLike != null && !userLoginLike.isBlank()) {

@@ -3,6 +3,7 @@ package fr.inra.oresing.workflow.cascade.history;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -10,7 +11,7 @@ import java.util.UUID;
  *
  * <p>Record immutable construit au moment de la finalisation du workflow
  * puis transmis au {@link WorkflowLogWriter} pour insertion async dans
- * {@code oa_metrics.workflow_log}.
+ * {@code oa_audit.workflow_log}.
  *
  * <p>Phase 2 observabilite (issue #62).
  *
@@ -49,7 +50,25 @@ public record WorkflowLogEntry(
         int           chunksProcessed,
         long          bytesTotal,
         List<String>  errors,
-        String        fatalError) {
+        String        fatalError,
+        /** Champ extensible JSONB persiste tel quel ; contient
+         *  parallelisme + strategy + JVM stats pour aider l'admin a
+         *  trouver la config optimale en post-mortem . */
+        Map<String, Object> metadata) {
+
+    /** Compat constructor : entries sans metadata . */
+    public WorkflowLogEntry(
+            UUID correlationId, String workflowType, UUID userId, String userLogin,
+            String applicationName, String dataType, String resourceName,
+            Instant startTime, Instant endTime, Duration duration, String status,
+            long recordsProcessed, long recordsFailed, int chunksProcessed,
+            long bytesTotal, List<String> errors, String fatalError) {
+        this(correlationId, workflowType, userId, userLogin,
+             applicationName, dataType, resourceName,
+             startTime, endTime, duration, status,
+             recordsProcessed, recordsFailed, chunksProcessed,
+             bytesTotal, errors, fatalError, null);
+    }
 
     public static final String TYPE_IMPORT                    = "IMPORT";
     public static final String TYPE_EXTRACT_ZIP               = "EXTRACT_ZIP";
@@ -63,7 +82,7 @@ public record WorkflowLogEntry(
     public static final String STATUS_RATE_LIMITED  = "RATE_LIMITED";
 
     // Phases in-progress , publiées dans WorkflowActiveRegistry pour oa-live.
-    // Ne sont jamais persistées dans oa_metrics.workflow_log ( qui ne reçoit
+    // Ne sont jamais persistées dans oa_audit.workflow_log ( qui ne reçoit
     // que les états terminaux ci-dessus ).
     public static final String STATUS_UPLOADING     = "UPLOADING";
     public static final String STATUS_CHUNKING      = "CHUNKING";

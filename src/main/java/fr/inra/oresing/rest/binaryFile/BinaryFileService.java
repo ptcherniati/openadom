@@ -51,7 +51,7 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     }
 
     @Override
-    @Transactional()
+    @Transactional
     public UUID storeFile(final Application application, final DataFile file, String comment, final BinaryFileDataset binaryFileDataset) throws IOException {
         authenticationService.setRoleForClient();
         // creation du fichier

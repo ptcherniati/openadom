@@ -950,12 +950,27 @@ public class OreSiResources {
                 Objects.requireNonNull(additionalFilesInfos).getFiletype()) ? "charte" : "additional_files";
         extractionRateLimiter.acquireOrThrow(userId, extractionType);
 
+        // StreamingResponseBody runs sur le thread async-dispatch Spring ,
+        // pas sur le thread HTTP servlet courant . SecurityContextHolder
+        // est un ThreadLocal => le contexte d'authentification ne se
+        // propage PAS automatiquement vers la lambda . Sans capture
+        // explicite , {@code AdditionalFileService.getCharte} declenche
+        // {@code setRoleForClient()} sur un thread sans authentification ,
+        // tombe en role anonyme , et le SELECT sur la table
+        // {@code application} echoue avec NoSuchApplicationException
+        // ( "application inconnue 'X'" ) . On snapshot ici puis re-set
+        // dans la lambda , avec clearContext() en finally pour eviter
+        // la fuite du context sur le thread du pool .
+        final org.springframework.security.core.context.SecurityContext capturedSecurityCtx =
+                org.springframework.security.core.context.SecurityContextHolder.getContext();
+
         final String dataType = additionalFilesInfos.getFiletype();
         final StreamingResponseBody streamResponseBody;
         if (AdditionalFileService.CHARTE.equals(additionalFilesInfos.getFiletype())) {
             response.setHeader("Content-type", "application/pdf");
             response.setHeader("Content-Security-Policy", "frame-ancestors %s".formatted(frontendOrigin));
             streamResponseBody = out -> {
+                org.springframework.security.core.context.SecurityContextHolder.setContext(capturedSecurityCtx);
                 final Instant startedAt = Instant.now();
                 final org.apache.commons.io.output.CountingOutputStream counting =
                         new org.apache.commons.io.output.CountingOutputStream(out);
@@ -977,10 +992,12 @@ public class OreSiResources {
                             userId, nameOrId, dataType, "charte.pdf",
                             startedAt, duration, finalStatus, bytes, fatalError);
                     extractionRateLimiter.release(userId);
+                    org.springframework.security.core.context.SecurityContextHolder.clearContext();
                 }
             };
         } else {
             streamResponseBody = out -> {
+                org.springframework.security.core.context.SecurityContextHolder.setContext(capturedSecurityCtx);
                 final Instant startedAt = Instant.now();
                 final org.apache.commons.io.output.CountingOutputStream counting =
                         new org.apache.commons.io.output.CountingOutputStream(out);
@@ -1006,6 +1023,7 @@ public class OreSiResources {
                             userId, nameOrId, dataType, "additionalFiles.zip",
                             startedAt, duration, finalStatus, bytes, fatalError);
                     extractionRateLimiter.release(userId);
+                    org.springframework.security.core.context.SecurityContextHolder.clearContext();
                 }
             };
             response.setHeader(HEADER_CONTENT_DISPOSITION, HEADER_ZIP);

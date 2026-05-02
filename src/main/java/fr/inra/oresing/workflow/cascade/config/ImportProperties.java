@@ -14,26 +14,33 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "cascade.import")
 public class ImportProperties {
 
+    // Tous les fields sont {@code volatile} pour autoriser la mutation
+    // a chaud par {@code ConfigEditService} ( endpoint admin oa-live ) .
+    // Les readers ( {@code CascadeImportPipeline.execute} ) lisent chaque
+    // valeur une seule fois au build du Workflow , donc une mutation
+    // pendant un import en cours ne casse pas l'import courant : seule
+    // la prochaine soumission verra la nouvelle valeur .
+
     /** Nombre de lignes CSV par chunk. */
-    private int chunkSizeLines = 1000;
+    private volatile int chunkSizeLines = 1000;
 
     /** Granularité des notifications de progression ( en lignes ). */
-    private int progressBatchSize = 100;
+    private volatile int progressBatchSize = 100;
 
     /** Seuil d'erreurs au-delà duquel le workflow est avorté. */
-    private int maxErrorsThreshold = 100;
+    private volatile int maxErrorsThreshold = 100;
 
     /** Répertoire racine pour les chunks bruts découpés du fichier source. */
-    private String chunksTempDir = "/tmp/openadom-import/chunks";
+    private volatile String chunksTempDir = "/tmp/openadom-import/chunks";
 
     /** Répertoire racine pour les chunks transformés ( sortie DataImporter ). */
-    private String processedTempDir = "/tmp/openadom-import/processed";
+    private volatile String processedTempDir = "/tmp/openadom-import/processed";
 
     /**
      * Taille de consolidation côté Collector cascade ( 0 = pas de
      * consolidation , -1 = merge tout , &gt;0 = consolide à cette taille ).
      */
-    private int collectorChunkSize = 0;
+    private volatile int collectorChunkSize = 0;
 
     /**
      * Active les interceptors {@code MetricsChunkInterceptor} +
@@ -41,42 +48,37 @@ public class ImportProperties {
      * False par défaut pour minimiser le coût CPU/RAM des imports
      * ( la collection a un coût non nul sur les très gros volumes ).
      */
-    private boolean enableMetrics = false;
+    private volatile boolean enableMetrics = false;
 
     // ------------------------------------------------------------------ //
     //  cascade 1.7.0 strategy flags
     // ------------------------------------------------------------------ //
 
-    /** Workflow execution mode : SYNC ( default ) or ASYNC . */
-    private SinkStrategy sinkStrategy = SinkStrategy.MERGE_FILE;
+    /** Sink strategy ( MERGE_FILE legacy , DIRECT_COPY production ) . */
+    private volatile SinkStrategy sinkStrategy = SinkStrategy.MERGE_FILE;
 
     /**
-     * Cascade execution mode . SYNC stays on the legacy direct-write path ;
-     * ASYNC delegates to {@code workflow.executeAsync().join()} which uses
-     * the parallel sink + fail-fast + sink timeout pipeline .
+     * Cascade pipeline mode ( cascade 2.1.0 ) :
+     * {@link fr.inrae.ore.cascade.model.workflow.PipelineMode#STAGED STAGED}
+     * waits for every chunk's transform to complete before sink begins ;
+     * {@link fr.inrae.ore.cascade.model.workflow.PipelineMode#PIPELINED PIPELINED}
+     * pipes chunks through a bounded queue for transform / sink overlap .
      */
-    private fr.inrae.ore.cascade.model.workflow.ExecutionMode executionMode =
-            fr.inrae.ore.cascade.model.workflow.ExecutionMode.SYNC;
-
-    /** When true , {@code executeDirectWrite} parallelises sink writes via {@code sinkPool} + Semaphore . */
-    private boolean directWriteParallel = false;
-
-    /** Streaming strategy ( BUFFERED default ; BACKPRESSURED reserved for cascade 1.7.1 ) . */
-    private fr.inrae.ore.cascade.model.workflow.StreamingMode streamingMode =
-            fr.inrae.ore.cascade.model.workflow.StreamingMode.BUFFERED;
+    private volatile fr.inrae.ore.cascade.model.workflow.PipelineMode pipelineMode =
+            fr.inrae.ore.cascade.model.workflow.PipelineMode.STAGED;
 
     /**
      * Staging table strategy when {@link #sinkStrategy} = DIRECT_COPY :
      * PER_CONNECTION_TEMP ( single sticky connection , atomic ) or
      * SHARED_UNLOGGED ( permanent UNLOGGED table , parallel-friendly ) .
      */
-    private StagingStrategy stagingStrategy = StagingStrategy.PER_CONNECTION_TEMP;
+    private volatile StagingStrategy stagingStrategy = StagingStrategy.PER_CONNECTION_TEMP;
 
     /** Name of the SHARED_UNLOGGED staging table ( must exist via Flyway migration ) . */
-    private String stagingSharedTableName = "referencevalue_import_shared";
+    private volatile String stagingSharedTableName = "oa_staging.referencevalue_import_shared";
 
     /** Orphan TTL for SHARED_UNLOGGED staging table sweep ( minutes ) . */
-    private int stagingSharedOrphanTtlMinutes = 60;
+    private volatile int stagingSharedOrphanTtlMinutes = 60;
 
     /**
      * When true , {@link fr.inra.oresing.domain.data.deposit.DataImporter#prepareContextForDataTreatment}
@@ -85,7 +87,7 @@ public class ImportProperties {
      * requires the input CSV to be free of multi-line cells / unescaped
      * quotes that would otherwise be normalised by CSVPrinter .
      */
-    private boolean skipCsvReencoding = false;
+    private volatile boolean skipCsvReencoding = false;
 
     /** Strategy for the import sink path . */
     public enum SinkStrategy {
@@ -97,8 +99,17 @@ public class ImportProperties {
 
     /** Staging table strategy under SinkStrategy.DIRECT_COPY . */
     public enum StagingStrategy {
+        /** TEMP table per-conn ( sticky , 1 sink serie , auto-cleanup ) . */
         PER_CONNECTION_TEMP,
-        SHARED_UNLOGGED
+        /** Table UNLOGGED partagee + tag correlation_id ( workers paralleles ) . */
+        SHARED_UNLOGGED,
+        /**
+         * 1 table UNLOGGED dediee creee/droppee par workflow
+         * ( oa_staging.referencevalue_import_&lt;correlationId&gt; ) . Workers
+         * paralleles , isolation native , DROP TABLE atomique , sweeper
+         * orphan scanne pg_class apres TTL .
+         */
+        PER_WORKFLOW_TABLE
     }
 
     public int getChunkSizeLines()        { return chunkSizeLines; }
@@ -110,9 +121,7 @@ public class ImportProperties {
     public boolean isEnableMetrics()      { return enableMetrics; }
 
     public SinkStrategy getSinkStrategy() { return sinkStrategy; }
-    public fr.inrae.ore.cascade.model.workflow.ExecutionMode getExecutionMode() { return executionMode; }
-    public boolean isDirectWriteParallel() { return directWriteParallel; }
-    public fr.inrae.ore.cascade.model.workflow.StreamingMode getStreamingMode() { return streamingMode; }
+    public fr.inrae.ore.cascade.model.workflow.PipelineMode getPipelineMode() { return pipelineMode; }
     public StagingStrategy getStagingStrategy() { return stagingStrategy; }
     public String getStagingSharedTableName() { return stagingSharedTableName; }
     public int getStagingSharedOrphanTtlMinutes() { return stagingSharedOrphanTtlMinutes; }
@@ -127,9 +136,7 @@ public class ImportProperties {
     public void setEnableMetrics(boolean v)   { this.enableMetrics = v; }
 
     public void setSinkStrategy(SinkStrategy v) { this.sinkStrategy = v; }
-    public void setExecutionMode(fr.inrae.ore.cascade.model.workflow.ExecutionMode v) { this.executionMode = v; }
-    public void setDirectWriteParallel(boolean v) { this.directWriteParallel = v; }
-    public void setStreamingMode(fr.inrae.ore.cascade.model.workflow.StreamingMode v) { this.streamingMode = v; }
+    public void setPipelineMode(fr.inrae.ore.cascade.model.workflow.PipelineMode v) { this.pipelineMode = v; }
     public void setStagingStrategy(StagingStrategy v) { this.stagingStrategy = v; }
     public void setStagingSharedTableName(String v) { this.stagingSharedTableName = v; }
     public void setStagingSharedOrphanTtlMinutes(int v) { this.stagingSharedOrphanTtlMinutes = v; }

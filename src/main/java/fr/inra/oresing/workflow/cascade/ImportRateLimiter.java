@@ -37,7 +37,7 @@ import java.util.concurrent.Semaphore;
 public class ImportRateLimiter {
 
     private final Map<String, Semaphore> userSlots = new ConcurrentHashMap<>();
-    private final int                   maxConcurrentPerUser;
+    private volatile int                 maxConcurrentPerUser;
     private final OpenadomMetrics       metrics;
     private final WorkflowLogWriter     logWriter;
     private final AuthenticationService authenticationService;
@@ -53,6 +53,23 @@ public class ImportRateLimiter {
         this.authenticationService = authenticationService;
         log.info("ImportRateLimiter ready : max {} imports concurrents par utilisateur",
                 maxConcurrentPerUser);
+    }
+
+    /**
+     * Mute le quota max a chaud . S'applique aux NOUVEAUX semaphores
+     * crees ; les semaphores deja attaches a un user gardent l'ancienne
+     * valeur jusqu'a leur drain . Reset le map userSlots pour forcer la
+     * recreation au prochain acquire ( les imports en cours conservent
+     * leur permit sur l'ancien semaphore via reference forte locale -
+     * pas de fuite , release standard ) .
+     */
+    public synchronized void setMaxConcurrentPerUser(int n) {
+        if (n < 1) throw new IllegalArgumentException("max must be >= 1");
+        if (n == this.maxConcurrentPerUser) return;
+        log.info("ImportRateLimiter : max {} -> {} ( reset user slots map )",
+                this.maxConcurrentPerUser, n);
+        this.maxConcurrentPerUser = n;
+        this.userSlots.clear();
     }
 
     /**

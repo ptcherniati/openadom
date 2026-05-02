@@ -8,8 +8,8 @@ import fr.inra.oresing.workflow.cascade.ImportRateLimiter;
 import fr.inra.oresing.workflow.cascade.config.ImportProperties;
 import fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry;
 import fr.inra.oresing.workflow.cascade.history.WorkflowSnapshot;
-import fr.inrae.ore.cascade.core.execution.ExecutionResourceManager;
-import fr.inrae.ore.cascade.core.monitoring.WorkflowMonitoringService;
+import fr.inrae.ore.cascade.core.execution.WorkflowPoolRegistry;
+import fr.inrae.ore.cascade.core.monitoring.WorkflowEventBus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +21,8 @@ import org.springframework.stereotype.Service;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -49,8 +51,19 @@ public class DashboardService {
 
     private final WorkflowActiveRegistry registry;
     private final fr.inra.oresing.workflow.cascade.pipeline.PipelineRegistry pipelineRegistry;
+
+    /**
+     * Optional : PoolReloader peut etre absent en mode test sans cascade
+     * WorkflowPoolRegistry . Field injection volontaire car
+     * {@link lombok.RequiredArgsConstructor} generera un ctor obligatoire
+     * sur les final fields ; ici on veut required=false .
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private fr.inra.oresing.workflow.cascade.config.PoolReloader poolReloader;
     private final fr.inra.oresing.monitoring.session.UserSessionRegistry sessionRegistry;
     private final fr.inra.oresing.monitoring.session.UserSessionLogRepository sessionLogRepository;
+    private final fr.inra.oresing.monitoring.session.UserSessionLogWriter sessionLogWriter;
+    private final fr.inra.oresing.monitoring.session.JwtBlacklistRegistry jwtBlacklist;
     private final NamedParameterJdbcTemplate jdbc;
     private final AuthenticationService authenticationService;
     private final ImportProperties importProperties;
@@ -127,7 +140,7 @@ public class DashboardService {
         }
 
         Long total = jdbc.queryForObject(
-                "SELECT count(*) FROM oa_metrics.workflow_log " + where, p, Long.class);
+                "SELECT count(*) FROM oa_audit.workflow_log " + where, p, Long.class);
 
         p.addValue("limit", l);
         p.addValue("offset", o);
@@ -138,7 +151,7 @@ public class DashboardService {
                 "       start_time, end_time, duration_ms, status, " +
                 "       records_processed, records_failed, chunks_processed, " +
                 "       progress_percentage, bytes_total " +
-                "  FROM oa_metrics.workflow_log " +
+                "  FROM oa_audit.workflow_log " +
                 where +
                 " ORDER BY start_time DESC " +
                 " LIMIT :limit OFFSET :offset ",
@@ -168,7 +181,7 @@ public class DashboardService {
                     summary, null, s.errors(), Map.of()));
         }
 
-        // 2) fallback on oa_metrics.workflow_log ( finished )
+        // 2) fallback on oa_audit.workflow_log ( finished )
         MapSqlParameterSource p = new MapSqlParameterSource()
                 .addValue("cid", correlationId);
         List<DashboardWorkflowDTO.Detail> rows = jdbc.query(
@@ -179,7 +192,7 @@ public class DashboardService {
                 "       progress_percentage, bytes_total, " +
                 "       errors::text AS errors_json, fatal_error, " +
                 "       metadata::text AS metadata_json " +
-                "  FROM oa_metrics.workflow_log " +
+                "  FROM oa_audit.workflow_log " +
                 " WHERE correlation_id = :cid ",
                 p, this::mapDetail);
 
@@ -219,7 +232,77 @@ public class DashboardService {
     }
 
     /**
-     * Pagination sur oa_metrics.user_session_log . Admin only .
+     * Marque une session active comme DISCONNECTED ( end_reason = KICK )
+     * dans le registry in-memory et la persiste dans
+     * {@code oa_audit.user_session_log} .
+     *
+     * <p><b>Note importante</b> : cette action est dashboard-side
+     * uniquement . Le JWT du user reste techniquement valide jusqu'a
+     * son expiration naturelle ; le user ne sera pas force-deconnecte
+     * de l'application . Cette feature sert principalement au
+     * housekeeping admin du dashboard ( ex : nettoyer une session
+     * orpheline ) . Pour une vraie revocation de token , voir une
+     * future implementation de blocklist JWT .
+     *
+     * @throws AccessDeniedException si l'appelant n'est pas admin
+     * @throws java.util.NoSuchElementException si la session n'existe
+     *         pas ou est deja terminee ( controller -> 404 )
+     */
+    public void disconnectSession(UUID sessionId) {
+        requireAdmin();
+        java.time.Instant now = java.time.Instant.now();
+        fr.inra.oresing.monitoring.session.SessionInfo finished = sessionRegistry
+                .finish(sessionId,
+                        fr.inra.oresing.monitoring.session.SessionInfo.END_KICK,
+                        now)
+                .orElseThrow(() -> new java.util.NoSuchElementException(
+                        "Session not found or already disconnected : " + sessionId));
+        // Revocation effective : on inscrit le hash du JWT remis au login
+        // dans la blacklist . Le AuthorizationFilter rejette les requetes
+        // ulterieures avec 401 TOKEN_REVOKED -> le frontend ( interceptor
+        // axios global ) redirige vers la page de login .
+        if (finished.jwtTokenHash() != null) {
+            jwtBlacklist.add(
+                    finished.jwtTokenHash(),
+                    finished.userId(),
+                    finished.userLogin(),
+                    finished.sessionId(),
+                    now,
+                    finished.expiresAt());
+        } else {
+            log.warn("disconnectSession : session {} has no jwtTokenHash , kick is cosmetic only "
+                    + "( pre-blacklist session ; user can keep using the API until JWT TTL )",
+                    sessionId);
+        }
+        sessionLogWriter.logAsync(
+                fr.inra.oresing.monitoring.session.UserSessionLogEntry.fromSession(finished));
+    }
+
+    /**
+     * Liste des entrees blacklist . Admin only ( {@code openAdomAdmin} ) .
+     */
+    public java.util.List<fr.inra.oresing.monitoring.session.JwtBlacklistRegistry.Entry> listBlacklist() {
+        requireAdmin();
+        return jwtBlacklist.list();
+    }
+
+    /**
+     * Retire une entree blacklist ( admin annule un kick par erreur ) .
+     * Renvoie {@code true} si l'entree existait et a ete supprimee .
+     */
+    public boolean removeBlacklistEntry(String tokenHash) {
+        requireAdmin();
+        return jwtBlacklist.remove(tokenHash);
+    }
+
+    /** Purge entiere de la blacklist par un admin . Renvoie le nombre d'entrees vidées . */
+    public int clearBlacklist() {
+        requireAdmin();
+        return jwtBlacklist.clear();
+    }
+
+    /**
+     * Pagination sur oa_audit.user_session_log . Admin only .
      */
     public SessionDTO.Page listSessionsHistory(Integer limit, Integer offset,
                                                String userLoginLike, String endReason) {
@@ -252,7 +335,252 @@ public class DashboardService {
         if (!admin && !live.get().userId().equals(myUserId)) {
             return Optional.empty();
         }
-        return pipelineRegistry.snapshot(correlationId).map(PipelineDTO::from);
+        // Enrichit le snapshot cascade avec la queue du pool SOURCE
+        // ( CASCADE_POOL_SOURCE_QUEUE ) , que le snapshot cascade ne porte
+        // pas ( il n'expose que les inboxes inter-stages transform / sink ) .
+        // PoolReloader peut etre absent en mode test ; on garde un null
+        // qui se materialise en sourceInbox=null cote DTO .
+        fr.inra.oresing.workflow.cascade.config.PoolReloader.PoolSnapshot sourcePool = poolSnap(
+                fr.inra.oresing.workflow.cascade.config.PoolReloader.Stage.SOURCE);
+        fr.inra.oresing.workflow.cascade.config.PoolReloader.PoolSnapshot transformPool = poolSnap(
+                fr.inra.oresing.workflow.cascade.config.PoolReloader.Stage.TRANSFORM);
+        fr.inra.oresing.workflow.cascade.config.PoolReloader.PoolSnapshot sinkPool = poolSnap(
+                fr.inra.oresing.workflow.cascade.config.PoolReloader.Stage.SINK);
+        return pipelineRegistry.snapshot(correlationId)
+                .map(s -> PipelineDTO.from(s, sourcePool, transformPool, sinkPool));
+    }
+
+    /**
+     * Lookup PoolSnapshot best-effort : retourne null si le PoolReloader
+     * est absent ( mode test ) ou si la query echoue ( pool pas encore
+     * initialise ) . Le caller ( PipelineDTO.from ) gere null comme une
+     * absence de fallback ( pas de placeholder workers ) .
+     */
+    private fr.inra.oresing.workflow.cascade.config.PoolReloader.PoolSnapshot poolSnap(
+            fr.inra.oresing.workflow.cascade.config.PoolReloader.Stage stage) {
+        if (poolReloader == null) return null;
+        try {
+            return poolReloader.snapshot(stage);
+        } catch (RuntimeException ex) {
+            log.debug("pipeline : pool snapshot {} failed : {}", stage, ex.getMessage());
+            return null;
+        }
+    }
+
+    // ---------------------------------------------------------------- //
+    //  finalize-progress  ( bloc CHARGEMENT FINAL )                    //
+    // ---------------------------------------------------------------- //
+
+    private static final java.util.regex.Pattern SAFE_IDENT =
+            java.util.regex.Pattern.compile("^[a-z_][a-z0-9_]*$");
+
+    /**
+     * Snapshot temps reel du bloc CHARGEMENT FINAL pour un workflow .
+     * Decompose la duree totale en {@code cascade} ( emit chunks ) +
+     * {@code finalize} ( UPSERT staging->final ou COPY merged.csv->final )
+     * + {@code rollback} . Le frontend poll cet endpoint pendant que
+     * workflow phase != COMPLETED / ROLLBACK_DONE pour animer le bloc .
+     */
+    /**
+     * Agregat global des workflows actifs en phase CHARGEMENT FINAL .
+     * Consomme par {@code LiveFinalizeAggregate} ( bloc en tete de
+     * page Live ) pour donner une vue infrastructure : combien de
+     * workflows en finalize / rollback , progress cumule , debit total .
+     *
+     * <p>Auth : admin = tous workflows , user = ses propres workflows
+     * uniquement ( meme regle que {@link #listInProgress} ) .
+     */
+    /**
+     * Snapshot des 4 pools cascade pour le rendu Pipeline live en idle .
+     * Lit {@code PoolReloader.snapshot(stage)} pour chaque stage ; null
+     * silencieux si pool indisponible ( mode test ) -> DTO avec parallelism=0 .
+     */
+    public PipelinePoolsDTO cascadePools() {
+        var src   = poolSnap(fr.inra.oresing.workflow.cascade.config.PoolReloader.Stage.SOURCE);
+        var trans = poolSnap(fr.inra.oresing.workflow.cascade.config.PoolReloader.Stage.TRANSFORM);
+        var sink  = poolSnap(fr.inra.oresing.workflow.cascade.config.PoolReloader.Stage.SINK);
+        var ord   = poolSnap(fr.inra.oresing.workflow.cascade.config.PoolReloader.Stage.ORDERING);
+        return new PipelinePoolsDTO(
+                PipelinePoolsDTO.PoolDTO.from(src),
+                PipelinePoolsDTO.PoolDTO.from(trans),
+                PipelinePoolsDTO.PoolDTO.from(sink),
+                PipelinePoolsDTO.PoolDTO.from(ord));
+    }
+
+    public FinalizeAggregateDTO finalizeAggregate() {
+        CurrentUserRoles me = authenticationService.getCurrentUserRoles();
+        UUID filter = me.isOpenAdomAdmin() ? null : me.userId();
+
+        int nbActive = 0;
+        int nbFinalize = 0;
+        int nbRollback = 0;
+        int nbCompleted = 0;
+        long expectedSum = 0L;
+        long finalSum = 0L;
+        long stagingSum = 0L;
+        long throughputSum = 0L;
+
+        for (WorkflowSnapshot snap : registry.list(filter)) {
+            nbActive++;
+            FinalizeProgressDTO p = finalizeProgress(snap.correlationId()).orElse(null);
+            if (p == null) continue;
+            switch (p.phase()) {
+                case "FINALIZE_RUNNING"     -> nbFinalize++;
+                case "ROLLBACK_IN_PROGRESS",
+                     "ROLLBACK_DONE"        -> nbRollback++;
+                case "COMPLETED"            -> nbCompleted++;
+                default                     -> { /* CASCADE_RUNNING : compte juste dans nbActive */ }
+            }
+            expectedSum  += Math.max(0, p.expectedTotal());
+            finalSum     += Math.max(0, p.finalCount());
+            if (p.stagingRemaining() >= 0) stagingSum += p.stagingRemaining();
+            throughputSum += Math.max(0, p.finalizeThroughput());
+        }
+
+        return new FinalizeAggregateDTO(
+                nbActive, nbFinalize, nbRollback, nbCompleted,
+                expectedSum, finalSum, stagingSum, throughputSum);
+    }
+
+    public Optional<FinalizeProgressDTO> finalizeProgress(UUID correlationId) {
+        CurrentUserRoles me = authenticationService.getCurrentUserRoles();
+        boolean admin = me.isOpenAdomAdmin();
+        UUID myUserId = me.userId();
+
+        Optional<WorkflowSnapshot> live = registry.find(correlationId);
+        if (live.isEmpty()) return Optional.empty();
+        WorkflowSnapshot snap = live.get();
+        if (!admin && !snap.userId().equals(myUserId)) {
+            return Optional.empty();
+        }
+
+        fr.inra.oresing.workflow.cascade.history.FinalizePhaseSnapshot phase =
+                registry.findFinalizePhase(correlationId).orElse(null);
+        UUID binaryFileId = registry.findBinaryFileId(correlationId).orElse(null);
+        fr.inra.oresing.workflow.cascade.history.StrategySnapshot strategy = snap.strategy();
+
+        long expectedTotal = snap.recordsTotal() > 0 ? snap.recordsTotal() : snap.recordsProcessed();
+
+        // Final count : SELECT count referencevalue WHERE binaryfile = ?
+        long finalCount = -1L;
+        String appName = snap.applicationName();
+        if (binaryFileId != null && appName != null && SAFE_IDENT.matcher(appName).matches()) {
+            try {
+                String sql = "SELECT COUNT(*) FROM \"" + appName + "\".referencevalue WHERE binaryfile = :bf";
+                Long n = jdbc.queryForObject(sql,
+                        new MapSqlParameterSource("bf", binaryFileId), Long.class);
+                finalCount = n != null ? n : 0L;
+            } catch (RuntimeException ex) {
+                log.debug("finalizeProgress : count referencevalue failed for {}.{} : {}",
+                        appName, correlationId, ex.getMessage());
+            }
+        }
+
+        // Staging remaining : SHARED_UNLOGGED uniquement ( PER_CONNECTION_TEMP
+        // est invisible cross-conn par design ) .
+        long stagingRemaining = -1L;
+        if (strategy != null && "SHARED_UNLOGGED".equals(strategy.stagingStrategy())) {
+            try {
+                Long n = jdbc.queryForObject(
+                        "SELECT COUNT(*) FROM oa_staging.referencevalue_import_shared WHERE correlation_id = :cid",
+                        new MapSqlParameterSource("cid", correlationId), Long.class);
+                stagingRemaining = n != null ? n : 0L;
+            } catch (RuntimeException ex) {
+                log.debug("finalizeProgress : staging count failed for {} : {}", correlationId, ex.getMessage());
+            }
+        }
+
+        Instant now = Instant.now();
+        Instant cascadeStart = phase != null && phase.cascadeStartedAt() != null
+                ? phase.cascadeStartedAt() : snap.startTime();
+        Instant cascadeEnd = phase != null ? phase.cascadeFinishedAt() : null;
+        Instant finalizeStart = phase != null ? phase.finalizeStartedAt() : null;
+        Instant finalizeEnd = phase != null ? phase.finalizeFinishedAt() : null;
+        Instant rollbackStart = phase != null ? phase.rollbackStartedAt() : null;
+        Instant rollbackEnd = phase != null ? phase.rollbackFinishedAt() : null;
+
+        long cascadeDur = cascadeStart == null ? 0L
+                : Duration.between(cascadeStart,
+                        cascadeEnd != null ? cascadeEnd : now).toMillis();
+        long finalizeDur = finalizeStart == null ? 0L
+                : Duration.between(finalizeStart,
+                        finalizeEnd != null ? finalizeEnd : now).toMillis();
+        long rollbackDur = rollbackStart == null ? 0L
+                : Duration.between(rollbackStart,
+                        rollbackEnd != null ? rollbackEnd : now).toMillis();
+
+        long cascadeTput = cascadeDur > 0
+                ? (snap.recordsProcessed() * 1000L / cascadeDur) : 0L;
+        long finalizeTput = (finalizeDur > 0 && finalCount > 0)
+                ? (finalCount * 1000L / finalizeDur) : 0L;
+
+        String phaseName = phase != null ? phase.phase()
+                : fr.inra.oresing.workflow.cascade.history.FinalizePhaseSnapshot.PHASE_CASCADE_RUNNING;
+
+        // Compteurs in-memory ( pas de SQL count par poll ) maintenus
+        // par WorkflowActiveRegistry sur cascade events sink chunk written .
+        //
+        // Strategy-specific :
+        //   DIRECT_COPY : sink emet onSinkChunkWritten avec recordsWritten ;
+        //                 le compteur registry.stagingRows reflete les
+        //                 rows reellement ecrites en staging DB . On NE
+        //                 fallback PAS sur recordsProcessed ( ca refleterait
+        //                 transform output , pas sink output -> Phase A bar
+        //                 avancerait avant que sink ait ecrit quoi que ce
+        //                 soit -> incoherence avec la table workers SINK ) .
+        //   MERGE_FILE  : sink filesystem inline , cascade n'emet pas
+        //                 d'events sink chunk -> registry.stagingRows reste
+        //                 a 0 . On fallback sur snap.recordsProcessed pour
+        //                 afficher quand meme une progression .
+        long stagingRowsWritten;
+        boolean isDirectCopy = strategy != null && "DIRECT_COPY".equals(strategy.sinkStrategy());
+        if (isDirectCopy) {
+            stagingRowsWritten = registry.stagingRows(correlationId);
+        } else {
+            stagingRowsWritten = Math.max(
+                    registry.stagingRows(correlationId),
+                    snap.recordsProcessed());
+        }
+        long finalRowsWritten = registry.finalRows(correlationId);
+        // Phase COMPLETED : on garantit finalRows = expected pour que l'UI
+        // bascule a 100 % meme sans hook batch UPSERT granulaire .
+        if (FinalizePhaseSnapshotConst.PHASE_COMPLETED.equals(phaseName)
+                && finalRowsWritten == 0 && expectedTotal > 0) {
+            finalRowsWritten = expectedTotal;
+        }
+
+        // Determinate flags : phase A toujours determinate ( cascade event
+        // sink chunk emet recordsWritten en temps reel ) . Phase B
+        // determinate uniquement pour SHARED_UNLOGGED ou strategies futures
+        // exposant des hooks batch granulaires ; sinon le commit final est
+        // atomique cote DB et le UI doit afficher une barre indeterminee .
+        boolean stagingDeterminate = true;
+        // SHARED_UNLOGGED + PER_WORKFLOW_TABLE : table staging visible
+        // cross-conn -> count finale observable progressivement ( si lib
+        // cascade emit batch progress ) . PER_CONN_TEMP / MERGE_FILE : tx
+        // atomique , progres invisible -> indeterminate .
+        boolean finalDeterminate = strategy != null
+                && ("SHARED_UNLOGGED".equals(strategy.stagingStrategy())
+                  || "PER_WORKFLOW_TABLE".equals(strategy.stagingStrategy()));
+
+        return Optional.of(new FinalizeProgressDTO(
+                phaseName,
+                strategy != null ? strategy.sinkStrategy() : null,
+                strategy != null ? strategy.stagingStrategy() : null,
+                cascadeStart, cascadeEnd,
+                finalizeStart, finalizeEnd,
+                rollbackStart, rollbackEnd,
+                cascadeDur, finalizeDur, rollbackDur,
+                expectedTotal, finalCount, stagingRemaining,
+                cascadeTput, finalizeTput,
+                phase != null ? phase.errorMessage() : null,
+                stagingRowsWritten, finalRowsWritten,
+                stagingDeterminate, finalDeterminate));
+    }
+
+    private static final class FinalizePhaseSnapshotConst {
+        static final String PHASE_COMPLETED =
+                fr.inra.oresing.workflow.cascade.history.FinalizePhaseSnapshot.PHASE_COMPLETED;
     }
 
     // ---------------------------------------------------------------- //
@@ -341,7 +669,7 @@ public class DashboardService {
         DashboardConfigDTO.RuntimeInfo runtime = new DashboardConfigDTO.RuntimeInfo(
                 resolveCascadeVersion(),
                 Runtime.version().feature() + "." + Runtime.version().interim(),
-                ExecutionResourceManager.useVirtualThreads(),
+                WorkflowPoolRegistry.useVirtualThreads(),
                 registry.size(),
                 Map.of());
 
@@ -349,8 +677,8 @@ public class DashboardService {
         // encore ( aucun workflow n'a tourne ) on retourne une liste vide
         // au lieu de forcer la creation : evite les surprises de
         // configuration ( la creation lit les system properties de cascade ).
-        java.util.List<DashboardConfigDTO.CascadePool> pools = ExecutionResourceManager.isInitialized()
-                ? ExecutionResourceManager.getInstance().snapshotPools().stream()
+        java.util.List<DashboardConfigDTO.CascadePool> pools = WorkflowPoolRegistry.isInitialized()
+                ? WorkflowPoolRegistry.getInstance().snapshotPools().stream()
                         .map(p -> new DashboardConfigDTO.CascadePool(
                                 p.stage(), p.threadNamePrefix(),
                                 p.configuredThreads(), p.activeCount(), p.poolSize(),
@@ -369,7 +697,7 @@ public class DashboardService {
                 wfDefaults.collectorChunkSize(),
                 wfDefaults.maxErrors(),
                 wfDefaults.enableMetrics(),
-                wfDefaults.defaultParallelism(),
+                wfDefaults.fallbackParallelism(),
                 wfDefaults.sourceParallelism(),
                 wfDefaults.transformParallelism(),
                 wfDefaults.sinkParallelism(),
@@ -430,7 +758,7 @@ public class DashboardService {
             throw new java.util.NoSuchElementException(
                     "Workflow not found : " + correlationId);
         }
-        boolean signalled = WorkflowMonitoringService.getDefault()
+        boolean signalled = WorkflowEventBus.getInstance()
                 .cancel(correlationId.toString(),
                         "Cancelled by " + (me.userLogin() != null ? me.userLogin() : me.userId()));
         return new CancelResult(signalled);

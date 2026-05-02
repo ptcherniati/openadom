@@ -33,8 +33,8 @@ import java.util.UUID;
 @Service
 public class ExtractionRateLimiter {
 
-    private final int                   maxConcurrentPerUser;
-    private final long                  acquireTimeoutSeconds;
+    private volatile int                 maxConcurrentPerUser;
+    private volatile long                acquireTimeoutSeconds;
     private final OpenadomMetrics       metrics;
     private final WorkflowLogWriter     logWriter;
     private final AuthenticationService authenticationService;
@@ -51,6 +51,33 @@ public class ExtractionRateLimiter {
         this.metrics               = metrics;
         this.logWriter             = logWriter;
         this.authenticationService = authenticationService;
+    }
+
+    public int getMaxConcurrentPerUser()    { return maxConcurrentPerUser; }
+    public long getAcquireTimeoutSeconds()  { return acquireTimeoutSeconds; }
+
+    /**
+     * Mute le quota max + timeout a chaud . Reinit le UserRateLimiter
+     * cascade ( reset + initialize ) : les permits actuellement acquis
+     * restent valides via leurs references Java mais les nouveaux
+     * acquires utilisent la nouvelle config .
+     */
+    public synchronized void reconfigure(int newMax, long newTimeoutSeconds) {
+        if (newMax < 1) throw new IllegalArgumentException("max must be >= 1");
+        if (newTimeoutSeconds < 0) throw new IllegalArgumentException("timeout must be >= 0");
+        if (newMax == this.maxConcurrentPerUser
+                && newTimeoutSeconds == this.acquireTimeoutSeconds) return;
+        log.info("ExtractionRateLimiter : reconfigure max {} -> {} , timeout {} -> {} ",
+                this.maxConcurrentPerUser, newMax,
+                this.acquireTimeoutSeconds, newTimeoutSeconds);
+        this.maxConcurrentPerUser  = newMax;
+        this.acquireTimeoutSeconds = newTimeoutSeconds;
+        RejectionPolicy policy = newTimeoutSeconds > 0
+                ? RejectionPolicy.WAIT_WITH_TIMEOUT
+                : RejectionPolicy.REJECT_IMMEDIATELY;
+        RateLimitConfig config = new RateLimitConfig(newMax, newTimeoutSeconds, true, policy);
+        UserRateLimiter.reset();
+        this.limiter = UserRateLimiter.initialize(config);
     }
 
     @PostConstruct

@@ -15,7 +15,7 @@ import java.time.Duration;
 import java.util.Collection;
 
 /**
- * Acces PostgreSQL a la table {@code oa_metrics.workflow_log}.
+ * Acces PostgreSQL a la table {@code oa_audit.workflow_log}.
  *
  * <p>Utilise le {@link JdbcTemplate} par defaut ( pool Hikari HTTP ).
  * Quand la branche 61 sera mergee , on pourra swap vers
@@ -25,21 +25,18 @@ import java.util.Collection;
 @Repository
 public class WorkflowLogRepository {
 
+    // Wrapper SECURITY DEFINER ; voir V2__oa_audit_schema.sql .
     private static final String INSERT_SQL = """
-            INSERT INTO oa_metrics.workflow_log (
-                correlation_id, workflow_type, user_id, user_login,
-                application_name, data_type, resource_name,
-                start_time, end_time, duration_ms, status,
-                records_processed, records_failed, chunks_processed,
-                bytes_total, errors, fatal_error
-            ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ? )
-            ON CONFLICT (correlation_id) DO NOTHING
+            SELECT oa_audit.record_workflow(
+                ?::uuid, ?::varchar(32), ?::uuid, ?::varchar(128),
+                ?::varchar(256), ?::varchar(256), ?::varchar(512),
+                ?::timestamptz, ?::timestamptz, ?::bigint, ?::varchar(16),
+                ?::bigint, ?::bigint, ?::int,
+                ?::bigint, ?::jsonb, ?::text, ?::jsonb)
             """;
 
-    private static final String DELETE_OLDER_THAN_SQL = """
-            DELETE FROM oa_metrics.workflow_log
-            WHERE start_time < now() - (? || ' days')::interval
-            """;
+    private static final String DELETE_OLDER_THAN_SQL =
+            "SELECT oa_audit.delete_workflow_logs_older_than(?::int)";
 
     private final JdbcTemplate  jdbcTemplate;
     private final ObjectMapper  objectMapper = new ObjectMapper();
@@ -113,6 +110,17 @@ public class WorkflowLogRepository {
         ps.setLong(15, e.bytesTotal());
         ps.setString(16, serializeErrors(e.errors()));
         setNullableString(ps, 17, e.fatalError());
+        setNullableString(ps, 18, serializeMetadata(e.metadata()));
+    }
+
+    private String serializeMetadata(java.util.Map<String, Object> metadata) {
+        if (metadata == null || metadata.isEmpty()) return null;
+        try {
+            return objectMapper.writeValueAsString(metadata);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException ex) {
+            log.warn("Failed to serialize workflow_log metadata : {}", ex.getMessage());
+            return null;
+        }
     }
 
     private static void setNullableString(PreparedStatement ps, int idx, String value) throws SQLException {
