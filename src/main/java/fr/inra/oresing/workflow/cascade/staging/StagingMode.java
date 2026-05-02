@@ -59,6 +59,9 @@ public sealed interface StagingMode
                           String sharedTableName,
                           int sharedOrphanTtlMinutes) {
         return switch (strategy) {
+            case NO_STAGING -> throw new IllegalArgumentException(
+                    "NO_STAGING is only valid with SinkStrategy.MERGE_FILE ; "
+                            + "DIRECT_COPY + NO_STAGING is not implemented .");
             case PER_CONNECTION_TEMP -> new PerConnectionTempMode();
             case SHARED_UNLOGGED -> new SharedUnloggedMode(sharedTableName, sharedOrphanTtlMinutes);
             case PER_WORKFLOW_TABLE -> {

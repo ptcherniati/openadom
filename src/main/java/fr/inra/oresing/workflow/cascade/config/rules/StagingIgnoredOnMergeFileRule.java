@@ -17,11 +17,13 @@ public class StagingIgnoredOnMergeFileRule implements ConsistencyRule {
 
     @Override
     public Optional<String> check(EffectiveConfig c) {
-        if ("MERGE_FILE".equals(c.stringValue("sinkStrategy"))
-                && c.stringValue("stagingStrategy") != null) {
+        String sink    = c.stringValue("sinkStrategy");
+        String staging = c.stringValue("stagingStrategy");
+        if ("MERGE_FILE".equals(sink) && staging != null && !"NO_STAGING".equals(staging)) {
             return Optional.of(
-                    "MERGE_FILE n'utilise pas stagingStrategy ; la valeur sera ignorée "
-                            + "( aucun staging table en mode merge-file -> storeAll ) .");
+                    "MERGE_FILE n'utilise pas stagingStrategy ; la valeur '" + staging
+                            + "' sera ignoree ( aucune staging table en mode merge-file -> storeAll ) . "
+                            + "Pour exprimer explicitement le bypass , selectionner NO_STAGING .");
         }
         return Optional.empty();
     }

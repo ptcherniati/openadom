@@ -97,8 +97,17 @@ public class ImportProperties {
         DIRECT_COPY
     }
 
-    /** Staging table strategy under SinkStrategy.DIRECT_COPY . */
+    /** Staging table strategy . */
     public enum StagingStrategy {
+        /**
+         * Bypass complet de la staging table . Avec {@link SinkStrategy#MERGE_FILE}
+         * : c'est le comportement par defaut ( chunks merges sur disque puis 1
+         * COPY massif direct vers la table finale ) . Avec
+         * {@link SinkStrategy#DIRECT_COPY} : non implemente ( bloque par la
+         * rule {@code DirectCopyNoStagingNotSupported} ) ; reserve pour un
+         * futur sink direct-to-final sans table intermediaire .
+         */
+        NO_STAGING,
         /** TEMP table per-conn ( sticky , 1 sink serie , auto-cleanup ) . */
         PER_CONNECTION_TEMP,
         /** Table UNLOGGED partagee + tag correlation_id ( workers paralleles ) . */

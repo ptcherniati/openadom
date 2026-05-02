@@ -303,19 +303,33 @@ public class CascadeImportPipeline {
                             .withMaxErrors(maxErrors)
                             .withPipelineMode(importProperties.getPipelineMode());
 
-            // Sticky-connection guard : DIRECT_COPY + PER_CONNECTION_TEMP must
-            // run the sink on a single thread because PgConnection is not
-            // thread-safe and the same connection holds the TEMP table .
+            // Sink parallelism wiring ( cascade 2.1.0 ) :
+            //   - DIRECT_COPY + PER_CONNECTION_TEMP : sticky connection ,
+            //     force sinkParallelism=1 ( PgConnection pas thread-safe et
+            //     TEMP table portee par cette connexion uniquement ) .
+            //   - DIRECT_COPY + SHARED_UNLOGGED / PER_WORKFLOW_TABLE :
+            //     sinkParallelism=pool.sink ( workers paralleles , table
+            //     UNLOGGED accessible cross-conn ) .
+            //   - MERGE_FILE : sinkParallelism=1 ( agregateur fichier
+            //     intrinsequement serie ; pool.sink ignore ) .
+            // Cascade 2.1.0 default sinkParallelism=1 ; donc sans cet appel
+            // explicite le sink reste sequentiel meme si pool.sink=4 .
             boolean stickyConnection = directCopy
                     && importProperties.getStagingStrategy() == ImportProperties.StagingStrategy.PER_CONNECTION_TEMP;
+            int effectiveSinkPar;
             if (stickyConnection) {
+                effectiveSinkPar = 1;
                 if (rawSinkPoolSize > 1) {
                     log.warn("[{}] DIRECT_COPY + PER_CONNECTION_TEMP force sinkParallelism=1 ( connexion sticky unique ) ; "
                             + "CASCADE_POOL_SINK={} reste configure mais le sink est sériel",
                             correlationId, rawSinkPoolSize);
                 }
-                builder = builder.withSinkParallelism(1);
+            } else if (!directCopy) {
+                effectiveSinkPar = 1;     // MERGE_FILE intrinsequement serie
+            } else {
+                effectiveSinkPar = Math.max(1, rawSinkPoolSize);
             }
+            builder = builder.withSinkParallelism(effectiveSinkPar);
 
             if (enableMetrics) {
                 builder = builder.enableMetrics();
