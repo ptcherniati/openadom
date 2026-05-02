@@ -132,17 +132,17 @@ public sealed interface StagingMode
         @Override public String copyColumns()                                { return "correlation_id, data"; }
         @Override public String correlationIdFilter(UUID correlationId)      { return correlationId == null ? null : correlationId.toString(); }
         @Override public String createTableSql()                             {
-            // UNLOGGED ( pas de WAL ) , no-FK ( tampon transitoire ) , INDEX
-            // sur correlation_id pour cohabiter avec la spec cascade .
-            String t = perWorkflowTableName(correlationId);
-            return "CREATE UNLOGGED TABLE IF NOT EXISTS " + t + " ("
-                    + "correlation_id uuid NOT NULL, "
-                    + "created_at timestamptz NOT NULL DEFAULT now(), "
-                    + "data jsonb NOT NULL"
-                    + ")";
+            // SECURITY DEFINER function ( cf V3 migration ) : cree la table
+            // UNLOGGED dans oa_staging avec les droits de openAdomTechUser
+            // et grant SELECT/INSERT/DELETE TO PUBLIC pour que le COPY
+            // de l'app ( role per-app ) y accede . Evite GRANT CREATE TO
+            // PUBLIC sur le schema , bien plus permissif .
+            return "SELECT oa_staging.create_per_workflow_referencevalue_import('"
+                    + correlationId + "')";
         }
         @Override public String dropTableSql()                               {
-            return "DROP TABLE IF EXISTS " + perWorkflowTableName(correlationId);
+            return "SELECT oa_staging.drop_per_workflow_referencevalue_import('"
+                    + correlationId + "')";
         }
         @Override public String tableName()                                  { return perWorkflowTableName(correlationId); }
     }

@@ -89,3 +89,78 @@ COMMENT ON SCHEMA oa_staging IS
 COMMENT ON TABLE oa_staging.referencevalue_import_shared IS
     'cascade SHARED_UNLOGGED staging . Rows tagged correlation_id , '
     'filtrees par workflow lors du UPSERT staging -> referencevalue final .';
+
+-- =====================================================================
+-- PER_WORKFLOW_TABLE : creation / drop de tables UNLOGGED dediees
+-- =====================================================================
+--
+-- 1 table UNLOGGED par workflow : oa_staging.referencevalue_import_<corrid>
+-- ( UUID-tirets-en-_ ) . Workers sink paralleles , isolation native ,
+-- DROP TABLE atomique apres succes . Le sweeper orphan scanne pg_class
+-- pour les tables orphelines apres TTL .
+--
+-- Probleme avec CREATE TABLE direct depuis l'app :
+--   - GRANT USAGE ON SCHEMA oa_staging TO PUBLIC permet la lecture mais
+--     pas CREATE TABLE . Les roles per-app ( utilisateurs metier )
+--     n'ont pas le droit de creer des tables dans oa_staging .
+--   - Si on grant CREATE TO PUBLIC , chaque role pourrait creer des
+--     tables arbitraires ; mauvais pour la securite .
+--   - Solution : 2 fonctions SECURITY DEFINER , owned by openAdomTechUser ,
+--     EXECUTE granted to PUBLIC . L'app les appelle ; elles s'executent
+--     avec les privileges du proprietaire ( openAdomTechUser ) qui peut
+--     CREATE / DROP dans oa_staging , et grant le DML a PUBLIC sur la
+--     table fraichement creee pour que le COPY de l'app passe .
+-- =====================================================================
+
+CREATE OR REPLACE FUNCTION oa_staging.create_per_workflow_referencevalue_import(p_corrid text)
+    RETURNS text
+    LANGUAGE plpgsql
+    SECURITY DEFINER
+    SET search_path = oa_staging, pg_temp
+AS $$
+DECLARE
+    v_table_name text := 'referencevalue_import_' || replace(p_corrid, '-', '_');
+    v_full_name  text := 'oa_staging.' || quote_ident(v_table_name);
+BEGIN
+    EXECUTE format(
+        'CREATE UNLOGGED TABLE IF NOT EXISTS %s ( '
+        '   correlation_id uuid        NOT NULL , '
+        '   created_at     timestamptz NOT NULL DEFAULT now() , '
+        '   data           jsonb       NOT NULL '
+        ')', v_full_name);
+    EXECUTE format('GRANT SELECT , INSERT , DELETE ON %s TO PUBLIC', v_full_name);
+    RETURN v_table_name;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION oa_staging.drop_per_workflow_referencevalue_import(p_corrid text)
+    RETURNS void
+    LANGUAGE plpgsql
+    SECURITY DEFINER
+    SET search_path = oa_staging, pg_temp
+AS $$
+DECLARE
+    v_table_name text := 'referencevalue_import_' || replace(p_corrid, '-', '_');
+    v_full_name  text := 'oa_staging.' || quote_ident(v_table_name);
+BEGIN
+    EXECUTE format('DROP TABLE IF EXISTS %s', v_full_name);
+END;
+$$;
+
+-- Fonctions SECURITY DEFINER s'executent avec les droits du proprietaire ;
+-- transferer la propriete a openAdomTechUser pour que CREATE / DROP dans
+-- oa_staging soient autorises ( il a les droits CREATE sur le schema ) .
+ALTER FUNCTION oa_staging.create_per_workflow_referencevalue_import(text)
+    OWNER TO "openAdomTechUser";
+ALTER FUNCTION oa_staging.drop_per_workflow_referencevalue_import(text)
+    OWNER TO "openAdomTechUser";
+
+GRANT EXECUTE ON FUNCTION oa_staging.create_per_workflow_referencevalue_import(text) TO PUBLIC;
+GRANT EXECUTE ON FUNCTION oa_staging.drop_per_workflow_referencevalue_import(text)   TO PUBLIC;
+
+COMMENT ON FUNCTION oa_staging.create_per_workflow_referencevalue_import(text) IS
+    'cascade PER_WORKFLOW_TABLE : cree une table UNLOGGED dediee au workflow . '
+    'SECURITY DEFINER : appelable par les roles per-app sans grant CREATE direct .';
+COMMENT ON FUNCTION oa_staging.drop_per_workflow_referencevalue_import(text) IS
+    'cascade PER_WORKFLOW_TABLE : drop la table dediee apres succes du workflow . '
+    'SECURITY DEFINER : appelable par les roles per-app sans grant DROP direct .';

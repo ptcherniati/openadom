@@ -56,12 +56,14 @@ class StagingModeTest {
         assertThat(m.correlationIdFilter(CID)).isEqualTo(CID.toString());
         assertThat(m.tableName())
                 .isEqualTo("oa_staging.referencevalue_import_11dbf758_b670_43bc_9c91_aa64544016ae");
+        // SQL = appel a fonction SECURITY DEFINER ( cf V3 migration )
+        // pour eviter GRANT CREATE TO PUBLIC sur le schema oa_staging .
         assertThat(m.createTableSql())
-                .startsWith("CREATE UNLOGGED TABLE IF NOT EXISTS oa_staging.referencevalue_import_")
-                .contains("correlation_id uuid NOT NULL")
-                .contains("data jsonb NOT NULL");
+                .startsWith("SELECT oa_staging.create_per_workflow_referencevalue_import(")
+                .contains(CID.toString());
         assertThat(m.dropTableSql())
-                .startsWith("DROP TABLE IF EXISTS oa_staging.referencevalue_import_");
+                .startsWith("SELECT oa_staging.drop_per_workflow_referencevalue_import(")
+                .contains(CID.toString());
     }
 
     @Test
