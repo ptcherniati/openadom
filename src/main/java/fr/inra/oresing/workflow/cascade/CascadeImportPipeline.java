@@ -281,9 +281,21 @@ public class CascadeImportPipeline {
                 }
             }
 
+            // Sink + ( optionnel ) Collector selon strategy :
+            //   DIRECT_COPY : 1 sink chunk-par-chunk vers staging DB ;
+            //                 pas de collector .
+            //   MERGE_FILE  : Collector qui accumule les chunk paths et les
+            //                 concatene en merged.csv a finish() , puis Sink
+            //                 qui prend ce 1 chunk merge et fait 1 COPY DB
+            //                 massif via storeAll . UI cascade reflete
+            //                 fidelement le travail reel ( cf rationale dans
+            //                 javadoc MergedFileChunkCollector ) .
             fr.inrae.ore.cascade.model.core.Sink<java.nio.file.Path> sink = directCopy
                     ? CascadeSinkFactory.directCopy(referenceValueRepository, importProperties, corrUuid)
-                    : new MergingFileSink(mergedPath);
+                    : new StoreAllPathSink(referenceValueRepository);
+            MergedFileChunkCollector mergeCollector = directCopy
+                    ? null
+                    : new MergedFileChunkCollector(mergedPath);
 
             log.info("[{}] Demarrage import : user={}, file={}, chunkSize={}, pools=[source={},transform={},sink={}], "
                     + "maxErrors={}, metrics={}, sinkStrategy={}, pipelineMode={}",
@@ -291,11 +303,23 @@ public class CascadeImportPipeline {
                     sourcePoolSize, transformPoolSize, rawSinkPoolSize,
                     maxErrors, enableMetrics, strategy, importProperties.getPipelineMode());
 
-            fr.inrae.ore.cascade.model.workflow.builder.WorkflowPipelineConfig builder =
+            // Construct workflow pipeline ; en MERGE_FILE on insere le
+            // {@link MergedFileChunkCollector} entre transform et sink pour
+            // que la concatenation chunk-files -> merged.csv passe par
+            // l'API cascade Collector ( == accumulation + post-process )
+            // au lieu d'etre cachee dans un faux Sink .
+            @SuppressWarnings({ "rawtypes", "unchecked" })
+            fr.inrae.ore.cascade.model.workflow.builder.WorkflowPipeline pipeline =
                     WorkflowBuilder.create()
                             .forUser(userId)
                             .from(source)
-                            .transform(transformation)
+                            .transform(transformation);
+            if (mergeCollector != null) {
+                pipeline = pipeline.collect(mergeCollector);
+            }
+            @SuppressWarnings("unchecked")
+            fr.inrae.ore.cascade.model.workflow.builder.WorkflowPipelineConfig builder =
+                    pipeline
                             .to(sink)
                             .withCorrelationId(correlationId)
                             .withSourceChunkSize(chunkSizeLines)
@@ -405,17 +429,17 @@ public class CascadeImportPipeline {
                 log.info("[{}] Workflow cascade termine : processed={}, chunks={}, duration={}",
                         correlationId, result.recordsProcessed(), result.chunksProcessed(), result.duration());
 
-                // Phase : chargement effectif en base . Branchement selon strategy :
-                //   MERGE_FILE  : storeAll(merged.csv) -- legacy
-                //   DIRECT_COPY : noop , le StagingPostgresSink a deja invoque
-                //                 la finalize hook ( COPY + UPSERT ) pendant teardown()
+                // Phase : chargement effectif en base . Cascade a deja
+                // tout fait :
+                //   DIRECT_COPY : StagingPostgresSink a invoque la finalize
+                //                 hook ( COPY + UPSERT ) pendant teardown() .
+                //   MERGE_FILE  : MergedFileChunkCollector a concatene les
+                //                 chunk-files en merged.csv ; StoreAllPathSink
+                //                 a fait le 1 COPY massif vers la table finale
+                //                 ( cf .collect(...).to(StoreAllPathSink) plus
+                //                 haut ) . Plus rien a faire ici .
                 updateWorkflowPhase(corrUuid, WorkflowLogEntry.STATUS_LOADING_DB, fileSizeBytes);
                 dataImporter.treatErrors();
-                if (!directCopy) {
-                    // MERGE_FILE : COPY merged.csv -> referencevalue est
-                    // l'unique phase finalize visible cote openadom .
-                    referenceValueRepository.storeAll(((MergingFileSink) sink).getMergedPath());
-                }
                 // Bloc CHARGEMENT FINAL : phase finalize fini ( OK ) .
                 if (corrUuid != null) {
                     activeRegistry.markFinalizeFinished(corrUuid, Instant.now());
