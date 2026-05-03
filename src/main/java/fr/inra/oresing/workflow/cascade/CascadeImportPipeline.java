@@ -297,11 +297,30 @@ public class CascadeImportPipeline {
                     ? null
                     : new MergedFileChunkCollector(mergedPath);
 
+            // MERGE_FILE necessite un Collector ( pour concatener les
+            // chunks ) ; cascade PIPELINED ne supporte pas les Collectors
+            // ( bounded queue + transform/sink overlap incompatibles avec
+            // un sync-point comme finish() ) . On force donc STAGED ici
+            // ; PIPELINED n'apporterait rien de toute facon car le merge
+            // est intrinsequement un sync-point . La config UI
+            // ( ConfigEditForm ) desactive aussi le dropdown pipelineMode
+            // pour MERGE_FILE pour que ca soit visible .
+            fr.inrae.ore.cascade.model.workflow.PipelineMode effectivePipelineMode =
+                    directCopy
+                            ? importProperties.getPipelineMode()
+                            : fr.inrae.ore.cascade.model.workflow.PipelineMode.STAGED;
+            if (!directCopy && importProperties.getPipelineMode()
+                    != fr.inrae.ore.cascade.model.workflow.PipelineMode.STAGED) {
+                log.info("[{}] MERGE_FILE force pipelineMode=STAGED ( cascade PIPELINED ne supporte pas les Collectors ) ; "
+                        + "valeur configuree {} ignoree pour ce workflow",
+                        correlationId, importProperties.getPipelineMode());
+            }
+
             log.info("[{}] Demarrage import : user={}, file={}, chunkSize={}, pools=[source={},transform={},sink={}], "
                     + "maxErrors={}, metrics={}, sinkStrategy={}, pipelineMode={}",
                     correlationId, userId, uploadedPath.getFileName(), chunkSizeLines,
                     sourcePoolSize, transformPoolSize, rawSinkPoolSize,
-                    maxErrors, enableMetrics, strategy, importProperties.getPipelineMode());
+                    maxErrors, enableMetrics, strategy, effectivePipelineMode);
 
             // Construct workflow pipeline ; en MERGE_FILE on insere le
             // {@link MergedFileChunkCollector} entre transform et sink pour
@@ -325,7 +344,7 @@ public class CascadeImportPipeline {
                             .withSourceChunkSize(chunkSizeLines)
                             .withCollectorChunkSize(collectorChunkSize)
                             .withMaxErrors(maxErrors)
-                            .withPipelineMode(importProperties.getPipelineMode());
+                            .withPipelineMode(effectivePipelineMode);
 
             // Sink parallelism wiring ( cascade 2.1.0 ) :
             //   - DIRECT_COPY + PER_CONNECTION_TEMP : sticky connection ,
@@ -373,7 +392,7 @@ public class CascadeImportPipeline {
                         new fr.inra.oresing.workflow.cascade.history.StrategySnapshot(
                                 strategy.name(),
                                 directCopy ? importProperties.getStagingStrategy().name() : null,
-                                importProperties.getPipelineMode().name(),
+                                effectivePipelineMode.name(),
                                 rawSinkPoolSize));
             }
 
