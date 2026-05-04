@@ -339,8 +339,27 @@ public class CascadeImportPipeline {
             //                 massif via storeAll . UI cascade reflete
             //                 fidelement le travail reel ( cf rationale dans
             //                 javadoc MergedFileChunkCollector ) .
+            // Cascade 3.0.0 : si on tourne dans une tx Spring outer ( cas
+            // openADOM standard via @Transactional sur le controller ) , on
+            // passe le sink en DEFERRED_TO_CALLER pour que le UPSERT
+            // staging -> table finale soit execute apres la commit Spring
+            // sur la connexion du caller ( evite le deadlock sink-thread vs
+            // caller-thread sur les row-locks de la table finale ) . Hors
+            // tx Spring ( tests directs , scripts ) on conserve
+            // SYNCHRONOUS = comportement cascade 2.x .
+            final boolean outerTxActive = directCopy
+                    && org.springframework.transaction.support.TransactionSynchronizationManager
+                            .isActualTransactionActive();
+            final fr.inrae.ore.cascade.api.defaults.db.staging.FinalizeMode finalizeMode = outerTxActive
+                    ? fr.inrae.ore.cascade.api.defaults.db.staging.FinalizeMode.DEFERRED_TO_CALLER
+                    : fr.inrae.ore.cascade.api.defaults.db.staging.FinalizeMode.SYNCHRONOUS;
+            if (outerTxActive) {
+                log.info("[{}] Outer Spring tx active : sink configure en DEFERRED_TO_CALLER ( finalize execute en afterCommit )",
+                        correlationId);
+            }
+
             fr.inrae.ore.cascade.model.core.Sink<java.nio.file.Path> sink = directCopy
-                    ? CascadeSinkFactory.directCopy(referenceValueRepository, importProperties, corrUuid, heartbeatService, activeRegistry)
+                    ? CascadeSinkFactory.directCopy(referenceValueRepository, importProperties, corrUuid, heartbeatService, activeRegistry, finalizeMode)
                     : new StoreAllPathSink(referenceValueRepository, activeRegistry);
             MergedFileChunkCollector mergeCollector = directCopy
                     ? null
@@ -530,6 +549,21 @@ public class CascadeImportPipeline {
 
                 log.info("[{}] Workflow cascade termine : processed={}, chunks={}, duration={}",
                         correlationId, result.recordsProcessed(), result.chunksProcessed(), result.duration());
+
+                // Cascade 3.0.0 DEFERRED_TO_CALLER : le sink a capture la
+                // finalize SQL au lieu de l executer inline . On l accroche
+                // sur la tx Spring courante : afterCommit declenche le UPSERT
+                // sur une connexion fraiche du pool ( meme thread que le
+                // caller , row-locks deja relaches ) ; afterCompletion
+                // ROLLED_BACK declenche le cleanup des rows staging .
+                if (outerTxActive) {
+                    result.deferredFinalize().ifPresent(deferred -> {
+                        org.springframework.transaction.support.TransactionSynchronizationManager
+                                .registerSynchronization(new TxAwareDeferredRunner(deferred, corrUuid));
+                        log.info("[{}] Deferred finalize handle bind sur la Spring tx courante ( afterCommit )",
+                                correlationId);
+                    });
+                }
 
                 // Phase : chargement effectif en base . Cascade a deja
                 // tout fait :

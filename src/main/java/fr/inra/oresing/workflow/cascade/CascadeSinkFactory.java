@@ -7,6 +7,7 @@ import fr.inra.oresing.workflow.cascade.staging.StagingMode;
 import fr.inrae.ore.cascade.api.builder.SinkBuilder;
 import fr.inrae.ore.cascade.api.defaults.db.RowSerializer;
 import fr.inrae.ore.cascade.api.defaults.db.staging.FinalizeHook;
+import fr.inrae.ore.cascade.api.defaults.db.staging.FinalizeMode;
 import fr.inrae.ore.cascade.api.defaults.db.staging.StagingTableSpec;
 import fr.inrae.ore.cascade.core.defaults.db.WriteMode;
 import fr.inrae.ore.cascade.model.core.Sink;
@@ -61,7 +62,17 @@ public final class CascadeSinkFactory {
                                          UUID correlationId,
                                          HeartbeatService heartbeatService) {
         return directCopy(referenceValueRepository, props, correlationId,
-                heartbeatService, null);
+                heartbeatService, null, FinalizeMode.SYNCHRONOUS);
+    }
+
+    /** Surcharge cascade 2.x compat ( SYNCHRONOUS finalize inline ) . */
+    public static Sink<Path> directCopy(DataRepository referenceValueRepository,
+                                         ImportProperties props,
+                                         UUID correlationId,
+                                         HeartbeatService heartbeatService,
+                                         fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry activeRegistry) {
+        return directCopy(referenceValueRepository, props, correlationId,
+                heartbeatService, activeRegistry, FinalizeMode.SYNCHRONOUS);
     }
 
     /**
@@ -74,11 +85,28 @@ public final class CascadeSinkFactory {
      *                       UPSERT TEMP -> table finale invoque
      *                       {@code activeRegistry.addFinalRows(corrId , n)} .
      */
+    /**
+     * Cascade 3.0.0 : finalizeMode arg permet de differer la finalize SQL
+     * lourde ( UPSERT staging -> table finale ) hors du sink thread cascade .
+     *
+     * <ul>
+     *   <li>{@link FinalizeMode#SYNCHRONOUS} : comportement historique , la
+     *       finalize tourne inline dans le sink ( cascade 2.x ) .</li>
+     *   <li>{@link FinalizeMode#DEFERRED_TO_CALLER} : la finalize est
+     *       capturee comme {@code DeferredFinalize} dans
+     *       {@link fr.inrae.ore.cascade.model.workflow.WorkflowResult#deferredFinalize()} ;
+     *       le caller execute le UPSERT plus tard sur sa propre connection
+     *       ( typiquement Spring tx {@code afterCommit} ) , evitant le
+     *       deadlock sink-thread vs caller-thread sur les row-locks de la
+     *       table finale .</li>
+     * </ul>
+     */
     public static Sink<Path> directCopy(DataRepository referenceValueRepository,
                                          ImportProperties props,
                                          UUID correlationId,
                                          HeartbeatService heartbeatService,
-                                         fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry activeRegistry) {
+                                         fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry activeRegistry,
+                                         FinalizeMode finalizeMode) {
 
         DataSource raw = referenceValueRepository.getDataSource();
         if (raw == null) {
@@ -147,30 +175,57 @@ public final class CascadeSinkFactory {
         String stagingTable   = spec.tableName();
         String idJsonPath     = "id";
 
-        FinalizeHook hook = ctx -> {
+        FinalizeHook hook = (ctx, registry) -> {
             // Filter par correlation_id : SHARED_UNLOGGED ( table partagee
             // multi-workflows ) + PER_WORKFLOW_TABLE ( tag cosmetique mais
             // garde la symetrie avec cascade SharedUnlogged spec ) .
             // PER_CONNECTION_TEMP : null ( table TEMP isolated ) .
             UUID corrId = correlationId != null ? correlationId : safeUuid(ctx.correlationId());
             String corridFilter = mode.correlationIdFilter(corrId);
-            // Heartbeat actif pendant la finalize ( phase potentiellement
-            // longue : UPSERT 274k+ rows ) . Le thread dedie ecrit
-            // last_heartbeat_at toutes les N sec dans workflow_log . Ferme
-            // les faux positifs zombie sur les workflows lents legitimes .
-            // try-with-resources : scheduler stop garanti meme en cas
-            // d'exception SQL ( rollback , timeout , etc ) .
-            HeartbeatService.Heartbeat hb = heartbeatService != null
-                    ? heartbeatService.start(corrId)
-                    : null;
             // Callback de progress UPSERT TEMP -> table finale . Quand un
             // registry est fourni , chaque batch incremente finalRows pour
-            // alimenter la progress bar UPSERT de la live view ( DIRECT_COPY :
-            // SHARED_UNLOGGED / PER_WORKFLOW_TABLE / PER_CONNECTION_TEMP -
-            // toutes ces strategies passent par cette boucle ) .
+            // alimenter la progress bar UPSERT de la live view .
             java.util.function.LongConsumer onBatch = (activeRegistry != null && corrId != null)
                     ? n -> activeRegistry.addFinalRows(corrId, n)
                     : n -> { };
+
+            if (registry != null) {
+                // Cascade 3.0.0 DEFERRED_TO_CALLER : on enregistre l action
+                // SQL lourde au lieu de l executer inline . Le caller la
+                // declenchera plus tard sur sa propre connexion ( ex.
+                // afterCommit Spring tx ) , avec un heartbeat dedie pour
+                // que la phase ne soit pas vue zombie .
+                final UUID  finalCorrId      = corrId;
+                final String finalCorrFilter = corridFilter;
+                registry.register(conn -> {
+                    HeartbeatService.Heartbeat hb = heartbeatService != null && finalCorrId != null
+                            ? heartbeatService.start(finalCorrId)
+                            : null;
+                    try {
+                        StagingFinalizeSql.runFinalize(
+                                conn,
+                                schemaName,
+                                targetTableId,
+                                orderedCols,
+                                stagingTable,
+                                finalCorrFilter,
+                                idJsonPath,
+                                props.getFinalizeStatementTimeoutMinutes(),
+                                onBatch);
+                    } finally {
+                        if (hb != null) hb.close();
+                    }
+                });
+                return;
+            }
+
+            // SYNCHRONOUS : finalize inline dans le sink ( cascade 2.x compat ) .
+            // Heartbeat actif pendant la finalize ( phase potentiellement
+            // longue : UPSERT 274k+ rows ) . try-with-resources : scheduler
+            // stop garanti meme en cas d exception SQL ( rollback , timeout ) .
+            HeartbeatService.Heartbeat hb = heartbeatService != null
+                    ? heartbeatService.start(corrId)
+                    : null;
             try {
                 StagingFinalizeSql.runFinalize(
                         ctx.connection(),
@@ -212,11 +267,13 @@ public final class CascadeSinkFactory {
                 .format(WriteMode.CopyFormat.TEXT)
                 .done();
 
-        // cascade 1.8.0 fluent API : SinkBuilder.create().<T>stagingPostgres()
+        // cascade 3.0.0 : finalizeMode pilote l execution synchrone vs
+        // deferree de la finalize hook ( cf javadoc directCopy ) .
         return SinkBuilder.create().<Path>stagingPostgres()
                 .dataSource(ds)
                 .writeMode(writeMode)
                 .rowSerializer(passthrough)
+                .finalizeMode(finalizeMode != null ? finalizeMode : FinalizeMode.SYNCHRONOUS)
                 .build();
     }
 
