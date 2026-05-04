@@ -880,9 +880,18 @@ public class OreSiResources {
             // #58 - Reconstruire le cache des filtres après un dépôt réussi ( asynchrone )
             Application application = serviceContainer.applicationService().getApplication(nameOrId);
             serviceContainer.dataService().refreshFilterListCache(application, dataName);
+            // En mode deferred ( cascade 3.0.0 ) le UPSERT staging -> table finale
+            // tourne dans afterCommit du @Transactional interne au .get() . Quand
+            // VersioningService.createData calcule dataSynthesis , afterCommit
+            // n a pas encore fire et la table finale est encore stale . On
+            // recalcule ici , post .get() , pour que la reponse HTTP reflete
+            // le compteur reel ( sinon le front voit l ancien total ) .
+            final List<ApplicationResult.DataSynthesis> freshSynthesis = Optional
+                    .ofNullable(serviceContainer.dataService().getReferenceSynthesis(application))
+                    .orElseGet(List::of);
             return ResponseEntity
                     .created(URI.create(dataVersioningResult.uri()))
-                    .body(Map.of("id", dataVersioningResult.dataId().toString(), "referenceSynthesis", dataVersioningResult.dataSynthesis()));
+                    .body(Map.of("id", dataVersioningResult.dataId().toString(), "referenceSynthesis", freshSynthesis));
         } catch (ExecutionException e) {
             Throwable cause = unwrapException(e.getCause());
             throw switch (cause) {
