@@ -33,6 +33,7 @@ public class WorkflowMetadataCollector {
             Map<String, Object> m = new LinkedHashMap<>();
             putParallelism(m, snap);
             putStrategy(m, snap);
+            putImportConfig(m, snap);
             putJvmStats(m);
             putBinaryFileId(m, correlationId);
             return m;
@@ -70,6 +71,30 @@ public class WorkflowMetadataCollector {
         strat.put("pipelineMode",        snap.strategy().pipelineMode());
         strat.put("sinkParallelism",     snap.strategy().sinkParallelism());
         m.put("strategy", strat);
+    }
+
+    /**
+     * Persiste la config import capturee au demarrage ( cf .
+     * {@link ImportConfigSnapshot} ) dans metadata.importConfig pour que
+     * le Detail oa-live puisse afficher chunkSize / pools / staging /
+     * metriques meme apres la fin du workflow ( registry vide ) .
+     */
+    private void putImportConfig(Map<String, Object> m, WorkflowSnapshot snap) {
+        if (snap.importConfig() == null) return;
+        Map<String, Object> ic = new LinkedHashMap<>();
+        ic.put("chunkSizeLines",         snap.importConfig().chunkSizeLines());
+        ic.put("progressBatchSize",      snap.importConfig().progressBatchSize());
+        ic.put("maxErrorsThreshold",     snap.importConfig().maxErrorsThreshold());
+        ic.put("collectorChunkSize",     snap.importConfig().collectorChunkSize());
+        ic.put("stagingSharedOrphanTtl", snap.importConfig().stagingSharedOrphanTtl());
+        ic.put("stagingSharedTableName", snap.importConfig().stagingSharedTableName());
+        ic.put("enableMetrics",          snap.importConfig().enableMetrics());
+        ic.put("skipCsvReencoding",      snap.importConfig().skipCsvReencoding());
+        ic.put("poolSource",             snap.importConfig().poolSource());
+        ic.put("poolTransform",          snap.importConfig().poolTransform());
+        ic.put("poolSink",               snap.importConfig().poolSink());
+        ic.put("poolOrdering",           snap.importConfig().poolOrdering());
+        m.put("importConfig", ic);
     }
 
     private void putJvmStats(Map<String, Object> m) {

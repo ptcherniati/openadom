@@ -68,7 +68,22 @@ public record WorkflowSnapshot(
          * les workflows non chunkes ou tant qu'aucun chunk n'a ete
          * ecrit .
          */
-        List<SinkChunkRecord> sinkChunks) {
+        List<SinkChunkRecord> sinkChunks,
+        /**
+         * Configuration cascade-import capturee au demarrage du workflow
+         * ( chunkSizeLines , pools , staging , metriques , ... ) . Expose
+         * dans le Detail du workflow ( oa-live ) pour debug perf / config .
+         * Null pour les workflows non chunkes ( extractions ) .
+         */
+        ImportConfigSnapshot importConfig,
+        /**
+         * Dernier heartbeat emit par {@code HeartbeatService} pendant les
+         * phases longues ( finalize hook ) . Permet a oa-live de distinguer
+         * "workflow vivant mais lent" de "workflow mort" : pill verte si
+         * heartbeat &lt; 1 min , orange 1-5 min , rouge &gt; 5 min . Null si
+         * jamais beat ( workflow trop court , phase non heartbeat-ee ) .
+         */
+        Instant lastHeartbeatAt) {
 
     /** Convenience helper : time elapsed since start in milliseconds. */
     public long elapsedMillis(Instant now) {
@@ -86,7 +101,7 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks);
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks, importConfig, lastHeartbeatAt);
     }
 
     /** Permet de mettre à jour le total une fois le comptage effectué. */
@@ -95,7 +110,7 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks);
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks, importConfig, lastHeartbeatAt);
     }
 
     /** Remplace la liste des chunks ( utilise par le registry au moment de l'expose ). */
@@ -104,7 +119,7 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks);
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks, importConfig, lastHeartbeatAt);
     }
 
     /** Met à jour le bloc de parallélisme effectif ( source / transform / sink ). */
@@ -113,7 +128,7 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks);
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks, importConfig, lastHeartbeatAt);
     }
 
     /** Remplace la liste des sink chunks ( utilise par le registry au moment de l'expose ). */
@@ -122,7 +137,25 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks);
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks, importConfig, lastHeartbeatAt);
+    }
+
+    /** Met à jour la config d'import capturee au demarrage du workflow . */
+    public WorkflowSnapshot withImportConfig(ImportConfigSnapshot importConfig) {
+        return new WorkflowSnapshot(
+                correlationId, workflowType, userId, userLogin,
+                applicationName, dataType, resourceName, startTime,
+                status, recordsProcessed, recordsFailed, chunksProcessed,
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks, importConfig, lastHeartbeatAt);
+    }
+
+    /** Met a jour le timestamp du dernier heartbeat ( phase longue active ) . */
+    public WorkflowSnapshot withLastHeartbeatAt(Instant lastHeartbeatAt) {
+        return new WorkflowSnapshot(
+                correlationId, workflowType, userId, userLogin,
+                applicationName, dataType, resourceName, startTime,
+                status, recordsProcessed, recordsFailed, chunksProcessed,
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks, importConfig, lastHeartbeatAt);
     }
 
     /** Met à jour le bloc de strategy cascade ( sinkStrategy , stagingStrategy , ... ). */
@@ -131,7 +164,7 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks);
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks, importConfig, lastHeartbeatAt);
     }
 
     /** Remplace la liste des workers ( utilise par le registry au moment de l'expose ). */
@@ -140,6 +173,6 @@ public record WorkflowSnapshot(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName, startTime,
                 status, recordsProcessed, recordsFailed, chunksProcessed,
-                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks);
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks, importConfig, lastHeartbeatAt);
     }
 }

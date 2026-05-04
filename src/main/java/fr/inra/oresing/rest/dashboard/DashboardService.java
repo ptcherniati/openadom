@@ -150,7 +150,7 @@ public class DashboardService {
                 "       application_name, data_type, resource_name, " +
                 "       start_time, end_time, duration_ms, status, " +
                 "       records_processed, records_failed, chunks_processed, " +
-                "       progress_percentage, bytes_total " +
+                "       progress_percentage, bytes_total, last_heartbeat_at " +
                 "  FROM oa_audit.workflow_log " +
                 where +
                 " ORDER BY start_time DESC " +
@@ -189,7 +189,7 @@ public class DashboardService {
                 "       application_name, data_type, resource_name, " +
                 "       start_time, end_time, duration_ms, status, " +
                 "       records_processed, records_failed, chunks_processed, " +
-                "       progress_percentage, bytes_total, " +
+                "       progress_percentage, bytes_total, last_heartbeat_at, " +
                 "       errors::text AS errors_json, fatal_error, " +
                 "       metadata::text AS metadata_json " +
                 "  FROM oa_audit.workflow_log " +
@@ -559,9 +559,18 @@ public class DashboardService {
         // cross-conn -> count finale observable progressivement ( si lib
         // cascade emit batch progress ) . PER_CONN_TEMP / MERGE_FILE : tx
         // atomique , progres invisible -> indeterminate .
+        // MERGE_FILE expose desormais sa sous-phase via {@link StoreAllPathSink}
+        // ( chemin batche UPSERT TEMP -> finale lit le rowcount par batch via
+        // {@link WorkflowActiveRegistry#addFinalRows} ) , donc on peut afficher
+        // une bar determinate pendant la phase UPSERT_FINAL .
+        String mergeFilePhase = registry.findMergeFilePhase(correlationId).orElse(null);
+        boolean mergeFileFinalObservable = strategy != null
+                && "MERGE_FILE".equals(strategy.sinkStrategy())
+                && "UPSERT_FINAL".equals(mergeFilePhase);
         boolean finalDeterminate = strategy != null
                 && ("SHARED_UNLOGGED".equals(strategy.stagingStrategy())
-                  || "PER_WORKFLOW_TABLE".equals(strategy.stagingStrategy()));
+                  || "PER_WORKFLOW_TABLE".equals(strategy.stagingStrategy())
+                  || mergeFileFinalObservable);
 
         return Optional.of(new FinalizeProgressDTO(
                 phaseName,
@@ -575,7 +584,8 @@ public class DashboardService {
                 cascadeTput, finalizeTput,
                 phase != null ? phase.errorMessage() : null,
                 stagingRowsWritten, finalRowsWritten,
-                stagingDeterminate, finalDeterminate));
+                stagingDeterminate, finalDeterminate,
+                mergeFilePhase));
     }
 
     private static final class FinalizePhaseSnapshotConst {
@@ -610,7 +620,9 @@ public class DashboardService {
                 List.of(),
                 null,
                 null,
-                List.of());
+                List.of(),
+                null,
+                toInstant(rs.getTimestamp("last_heartbeat_at")));
     }
 
     @SuppressWarnings("unchecked")

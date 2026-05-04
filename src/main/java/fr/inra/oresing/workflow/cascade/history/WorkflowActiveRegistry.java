@@ -131,6 +131,17 @@ public class WorkflowActiveRegistry implements WorkflowListener {
     private final ConcurrentMap<UUID, java.util.concurrent.atomic.AtomicLong>
             finalRowsByCid = new ConcurrentHashMap<>();
 
+    /**
+     * Sous-phase MERGE_FILE ( {@code MERGE_LOCAL} / {@code TEMP_LOAD} /
+     * {@code UPSERT_FINAL} ) emise par {@link DataRepository#storeAll}
+     * via {@link StoreAllPathSink} . Permet a la live view d'afficher
+     * 3 progress bars distinctes au lieu de 2 ( bar A determinate ,
+     * bar B indeterminate pendant TEMP_LOAD , bar C determinate ) .
+     * Null pour les workflows DIRECT_COPY ( pas de sous-phase MERGE_FILE ) .
+     */
+    private final ConcurrentMap<UUID, String> mergeFilePhaseByCid =
+            new ConcurrentHashMap<>();
+
     public void addStagingRows(UUID correlationId, long delta) {
         if (correlationId == null || delta <= 0) return;
         stagingRowsByCid.computeIfAbsent(correlationId,
@@ -151,6 +162,23 @@ public class WorkflowActiveRegistry implements WorkflowListener {
     public long finalRows(UUID correlationId) {
         var c = finalRowsByCid.get(correlationId);
         return c == null ? 0L : c.get();
+    }
+
+    /**
+     * Marque la sous-phase MERGE_FILE en cours pour ce workflow . Appelle
+     * par {@link StoreAllPathSink#write} via le callback
+     * {@code onPhaseChange} expose par {@code DataRepository.storeAll} .
+     *
+     * @param phase {@code MERGE_LOCAL} | {@code TEMP_LOAD} | {@code UPSERT_FINAL}
+     */
+    public void setMergeFilePhase(UUID correlationId, String phase) {
+        if (correlationId == null || phase == null) return;
+        mergeFilePhaseByCid.put(correlationId, phase);
+    }
+
+    /** @return sous-phase MERGE_FILE courante , ou empty pour DIRECT_COPY ou avant TEMP_LOAD . */
+    public Optional<String> findMergeFilePhase(UUID correlationId) {
+        return Optional.ofNullable(mergeFilePhaseByCid.get(correlationId));
     }
 
     public void initFinalizePhase(UUID correlationId, Instant startedAt) {
@@ -289,6 +317,29 @@ public class WorkflowActiveRegistry implements WorkflowListener {
                 cur.withStrategy(strategy));
     }
 
+    /**
+     * Records the import-pipeline config snapshot ( chunkSize , pools ,
+     * staging , metrics , ... ) capturee au demarrage du workflow . Affiche
+     * dans le Detail du workflow ( oa-live ) pour faciliter le debug
+     * perf / config a posteriori . No-op si l'entree n'est pas enregistree .
+     */
+    public void setImportConfig(UUID correlationId, ImportConfigSnapshot config) {
+        byCorrelationId.computeIfPresent(correlationId, (id, cur) ->
+                cur.withImportConfig(config));
+    }
+
+    /**
+     * Records the latest heartbeat timestamp emitted by {@code HeartbeatService}
+     * during long-running phases ( finalize hook ) . Permet a oa-live de
+     * distinguer "workflow vivant mais lent" de "workflow mort" via le pill
+     * vert / orange / rouge selon l'age du heartbeat . No-op si l'entree
+     * n'est plus enregistree ( workflow termine entre temps ) .
+     */
+    public void setLastHeartbeat(UUID correlationId, java.time.Instant heartbeatAt) {
+        byCorrelationId.computeIfPresent(correlationId, (id, cur) ->
+                cur.withLastHeartbeatAt(heartbeatAt));
+    }
+
     /** Removes the entry from the registry once the workflow is over. */
     public void finish(UUID correlationId) {
         WorkflowSnapshot removed = byCorrelationId.remove(correlationId);
@@ -300,6 +351,7 @@ public class WorkflowActiveRegistry implements WorkflowListener {
         finalizePhaseByCid.remove(correlationId);
         stagingRowsByCid.remove(correlationId);
         finalRowsByCid.remove(correlationId);
+        mergeFilePhaseByCid.remove(correlationId);
         if (removed != null) {
             log.debug("Workflow unregistered : {} / {}",
                     removed.workflowType(), correlationId);

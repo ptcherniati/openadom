@@ -54,9 +54,16 @@ public record WorkflowLogEntry(
         /** Champ extensible JSONB persiste tel quel ; contient
          *  parallelisme + strategy + JVM stats pour aider l'admin a
          *  trouver la config optimale en post-mortem . */
-        Map<String, Object> metadata) {
+        Map<String, Object> metadata,
+        /**
+         * Stage cascade ou la failure a ete attribuee ( cascade 2.2.0
+         * {@code WorkflowResult.failedStage} ) : SOURCE | TRANSFORM |
+         * COLLECTOR | SINK | TEARDOWN | UNKNOWN . NULL pour status
+         * non FAILED .
+         */
+        String        failedStage) {
 
-    /** Compat constructor : entries sans metadata . */
+    /** Compat constructor : entries sans metadata ni failedStage . */
     public WorkflowLogEntry(
             UUID correlationId, String workflowType, UUID userId, String userLogin,
             String applicationName, String dataType, String resourceName,
@@ -67,7 +74,23 @@ public record WorkflowLogEntry(
              applicationName, dataType, resourceName,
              startTime, endTime, duration, status,
              recordsProcessed, recordsFailed, chunksProcessed,
-             bytesTotal, errors, fatalError, null);
+             bytesTotal, errors, fatalError, null, null);
+    }
+
+    /** Compat constructor : entries sans failedStage ( workflows pre-cascade-2.2.0
+     *  ou phases sans contexte cascade ) . */
+    public WorkflowLogEntry(
+            UUID correlationId, String workflowType, UUID userId, String userLogin,
+            String applicationName, String dataType, String resourceName,
+            Instant startTime, Instant endTime, Duration duration, String status,
+            long recordsProcessed, long recordsFailed, int chunksProcessed,
+            long bytesTotal, List<String> errors, String fatalError,
+            Map<String, Object> metadata) {
+        this(correlationId, workflowType, userId, userLogin,
+             applicationName, dataType, resourceName,
+             startTime, endTime, duration, status,
+             recordsProcessed, recordsFailed, chunksProcessed,
+             bytesTotal, errors, fatalError, metadata, null);
     }
 
     public static final String TYPE_IMPORT                    = "IMPORT";
@@ -76,16 +99,35 @@ public record WorkflowLogEntry(
     public static final String TYPE_EXTRACT_ADDITIONAL_FILES  = "EXTRACT_ADDITIONAL_FILES";
     public static final String TYPE_EXTRACT_CHARTE            = "EXTRACT_CHARTE";
 
+    public static final String STATUS_IN_PROGRESS   = "IN_PROGRESS";
     public static final String STATUS_COMPLETED     = "COMPLETED";
     public static final String STATUS_FAILED        = "FAILED";
     public static final String STATUS_CANCELLED     = "CANCELLED";
     public static final String STATUS_RATE_LIMITED  = "RATE_LIMITED";
 
-    // Phases in-progress , publiées dans WorkflowActiveRegistry pour oa-live.
-    // Ne sont jamais persistées dans oa_audit.workflow_log ( qui ne reçoit
-    // que les états terminaux ci-dessus ).
+    // Phases in-progress publiees dans WorkflowActiveRegistry pour oa-live .
+    // Ne sont pas persistees dans oa_audit.workflow_log ( qui ne contient
+    // que IN_PROGRESS au demarrage puis les etats terminaux ci-dessus ;
+    // les phases intra-execution restent en memoire ) .
     public static final String STATUS_UPLOADING     = "UPLOADING";
     public static final String STATUS_CHUNKING      = "CHUNKING";
     public static final String STATUS_PROCESSING    = "PROCESSING";
     public static final String STATUS_LOADING_DB    = "LOADING_DB";
+
+    /**
+     * Construit l'entry minimale persistee au demarrage du workflow par
+     * {@link WorkflowLogWriter#recordStart} . Les compteurs / errors /
+     * fatalError sont nuls a ce stade ; ils seront remplis par l'entry
+     * terminale via UPSERT .
+     */
+    public static WorkflowLogEntry startMarker(
+            UUID correlationId, String workflowType, UUID userId, String userLogin,
+            String applicationName, String dataType, String resourceName,
+            Instant startTime, long bytesTotal) {
+        return new WorkflowLogEntry(
+                correlationId, workflowType, userId, userLogin,
+                applicationName, dataType, resourceName,
+                startTime, null, null, STATUS_IN_PROGRESS,
+                0L, 0L, 0, bytesTotal, List.of(), null, null, null);
+    }
 }

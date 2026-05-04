@@ -19,11 +19,14 @@ public class StagingIgnoredOnMergeFileRule implements ConsistencyRule {
     public Optional<String> check(EffectiveConfig c) {
         String sink    = c.stringValue("sinkStrategy");
         String staging = c.stringValue("stagingStrategy");
-        if ("MERGE_FILE".equals(sink) && staging != null && !"NO_STAGING".equals(staging)) {
+        if ("MERGE_FILE".equals(sink) && staging != null) {
             return Optional.of(
                     "MERGE_FILE n'utilise pas stagingStrategy ; la valeur '" + staging
-                            + "' sera ignoree ( aucune staging table en mode merge-file -> storeAll ) . "
-                            + "Pour exprimer explicitement le bypass , selectionner NO_STAGING .");
+                            + "' sera ignoree ( les chunks sont concatenes sur disque "
+                            + "puis 1 COPY direct vers la table finale , sans staging ) . "
+                            + "L'UI masque ce champ quand MERGE_FILE est selectionne ; "
+                            + "ce message ne devrait apparaitre que pour des appels API "
+                            + "directs qui specifient explicitement la stagingStrategy .");
         }
         return Optional.empty();
     }

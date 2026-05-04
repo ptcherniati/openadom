@@ -70,6 +70,8 @@ public class CascadeImportPipeline {
     private final AuthenticationService   authenticationService;
     private final WorkflowActiveRegistry  activeRegistry;
     private final WorkflowMetadataCollector metadataCollector;
+    private final fr.inra.oresing.workflow.cascade.history.HeartbeatService heartbeatService;
+    private final fr.inra.oresing.monitoring.compensation.CompensationLogService compensationLogService;
 
     public CascadeImportPipeline(
             ImportProperties       importProperties,
@@ -80,7 +82,9 @@ public class CascadeImportPipeline {
             WorkflowLogWriter      logWriter,
             AuthenticationService  authenticationService,
             WorkflowActiveRegistry activeRegistry,
-            WorkflowMetadataCollector metadataCollector) {
+            WorkflowMetadataCollector metadataCollector,
+            fr.inra.oresing.workflow.cascade.history.HeartbeatService heartbeatService,
+            fr.inra.oresing.monitoring.compensation.CompensationLogService compensationLogService) {
         this.importProperties      = importProperties;
         this.progressReporter      = progressReporter;
         this.tempCleanup           = tempCleanup;
@@ -90,6 +94,8 @@ public class CascadeImportPipeline {
         this.authenticationService = authenticationService;
         this.activeRegistry        = activeRegistry;
         this.metadataCollector     = metadataCollector;
+        this.heartbeatService      = heartbeatService;
+        this.compensationLogService = compensationLogService;
     }
 
     /**
@@ -224,8 +230,11 @@ public class CascadeImportPipeline {
 
             final Path chunksDir    = Paths.get(importProperties.getChunksTempDir(), userId, correlationId);
             final Path processedDir = Paths.get(importProperties.getProcessedTempDir(), correlationId);
-            final Path mergedPath   = Paths.get(System.getProperty("java.io.tmpdir"),
-                                                "openadom-import-" + correlationId + ".csv");
+            // mergedPath dans processedDir ( workflow-scoped , gere par
+            // WorkflowTempCleanup ) au lieu de /tmp racine : evite que
+            // systemd-tmpfiles / cron tmpwatch supprime le fichier pendant
+            // un workflow long ( cause d'un NoSuchFileException vu en prod ) .
+            final Path mergedPath   = processedDir.resolve("merged.csv");
 
             // FileChunkSource lit la taille de chunk depuis WorkflowConfig
             // ( hook Source.onWorkflowStart ) ; le constructeur ne reçoit
@@ -281,6 +290,46 @@ public class CascadeImportPipeline {
                 }
             }
 
+            // Enregistrement compensation_log STAGING_CLEANUP : garde-fou contre
+            // les staging tables / rows orphelines ( JVM crash entre le CREATE
+            // et la fin du finalize hook ) . Confirm en post-success ; sweeper
+            // ramasse en cas de crash via {@link StagingCleanupHandler} qui
+            // applique un smart-check ( refuse cleanup si workflow_log encore
+            // IN_PROGRESS legitime ) . Skip pour PER_CONNECTION_TEMP : la TEMP
+            // TABLE meurt avec la connexion , aucun cleanup necessaire .
+            final java.util.concurrent.atomic.AtomicReference<java.util.UUID> stagingCompensationIdRef =
+                    new java.util.concurrent.atomic.AtomicReference<>();
+            if (directCopy
+                    && importProperties.getStagingStrategy() != ImportProperties.StagingStrategy.PER_CONNECTION_TEMP
+                    && corrUuid != null && stagingMode != null) {
+                String fullTableName = stagingMode.tableName();
+                String[] parts = fullTableName.split("\\.", 2);
+                String compSchema = parts.length == 2 ? parts[0] : "oa_staging";
+                String compTable  = parts.length == 2 ? parts[1] : fullTableName;
+                try {
+                    java.util.UUID compId = compensationLogService.record(
+                            fr.inra.oresing.monitoring.compensation.handlers.StagingCleanupHandler.OP_TYPE,
+                            compSchema,
+                            compTable,
+                            correlationId,
+                            corrUuid, userUuid, userLogin,
+                            java.util.Map.of(
+                                    "stagingStrategy", importProperties.getStagingStrategy().name(),
+                                    "tableName",       fullTableName,
+                                    "correlationId",   correlationId),
+                            importProperties.getStagingSharedOrphanTtlMinutes());
+                    stagingCompensationIdRef.set(compId);
+                    log.info("[{}] STAGING_CLEANUP compensation enregistree : id={} table={}",
+                            correlationId, compId, fullTableName);
+                } catch (RuntimeException ex) {
+                    // Best-effort : si la DB est down sur l'INSERT compensation ,
+                    // on continue le workflow ( fallback : sweeper orphan TTL passif
+                    // existant ) . Loggue warn pour signal .
+                    log.warn("[{}] Echec record compensation STAGING_CLEANUP : {} ; fallback sweeper orphan TTL",
+                            correlationId, ex.getMessage());
+                }
+            }
+
             // Sink + ( optionnel ) Collector selon strategy :
             //   DIRECT_COPY : 1 sink chunk-par-chunk vers staging DB ;
             //                 pas de collector .
@@ -291,8 +340,8 @@ public class CascadeImportPipeline {
             //                 fidelement le travail reel ( cf rationale dans
             //                 javadoc MergedFileChunkCollector ) .
             fr.inrae.ore.cascade.model.core.Sink<java.nio.file.Path> sink = directCopy
-                    ? CascadeSinkFactory.directCopy(referenceValueRepository, importProperties, corrUuid)
-                    : new StoreAllPathSink(referenceValueRepository);
+                    ? CascadeSinkFactory.directCopy(referenceValueRepository, importProperties, corrUuid, heartbeatService, activeRegistry)
+                    : new StoreAllPathSink(referenceValueRepository, activeRegistry);
             MergedFileChunkCollector mergeCollector = directCopy
                     ? null
                     : new MergedFileChunkCollector(mergedPath);
@@ -394,6 +443,20 @@ public class CascadeImportPipeline {
                                 directCopy ? importProperties.getStagingStrategy().name() : null,
                                 effectivePipelineMode.name(),
                                 rawSinkPoolSize));
+                activeRegistry.setImportConfig(corrUuid,
+                        new fr.inra.oresing.workflow.cascade.history.ImportConfigSnapshot(
+                                chunkSizeLines,
+                                importProperties.getProgressBatchSize(),
+                                maxErrors,
+                                collectorChunkSize,
+                                importProperties.getStagingSharedOrphanTtlMinutes(),
+                                importProperties.getStagingSharedTableName(),
+                                enableMetrics,
+                                importProperties.isSkipCsvReencoding(),
+                                sourcePoolSize,
+                                transformPoolSize,
+                                rawSinkPoolSize,
+                                resolvePoolSize("ordering", 0)));
             }
 
             try {
@@ -404,6 +467,18 @@ public class CascadeImportPipeline {
                     activeRegistry.initFinalizePhase(corrUuid, startedAt);
                 }
 
+                // TODO ( P1 #4 extension , cf TODO_LOCAL.md ) : integrer un
+                // heartbeat sur les phases source / transform de cascade .
+                // Aujourd'hui {@link HeartbeatService} ne tourne que pendant
+                // la finalize hook ( cf {@link CascadeSinkFactory.directCopy} ) .
+                // Si cascade source/transform/copy-staging hangue > N min sans
+                // emettre de progress event , le sweeper utilisera le fallback
+                // start_time -> threshold actuel ( app.workflow.zombie-threshold-minutes )
+                // doit donc couvrir le plus long workflow legitime sans heartbeat .
+                // Pour fermer ce trou : hook les ChunkProcessedEvent cascade pour
+                // beat regulier ( debounce 30 sec ) ou wrapper workflow.execute()
+                // dans HeartbeatService.start ( option simple mais beat sans
+                // distinction de phase ) .
                 WorkflowResult result = workflow.execute();
                 // {@code cascadeFinishedAt} est marque dans le registry quand
                 // recordsProcessed atteint recordsTotal ( = cascade emit 100 %
@@ -431,18 +506,26 @@ public class CascadeImportPipeline {
                     // ( fatalError ne garde que le message dans workflow_log ) .
                     result.fatalError().ifPresent(t ->
                             log.error("[{}] Workflow cascade en echec ( stack ) :", correlationId, t));
-                    log.error("[{}] Workflow cascade en echec : {}", correlationId, firstError);
+                    // cascade 2.2.0 : recupere le stage attribuee par cascade
+                    // ( SOURCE / TRANSFORM / COLLECTOR / SINK / TEARDOWN /
+                    // UNKNOWN ) pour persistance + Prometheus tag .
+                    String failedStage = result.failedStage()
+                            .map(Enum::name)
+                            .orElse(fr.inrae.ore.cascade.model.workflow.WorkflowStage.UNKNOWN.name());
+                    log.error("[{}] Workflow cascade en echec ( stage={} ) : {}",
+                            correlationId, failedStage, firstError);
                     Duration failDuration = Duration.between(startedAt, Instant.now());
-                    metrics.recordImportCompleted(applicationName, dataType, WorkflowLogEntry.STATUS_FAILED,
+                    metrics.recordImportFailed(applicationName, dataType, failedStage,
                             failDuration, result.recordsProcessed(), result.recordsFailed(),
                             result.chunksProcessed(), fileSizeBytes);
                     logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
                             startedAt, failDuration, WorkflowLogEntry.STATUS_FAILED,
                             result.recordsProcessed(), result.recordsFailed(),
                             result.chunksProcessed(), fileSizeBytes,
-                            result.errors(), firstError);
-                    tempCleanup.cleanup(chunksDir, processedDir, mergedPath, uploadedPath);
-                    throw new UnsupportedOperationException("Import workflow failed: " + firstError);
+                            result.errors(), firstError, failedStage);
+                    tempCleanup.cleanup(chunksDir, processedDir, uploadedPath);
+                    throw new UnsupportedOperationException("Import workflow failed at stage "
+                            + failedStage + ": " + firstError);
                 }
 
                 log.info("[{}] Workflow cascade termine : processed={}, chunks={}, duration={}",
@@ -464,17 +547,26 @@ public class CascadeImportPipeline {
                     activeRegistry.markFinalizeFinished(corrUuid, Instant.now());
                 }
 
+                // Pour MERGE_FILE , cascade voit le sink emettre 1 chunk =
+                // 1 path = recordsProcessed = 1 . Le rowcount reel ( N rows
+                // ecrites en table finale par {@code DataRepository.storeAll}
+                // ) est connu uniquement par {@link StoreAllPathSink} . On
+                // surcharge ici pour que {@code workflow_log.records_processed}
+                // reflete la realite ; sans ca {@code IntegrityService}
+                // calculait un delta negatif aberrant ( {@code expected=1} vs
+                // {@code finalCount=N} ) sur les imports MERGE_FILE happy-path .
+                long effectiveRecordsProcessed = effectiveRecordsProcessed(result, sink);
                 Duration okDuration = Duration.between(startedAt, Instant.now());
                 metrics.recordImportCompleted(applicationName, dataType, WorkflowLogEntry.STATUS_COMPLETED,
-                        okDuration, result.recordsProcessed(), result.recordsFailed(),
+                        okDuration, effectiveRecordsProcessed, result.recordsFailed(),
                         result.chunksProcessed(), fileSizeBytes);
                 logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
                         startedAt, okDuration, WorkflowLogEntry.STATUS_COMPLETED,
-                        result.recordsProcessed(), result.recordsFailed(),
+                        effectiveRecordsProcessed, result.recordsFailed(),
                         result.chunksProcessed(), fileSizeBytes,
                         result.errors(), null);
 
-                tempCleanup.cleanup(chunksDir, processedDir, mergedPath, uploadedPath);
+                tempCleanup.cleanup(chunksDir, processedDir, uploadedPath);
 
                 // PER_WORKFLOW_TABLE : DROP TABLE apres succes ( la table
                 // dediee a deja ete UPSERTee vers la table finale par le
@@ -488,6 +580,23 @@ public class CascadeImportPipeline {
                     } catch (java.sql.SQLException dropErr) {
                         log.warn("[{}] DROP staging table failed ( sweeper rattrapera ) : {}",
                                 correlationId, dropErr.getMessage());
+                    }
+                }
+
+                // Confirm STAGING_CLEANUP compensation : DELETE row PENDING
+                // post-success . Le staging a ete cleanup ( SHARED_UNLOGGED :
+                // DELETE WHERE corrId par finalize hook ; PER_WORKFLOW_TABLE :
+                // DROP ci-dessus ) , la garde-fou n'est plus necessaire .
+                java.util.UUID stagingCompId = stagingCompensationIdRef.get();
+                if (stagingCompId != null) {
+                    try {
+                        compensationLogService.confirm(stagingCompId);
+                    } catch (RuntimeException ignore) {
+                        // Best-effort : si la DB est down sur le DELETE compensation ,
+                        // le sweeper detectera workflow_log.status=COMPLETED et
+                        // appliquera le smart-check ( cleanup no-op , row purgee ) .
+                        log.warn("[{}] Echec confirm STAGING_CLEANUP {} ( sweeper rattrapera ) : {}",
+                                correlationId, stagingCompId, ignore.getMessage());
                     }
                 }
 
@@ -516,7 +625,7 @@ public class CascadeImportPipeline {
 
                     logErrors(userId, userLogin, applicationName, dataType, e, startedAt, fileSizeBytes, correlationId, resourceName);
                 }
-                tempCleanup.cleanup(chunksDir, processedDir, mergedPath, uploadedPath);
+                tempCleanup.cleanup(chunksDir, processedDir, uploadedPath);
                 throw e;
             }
         } finally {
@@ -555,6 +664,14 @@ public class CascadeImportPipeline {
         if (corrUuid == null) {
             return;
         }
+        // Pre-persist workflow_log.status='IN_PROGRESS' synchrone . Ferme le
+        // trou d'observabilite SIGKILL : sans cet appel , un docker kill /
+        // OOM JVM / panne machine entre le start et le flush async des
+        // terminaisons laissait le workflow sans aucune trace en base
+        // ( workflow fantome non detectable par le dashboard ) . Idempotent .
+        logWriter.recordStart(WorkflowLogEntry.startMarker(
+                corrUuid, WorkflowLogEntry.TYPE_IMPORT, userUuid, userLogin,
+                applicationName, dataType, resourceName, startedAt, fileSizeBytes));
         try {
             activeRegistry.start(new WorkflowSnapshot(
                     corrUuid,
@@ -575,9 +692,11 @@ public class CascadeImportPipeline {
                     List.of(),     // errors ( aucune au démarrage )
                     List.of(),     // chunks ( injectes par le registry au read-time )
                     List.of(),     // workers ( injectes par le registry au read-time )
-                    null,          // parallelism ( renseigne par setParallelism plus tard )
-                    null,          // strategy    ( renseigne par setStrategy plus tard )
-                    List.of()));   // sinkChunks  ( injectes par le registry au read-time )
+                    null,          // parallelism      ( renseigne par setParallelism plus tard )
+                    null,          // strategy         ( renseigne par setStrategy plus tard )
+                    List.of(),     // sinkChunks       ( injectes par le registry au read-time )
+                    null,          // importConfig     ( renseigne par setImportConfig plus tard )
+                    null));        // lastHeartbeatAt  ( renseigne par HeartbeatService pendant la finalize )
         } catch (RuntimeException e) {
             // Best-effort : un échec de publication ne doit pas casser l'import.
             log.warn("[{}] WorkflowActiveRegistry.start a échoué : {}", corrUuid, e.getMessage());
@@ -626,7 +745,9 @@ public class CascadeImportPipeline {
                                 List.of(),
                                 snapshot.parallelism(),
                                 snapshot.strategy(),
-                                List.of()));
+                                List.of(),
+                                snapshot.importConfig(),
+                                snapshot.lastHeartbeatAt()));
                     });
         } catch (RuntimeException e) {
             log.warn("[{}] WorkflowActiveRegistry phase update échouée : {}", corrUuid, e.getMessage());
@@ -720,22 +841,48 @@ public class CascadeImportPipeline {
     private void logErrors(String userId, String userLogin, String applicationName, String dataType, IOException e, Instant startedAt, long fileSizeBytes, String correlationId, String resourceName) {
         log.error("[{}] IO error during import ( stack ) :", correlationId, e);
         Duration failDuration = Duration.between(startedAt, Instant.now());
-        metrics.recordImportCompleted(applicationName, dataType, WorkflowLogEntry.STATUS_FAILED,
+        // IOException = upload / disk error -> attribute to UNKNOWN ( pre-cascade ) .
+        String failedStage = extractFailedStage(e);
+        metrics.recordImportFailed(applicationName, dataType, failedStage,
                 failDuration, 0L, 0L, 0, fileSizeBytes);
         logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
                 startedAt, failDuration, WorkflowLogEntry.STATUS_FAILED,
-                0L, 0L, 0, fileSizeBytes, List.of(), formatThrowable(e));
+                0L, 0L, 0, fileSizeBytes, List.of(), formatThrowable(e), failedStage);
     }
 
     // Surcharge pour gérer les exceptions non-IOException
     private void logErrors(String userId, String userLogin, String applicationName, String dataType, Exception e, Instant startedAt, long fileSizeBytes, String correlationId, String resourceName) {
         log.error("[{}] Runtime error during import ( stack ) :", correlationId, e);
         Duration failDuration = Duration.between(startedAt, Instant.now());
-        metrics.recordImportCompleted(applicationName, dataType, WorkflowLogEntry.STATUS_FAILED,
+        String failedStage = extractFailedStage(e);
+        metrics.recordImportFailed(applicationName, dataType, failedStage,
                 failDuration, 0L, 0L, 0, fileSizeBytes);
         logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
                 startedAt, failDuration, WorkflowLogEntry.STATUS_FAILED,
-                0L, 0L, 0, fileSizeBytes, List.of(), formatThrowable(e));
+                0L, 0L, 0, fileSizeBytes, List.of(), formatThrowable(e), failedStage);
+    }
+
+    /**
+     * Extracts the cascade {@link fr.inrae.ore.cascade.model.workflow.WorkflowStage}
+     * from a throwable . Walks the cause chain looking for a
+     * {@link fr.inrae.ore.cascade.model.workflow.CascadeStageException} ;
+     * falls back to {@code UNKNOWN} for non-cascade failures ( upload IO ,
+     * pre-cascade validation , unexpected bugs ) .
+     *
+     * @return the stage name ( SOURCE / TRANSFORM / COLLECTOR / SINK /
+     *         TEARDOWN / UNKNOWN ) , never null
+     */
+    private static String extractFailedStage(Throwable t) {
+        Throwable cur = t;
+        // Cap the walk to avoid infinite loops on cyclic cause chains
+        // ( extremely rare , but cheap to guard against ) .
+        for (int i = 0; cur != null && i < 16; i++) {
+            if (cur instanceof fr.inrae.ore.cascade.model.workflow.CascadeStageException cse) {
+                return cse.stage().name();
+            }
+            cur = cur.getCause();
+        }
+        return fr.inrae.ore.cascade.model.workflow.WorkflowStage.UNKNOWN.name();
     }
 
     /**
@@ -754,6 +901,58 @@ public class CascadeImportPipeline {
             long recordsProcessed, long recordsFailed,
             int chunksProcessed, long fileSizeBytes,
             List<String> errors, String fatalError) {
+        logImportEvent(correlationId, userId, userLogin, applicationName, dataType,
+                resourceName, startedAt, duration, status, recordsProcessed, recordsFailed,
+                chunksProcessed, fileSizeBytes, errors, fatalError, null);
+    }
+
+    /**
+     * Resout le nombre de rows reellement traitees par l'import . Cascade
+     * cumule la taille des chunks emis par le sink ( {@code Chunk.recordCount()} )
+     * pour produire {@code WorkflowResult.recordsProcessed()} . Pour les
+     * sinks qui ecrivent une unite opaque ( typiquement
+     * {@link StoreAllPathSink} qui recoit 1 path = N rows ) cette valeur
+     * reflete le nombre d'unites , pas le nombre reel de rows en finale .
+     *
+     * <p>Resolution polymorphique via {@link RowCountingSink} : tout sink
+     * qui implemente le marker expose un compteur cumulatif fiable .
+     * Pas de couplage a une classe concrete ; ajouter un nouveau sink
+     * avec rowcount divergent ne touche pas ce helper .
+     *
+     * @return {@link RowCountingSink#getRowsWritten()} si le sink l'expose
+     *         et que le compteur est strictement positif ;
+     *         {@code result.recordsProcessed()} sinon . Le seuil
+     *         {@code > 0} est defensif : un compteur a zero apres une
+     *         execution declaree COMPLETED indique un cas degrade
+     *         ( cascade pretend OK , sink pretend rien ecrit ) -> on
+     *         retombe sur la valeur cascade plutot que de mentir avec 0 .
+     */
+    private static long effectiveRecordsProcessed(
+            fr.inrae.ore.cascade.model.workflow.WorkflowResult result,
+            fr.inrae.ore.cascade.model.core.Sink<?> sink) {
+        if (sink instanceof RowCountingSink countingSink) {
+            long actual = countingSink.getRowsWritten();
+            if (actual > 0L) {
+                return actual;
+            }
+        }
+        return result.recordsProcessed();
+    }
+
+    /**
+     * Helper enrichi avec le {@code failedStage} ( cascade 2.2.0
+     * {@code WorkflowResult.failedStage} ) . Persiste le stage dans
+     * {@code oa_audit.workflow_log.failed_stage} pour le dashboard
+     * Integrite et la metrique Prometheus
+     * {@code openadom_imports_failed_total{stage=...}} .
+     */
+    private void logImportEvent(
+            String correlationId, String userId, String userLogin,
+            String applicationName, String dataType, String resourceName,
+            Instant startedAt, Duration duration, String status,
+            long recordsProcessed, long recordsFailed,
+            int chunksProcessed, long fileSizeBytes,
+            List<String> errors, String fatalError, String failedStage) {
         try {
             UUID corrUuid = UUID.fromString(correlationId);
             UUID userUuid = UUID.fromString(userId);
@@ -761,7 +960,13 @@ public class CascadeImportPipeline {
             // metadata pour analyse post-mortem . Delegue au
             // WorkflowMetadataCollector ( testable isolement ) .
             java.util.Map<String, Object> metadata = metadataCollector.collect(corrUuid);
-            logWriter.logAsync(new WorkflowLogEntry(
+            // Use recordEnd ( synchronous + retry ) for terminal events to
+            // guarantee that the row reflects the workflow's true status
+            // even when the DB is transiently unhealthy ( the async queue
+            // drops entries on flush failure , which would leave a workflow
+            // stuck IN_PROGRESS forever and invisible in History / Integrity
+            // until {@link WorkflowZombieSweeper} kicks in ) .
+            logWriter.recordEnd(new WorkflowLogEntry(
                     corrUuid,
                     WorkflowLogEntry.TYPE_IMPORT,
                     userUuid,
@@ -779,7 +984,8 @@ public class CascadeImportPipeline {
                     fileSizeBytes,
                     errors == null ? List.of() : errors,
                     fatalError,
-                    metadata));
+                    metadata,
+                    failedStage));
         } catch (IllegalArgumentException e) {
             log.warn("Format UUID invalide , skip log entry [correlationId={} , userId={}]",
                     correlationId, userId);

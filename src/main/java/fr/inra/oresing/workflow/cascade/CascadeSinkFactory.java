@@ -2,6 +2,7 @@ package fr.inra.oresing.workflow.cascade;
 
 import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.workflow.cascade.config.ImportProperties;
+import fr.inra.oresing.workflow.cascade.history.HeartbeatService;
 import fr.inra.oresing.workflow.cascade.staging.StagingMode;
 import fr.inrae.ore.cascade.api.builder.SinkBuilder;
 import fr.inrae.ore.cascade.api.defaults.db.RowSerializer;
@@ -54,9 +55,30 @@ public final class CascadeSinkFactory {
      * {@code DataImporterTransformation} pour inclure la colonne corrid ;
      * pour 1.7.0 on garde {@code PER_CONNECTION_TEMP} comme défaut ) .
      */
+    /** Surcharge historique : pas de publication de progress UPSERT . */
     public static Sink<Path> directCopy(DataRepository referenceValueRepository,
                                          ImportProperties props,
-                                         UUID correlationId) {
+                                         UUID correlationId,
+                                         HeartbeatService heartbeatService) {
+        return directCopy(referenceValueRepository, props, correlationId,
+                heartbeatService, null);
+    }
+
+    /**
+     * Variante instrumentee : publie chaque batch UPSERT au registry pour
+     * que la live view affiche une progress bar determinate au lieu d'une
+     * indeterminate trompeuse alors que le rowcount est calculable .
+     *
+     * @param activeRegistry registry oa-live . Optionnel ( null = pas de
+     *                       publication ) . Quand fourni , chaque batch
+     *                       UPSERT TEMP -> table finale invoque
+     *                       {@code activeRegistry.addFinalRows(corrId , n)} .
+     */
+    public static Sink<Path> directCopy(DataRepository referenceValueRepository,
+                                         ImportProperties props,
+                                         UUID correlationId,
+                                         HeartbeatService heartbeatService,
+                                         fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry activeRegistry) {
 
         DataSource raw = referenceValueRepository.getDataSource();
         if (raw == null) {
@@ -130,16 +152,39 @@ public final class CascadeSinkFactory {
             // multi-workflows ) + PER_WORKFLOW_TABLE ( tag cosmetique mais
             // garde la symetrie avec cascade SharedUnlogged spec ) .
             // PER_CONNECTION_TEMP : null ( table TEMP isolated ) .
-            String corridFilter = mode.correlationIdFilter(
-                    correlationId != null ? correlationId : safeUuid(ctx.correlationId()));
-            StagingFinalizeSql.runFinalize(
-                    ctx.connection(),
-                    schemaName,
-                    targetTableId,
-                    orderedCols,
-                    stagingTable,
-                    corridFilter,
-                    idJsonPath);
+            UUID corrId = correlationId != null ? correlationId : safeUuid(ctx.correlationId());
+            String corridFilter = mode.correlationIdFilter(corrId);
+            // Heartbeat actif pendant la finalize ( phase potentiellement
+            // longue : UPSERT 274k+ rows ) . Le thread dedie ecrit
+            // last_heartbeat_at toutes les N sec dans workflow_log . Ferme
+            // les faux positifs zombie sur les workflows lents legitimes .
+            // try-with-resources : scheduler stop garanti meme en cas
+            // d'exception SQL ( rollback , timeout , etc ) .
+            HeartbeatService.Heartbeat hb = heartbeatService != null
+                    ? heartbeatService.start(corrId)
+                    : null;
+            // Callback de progress UPSERT TEMP -> table finale . Quand un
+            // registry est fourni , chaque batch incremente finalRows pour
+            // alimenter la progress bar UPSERT de la live view ( DIRECT_COPY :
+            // SHARED_UNLOGGED / PER_WORKFLOW_TABLE / PER_CONNECTION_TEMP -
+            // toutes ces strategies passent par cette boucle ) .
+            java.util.function.LongConsumer onBatch = (activeRegistry != null && corrId != null)
+                    ? n -> activeRegistry.addFinalRows(corrId, n)
+                    : n -> { };
+            try {
+                StagingFinalizeSql.runFinalize(
+                        ctx.connection(),
+                        schemaName,
+                        targetTableId,
+                        orderedCols,
+                        stagingTable,
+                        corridFilter,
+                        idJsonPath,
+                        props.getFinalizeStatementTimeoutMinutes(),
+                        onBatch);
+            } finally {
+                if (hb != null) hb.close();
+            }
         };
 
         // COPY column lists :

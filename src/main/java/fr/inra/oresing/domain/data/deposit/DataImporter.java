@@ -7,7 +7,6 @@ import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.checker.LineChecker;
-import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
@@ -205,15 +204,16 @@ public class DataImporter {
             final Stream<CSVRecord> csvRecordStream = Streams.stream(csvParser);
             final Integer firstRowLine = getDataImporterContext().contextConstants().dataConfiguration().firstRowLine();
             final Function<CSVRecord, Stream<RowWithReferenceDatum>> csvRecordToReferenceDatumFn = csvRecord -> csvReader.csvRecordToRowWithReferenceDatum((ImmutableList<String>) getDataImporterContext().publishContextBuilder().headerRow, csvRecord, firstRowLine, chunkNumber, chunkSizeLines);
-            // Clone du set de checkers UNE FOIS par chunk ( au lieu d'une
-            // fois par checker par ligne ). Le set issu du context est
-            // partage entre tous les chunks parallelises ; le clone garantit
-            // l'isolation thread-safe sans surcoût per-row.
-            final Set<LineChecker<? extends FieldType<?>>> chunkLineCheckers =
-                    getDataImporterContext().transformedLineCheckers().stream()
-                            .map(LineChecker::copy)
-                            .map(c -> (LineChecker<? extends FieldType<?>>) c)
-                            .collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new));
+            // Self-reference contract : addKnownIdToReferenceValues mutates
+            // the LineChecker's ReferenceType.referenceValues map after each
+            // parent row is processed. Subsequent child rows in the same
+            // chunk look up parent UUIDs via that map. Any per-chunk clone
+            // breaks this contract : children can't see UUIDs registered
+            // on the original LineChecker , validation fails silently for
+            // self-referencing references , rows are filtered at line 243
+            // ( errors().isEmpty() ) , only parents land in DB . Use the
+            // shared transformedLineCheckers() set ( also matches the
+            // pre-cascade-1.8.0 behavior that was known-working ).
             csvRecordStream
                     .map(csvRecord -> {
                         dataLinesProcessed.getAndIncrement();
@@ -232,7 +232,7 @@ public class DataImporter {
                     .map(rowWithReferenceDatum -> dataValidator.check(
                                     dataTransformer::computeKeys,
                                     recursionStrategy, rowWithReferenceDatum,
-                                    chunkLineCheckers,
+                                    getDataImporterContext().transformedLineCheckers(),
                                     getDataImporterContext().publishContextBuilder()
                             )
                     ).flatMap(List::stream)

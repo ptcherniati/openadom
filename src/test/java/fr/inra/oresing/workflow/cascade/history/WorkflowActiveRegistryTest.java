@@ -23,7 +23,7 @@ class WorkflowActiveRegistryTest {
                 cid, type, userId, "tester",
                 "app1", "type1", "file.csv",
                 Instant.now(), "IN_PROGRESS",
-                0L, 0L, 0, null, 0L, 0L, List.of(), List.of(), List.of(), null, null, List.of());
+                0L, 0L, 0, null, 0L, 0L, List.of(), List.of(), List.of(), null, null, List.of(), null, null);
     }
 
     @Test
@@ -87,9 +87,9 @@ class WorkflowActiveRegistryTest {
         Instant newer = Instant.now();
 
         reg.start(new WorkflowSnapshot(oldCid, "IMPORT", u, null, null, null, null,
-                older, "IN_PROGRESS", 0, 0, 0, null, 0, 0, List.of(), List.of(), List.of(), null, null, List.of()));
+                older, "IN_PROGRESS", 0, 0, 0, null, 0, 0, List.of(), List.of(), List.of(), null, null, List.of(), null, null));
         reg.start(new WorkflowSnapshot(newCid, "IMPORT", u, null, null, null, null,
-                newer, "IN_PROGRESS", 0, 0, 0, null, 0, 0, List.of(), List.of(), List.of(), null, null, List.of()));
+                newer, "IN_PROGRESS", 0, 0, 0, null, 0, 0, List.of(), List.of(), List.of(), null, null, List.of(), null, null));
 
         List<WorkflowSnapshot> ordered = reg.list(null);
         assertEquals(newCid, ordered.get(0).correlationId());

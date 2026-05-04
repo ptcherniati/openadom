@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Tests unitaires pour {@link MergedFileChunkCollector} . Couvre :
@@ -118,6 +119,82 @@ class MergedFileChunkCollectorTest {
 
         assertThat(merged.chunkIndex()).isEqualTo(0);
         assertThat(merged.records()).containsExactly(mergedPath);
+    }
+
+    @Test
+    @DisplayName("finish ( ) sans initialize ( ) auto-recover via fallback ( cascade contract violation logged )")
+    void finish_without_initialize_auto_recovers() throws Exception {
+        Path other = tempDir.resolve("merged-no-init.csv");
+        MergedFileChunkCollector orphan = new MergedFileChunkCollector(other);
+
+        // 0 chunk accepted + finish() -> fallback init + Optional.empty
+        Optional<Chunk<Path>> result = orphan.finish().get();
+        assertThat(result).isEmpty();
+        // mergedPath created by fallback ( may be deleted later but the
+        // collector did not crash ) .
+    }
+
+    @Test
+    @DisplayName("finish ( ) sans initialize ( ) avec chunks accept-es : fallback init + concat")
+    void finish_without_initialize_with_chunks_succeeds() throws Exception {
+        Path other = tempDir.resolve("merged-no-init-with-chunks.csv");
+        MergedFileChunkCollector orphan = new MergedFileChunkCollector(other);
+
+        Path c0 = writeChunkFile("c0-fallback.csv", "fallback-data\n");
+        orphan.accept(chunkOf(0, c0));
+
+        Chunk<Path> merged = orphan.finish().get().orElseThrow();
+        assertThat(Files.exists(other)).isTrue();
+        assertThat(Files.readString(other, StandardCharsets.UTF_8)).isEqualTo("fallback-data\n");
+        assertThat(merged.records()).containsExactly(other);
+    }
+
+    @Test
+    @DisplayName("initialize ( ) appele 2 fois leve IllegalStateException")
+    void double_initialize_throws_illegal_state() {
+        // collector deja initialize via @BeforeEach -> 2eme appel doit refuser .
+        assertThatThrownBy(() ->
+                collector.initialize(new CollectorContext("cid", -1, null, null, null, tempDir)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("expected NEW");
+    }
+
+    @Test
+    @DisplayName("finish ( ) appele 2 fois leve IllegalStateException")
+    void double_finish_throws_illegal_state() throws Exception {
+        Path c0 = writeChunkFile("c0.csv", "x\n");
+        collector.accept(chunkOf(0, c0));
+        collector.finish().get();
+
+        assertThatThrownBy(() -> collector.finish().get())
+                .hasCauseInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("expected READY")
+                .hasMessageContaining("state FINISHED");
+    }
+
+    @Test
+    @DisplayName("initialize ( ) cree les repertoires parents manquants ( workflow-scoped path )")
+    void initialize_creates_parent_directories() {
+        Path nested = tempDir.resolve("a/b/c/merged.csv");
+        MergedFileChunkCollector c = new MergedFileChunkCollector(nested);
+
+        c.initialize(new CollectorContext("cid", -1, null, null, null, tempDir));
+
+        assertThat(Files.exists(nested)).isTrue();
+        assertThat(Files.isDirectory(nested.getParent())).isTrue();
+    }
+
+    @Test
+    @DisplayName("initialize ( ) ecrase un merged.csv preexistant ( reprise apres echec )")
+    void initialize_replaces_existing_merged_file() throws Exception {
+        Path target = tempDir.resolve("preexisting/merged.csv");
+        Files.createDirectories(target.getParent());
+        Files.writeString(target, "stale-content-from-previous-run", StandardCharsets.UTF_8);
+
+        MergedFileChunkCollector c = new MergedFileChunkCollector(target);
+        c.initialize(new CollectorContext("cid", -1, null, null, null, tempDir));
+
+        assertThat(target).hasSize(0);
     }
 
     private Path writeChunkFile(String name, String content) throws Exception {

@@ -72,9 +72,124 @@ public class WorkflowLogWriter {
     }
 
     /**
+     * Insertion synchrone d'une row IN_PROGRESS au demarrage du workflow .
+     * Best-effort : si la DB est down , on log warn mais on laisse passer
+     * pour ne pas tuer un import qui pourrait survivre a une panne DB
+     * transitoire ( au pire on rebascule en mode "ecriture finale only" ) .
+     *
+     * <p>Apres cet appel , toute terminaison ( COMPLETED / FAILED / CANCELLED )
+     * passera par {@link #logAsync} qui UPDATE la row existante via UPSERT .
+     */
+    public void recordStart(WorkflowLogEntry start) {
+        if (start == null) {
+            return;
+        }
+        // Bounded retries with backoff to survive transient DB hiccups
+        // ( connection pool drain , DB restart in flight ) . Without this
+        // safety net , a workflow that starts during a brief DB outage
+        // would never appear in workflow_log -> invisible in History
+        // and Integrity views forever .
+        long[] backoffMs = { 200L, 500L, 1_000L };
+        RuntimeException lastError = null;
+        for (int attempt = 0; attempt <= backoffMs.length; attempt++) {
+            try {
+                boolean inserted = repository.recordStart(start);
+                if (!inserted) {
+                    log.debug("recordStart : row deja presente pour {} ( retry ? )", start.correlationId());
+                }
+                if (attempt > 0) {
+                    log.info("recordStart : entry persistee apres {} retries pour {}",
+                            attempt, start.correlationId());
+                }
+                return;
+            } catch (RuntimeException e) {
+                lastError = e;
+                log.warn("recordStart attempt {}/{} failed for {} : {}",
+                        attempt + 1, backoffMs.length + 1, start.correlationId(), e.getMessage());
+            }
+            if (attempt < backoffMs.length) {
+                try {
+                    Thread.sleep(backoffMs[attempt]);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }
+        log.warn("recordStart : all retries failed for {} : {} ; workflow continues in degraded mode "
+                        + "( the IN_PROGRESS row is missing , the {@code WorkflowZombieSweeper} cannot detect the workflow if it dies ; "
+                        + "the row will be inserted at terminal time via recordEnd if the DB recovers )",
+                start.correlationId(), lastError == null ? "unknown" : lastError.getMessage());
+    }
+
+    /**
+     * Persist a terminal workflow event ( COMPLETED / FAILED / CANCELLED )
+     * synchronously , with bounded retries before falling back to the
+     * async queue . Contrasts with {@link #logAsync} which fire-and-forget
+     * via the queue ; the async path drops entries on flush failure
+     * ( DB temporarily down ) , which is unacceptable for terminal events :
+     * losing a FAILED row leaves the workflow stuck IN_PROGRESS forever
+     * ( until ZombieSweeper kicks in 5 min later ) and , worse , out of the
+     * History / Integrity views .
+     *
+     * <p>Retry policy : 3 attempts with exponential backoff ( 0.5s , 1s ,
+     * 2s ) . Total worst-case latency ~ 3.5s before fallback to async
+     * queue . Acceptable for a workflow that just terminated ; admins
+     * see the row immediately if DB is healthy , see it via the async
+     * queue otherwise ( eventually consistent ) .
+     *
+     * <p>The fallback to async queue is a last resort : if the queue is
+     * full ( DB durably down + many workflows finishing ) , the entry is
+     * dropped . The {@code WorkflowZombieSweeper} catches it later via
+     * the IN_PROGRESS row left by {@link #recordStart} .
+     *
+     * @return {@code true} if persisted synchronously , {@code false} if
+     *         the entry was queued for async retry ( or dropped if queue
+     *         full )
+     */
+    public boolean recordEnd(WorkflowLogEntry entry) {
+        if (entry == null) {
+            return false;
+        }
+        long[] backoffMs = { 500L, 1_000L, 2_000L };
+        for (int attempt = 0; attempt < backoffMs.length; attempt++) {
+            try {
+                int inserted = repository.insertBatch(java.util.List.of(entry));
+                if (inserted >= 0) {
+                    if (attempt > 0) {
+                        log.info("recordEnd : entry persistee apres {} retries pour {}",
+                                attempt, entry.correlationId());
+                    }
+                    return true;
+                }
+            } catch (RuntimeException ex) {
+                log.warn("recordEnd attempt {}/{} failed for {} : {}",
+                        attempt + 1, backoffMs.length, entry.correlationId(), ex.getMessage());
+            }
+            try {
+                Thread.sleep(backoffMs[attempt]);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        // Tous les retries ont echoue : fallback queue async . Le
+        // {@code WorkflowZombieSweeper} sera notre filet final si la
+        // queue droppe aussi ( DB durablement down ) .
+        log.warn("recordEnd : all sync retries failed for {} ; fallback async queue",
+                entry.correlationId());
+        logAsync(entry);
+        return false;
+    }
+
+    /**
      * Empile une entry pour insertion async. Ne bloque jamais le thread
      * appelant : si la queue est pleine , l'entry est droppee et un
      * warning est logue.
+     *
+     * <p>Pour les events terminaux ( COMPLETED / FAILED / CANCELLED ) ,
+     * preferer {@link #recordEnd} qui retry synchrone avant fallback
+     * async . Reserve {@code logAsync} aux events non-critiques .
      */
     public void logAsync(WorkflowLogEntry entry) {
         if (entry == null) {

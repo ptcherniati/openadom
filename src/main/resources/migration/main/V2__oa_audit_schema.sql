@@ -78,8 +78,22 @@ CREATE TABLE IF NOT EXISTS oa_audit.workflow_log (
         -- liste des messages d'erreur collectes pendant le workflow
     fatal_error         text,
         -- message + cause-chain de l'exception fatale le cas echeant
-    metadata            jsonb
+    metadata            jsonb,
         -- champ extensible : parallelism , strategy , JVM stats , etc.
+    last_heartbeat_at   timestamptz,
+        -- Dernier signal de vie emis par {@code HeartbeatService} pendant les
+        -- phases longues ( finalize hook UPSERT staging -> referencevalue ) .
+        -- NULL si jamais beat ( workflow trop court , phase non heartbeat-ee ) .
+        -- Utilise par {@code WorkflowZombieSweeper} pour detecter les workflows
+        -- morts sans faux positifs sur les workflows lents legitimes ( marge
+        -- x10 par rapport a l'interval beat 30 sec , threshold typique 5 min ) .
+    failed_stage        varchar(32)
+        -- Stage cascade ou la failure a ete attribuee ( cascade 2.2.0
+        -- {@code WorkflowResult.failedStage()} ) : SOURCE | TRANSFORM |
+        -- COLLECTOR | SINK | TEARDOWN | UNKNOWN . NULL pour status
+        -- != FAILED ou pour les workflows pre-2.2.0 . Permet le filter
+        -- du dashboard Integrite + Prometheus tag pour analytique
+        -- "% d'echecs par stage" .
 );
 
 CREATE INDEX IF NOT EXISTS idx_workflow_log_user
@@ -90,6 +104,14 @@ CREATE INDEX IF NOT EXISTS idx_workflow_log_status
     ON oa_audit.workflow_log (status, start_time DESC);
 CREATE INDEX IF NOT EXISTS idx_workflow_log_type_time
     ON oa_audit.workflow_log (workflow_type, start_time DESC);
+
+-- Index partiel sur les workflows IN_PROGRESS uniquement : utilise par le
+-- zombie sweeper pour detecter les workflows morts via
+-- COALESCE ( last_heartbeat_at , start_time ) . Reduit la taille de
+-- l'index ( les rows terminees representent la majorite ) .
+CREATE INDEX IF NOT EXISTS idx_workflow_log_heartbeat_inprogress
+    ON oa_audit.workflow_log (last_heartbeat_at)
+    WHERE status = 'IN_PROGRESS';
 
 COMMENT ON TABLE oa_audit.workflow_log IS
     'Une row par workflow finalise ( succes , echec , rejet rate-limit ) . '
@@ -228,6 +250,84 @@ GRANT SELECT ON oa_audit.compensation_log  TO PUBLIC;
 -- =========================================================================
 
 -- ---------- workflow_log ------------------------------------------------
+--
+-- Lifecycle d'un workflow ( pre-persist + zombie + heartbeat ) :
+--
+--   T=0     : record_workflow_start ( synchrone )
+--             INSERT row IN_PROGRESS . Ferme le trou d'observabilite
+--             SIGKILL : sans cet appel , un crash JVM avant le flush
+--             async des terminaisons laissait le workflow sans aucune
+--             trace en base ( workflow fantome ) .
+--
+--   T=0..N  : beat_workflow ( periodique , async via HeartbeatService )
+--             UPDATE last_heartbeat_at = now() pendant les phases longues
+--             ( finalize hook ) . Permet au sweeper de distinguer
+--             workflow vivant mais lent vs workflow mort .
+--
+--   T=N     : record_workflow ( async via WorkflowLogWriter queue )
+--             UPSERT vers le status terminal ( COMPLETED / FAILED /
+--             CANCELLED ) avec records / errors / fatal_error / metadata .
+--             Ecrase la row IN_PROGRESS uniquement si elle l'est encore
+--             ( WHERE status = 'IN_PROGRESS' ) -> idempotent au retry .
+--
+--   T=N+ttl : mark_zombie_workflows ( @Scheduled WorkflowZombieSweeper )
+--             UPDATE rows IN_PROGRESS dont COALESCE ( last_heartbeat_at ,
+--             start_time ) > threshold -> CANCELLED + fatal_error explicite .
+--             Detecte les workflows abandonnes ( SIGKILL , crash JVM ) .
+
+-- record_workflow_start : INSERT row IN_PROGRESS au demarrage du workflow .
+-- Idempotent ( ON CONFLICT DO NOTHING : un retry reseau ne genere pas de
+-- doublon ) . Les fields end / records / errors sont remplis plus tard par
+-- record_workflow ( UPSERT ) .
+
+CREATE OR REPLACE FUNCTION oa_audit.record_workflow_start(
+    p_correlation_id      uuid,
+    p_workflow_type       varchar(32),
+    p_user_id             uuid,
+    p_user_login          varchar(128),
+    p_application_name    varchar(256),
+    p_data_type           varchar(256),
+    p_resource_name       varchar(512),
+    p_start_time          timestamptz,
+    p_bytes_total         bigint,
+    p_metadata            jsonb
+) RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = oa_audit, pg_temp
+AS $$
+DECLARE inserted boolean;
+BEGIN
+    INSERT INTO oa_audit.workflow_log (
+        correlation_id, workflow_type, user_id, user_login,
+        application_name, data_type, resource_name,
+        start_time, end_time, duration_ms, status,
+        records_processed, records_failed, chunks_processed,
+        bytes_total, errors, fatal_error, metadata
+    ) VALUES (
+        p_correlation_id, p_workflow_type, p_user_id, p_user_login,
+        p_application_name, p_data_type, p_resource_name,
+        p_start_time, NULL, NULL, 'IN_PROGRESS',
+        0, 0, 0,
+        coalesce(p_bytes_total, 0), NULL, NULL, p_metadata
+    )
+    ON CONFLICT (correlation_id) DO NOTHING;
+    GET DIAGNOSTICS inserted = ROW_COUNT;
+    RETURN inserted;
+END;
+$$;
+
+ALTER FUNCTION oa_audit.record_workflow_start(
+    uuid, varchar, uuid, varchar, varchar, varchar, varchar,
+    timestamptz, bigint, jsonb
+) OWNER TO "openAdomTechUser";
+
+
+-- record_workflow : UPSERT conditionnel . Si la row existe en IN_PROGRESS
+-- ( via record_workflow_start ) on UPDATE vers le status terminal . Si la
+-- row n'existe pas ( ex extractions qui n'appellent pas record_workflow_start )
+-- on INSERT direct . La clause WHERE workflow_log.status = 'IN_PROGRESS'
+-- empeche d'ecraser une row deja terminale ( idempotent au retry ) .
 
 CREATE OR REPLACE FUNCTION oa_audit.record_workflow(
     p_correlation_id      uuid,
@@ -247,38 +347,113 @@ CREATE OR REPLACE FUNCTION oa_audit.record_workflow(
     p_bytes_total         bigint,
     p_errors              jsonb,
     p_fatal_error         text,
-    p_metadata            jsonb
+    p_metadata            jsonb,
+    p_failed_stage        varchar(32)
 ) RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = oa_audit, pg_temp
 AS $$
-DECLARE inserted boolean;
+DECLARE affected boolean;
 BEGIN
     INSERT INTO oa_audit.workflow_log (
         correlation_id, workflow_type, user_id, user_login,
         application_name, data_type, resource_name,
         start_time, end_time, duration_ms, status,
         records_processed, records_failed, chunks_processed,
-        bytes_total, errors, fatal_error, metadata
+        bytes_total, errors, fatal_error, metadata, failed_stage
     ) VALUES (
         p_correlation_id, p_workflow_type, p_user_id, p_user_login,
         p_application_name, p_data_type, p_resource_name,
         p_start_time, p_end_time, p_duration_ms, p_status,
         p_records_processed, p_records_failed, p_chunks_processed,
-        p_bytes_total, p_errors, p_fatal_error, p_metadata
+        p_bytes_total, p_errors, p_fatal_error, p_metadata, p_failed_stage
     )
-    ON CONFLICT (correlation_id) DO NOTHING;
-    GET DIAGNOSTICS inserted = ROW_COUNT;
-    RETURN inserted;
+    ON CONFLICT (correlation_id) DO UPDATE
+    SET end_time          = EXCLUDED.end_time,
+        duration_ms       = EXCLUDED.duration_ms,
+        status            = EXCLUDED.status,
+        records_processed = EXCLUDED.records_processed,
+        records_failed    = EXCLUDED.records_failed,
+        chunks_processed  = EXCLUDED.chunks_processed,
+        bytes_total       = EXCLUDED.bytes_total,
+        errors            = EXCLUDED.errors,
+        fatal_error       = EXCLUDED.fatal_error,
+        metadata          = COALESCE(EXCLUDED.metadata, oa_audit.workflow_log.metadata),
+        failed_stage      = EXCLUDED.failed_stage
+    WHERE oa_audit.workflow_log.status = 'IN_PROGRESS';
+    GET DIAGNOSTICS affected = ROW_COUNT;
+    RETURN affected;
 END;
 $$;
 
 ALTER FUNCTION oa_audit.record_workflow(
     uuid, varchar, uuid, varchar, varchar, varchar, varchar,
     timestamptz, timestamptz, bigint, varchar, bigint, bigint, int,
-    bigint, jsonb, text, jsonb
+    bigint, jsonb, text, jsonb, varchar
 ) OWNER TO "openAdomTechUser";
+
+
+-- beat_workflow : emet un heartbeat sur la row IN_PROGRESS . Idempotent ,
+-- thread-safe ( UPDATE atomique ) . Retour : true si la row a ete touchee
+-- ( workflow encore IN_PROGRESS ) , false sinon ( deja terminal ou inconnu ) .
+-- Appele toutes les ~30 sec par {@code HeartbeatService} pendant les
+-- phases longues .
+
+CREATE OR REPLACE FUNCTION oa_audit.beat_workflow(
+    p_correlation_id uuid
+) RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = oa_audit, pg_temp
+AS $$
+DECLARE n int;
+BEGIN
+    UPDATE oa_audit.workflow_log
+       SET last_heartbeat_at = now()
+     WHERE correlation_id = p_correlation_id
+       AND status = 'IN_PROGRESS';
+    GET DIAGNOSTICS n = ROW_COUNT;
+    RETURN n > 0;
+END;
+$$;
+
+ALTER FUNCTION oa_audit.beat_workflow(uuid) OWNER TO "openAdomTechUser";
+
+
+-- mark_zombie_workflows : passe a CANCELLED toutes les rows IN_PROGRESS
+-- dont COALESCE ( last_heartbeat_at , start_time ) est anterieur a
+-- p_minutes . Appele periodiquement par {@code WorkflowZombieSweeper}
+-- ( @Scheduled ) . Threshold typiquement 5 min ( marge x10 sur l'interval
+-- beat 30 sec ) ; relever a 30+ pour les deploys sans heartbeat .
+
+CREATE OR REPLACE FUNCTION oa_audit.mark_zombie_workflows(
+    p_minutes int
+) RETURNS int
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = oa_audit, pg_temp
+AS $$
+DECLARE n int;
+BEGIN
+    IF p_minutes <= 0 THEN
+        RAISE EXCEPTION 'p_minutes must be > 0 ( got % )', p_minutes;
+    END IF;
+    UPDATE oa_audit.workflow_log
+    SET status      = 'CANCELLED',
+        end_time    = now(),
+        duration_ms = EXTRACT(EPOCH FROM (now() - start_time)) * 1000,
+        fatal_error = 'presumed dead ( no heartbeat / start signal in '
+                      || p_minutes::text || ' min ; status was IN_PROGRESS )'
+    WHERE status = 'IN_PROGRESS'
+      AND COALESCE(last_heartbeat_at, start_time)
+            < now() - (p_minutes || ' minutes')::interval;
+    GET DIAGNOSTICS n = ROW_COUNT;
+    RETURN n;
+END;
+$$;
+
+ALTER FUNCTION oa_audit.mark_zombie_workflows(int) OWNER TO "openAdomTechUser";
 
 CREATE OR REPLACE FUNCTION oa_audit.delete_workflow_logs_older_than(p_days int)
 RETURNS int
@@ -485,7 +660,7 @@ ALTER FUNCTION oa_audit.lock_stale_pending_compensations(int)
 REVOKE ALL ON FUNCTION oa_audit.record_workflow(
     uuid, varchar, uuid, varchar, varchar, varchar, varchar,
     timestamptz, timestamptz, bigint, varchar, bigint, bigint, int,
-    bigint, jsonb, text, jsonb) FROM PUBLIC;
+    bigint, jsonb, text, jsonb, varchar) FROM PUBLIC;
 REVOKE ALL ON FUNCTION oa_audit.delete_workflow_logs_older_than(int) FROM PUBLIC;
 REVOKE ALL ON FUNCTION oa_audit.record_user_session(
     uuid, uuid, text, inet, text, timestamptz, timestamptz, bigint, text) FROM PUBLIC;
@@ -500,7 +675,7 @@ REVOKE ALL ON FUNCTION oa_audit.lock_stale_pending_compensations(int) FROM PUBLI
 GRANT EXECUTE ON FUNCTION oa_audit.record_workflow(
     uuid, varchar, uuid, varchar, varchar, varchar, varchar,
     timestamptz, timestamptz, bigint, varchar, bigint, bigint, int,
-    bigint, jsonb, text, jsonb) TO PUBLIC;
+    bigint, jsonb, text, jsonb, varchar) TO PUBLIC;
 GRANT EXECUTE ON FUNCTION oa_audit.delete_workflow_logs_older_than(int) TO PUBLIC;
 GRANT EXECUTE ON FUNCTION oa_audit.record_user_session(
     uuid, uuid, text, inet, text, timestamptz, timestamptz, bigint, text) TO PUBLIC;

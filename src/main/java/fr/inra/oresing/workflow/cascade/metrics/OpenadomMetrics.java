@@ -54,6 +54,7 @@ public class OpenadomMetrics {
     public static final String TAG_DATA_TYPE   = "data_type";
     public static final String TAG_STATUS      = "status";
     public static final String TAG_TYPE        = "type";
+    public static final String TAG_STAGE       = "stage";
     public static final String VALUE_UNKNOWN   = "unknown";
 
     // Prefixes metrics
@@ -167,6 +168,62 @@ public class OpenadomMetrics {
             }
         } catch (Exception e) {
             log.warn("Echec enregistrement metrics import {}/{}", application, dataType, e);
+        }
+    }
+
+    /**
+     * Enregistre un import en echec , taggue avec le {@code stage} cascade
+     * ( {@code SOURCE} / {@code TRANSFORM} / {@code COLLECTOR} /
+     * {@code SINK} / {@code TEARDOWN} / {@code UNKNOWN} ) recupere depuis
+     * {@code WorkflowResult.failedStage()} ( cascade 2.2.0 ) .
+     *
+     * <p>Ecrit deux series de metriques :
+     * <ul>
+     *   <li>{@code oa_import_total{status=FAILED,application,data_type}} :
+     *       compteur des imports echoues ( meme dimension que les succes ,
+     *       pour le ratio sur le dashboard "Failure rate" ) .</li>
+     *   <li>{@code oa_import_failed_total{stage,application,data_type}} :
+     *       compteur dedie au stage attribue par cascade , utilise par
+     *       Grafana pour le panel "Failures by stage" et l'alerting
+     *       cible sur les phases critiques ( ex TEARDOWN -&gt; finalize
+     *       hook FK violation ) .</li>
+     * </ul>
+     *
+     * @param application      nom de l'application ( null -&gt; "unknown" )
+     * @param dataType         type de reference / data ( null -&gt; "unknown" )
+     * @param failedStage      stage cascade ( {@code WorkflowStage.name()} ) ,
+     *                         null sera mappe sur {@code "unknown"}
+     * @param duration         duree totale de l'import
+     * @param recordsProcessed lignes traitees avec succes avant l'echec
+     * @param recordsFailed    lignes en erreur
+     * @param chunksProcessed  chunks cascade achevs avant l'echec
+     * @param fileSizeBytes    taille du fichier d'entree en octets
+     * @since cascade 2.2.0 + workflow_log.failed_stage column
+     */
+    public void recordImportFailed(
+            String application, String dataType, String failedStage,
+            Duration duration, long recordsProcessed, long recordsFailed,
+            int chunksProcessed, long fileSizeBytes) {
+        try {
+            // Garde-fou : reuse la meme combinaison de tags que recordImportCompleted
+            // pour que le ratio "FAILED / total" soit calculable cote Grafana .
+            recordImportCompleted(application, dataType, "FAILED",
+                    duration, recordsProcessed, recordsFailed, chunksProcessed, fileSizeBytes);
+
+            Tags failedTags = Tags.of(
+                    TAG_APPLICATION, safe(application),
+                    TAG_DATA_TYPE,   safe(dataType),
+                    TAG_STAGE,       safe(failedStage));
+
+            Counter.builder(IMPORT_PREFIX + "_failed_total")
+                    .description("Nombre d'imports en echec , dimension par stage cascade ( SOURCE / "
+                            + "TRANSFORM / COLLECTOR / SINK / TEARDOWN / UNKNOWN )")
+                    .tags(failedTags)
+                    .register(registry)
+                    .increment();
+        } catch (Exception e) {
+            log.warn("Echec enregistrement metrics recordImportFailed {}/{}/{}",
+                    application, dataType, failedStage, e);
         }
     }
 

@@ -161,13 +161,20 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
             Integer.getInteger("app.import.bulkInsertBatchSize", 50_000);
 
     @Override
-    public void storeAll(final Path finalCsvFile) {
+    public long storeAll(final Path finalCsvFile,
+                         final java.util.function.LongConsumer onBatchUpserted,
+                         final java.util.function.Consumer<String> onPhaseChange) {
         final String columns = Arrays.stream(ORDERED_COLUMNS)
                 .map(String::toLowerCase)
                 .collect(Collectors.joining(","));
 
-        getNamedParameterJdbcTemplate().getJdbcTemplate().execute(
-                (ConnectionCallback<Void>) connection -> {
+        // Phase 1 : MERGE_LOCAL ( la concatenation est faite par cascade
+        // collector AVANT cet appel ; on emit l'event juste pour aligner
+        // l'UI sur la prochaine etape ) .
+        try { onPhaseChange.accept("MERGE_LOCAL"); } catch (RuntimeException ignored) { /* best effort */ }
+
+        Long upserted = getNamedParameterJdbcTemplate().getJdbcTemplate().execute(
+                (ConnectionCallback<Long>) connection -> {
                     // setAutoCommit jamais restaure par l'ancien code + 4
                     // Statement createStatement() sans try-with-resources
                     // ( leak ). Restoration en finally.
@@ -182,6 +189,10 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                             stmt.execute("CREATE TEMP TABLE referencevalue_import (data jsonb) ON COMMIT DROP");
                         }
 
+                        // Phase 2 : TEMP_LOAD ( COPY merged.csv -> referencevalue_import ) .
+                        // Cote UI : indeterminate ( 1 statement Postgres , pas de
+                        // progress incremental observable ) .
+                        try { onPhaseChange.accept("TEMP_LOAD"); } catch (RuntimeException ignored) { /* best effort */ }
                         long copiedRows;
                         long copyStart = System.nanoTime();
                         try (BufferedReader reader = Files.newBufferedReader(finalCsvFile, StandardCharsets.UTF_8)) {
@@ -191,29 +202,40 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         long copyMs = (System.nanoTime() - copyStart) / 1_000_000L;
                         log.info("storeAll : COPY phase loaded {} rows into temp table in {} ms", copiedRows, copyMs);
 
-                        // Reconstruction reference_reference :
-                        //   1. supprimer les liens existants pour les ids importes
-                        //   2. les re-creer depuis le jsonb des nouvelles donnees
-                        // Important : ces 2 etapes lisent referencevalue_import
-                        // donc DOIVENT s'executer AVANT l'INSERT bulk batche
-                        // ci-dessous ( qui consomme la temp table via DELETE
-                        // RETURNING ).
+                        // Reconstruction reference_reference - 4 etapes ordonnees :
+                        //
+                        //   1. Snapshot ( id , referencesby ) du jsonb refslinkedto
+                        //      dans une temp table dediee . Doit se faire AVANT le
+                        //      bulk INSERT car celui-ci consomme referencevalue_import
+                        //      via DELETE RETURNING ( CTE batchee ) .
+                        //   2. DELETE des liens reference_reference existants pour
+                        //      les ids importes ( re-import = reconstruction propre ).
+                        //   3. Bulk INSERT/UPSERT vers la table cible referencevalue
+                        //      ( consomme referencevalue_import ).
+                        //   4. INSERT reference_reference depuis le snapshot .
+                        //
+                        // Ordre crucial : la FK reference_reference_referenceid_fkey
+                        // pointe sur referencevalue(id) NON deferred . Le INSERT
+                        // reference_reference DOIT se faire APRES le bulk INSERT
+                        // sinon la FK echoue au tout premier depot d'un referentiel
+                        // ( les UUIDs n'existent pas encore dans referencevalue ) .
+                        // L'ancien ordre 1->2->4->3 marchait par chance uniquement
+                        // sur les re-depots ( les UUIDs existaient deja ) .
                         try (Statement stmt = connection.createStatement()) {
                             stmt.execute("""
-                                    DELETE FROM %1$s.reference_reference
-                                    WHERE referenceid IN (
-                                        SELECT (data->>'id')::uuid
-                                        FROM referencevalue_import
-                                    )
-                                    """.formatted(getSchema().getName()));
+                                    CREATE TEMP TABLE refref_pending (
+                                        referenceid  uuid,
+                                        referencesby uuid
+                                    ) ON COMMIT DROP
+                                    """);
                         }
 
                         try (Statement stmt = connection.createStatement()) {
                             stmt.execute("""
-                                    INSERT INTO %1$s.reference_reference(referenceid, referencesby)
+                                    INSERT INTO refref_pending(referenceid, referencesby)
                                     SELECT DISTINCT
-                                     (s.data->>'id')::uuid referenceid,
-                                     referencesby::uuid
+                                     (s.data->>'id')::uuid AS referenceid,
+                                     referencesby::uuid    AS referencesby
                                     FROM
                                      referencevalue_import s,
                                          JSON_TABLE (
@@ -221,7 +243,16 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                              NESTED PATH '$[*]' COLUMNS(
                                                      referencesby  TEXT PATH '$')
                                                  )
-                                         ) as joins;
+                                         ) as joins
+                                    """);
+                        }
+
+                        try (Statement stmt = connection.createStatement()) {
+                            stmt.execute("""
+                                    DELETE FROM %1$s.reference_reference
+                                    WHERE referenceid IN (
+                                        SELECT referenceid FROM refref_pending
+                                    )
                                     """.formatted(getSchema().getName()));
                         }
 
@@ -258,6 +289,11 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                 getTable().getSqlIdentifier(), columns, BULK_INSERT_BATCH_SIZE
                         );
 
+                        // Phase 3 : UPSERT_FINAL ( loop batche TEMP -> table finale ) .
+                        // Cote UI : determinate via {@code onBatchUpserted} qui propage
+                        // le rowcount par batch au consommateur ( typiquement
+                        // {@code StoreAllPathSink} -> {@code WorkflowActiveRegistry.addFinalRows} ) .
+                        try { onPhaseChange.accept("UPSERT_FINAL"); } catch (RuntimeException ignored) { /* best effort */ }
                         long insertStart = System.nanoTime();
                         long totalUpserted = 0L;
                         int batchCount = 0;
@@ -269,15 +305,33 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                 }
                                 totalUpserted += affected;
                                 batchCount++;
+                                try {
+                                    onBatchUpserted.accept((long) affected);
+                                } catch (RuntimeException ignored) {
+                                    /* best effort : un consommateur fautif ne doit pas
+                                       casser le UPSERT en cours */
+                                }
                             }
                         }
                         long insertMs = (System.nanoTime() - insertStart) / 1_000_000L;
                         log.info("storeAll : INSERT phase upserted {} rows in {} batches ( batch size = {} ) in {} ms",
                                 totalUpserted, batchCount, BULK_INSERT_BATCH_SIZE, insertMs);
 
+                        // Etape 4 : reference_reference est maintenant valide
+                        // car les UUIDs existent dans referencevalue ( bulk
+                        // UPSERT vient de finir ) .
+                        try (Statement stmt = connection.createStatement()) {
+                            int refrefInserted = stmt.executeUpdate("""
+                                    INSERT INTO %1$s.reference_reference(referenceid, referencesby)
+                                    SELECT referenceid, referencesby FROM refref_pending
+                                    """.formatted(getSchema().getName()));
+                            log.info("storeAll : reference_reference rebuilt with {} link(s) in {} ms",
+                                    refrefInserted, (System.nanoTime() - insertStart) / 1_000_000L - insertMs);
+                        }
+
                         connection.commit();
                         committed = true;
-                        return null;
+                        return totalUpserted;
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     } finally {
@@ -291,6 +345,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         }
                     }
                 });
+        return upserted == null ? 0L : upserted;
     }
 
 

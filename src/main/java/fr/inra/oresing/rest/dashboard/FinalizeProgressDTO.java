@@ -90,5 +90,11 @@ public record FinalizeProgressDTO(
         boolean stagingDeterminate,
 
         @Schema(description = "True si la progression du transfert vers la finale est observable temps-reel")
-        boolean finalDeterminate) {
+        boolean finalDeterminate,
+
+        @Schema(description = "Sous-phase MERGE_FILE en cours ( MERGE_LOCAL | TEMP_LOAD | UPSERT_FINAL ) "
+                + "; null pour DIRECT_COPY ou avant entree dans le sink storeAll . "
+                + "Permet a la live view de rendre 3 progress bars distinctes "
+                + "( merge local % , COPY -> TEMP indeterminate , UPSERT TEMP -> finale % ) .")
+        String  mergeFilePhase) {
 }

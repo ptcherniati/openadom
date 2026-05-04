@@ -42,7 +42,9 @@ class WorkflowMetadataCollectorTest {
                 java.util.List.of(),
                 java.util.List.of(),
                 null, null,
-                java.util.List.of()));
+                java.util.List.of(),
+                null,
+                null));
         registry.setParallelism(cid, new ParallelismSnapshot(4, 8, 2));
         registry.setStrategy(cid, new StrategySnapshot(
                 "DIRECT_COPY", "PER_CONNECTION_TEMP", "STAGED", 4));

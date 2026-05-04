@@ -32,11 +32,24 @@ public class WorkflowLogRepository {
                 ?::varchar(256), ?::varchar(256), ?::varchar(512),
                 ?::timestamptz, ?::timestamptz, ?::bigint, ?::varchar(16),
                 ?::bigint, ?::bigint, ?::int,
-                ?::bigint, ?::jsonb, ?::text, ?::jsonb)
+                ?::bigint, ?::jsonb, ?::text, ?::jsonb, ?::varchar(32))
             """;
 
     private static final String DELETE_OLDER_THAN_SQL =
             "SELECT oa_audit.delete_workflow_logs_older_than(?::int)";
+
+    private static final String INSERT_START_SQL = """
+            SELECT oa_audit.record_workflow_start(
+                ?::uuid, ?::varchar(32), ?::uuid, ?::varchar(128),
+                ?::varchar(256), ?::varchar(256), ?::varchar(512),
+                ?::timestamptz, ?::bigint, ?::jsonb)
+            """;
+
+    private static final String MARK_ZOMBIES_SQL =
+            "SELECT oa_audit.mark_zombie_workflows(?::int)";
+
+    private static final String BEAT_SQL =
+            "SELECT oa_audit.beat_workflow(?::uuid)";
 
     private final JdbcTemplate  jdbcTemplate;
     private final ObjectMapper  objectMapper = new ObjectMapper();
@@ -68,6 +81,84 @@ public class WorkflowLogRepository {
             }
         }
         return inserted;
+    }
+
+    /**
+     * Insertion synchrone d'une row IN_PROGRESS au demarrage du workflow .
+     * Ferme le trou d'observabilite SIGKILL : sans cet appel , un crash
+     * JVM avant le flush async laissait le workflow sans aucune trace .
+     *
+     * <p>Idempotent ( ON CONFLICT DO NOTHING cote SQL ) : un retry reseau
+     * ne genere pas de doublon ; les fields end / records / errors sont
+     * remplis plus tard par {@link #insertBatch} ( UPSERT ) .
+     *
+     * @return true si une row a ete cree , false si un doublon existait deja
+     */
+    public boolean recordStart(WorkflowLogEntry start) {
+        if (start == null) {
+            return false;
+        }
+        Boolean inserted = jdbcTemplate.queryForObject(INSERT_START_SQL, Boolean.class,
+                start.correlationId(),
+                start.workflowType(),
+                start.userId(),
+                start.userLogin(),
+                start.applicationName(),
+                start.dataType(),
+                start.resourceName(),
+                Timestamp.from(start.startTime()),
+                start.bytesTotal(),
+                serializeMetadata(start.metadata()));
+        return Boolean.TRUE.equals(inserted);
+    }
+
+    /**
+     * Emet un heartbeat sur la row IN_PROGRESS du workflow . Appele par
+     * {@code HeartbeatService} pendant les phases longues ( finalize hook ) .
+     * Idempotent , thread-safe ( UPDATE indexed atomic ) .
+     *
+     * @return true si la row a ete touchee ( workflow encore IN_PROGRESS ) ,
+     *         false sinon ( deja terminal , inconnu , ou DB transient error )
+     */
+    public boolean beat(java.util.UUID correlationId) {
+        if (correlationId == null) {
+            return false;
+        }
+        try {
+            Boolean updated = jdbcTemplate.queryForObject(BEAT_SQL, Boolean.class, correlationId);
+            return Boolean.TRUE.equals(updated);
+        } catch (RuntimeException e) {
+            // Best-effort : un heartbeat manque ne doit pas casser le workflow .
+            // Au pire le sweeper detectera le workflow comme zombie apres N min
+            // -> on log warn et on continue .
+            log.warn("Heartbeat failed for {} : {}", correlationId, e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Passe a CANCELLED toutes les rows IN_PROGRESS dont
+     * {@code COALESCE ( last_heartbeat_at , start_time )} est anterieur a
+     * {@code thresholdMinutes} . Appele par {@link WorkflowZombieSweeper
+     * @Scheduled} pour detecter les workflows orphelins ( SIGKILL , crash
+     * JVM , panne machine ) .
+     *
+     * <p>Le COALESCE permet de gerer 2 cas :
+     * <ul>
+     *   <li>Workflow avec heartbeat ( phases longues ) : detecte zombie si
+     *       last_heartbeat_at &gt; threshold . Marge x10 par rapport au beat
+     *       interval ( 30 sec defaut ) -&gt; threshold 5 min OK .</li>
+     *   <li>Workflow sans heartbeat ( phase courte ou pre-V5 ) : fallback
+     *       sur start_time . Threshold doit alors couvrir le plus long
+     *       workflow legitime sans heartbeat .</li>
+     * </ul>
+     *
+     * @param thresholdMinutes seuil ( min ) ; recommande 5 avec heartbeat
+     * @return nombre de rows passees a CANCELLED
+     */
+    public int markZombies(int thresholdMinutes) {
+        Integer n = jdbcTemplate.queryForObject(MARK_ZOMBIES_SQL, Integer.class, thresholdMinutes);
+        return n == null ? 0 : n;
     }
 
     /**
@@ -111,6 +202,7 @@ public class WorkflowLogRepository {
         ps.setString(16, serializeErrors(e.errors()));
         setNullableString(ps, 17, e.fatalError());
         setNullableString(ps, 18, serializeMetadata(e.metadata()));
+        setNullableString(ps, 19, e.failedStage());
     }
 
     private String serializeMetadata(java.util.Map<String, Object> metadata) {

@@ -68,11 +68,20 @@ public class ImportProperties {
             fr.inrae.ore.cascade.model.workflow.PipelineMode.STAGED;
 
     /**
-     * Staging table strategy when {@link #sinkStrategy} = DIRECT_COPY :
-     * PER_CONNECTION_TEMP ( single sticky connection , atomic ) or
-     * SHARED_UNLOGGED ( permanent UNLOGGED table , parallel-friendly ) .
+     * Staging table strategy when {@link #sinkStrategy} = DIRECT_COPY .
+     *
+     * <p><b>Defaut prod : SHARED_UNLOGGED</b> ( table UNLOGGED partagee
+     * tag correlation_id ) car elle survit au crash JVM ( docker kill ,
+     * OOM ) et permet la recuperation des rows via IntegrityService +
+     * sweeper orphan . PER_CONNECTION_TEMP ( ancien defaut ) est
+     * irrecuperable : la TEMP TABLE meurt avec la connexion , aucune
+     * trace en base . PER_CONNECTION_TEMP est conserve pour les tests
+     * d'integration ( atomicite simple a raisonner ) .
+     *
+     * <p>Surcharge possible via env var {@code CASCADE_IMPORT_STAGING_STRATEGY}
+     * ou property {@code cascade.import.staging-strategy} .
      */
-    private volatile StagingStrategy stagingStrategy = StagingStrategy.PER_CONNECTION_TEMP;
+    private volatile StagingStrategy stagingStrategy = StagingStrategy.SHARED_UNLOGGED;
 
     /** Name of the SHARED_UNLOGGED staging table ( must exist via Flyway migration ) . */
     private volatile String stagingSharedTableName = "oa_staging.referencevalue_import_shared";
@@ -89,6 +98,20 @@ public class ImportProperties {
      */
     private volatile boolean skipCsvReencoding = false;
 
+    /**
+     * Postgres {@code SET LOCAL statement_timeout} applique au debut de
+     * {@link fr.inra.oresing.workflow.cascade.StagingFinalizeSql#runFinalize}
+     * ( en minutes , 0 = pas de timeout ) . Garde-fou contre les UPSERTs
+     * bloques infiniment ( deadlock pur , lock advisory non release ) que
+     * le heartbeat ne detecte pas ( cf Point 4 javadoc ) . Doit etre
+     * superieur au temps legitime maximal d'un finalize ( gros UPSERT
+     * 1M+ rows ) . Defaut : 180 min ( 3h ) .
+     *
+     * <p>Surcharge via env var {@code CASCADE_IMPORT_FINALIZE_STATEMENT_TIMEOUT_MINUTES}
+     * ou property {@code cascade.import.finalize-statement-timeout-minutes} .
+     */
+    private volatile int finalizeStatementTimeoutMinutes = 180;
+
     /** Strategy for the import sink path . */
     public enum SinkStrategy {
         /** Legacy : Source -&gt; Transform -&gt; MergingFileSink -&gt; merged.csv -&gt; storeAll(file) . */
@@ -97,17 +120,19 @@ public class ImportProperties {
         DIRECT_COPY
     }
 
-    /** Staging table strategy . */
+    /**
+     * Staging table strategy . Pertinent uniquement avec
+     * {@link SinkStrategy#DIRECT_COPY} : decrit ou cascade depose les chunks
+     * pendant le COPY parallele , avant que le finalize hook UPSERT vers la
+     * table finale .
+     *
+     * <p>Avec {@link SinkStrategy#MERGE_FILE} le champ est ignore : MERGE_FILE
+     * concatene les chunks sur disque local puis fait 1 COPY direct vers la
+     * table finale ( pas de staging cascade ) . Le couplage UI/validation
+     * empeche desormais cette combinaison ambigue ( cf
+     * {@code MergeFileWithStagingRule} ) .
+     */
     public enum StagingStrategy {
-        /**
-         * Bypass complet de la staging table . Avec {@link SinkStrategy#MERGE_FILE}
-         * : c'est le comportement par defaut ( chunks merges sur disque puis 1
-         * COPY massif direct vers la table finale ) . Avec
-         * {@link SinkStrategy#DIRECT_COPY} : non implemente ( bloque par la
-         * rule {@code DirectCopyNoStagingNotSupported} ) ; reserve pour un
-         * futur sink direct-to-final sans table intermediaire .
-         */
-        NO_STAGING,
         /** TEMP table per-conn ( sticky , 1 sink serie , auto-cleanup ) . */
         PER_CONNECTION_TEMP,
         /** Table UNLOGGED partagee + tag correlation_id ( workers paralleles ) . */
@@ -135,6 +160,7 @@ public class ImportProperties {
     public String getStagingSharedTableName() { return stagingSharedTableName; }
     public int getStagingSharedOrphanTtlMinutes() { return stagingSharedOrphanTtlMinutes; }
     public boolean isSkipCsvReencoding() { return skipCsvReencoding; }
+    public int getFinalizeStatementTimeoutMinutes() { return finalizeStatementTimeoutMinutes; }
 
     public void setChunkSizeLines(int v)      { this.chunkSizeLines = v; }
     public void setProgressBatchSize(int v)   { this.progressBatchSize = v; }
@@ -150,4 +176,5 @@ public class ImportProperties {
     public void setStagingSharedTableName(String v) { this.stagingSharedTableName = v; }
     public void setStagingSharedOrphanTtlMinutes(int v) { this.stagingSharedOrphanTtlMinutes = v; }
     public void setSkipCsvReencoding(boolean v) { this.skipCsvReencoding = v; }
+    public void setFinalizeStatementTimeoutMinutes(int v) { this.finalizeStatementTimeoutMinutes = v; }
 }

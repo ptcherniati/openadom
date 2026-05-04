@@ -77,7 +77,16 @@ public final class StagingFinalizeSql {
      * @param stagingTable       staging table name ( unqualified ; e.g. {@code "referencevalue_import"} or {@code "referencevalue_import_shared"} )
      * @param correlationId      workflow correlation id for SHARED_UNLOGGED filter ; pass null for PER_CONNECTION_TEMP
      * @param idJsonPath         JSONB path for the id column inside the {@code data} field ( e.g. {@code "id"} )
+     * @param statementTimeoutMinutes Postgres {@code statement_timeout} ( minutes ) applique en debut de
+     *                                finalize via {@code SET LOCAL} . Garde-fou contre les UPSERTs bloques
+     *                                infiniment ( deadlock pur , lock advisory ) que le heartbeat ne detecte
+     *                                pas . 0 = pas de timeout ( deconseille en prod ) .
      * @throws SQLException on any SQL failure ( caller must rollback )
+     */
+    /**
+     * Surcharge historique sans publication de progress . Conserve la
+     * compat avec les appelants qui ne souhaitent pas instrumenter la
+     * boucle UPSERT ( tests , appels directs ) .
      */
     public static void runFinalize(
             Connection connection,
@@ -86,7 +95,38 @@ public final class StagingFinalizeSql {
             String[] targetColumns,
             String stagingTable,
             String correlationId,
-            String idJsonPath
+            String idJsonPath,
+            int    statementTimeoutMinutes
+    ) throws SQLException {
+        runFinalize(connection, schemaName, targetTableSqlId, targetColumns,
+                stagingTable, correlationId, idJsonPath, statementTimeoutMinutes,
+                n -> { });
+    }
+
+    /**
+     * Variante instrumentee : invoque {@code onBatchUpserted} apres chaque
+     * batch UPSERT TEMP -> table finale avec le rowcount affected . Permet
+     * a {@code CascadeSinkFactory.directCopy} de propager le progres au
+     * {@code WorkflowActiveRegistry.addFinalRows} pour que la live view
+     * affiche une progress bar determinate ( au lieu d'indeterminate
+     * trompeuse alors que le rowcount est calculable ) .
+     *
+     * @param onBatchUpserted callback synchrone invoque dans la transaction
+     *                        avec le rowcount du batch UPSERT . Ne doit pas
+     *                        throw ( l'implementation enveloppe en
+     *                        try/catch best-effort pour ne pas casser le
+     *                        UPSERT en cours ) .
+     */
+    public static void runFinalize(
+            Connection connection,
+            String schemaName,
+            String targetTableSqlId,
+            String[] targetColumns,
+            String stagingTable,
+            String correlationId,
+            String idJsonPath,
+            int    statementTimeoutMinutes,
+            java.util.function.LongConsumer onBatchUpserted
     ) throws SQLException {
 
         // Diagnostic : permet de detecter le scenario "cascade tourne hors
@@ -98,11 +138,26 @@ public final class StagingFinalizeSql {
             inSpringTx = org.springframework.transaction.support
                     .TransactionSynchronizationManager.isActualTransactionActive();
         } catch (NoClassDefFoundError | RuntimeException ignore) { /* hors contexte Spring : best-effort */ }
-        log.info("StagingFinalize start : thread={} , correlationId={} , autoCommit={} , inSpringTx={}",
+        log.info("StagingFinalize start : thread={} , correlationId={} , autoCommit={} , inSpringTx={} , statement_timeout={}min",
                 Thread.currentThread().getName(),
                 correlationId == null ? "(none)" : correlationId.substring(0, Math.min(8, correlationId.length())),
                 connection.getAutoCommit(),
-                inSpringTx);
+                inSpringTx,
+                statementTimeoutMinutes);
+
+        // Garde-fou Postgres : SET LOCAL statement_timeout limite le temps
+        // d'execution de chaque statement de cette transaction . Couvre le
+        // scenario "UPSERT bloque infiniment" ( deadlock pur , lock
+        // advisory non release ) que le heartbeat ne detecte pas
+        // ( cf javadoc Point 4 : heartbeat = liveness probe pas success
+        // probe ) . LOCAL = portee transaction , reset auto a la fin .
+        // Ne s'applique pas si statementTimeoutMinutes = 0 ( opt-out ) .
+        if (statementTimeoutMinutes > 0) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "SET LOCAL statement_timeout = '" + statementTimeoutMinutes + "min'")) {
+                ps.execute();
+            }
+        }
 
         String columnList = Arrays.stream(targetColumns)
                 .map(String::toLowerCase)
@@ -111,28 +166,49 @@ public final class StagingFinalizeSql {
         boolean filtered = (correlationId != null && !correlationId.isBlank());
         String filterSql = filtered ? " AND correlation_id = ? " : "";
 
-        // 1) DELETE FROM reference_reference WHERE referenceid IN (SELECT data->>id FROM staging [WHERE correlation_id = ?])
-        String deleteRefRefSql = "DELETE FROM " + schemaName + ".reference_reference"
-                + " WHERE referenceid IN ("
-                + " SELECT (data->>'" + idJsonPath + "')::uuid FROM " + stagingTable
-                + (filtered ? " WHERE correlation_id = ?" : "")
-                + " )";
-        try (PreparedStatement ps = connection.prepareStatement(deleteRefRefSql)) {
-            if (filtered) ps.setObject(1, UUID.fromString(correlationId));
-            ps.executeUpdate();
+        // Reconstruction reference_reference - 4 etapes ordonnees :
+        //
+        //   1. Snapshot ( id , referencesby ) du jsonb refslinkedto dans
+        //      une temp table dediee . Doit se faire AVANT le bulk INSERT
+        //      car celui-ci consomme la staging table via DELETE RETURNING
+        //      ( CTE batchee ) .
+        //   2. DELETE des liens reference_reference existants pour les ids
+        //      importes ( re-import = reconstruction propre ) .
+        //   3. Bulk UPSERT vers la table cible referencevalue ( consomme la
+        //      staging table ) .
+        //   4. INSERT reference_reference depuis le snapshot .
+        //
+        // Ordre crucial : la FK reference_reference_referenceid_fkey pointe
+        // sur referencevalue(id) NON deferred . Le INSERT reference_reference
+        // DOIT se faire APRES le bulk UPSERT sinon la FK echoue au tout
+        // premier depot d'un referentiel ( les UUIDs n'existent pas encore
+        // dans referencevalue ) . Cf bug identique fixe dans
+        // DataRepository.storeAll ( chemin MERGE_FILE ) .
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute(
+                    "CREATE TEMP TABLE refref_pending ("
+                            + "  referenceid  uuid,"
+                            + "  referencesby uuid"
+                            + ") ON COMMIT DROP");
         }
 
-        // 2) INSERT INTO reference_reference (refid, refby) SELECT DISTINCT FROM staging
-        String insertRefRefSql = "INSERT INTO " + schemaName + ".reference_reference(referenceid, referencesby)"
-                + " SELECT DISTINCT (s.data->>'" + idJsonPath + "')::uuid referenceid, referencesby::uuid"
+        String snapshotRefRefSql = "INSERT INTO refref_pending(referenceid, referencesby)"
+                + " SELECT DISTINCT (s.data->>'" + idJsonPath + "')::uuid AS referenceid,"
+                + "                 referencesby::uuid                  AS referencesby"
                 + " FROM " + stagingTable + " s, JSON_TABLE("
                 + "     s.data, '$.refslinkedto.*.*.*.uuids' COLUMNS ("
                 + "         NESTED PATH '$[*]' COLUMNS(referencesby TEXT PATH '$')"
                 + "     )"
                 + " ) as joins"
                 + (filtered ? " WHERE s.correlation_id = ?" : "");
-        try (PreparedStatement ps = connection.prepareStatement(insertRefRefSql)) {
+        try (PreparedStatement ps = connection.prepareStatement(snapshotRefRefSql)) {
             if (filtered) ps.setObject(1, UUID.fromString(correlationId));
+            ps.executeUpdate();
+        }
+
+        String deleteRefRefSql = "DELETE FROM " + schemaName + ".reference_reference"
+                + " WHERE referenceid IN ( SELECT referenceid FROM refref_pending )";
+        try (PreparedStatement ps = connection.prepareStatement(deleteRefRefSql)) {
             ps.executeUpdate();
         }
 
@@ -192,6 +268,14 @@ public final class StagingFinalizeSql {
                 if (filtered) ps.setObject(1, UUID.fromString(correlationId));
                 int affected = ps.executeUpdate();
                 totalAffected += affected;
+                if (affected > 0) {
+                    try {
+                        onBatchUpserted.accept((long) affected);
+                    } catch (RuntimeException ignored) {
+                        /* best effort : un consommateur fautif ne doit pas
+                           casser le UPSERT en cours */
+                    }
+                }
 
                 long stagingNow = countStagingRows(connection, stagingTable, correlationId, filtered);
                 if (log.isDebugEnabled()) {
@@ -216,6 +300,15 @@ public final class StagingFinalizeSql {
             }
             log.info("StagingFinalize : completed in {} batches , {} rows upserted into target",
                     batchNum, totalAffected);
+        }
+
+        // 4) reference_reference est maintenant valide a inserer car les
+        // UUIDs existent dans referencevalue ( bulk UPSERT vient de finir ) .
+        String insertRefRefSql = "INSERT INTO " + schemaName + ".reference_reference(referenceid, referencesby)"
+                + " SELECT referenceid, referencesby FROM refref_pending";
+        try (PreparedStatement ps = connection.prepareStatement(insertRefRefSql)) {
+            int refrefInserted = ps.executeUpdate();
+            log.info("StagingFinalize : reference_reference rebuilt with {} link(s)", refrefInserted);
         }
     }
 

@@ -103,7 +103,20 @@ public record DashboardWorkflowDTO(
                 + "( cap 1000 ) . Alimente la modal SINK ( drill-down 'fichiers charges "
                 + "en base' ) . Vide pour les workflows non chunkes ou tant qu'aucun "
                 + "chunk n'a ete ecrit.")
-        List<SinkChunkDTO> sinkChunks) {
+        List<SinkChunkDTO> sinkChunks,
+
+        @Schema(description = "Configuration cascade-import capturee au demarrage du "
+                + "workflow ( chunkSize , pools , staging , metriques , skipCsvReencoding "
+                + ", ... ) . Affiche dans le Detail du workflow ( oa-live ) pour faciliter "
+                + "le diagnostic perf / config . Null pour les workflows non chunkes.")
+        ImportConfigDTO importConfig,
+
+        @Schema(description = "Dernier heartbeat emit par HeartbeatService pendant les "
+                + "phases longues ( finalize hook ) . Permet a oa-live de distinguer "
+                + "'workflow vivant mais lent' de 'workflow mort' via un pill vert/orange/"
+                + "rouge selon l'age . Null si jamais beat ( workflow trop court , phase "
+                + "non heartbeat-ee , workflow termine ) .")
+        Instant lastHeartbeatAt) {
 
     public static DashboardWorkflowDTO fromSnapshot(fr.inra.oresing.workflow.cascade.history.WorkflowSnapshot s) {
         List<ChunkDTO> chunkDtos = s.chunks() == null
@@ -121,6 +134,9 @@ public record DashboardWorkflowDTO(
         List<SinkChunkDTO> sinkChunkDtos = s.sinkChunks() == null
                 ? List.of()
                 : s.sinkChunks().stream().map(SinkChunkDTO::fromRecord).toList();
+        ImportConfigDTO importConfig = s.importConfig() == null
+                ? null
+                : ImportConfigDTO.fromSnapshot(s.importConfig());
         return new DashboardWorkflowDTO(
                 s.correlationId(), s.workflowType(), s.userId(), s.userLogin(),
                 s.applicationName(), s.dataType(), s.resourceName(),
@@ -128,7 +144,9 @@ public record DashboardWorkflowDTO(
                 s.status(),
                 s.recordsProcessed(), s.recordsFailed(), s.chunksProcessed(),
                 s.progressPercentage(), s.bytesTotal(), s.recordsTotal(),
-                chunkDtos, workerDtos, parallelism, strategy, sinkChunkDtos);
+                chunkDtos, workerDtos, parallelism, strategy, sinkChunkDtos,
+                importConfig,
+                s.lastHeartbeatAt());
     }
 
     /** Per-chunk DTO mirroring {@link fr.inra.oresing.workflow.cascade.history.ChunkSnapshot}. */
@@ -229,6 +247,46 @@ public record DashboardWorkflowDTO(
         public static SinkChunkDTO fromRecord(fr.inra.oresing.workflow.cascade.history.SinkChunkRecord r) {
             return new SinkChunkDTO(r.chunkIndex(), r.workerName(), r.status(),
                     r.durationMs(), r.at(), r.errorMessage());
+        }
+    }
+
+    /** Import-pipeline config snapshot mirroring
+     *  {@link fr.inra.oresing.workflow.cascade.history.ImportConfigSnapshot} . */
+    @Schema(name = "DashboardImportConfig",
+            description = "Snapshot de la configuration cascade-import capturee au demarrage "
+                    + "du workflow ; affichee dans le Detail oa-live pour le diagnostic perf / config")
+    public record ImportConfigDTO(
+            @Schema(description = "Nombre de lignes CSV par chunk")
+            int chunkSizeLines,
+            @Schema(description = "Granularite des notifications de progression ( lignes )")
+            int progressBatchSize,
+            @Schema(description = "Seuil d'erreurs au-dela duquel le workflow est avorte")
+            int maxErrorsThreshold,
+            @Schema(description = "Taille de consolidation collector cascade ( 0 = desactive )")
+            int collectorChunkSize,
+            @Schema(description = "TTL ( minutes ) sweeper orphelins SHARED_UNLOGGED")
+            int stagingSharedOrphanTtl,
+            @Schema(description = "Nom de la table SHARED_UNLOGGED")
+            String stagingSharedTableName,
+            @Schema(description = "MetricsChunkInterceptor + JVM stats actives")
+            boolean enableMetrics,
+            @Schema(description = "Bypass re-encoding CSV ( perf gain , prerequiert un input clean )")
+            boolean skipCsvReencoding,
+            @Schema(description = "cascade.pool.source effectif")
+            int poolSource,
+            @Schema(description = "cascade.pool.transform effectif")
+            int poolTransform,
+            @Schema(description = "cascade.pool.sink effectif")
+            int poolSink,
+            @Schema(description = "cascade.pool.ordering effectif ( 0 si non configure )")
+            int poolOrdering) {
+        public static ImportConfigDTO fromSnapshot(
+                fr.inra.oresing.workflow.cascade.history.ImportConfigSnapshot c) {
+            return new ImportConfigDTO(
+                    c.chunkSizeLines(), c.progressBatchSize(), c.maxErrorsThreshold(),
+                    c.collectorChunkSize(), c.stagingSharedOrphanTtl(),
+                    c.stagingSharedTableName(), c.enableMetrics(), c.skipCsvReencoding(),
+                    c.poolSource(), c.poolTransform(), c.poolSink(), c.poolOrdering());
         }
     }
 

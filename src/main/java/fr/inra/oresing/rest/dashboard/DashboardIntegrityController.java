@@ -43,4 +43,21 @@ public class DashboardIntegrityController {
             @PathVariable UUID correlationId) {
         return ResponseEntity.ok(integrityService.reprocess(correlationId));
     }
+
+    @Operation(summary = "Preview read-only des rows impactes par un DELETE . Sert a alimenter "
+            + "la modale de confirmation stylee . Admin only .")
+    @GetMapping("/{correlationId}/delete-preview")
+    public ResponseEntity<IntegrityService.DeletePreview> deletePreview(
+            @PathVariable UUID correlationId) {
+        return ResponseEntity.ok(integrityService.deletePreview(correlationId));
+    }
+
+    @Operation(summary = "Supprime totalement un workflow et ses donnees associees "
+            + "( referencevalue + binaryfile + staging + compensation_log + workflow_log ) . "
+            + "Operation IRREVERSIBLE - admin only , confirm UI requis . ")
+    @DeleteMapping("/{correlationId}")
+    public ResponseEntity<IntegrityService.DeleteResult> delete(
+            @PathVariable UUID correlationId) {
+        return ResponseEntity.ok(integrityService.deleteWorkflow(correlationId));
+    }
 }
