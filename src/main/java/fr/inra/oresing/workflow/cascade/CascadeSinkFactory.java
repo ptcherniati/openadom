@@ -80,7 +80,7 @@ public final class CascadeSinkFactory {
      * que la live view affiche une progress bar determinate au lieu d'une
      * indeterminate trompeuse alors que le rowcount est calculable .
      *
-     * @param activeRegistry registry oa-live . Optionnel ( null = pas de
+     * @param activeRegistry registry de progression live . Optionnel ( null = pas de
      *                       publication ) . Quand fourni , chaque batch
      *                       UPSERT TEMP -> table finale invoque
      *                       {@code activeRegistry.addFinalRows(corrId , n)} .

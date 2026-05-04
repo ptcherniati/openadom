@@ -163,6 +163,16 @@ public class CascadeImportPipeline {
         final String correlationId = UUID.randomUUID().toString();
         final UUID   corrUuid      = safeUuid(correlationId);
 
+        // Marqueur lu par le finally : a true des qu un runner deferred a
+        // ete enregistre sur le TransactionSynchronizationManager Spring .
+        // Le runner reprend la finalisation ( log COMPLETED , metrics ,
+        // activeRegistry.finish ) en afterCommit / afterCompletion ; le
+        // finally doit donc s abstenir de retirer le workflow du registry
+        // sinon les consommateurs live le verraient disparaitre AVANT que
+        // les donnees soient effectivement chargees en DB .
+        final java.util.concurrent.atomic.AtomicBoolean runnerWillFinalize =
+                new java.util.concurrent.atomic.AtomicBoolean(false);
+
         // Initialise hors du try uniquement quand l'expression est
         // garantie sans throw . userLogin est inside-try parce que
         // resolveCurrentLogin() peut lever une RuntimeException .
@@ -182,7 +192,7 @@ public class CascadeImportPipeline {
             }
 
             // #62 - Publie la progression en temps réel dans WorkflowActiveRegistry
-            // pour que /api/dashboard/workflows/in-progress ( oa-live ) puisse
+            // pour que /api/dashboard/workflows/in-progress puisse
             // afficher ce workflow dès son démarrage. Le finally garantit le
             // retrait du registry même en cas d'erreur ou d'annulation.
             final UUID userUuid = safeUuid(userId);
@@ -207,7 +217,7 @@ public class CascadeImportPipeline {
             }
 
             // #62 - Compte les lignes du fichier ( deja sans en-tete ) pour
-            // permettre a oa-live de basculer la barre de progression en
+            // permettre aux consommateurs live de basculer la barre de progression en
             // mode determine. Best-effort : si le comptage echoue , on
             // laisse recordsTotal a 0 ( fallback animation indeterminee ).
             long recordsTotal = countLines(uploadedPath);
@@ -243,7 +253,7 @@ public class CascadeImportPipeline {
             FileChunkSource source = new FileChunkSource(uploadedPath, chunksDir, chunkSizeLines);
 
             // #62 - Compteurs intermediaires utilises uniquement pour pousser
-            // la progression dans WorkflowActiveRegistry ( oa-live ). La
+            // la progression dans WorkflowActiveRegistry . La
             // valeur finale persistee est lue depuis WorkflowResult ( cascade
             // tient deja le compte correct grace a Chunk.recordCount() ).
             final java.util.concurrent.atomic.AtomicLong liveRecords  = new java.util.concurrent.atomic.AtomicLong();
@@ -455,7 +465,7 @@ public class CascadeImportPipeline {
             Workflow workflow = builder.build();
 
             // Publie le parallélisme effectif dans le registry pour que
-            // l'en-tête de la vue Workers de oa-live affiche le nombre de
+            // l'en-tête de la vue Workers live affiche le nombre de
             // threads par stage . Le sink est forcé à 1 quand
             // DIRECT_COPY + PER_CONNECTION_TEMP.
             int sinkSlots = stickyConnection ? 1 : rawSinkPoolSize;
@@ -488,7 +498,7 @@ public class CascadeImportPipeline {
             try {
                 // Phase : traitement ( chunking + transformation + merge ).
                 updateWorkflowPhase(corrUuid, WorkflowLogEntry.STATUS_PROCESSING, fileSizeBytes);
-                // Hook bloc CHARGEMENT FINAL ( oa-live ) : capture cascadeStart .
+                // Hook bloc CHARGEMENT FINAL : capture cascadeStart .
                 if (corrUuid != null) {
                     activeRegistry.initFinalizePhase(corrUuid, startedAt);
                 }
@@ -557,21 +567,114 @@ public class CascadeImportPipeline {
                 log.info("[{}] Workflow cascade termine : processed={}, chunks={}, duration={}",
                         correlationId, result.recordsProcessed(), result.chunksProcessed(), result.duration());
 
-                // Cascade 3.0.0 DEFERRED_TO_CALLER ( DIRECT_COPY ) ou
-                // StoreAllPathSink.deferToCaller ( MERGE_FILE ) : le sink a
-                // capture la finalize SQL ( ou le path merged.csv ) au lieu
-                // de l executer inline . On l accroche sur la tx Spring
-                // courante : afterCommit declenche le UPSERT sur une
-                // connexion fraiche du pool ( meme thread que le caller ,
-                // row-locks deja relaches ) ; afterCompletion ROLLED_BACK
-                // nettoie les artefacts ( staging rows / merged.csv ) .
+                // ---- Lambdas de finalisation : invoquees inline en mode
+                //      synchrone , passees au runner deferred sinon . Tout
+                //      le post-load ( markFinalizeFinished , metrics ,
+                //      logImportEvent , DROP staging , confirm compensation ,
+                //      activeRegistry.finish ) est concentre ici pour qu il
+                //      soit emis APRES que les donnees soient reellement
+                //      visibles en DB ( afterCommit du caller ) , sinon
+                //      les consommateurs live afficheraient COMPLETED avant
+                //      que la table finale soit ecrite . ----
+                final WorkflowResult finalResult = result;
+                final long           finalFileSize = fileSizeBytes;
+                final fr.inrae.ore.cascade.model.core.Sink<java.nio.file.Path> finalSink = sink;
+                final java.nio.file.Path finalProcessedDir = processedDir;
+                final fr.inra.oresing.workflow.cascade.staging.StagingMode finalStagingMode = stagingMode;
+                final java.util.UUID finalStagingCompId = stagingCompensationIdRef.get();
+
+                final Runnable markCompleted = () -> {
+                    if (corrUuid != null) {
+                        activeRegistry.markFinalizeFinished(corrUuid, Instant.now());
+                    }
+                    long effective = effectiveRecordsProcessed(finalResult, finalSink);
+                    Duration dur   = Duration.between(startedAt, Instant.now());
+                    metrics.recordImportCompleted(applicationName, dataType, WorkflowLogEntry.STATUS_COMPLETED,
+                            dur, effective, finalResult.recordsFailed(),
+                            finalResult.chunksProcessed(), finalFileSize);
+                    logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
+                            startedAt, dur, WorkflowLogEntry.STATUS_COMPLETED,
+                            effective, finalResult.recordsFailed(),
+                            finalResult.chunksProcessed(), finalFileSize,
+                            finalResult.errors(), null);
+                    // PER_WORKFLOW_TABLE : DROP table dediee post-succes .
+                    if (finalStagingMode != null && finalStagingMode.dropTableSql() != null) {
+                        try (java.sql.Connection c = referenceValueRepository.getDataSource().getConnection();
+                             java.sql.Statement st = c.createStatement()) {
+                            st.execute(finalStagingMode.dropTableSql());
+                            log.info("[{}] PER_WORKFLOW_TABLE : table {} droppee apres succes",
+                                    correlationId, finalStagingMode.tableName());
+                        } catch (java.sql.SQLException dropErr) {
+                            log.warn("[{}] DROP staging table failed ( sweeper rattrapera ) : {}",
+                                    correlationId, dropErr.getMessage());
+                        }
+                    }
+                    if (finalStagingCompId != null) {
+                        try { compensationLogService.confirm(finalStagingCompId); }
+                        catch (RuntimeException ignore) {
+                            log.warn("[{}] Echec confirm STAGING_CLEANUP {} ( sweeper rattrapera ) : {}",
+                                    correlationId, finalStagingCompId, ignore.getMessage());
+                        }
+                    }
+                    if (corrUuid != null) {
+                        activeRegistry.finish(corrUuid);
+                    }
+                };
+
+                final java.util.function.Consumer<Throwable> markPostCommitFailure = err -> {
+                    // Spring tx outer DEJA committee . Le UPSERT differe a
+                    // echoue : on persiste FAILED + metrics pour que les
+                    // consommateurs live basculent en rouge ; le merged.csv / staging row reste
+                    // pour replay manuel ( compensation_log + sweeper s en
+                    // chargent en background ) .
+                    if (corrUuid != null) {
+                        activeRegistry.markRollbackStarted(corrUuid, Instant.now(), 0L,
+                                formatThrowable(err));
+                        activeRegistry.markRollbackFinished(corrUuid, Instant.now());
+                    }
+                    Duration dur = Duration.between(startedAt, Instant.now());
+                    String   stage = extractFailedStage(err);
+                    metrics.recordImportFailed(applicationName, dataType, stage, dur,
+                            finalResult.recordsProcessed(), finalResult.recordsFailed(),
+                            finalResult.chunksProcessed(), finalFileSize);
+                    logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
+                            startedAt, dur, WorkflowLogEntry.STATUS_FAILED,
+                            finalResult.recordsProcessed(), finalResult.recordsFailed(),
+                            finalResult.chunksProcessed(), finalFileSize,
+                            finalResult.errors(), formatThrowable(err), stage);
+                    if (corrUuid != null) {
+                        activeRegistry.finish(corrUuid);
+                    }
+                };
+
+                final Runnable markTxRolledBack = () -> {
+                    // Le catch RuntimeException ci-dessous a deja emit
+                    // markRollback + logErrors / FAILED . Le runner doit
+                    // simplement retirer le workflow de l active registry
+                    // ( car le finally a ete instruit de skip via
+                    // runnerWillFinalize=true ) .
+                    if (corrUuid != null) {
+                        activeRegistry.finish(corrUuid);
+                    }
+                };
+
+                // ---- Cascade 3.0.0 DEFERRED_TO_CALLER ( DIRECT_COPY ) ou
+                //      StoreAllPathSink.deferToCaller ( MERGE_FILE ) : le
+                //      sink a capture la finalize SQL ( ou le path
+                //      merged.csv ) au lieu de l executer inline . On
+                //      accroche un runner sur la tx Spring : afterCommit
+                //      execute le UPSERT puis markCompleted ; afterCommit
+                //      en erreur appelle markPostCommitFailure ;
+                //      afterCompletion(rolledBack) appelle markTxRolledBack . ----
                 boolean deferredMergeFile = false;
                 if (outerTxActive && directCopy) {
                     java.util.Optional<fr.inrae.ore.cascade.api.defaults.db.staging.DeferredFinalize> deferred =
                             result.deferredFinalize();
                     if (deferred.isPresent()) {
                         org.springframework.transaction.support.TransactionSynchronizationManager
-                                .registerSynchronization(new TxAwareDeferredRunner(deferred.get(), corrUuid));
+                                .registerSynchronization(new TxAwareDeferredRunner(deferred.get(), corrUuid,
+                                        markCompleted, markPostCommitFailure, markTxRolledBack));
+                        runnerWillFinalize.set(true);
                         log.info("[{}] DIRECT_COPY deferred finalize bind sur la Spring tx courante ( afterCommit )",
                                 correlationId);
                     }
@@ -581,7 +684,9 @@ public class CascadeImportPipeline {
                         org.springframework.transaction.support.TransactionSynchronizationManager
                                 .registerSynchronization(new MergeFileDeferredRunner(
                                         referenceValueRepository, tempCleanup, mergeFileSink,
-                                        mergedDeferred.get(), processedDir, corrUuid, activeRegistry));
+                                        mergedDeferred.get(), finalProcessedDir, corrUuid, activeRegistry,
+                                        markCompleted, markPostCommitFailure, markTxRolledBack));
+                        runnerWillFinalize.set(true);
                         deferredMergeFile = true;
                         log.info("[{}] MERGE_FILE deferred storeAll bind sur la Spring tx courante ( afterCommit )",
                                 correlationId);
@@ -589,88 +694,31 @@ public class CascadeImportPipeline {
                 }
                 final boolean processedDirDeferred = deferredMergeFile;
 
-                // Phase : chargement effectif en base . Cascade a deja
-                // tout fait :
-                //   DIRECT_COPY : StagingPostgresSink a invoque la finalize
-                //                 hook ( COPY + UPSERT ) pendant teardown() .
-                //   MERGE_FILE  : MergedFileChunkCollector a concatene les
-                //                 chunk-files en merged.csv ; StoreAllPathSink
-                //                 a fait le 1 COPY massif vers la table finale
-                //                 ( cf .collect(...).to(StoreAllPathSink) plus
-                //                 haut ) . Plus rien a faire ici .
-                updateWorkflowPhase(corrUuid, WorkflowLogEntry.STATUS_LOADING_DB, fileSizeBytes);
+                updateWorkflowPhase(corrUuid, WorkflowLogEntry.STATUS_LOADING_DB, finalFileSize);
                 dataImporter.treatErrors();
-                // Bloc CHARGEMENT FINAL : phase finalize fini ( OK ) .
-                if (corrUuid != null) {
-                    activeRegistry.markFinalizeFinished(corrUuid, Instant.now());
-                }
 
-                // Pour MERGE_FILE , cascade voit le sink emettre 1 chunk =
-                // 1 path = recordsProcessed = 1 . Le rowcount reel ( N rows
-                // ecrites en table finale par {@code DataRepository.storeAll}
-                // ) est connu uniquement par {@link StoreAllPathSink} . On
-                // surcharge ici pour que {@code workflow_log.records_processed}
-                // reflete la realite ; sans ca {@code IntegrityService}
-                // calculait un delta negatif aberrant ( {@code expected=1} vs
-                // {@code finalCount=N} ) sur les imports MERGE_FILE happy-path .
-                long effectiveRecordsProcessed = effectiveRecordsProcessed(result, sink);
-                Duration okDuration = Duration.between(startedAt, Instant.now());
-                metrics.recordImportCompleted(applicationName, dataType, WorkflowLogEntry.STATUS_COMPLETED,
-                        okDuration, effectiveRecordsProcessed, result.recordsFailed(),
-                        result.chunksProcessed(), fileSizeBytes);
-                logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
-                        startedAt, okDuration, WorkflowLogEntry.STATUS_COMPLETED,
-                        effectiveRecordsProcessed, result.recordsFailed(),
-                        result.chunksProcessed(), fileSizeBytes,
-                        result.errors(), null);
-
-                // En MERGE_FILE deferred , processedDir contient le merged.csv
-                // que le runner afterCommit doit encore lire ; on le nettoie
-                // depuis MergeFileDeferredRunner . Les autres dirs ( source
-                // chunks + uploaded raw ) peuvent partir tout de suite .
-                if (processedDirDeferred) {
-                    tempCleanup.cleanup(chunksDir, uploadedPath);
+                if (runnerWillFinalize.get()) {
+                    // Mode deferred : le runner emettra COMPLETED en afterCommit .
+                    // En attendant le workflow reste en phase LOADING_DB pour
+                    // que les consommateurs live affichent la barre finalize jusqu a la
+                    // visibilite reelle des donnees en DB . On ne nettoie pas
+                    // processedDir en MERGE_FILE ( le runner en a besoin ) .
+                    if (processedDirDeferred) {
+                        tempCleanup.cleanup(chunksDir, uploadedPath);
+                    } else {
+                        tempCleanup.cleanup(chunksDir, finalProcessedDir, uploadedPath);
+                    }
                 } else {
-                    tempCleanup.cleanup(chunksDir, processedDir, uploadedPath);
-                }
-
-                // PER_WORKFLOW_TABLE : DROP TABLE apres succes ( la table
-                // dediee a deja ete UPSERTee vers la table finale par le
-                // FinalizeHook ; on libere immediatement le catalog Postgres ) .
-                if (stagingMode != null && stagingMode.dropTableSql() != null) {
-                    try (java.sql.Connection c = referenceValueRepository.getDataSource().getConnection();
-                         java.sql.Statement st = c.createStatement()) {
-                        st.execute(stagingMode.dropTableSql());
-                        log.info("[{}] PER_WORKFLOW_TABLE : table {} droppee apres succes",
-                                correlationId, stagingMode.tableName());
-                    } catch (java.sql.SQLException dropErr) {
-                        log.warn("[{}] DROP staging table failed ( sweeper rattrapera ) : {}",
-                                correlationId, dropErr.getMessage());
-                    }
-                }
-
-                // Confirm STAGING_CLEANUP compensation : DELETE row PENDING
-                // post-success . Le staging a ete cleanup ( SHARED_UNLOGGED :
-                // DELETE WHERE corrId par finalize hook ; PER_WORKFLOW_TABLE :
-                // DROP ci-dessus ) , la garde-fou n'est plus necessaire .
-                java.util.UUID stagingCompId = stagingCompensationIdRef.get();
-                if (stagingCompId != null) {
-                    try {
-                        compensationLogService.confirm(stagingCompId);
-                    } catch (RuntimeException ignore) {
-                        // Best-effort : si la DB est down sur le DELETE compensation ,
-                        // le sweeper detectera workflow_log.status=COMPLETED et
-                        // appliquera le smart-check ( cleanup no-op , row purgee ) .
-                        log.warn("[{}] Echec confirm STAGING_CLEANUP {} ( sweeper rattrapera ) : {}",
-                                correlationId, stagingCompId, ignore.getMessage());
-                    }
+                    // Mode synchrone : on emet COMPLETED inline + cleanup complet .
+                    markCompleted.run();
+                    tempCleanup.cleanup(chunksDir, finalProcessedDir, uploadedPath);
                 }
 
             } catch (RuntimeException e) {
                 // Bloc CHARGEMENT FINAL : la transaction Postgres rollback
                 // automatiquement quand l'exception bubble out du sink /
                 // finalize hook . On marque la phase ROLLBACK pour que
-                // oa-live affiche un badge rouge live . Postgres ne donne
+                // les consommateurs live affichent un badge rouge . Postgres ne donne
                 // pas de feedback granulaire sur le rollback ( atomique ) ,
                 // on capture juste le timestamp + le delta de rows pour
                 // post-mortem .
@@ -699,8 +747,13 @@ public class CascadeImportPipeline {
             // #62 - Toujours retirer le snapshot du registry , quel que soit
             // le chemin de sortie ( succès , erreur , annulation ). Sans ce
             // finally , un workflow planté laisserait un fantôme indéfiniment
-            // visible dans oa-live.
-            if (corrUuid != null) {
+            // visible cote consommateurs live . En mode deferred ( cascade 3.0.0 ) le
+            // runner enregistre sur le TransactionSynchronizationManager
+            // appelle activeRegistry.finish au moment de afterCommit /
+            // afterCompletion , donc on s abstient ici pour que le
+            // workflow reste visible jusqu a ce que les donnees soient
+            // effectivement en DB .
+            if (corrUuid != null && !runnerWillFinalize.get()) {
                 activeRegistry.finish(corrUuid);
             }
             // release the per-correlationId counter held by the
@@ -826,7 +879,7 @@ public class CascadeImportPipeline {
      * delta sur {@link fr.inrae.ore.cascade.model.progress.ProgressContext}
      * pour que les interceptors cascade voient la progression intra-chunk ,
      * puis met à jour le snapshot dans {@link WorkflowActiveRegistry} pour
-     * que oa-live voie progresser recordsProcessed et chunksProcessed en
+     * que les consommateurs live voient progresser recordsProcessed et chunksProcessed en
      * temps réel.
      */
     private ImportProgressReporter buildRegistryAwareReporter(
@@ -853,7 +906,7 @@ public class CascadeImportPipeline {
     /**
      * Compte les lignes du fichier ( deja sans en-tete ) pour alimenter
      * recordsTotal. Best-effort : en cas d'erreur I/O on retourne 0L et
-     * oa-live retombe sur la barre indeterminee.
+     * les consommateurs live retombent sur la barre indeterminee.
      */
     private static long countLines(Path path) {
         try (java.util.stream.Stream<String> lines = Files.lines(path)) {
