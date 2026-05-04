@@ -347,20 +347,27 @@ public class CascadeImportPipeline {
             // caller-thread sur les row-locks de la table finale ) . Hors
             // tx Spring ( tests directs , scripts ) on conserve
             // SYNCHRONOUS = comportement cascade 2.x .
-            final boolean outerTxActive = directCopy
-                    && org.springframework.transaction.support.TransactionSynchronizationManager
-                            .isActualTransactionActive();
-            final fr.inrae.ore.cascade.api.defaults.db.staging.FinalizeMode finalizeMode = outerTxActive
+            // S applique aux deux strategies : DIRECT_COPY ( deferred via
+            // FinalizeMode.DEFERRED_TO_CALLER cascade 3.0.0 ) ET MERGE_FILE
+            // ( deferred via StoreAllPathSink.deferToCaller phase B ) .
+            final boolean outerTxActive = org.springframework.transaction.support.TransactionSynchronizationManager
+                    .isActualTransactionActive();
+            final fr.inrae.ore.cascade.api.defaults.db.staging.FinalizeMode finalizeMode = (directCopy && outerTxActive)
                     ? fr.inrae.ore.cascade.api.defaults.db.staging.FinalizeMode.DEFERRED_TO_CALLER
                     : fr.inrae.ore.cascade.api.defaults.db.staging.FinalizeMode.SYNCHRONOUS;
             if (outerTxActive) {
-                log.info("[{}] Outer Spring tx active : sink configure en DEFERRED_TO_CALLER ( finalize execute en afterCommit )",
-                        correlationId);
+                log.info("[{}] Outer Spring tx active : sink configure en mode deferred ( finalize execute en afterCommit ) - strategy={}",
+                        correlationId, strategy);
             }
 
+            // MERGE_FILE deferred : on garde une reference typee sur le sink
+            // pour pouvoir ensuite recuperer le path capte via takeDeferredMergedPath .
+            StoreAllPathSink mergeFileSink = directCopy
+                    ? null
+                    : new StoreAllPathSink(referenceValueRepository, activeRegistry, outerTxActive);
             fr.inrae.ore.cascade.model.core.Sink<java.nio.file.Path> sink = directCopy
                     ? CascadeSinkFactory.directCopy(referenceValueRepository, importProperties, corrUuid, heartbeatService, activeRegistry, finalizeMode)
-                    : new StoreAllPathSink(referenceValueRepository, activeRegistry);
+                    : mergeFileSink;
             MergedFileChunkCollector mergeCollector = directCopy
                     ? null
                     : new MergedFileChunkCollector(mergedPath);
@@ -550,20 +557,37 @@ public class CascadeImportPipeline {
                 log.info("[{}] Workflow cascade termine : processed={}, chunks={}, duration={}",
                         correlationId, result.recordsProcessed(), result.chunksProcessed(), result.duration());
 
-                // Cascade 3.0.0 DEFERRED_TO_CALLER : le sink a capture la
-                // finalize SQL au lieu de l executer inline . On l accroche
-                // sur la tx Spring courante : afterCommit declenche le UPSERT
-                // sur une connexion fraiche du pool ( meme thread que le
-                // caller , row-locks deja relaches ) ; afterCompletion
-                // ROLLED_BACK declenche le cleanup des rows staging .
-                if (outerTxActive) {
-                    result.deferredFinalize().ifPresent(deferred -> {
+                // Cascade 3.0.0 DEFERRED_TO_CALLER ( DIRECT_COPY ) ou
+                // StoreAllPathSink.deferToCaller ( MERGE_FILE ) : le sink a
+                // capture la finalize SQL ( ou le path merged.csv ) au lieu
+                // de l executer inline . On l accroche sur la tx Spring
+                // courante : afterCommit declenche le UPSERT sur une
+                // connexion fraiche du pool ( meme thread que le caller ,
+                // row-locks deja relaches ) ; afterCompletion ROLLED_BACK
+                // nettoie les artefacts ( staging rows / merged.csv ) .
+                boolean deferredMergeFile = false;
+                if (outerTxActive && directCopy) {
+                    java.util.Optional<fr.inrae.ore.cascade.api.defaults.db.staging.DeferredFinalize> deferred =
+                            result.deferredFinalize();
+                    if (deferred.isPresent()) {
                         org.springframework.transaction.support.TransactionSynchronizationManager
-                                .registerSynchronization(new TxAwareDeferredRunner(deferred, corrUuid));
-                        log.info("[{}] Deferred finalize handle bind sur la Spring tx courante ( afterCommit )",
+                                .registerSynchronization(new TxAwareDeferredRunner(deferred.get(), corrUuid));
+                        log.info("[{}] DIRECT_COPY deferred finalize bind sur la Spring tx courante ( afterCommit )",
                                 correlationId);
-                    });
+                    }
+                } else if (outerTxActive && mergeFileSink != null) {
+                    java.util.Optional<java.nio.file.Path> mergedDeferred = mergeFileSink.takeDeferredMergedPath();
+                    if (mergedDeferred.isPresent()) {
+                        org.springframework.transaction.support.TransactionSynchronizationManager
+                                .registerSynchronization(new MergeFileDeferredRunner(
+                                        referenceValueRepository, tempCleanup, mergeFileSink,
+                                        mergedDeferred.get(), processedDir, corrUuid, activeRegistry));
+                        deferredMergeFile = true;
+                        log.info("[{}] MERGE_FILE deferred storeAll bind sur la Spring tx courante ( afterCommit )",
+                                correlationId);
+                    }
                 }
+                final boolean processedDirDeferred = deferredMergeFile;
 
                 // Phase : chargement effectif en base . Cascade a deja
                 // tout fait :
@@ -600,7 +624,15 @@ public class CascadeImportPipeline {
                         result.chunksProcessed(), fileSizeBytes,
                         result.errors(), null);
 
-                tempCleanup.cleanup(chunksDir, processedDir, uploadedPath);
+                // En MERGE_FILE deferred , processedDir contient le merged.csv
+                // que le runner afterCommit doit encore lire ; on le nettoie
+                // depuis MergeFileDeferredRunner . Les autres dirs ( source
+                // chunks + uploaded raw ) peuvent partir tout de suite .
+                if (processedDirDeferred) {
+                    tempCleanup.cleanup(chunksDir, uploadedPath);
+                } else {
+                    tempCleanup.cleanup(chunksDir, processedDir, uploadedPath);
+                }
 
                 // PER_WORKFLOW_TABLE : DROP TABLE apres succes ( la table
                 // dediee a deja ete UPSERTee vers la table finale par le

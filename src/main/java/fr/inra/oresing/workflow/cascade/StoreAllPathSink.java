@@ -49,6 +49,29 @@ public final class StoreAllPathSink implements Sink<Path>, RowCountingSink {
     private final WorkflowActiveRegistry registry;
 
     /**
+     * Mode "deferred to caller" pour MERGE_FILE ( phase B / cascade 3.0.0 ) :
+     * quand {@code true} , {@link #write(Chunk)} ne lance pas
+     * {@link DataRepository#storeAll} inline sur le thread sink-1 mais capte
+     * le chemin du {@code merged.csv} . Le caller invoquera plus tard la
+     * methode {@link #takeDeferredMergedPath()} pour recuperer le path et
+     * executer le UPSERT sur sa propre connexion ( afterCommit Spring tx ) .
+     * Evite le deadlock sink-1 vs caller-thread sur les row-locks de la
+     * table finale ( meme cause que le DEFERRED_TO_CALLER cascade 3.0.0
+     * cote StagingPostgresSink ) .
+     *
+     * <p>Hors tx Spring ( {@code false} ) : comportement historique , storeAll
+     * inline dans {@link #write} = compatible cascade 2.x .
+     */
+    private final boolean deferToCaller;
+
+    /**
+     * Path capte en mode {@link #deferToCaller} . Volatile pour la
+     * visibilite cross-thread ( sink-1 ecrit , caller-thread lit ) .
+     * Consomme une fois via {@link #takeDeferredMergedPath()} .
+     */
+    private volatile Path deferredMergedPath;
+
+    /**
      * correlationId du workflow en cours . Capte au {@code setup} ;
      * {@link AtomicReference} pour rester thread-safe en cas de
      * publication parallele future ( aujourd'hui le contrat sink
@@ -72,16 +95,30 @@ public final class StoreAllPathSink implements Sink<Path>, RowCountingSink {
 
     /** Constructeur historique : pas de publication de progress sub-phase ( tests ) . */
     public StoreAllPathSink(DataRepository repository) {
-        this(repository, null);
+        this(repository, null, false);
     }
 
     /**
-     * Constructeur instrumente : publie sub-phase + per-batch row count
-     * dans {@code registry} pour alimenter la live view MERGE_FILE 3 bars .
+     * Constructeur instrumente sans deferred mode . Compatible cascade 2.x .
      */
     public StoreAllPathSink(DataRepository repository, WorkflowActiveRegistry registry) {
-        this.repository = Objects.requireNonNull(repository, "repository cannot be null");
-        this.registry   = registry;
+        this(repository, registry, false);
+    }
+
+    /**
+     * Constructeur complet : registry + mode deferred ( phase B ) .
+     *
+     * @param deferToCaller si {@code true} , {@link #write} capte le path
+     *                      au lieu d invoquer storeAll inline ; le caller
+     *                      doit invoquer {@link #takeDeferredMergedPath} et
+     *                      executer le UPSERT sur sa propre connexion
+     *                      ( typiquement Spring afterCommit ) .
+     */
+    public StoreAllPathSink(DataRepository repository, WorkflowActiveRegistry registry,
+                            boolean deferToCaller) {
+        this.repository    = Objects.requireNonNull(repository, "repository cannot be null");
+        this.registry      = registry;
+        this.deferToCaller = deferToCaller;
     }
 
     @Override
@@ -100,6 +137,7 @@ public final class StoreAllPathSink implements Sink<Path>, RowCountingSink {
     @Override
     public void setup(String correlationId) {
         rowsWritten.set(0L);
+        deferredMergedPath = null;
         UUID corr = parseUuid(correlationId);
         currentCorrelationId.set(corr);
     }
@@ -117,6 +155,15 @@ public final class StoreAllPathSink implements Sink<Path>, RowCountingSink {
             return;
         }
         Path mergedFile = chunk.records().get(0);
+
+        if (deferToCaller) {
+            // Capture seulement ; le caller invoquera storeAll en afterCommit
+            // sur sa propre connexion ( evite le deadlock sink-1 vs caller
+            // outer-tx sur les row-locks de la table finale ) .
+            deferredMergedPath = mergedFile;
+            return;
+        }
+
         UUID corr = currentCorrelationId.get();
         java.util.function.LongConsumer onBatch = (registry != null && corr != null)
                 ? n -> registry.addFinalRows(corr, n)
@@ -126,6 +173,32 @@ public final class StoreAllPathSink implements Sink<Path>, RowCountingSink {
                 : phase -> { };
         long upserted = repository.storeAll(mergedFile, onBatch, onPhase);
         rowsWritten.addAndGet(upserted);
+    }
+
+    /**
+     * Renvoie le path {@code merged.csv} capte en mode {@link #deferToCaller} ,
+     * et reset le slot ( consume-once ) . Toujours {@link java.util.Optional#empty()}
+     * en mode synchrone ou avant que cascade ait emit le chunk merge .
+     *
+     * <p>Le caller doit invoquer {@code repository.storeAll} sur le path
+     * renvoye depuis sa propre connexion ( typiquement
+     * {@code TransactionSynchronization.afterCommit()} ) .
+     */
+    public java.util.Optional<Path> takeDeferredMergedPath() {
+        Path p = deferredMergedPath;
+        deferredMergedPath = null;
+        return java.util.Optional.ofNullable(p);
+    }
+
+    /**
+     * Permet au runner deferred de reporter le rowcount apres execution
+     * sur la connexion caller . Sans ce setter , {@link #getRowsWritten}
+     * resterait a 0 en mode deferred ( {@link #write} ne fait pas le
+     * UPSERT ) ce qui casse le {@code effectiveRecordsProcessed} dans
+     * {@code workflow_log.records_processed} .
+     */
+    public void recordDeferredRowsWritten(long rows) {
+        rowsWritten.set(rows);
     }
 
     private static UUID parseUuid(String s) {
