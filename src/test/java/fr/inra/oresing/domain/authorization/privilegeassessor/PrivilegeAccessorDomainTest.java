@@ -6,6 +6,7 @@ import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DynamicNode;
 import org.junit.jupiter.api.TestFactory;
+import org.junit.jupiter.api.Tag;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +23,7 @@ import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 @DisplayName("Tests organisés des méthodes de PrivilegeAssessorDomainForApplication")
+@Tag("core.auth")
 public class PrivilegeAccessorDomainTest {
     /**
      * Définition des méthodes à tester avec leurs assessors autorisés et non autorisés

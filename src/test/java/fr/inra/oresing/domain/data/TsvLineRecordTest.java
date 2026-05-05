@@ -3,12 +3,14 @@ package fr.inra.oresing.domain.data;
 import com.fasterxml.jackson.core.type.TypeReference;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
 import java.io.IOException;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@Tag("domain.model")
 class TsvLineRecordTest {
     public static final String[] ORDERED_COLUMNS = new String[]{
             "id",

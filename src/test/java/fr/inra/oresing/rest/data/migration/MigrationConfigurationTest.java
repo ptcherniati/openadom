@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.application.configuration.internationalization.Int
 import org.javers.core.Javers;
 import org.javers.core.diff.Diff;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
 import java.util.Locale;
 import java.util.Map;
@@ -25,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * modifications , il est préférable de les ignorer côté Javers plutôt
  * que de les router vers une règle « no-op ».
  */
+@Tag("core.config")
 class MigrationConfigurationTest {
 
     private final Javers javers = new MigrationConfiguration().javers();

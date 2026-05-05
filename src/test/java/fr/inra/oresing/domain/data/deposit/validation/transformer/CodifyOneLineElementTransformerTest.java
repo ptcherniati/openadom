@@ -6,12 +6,14 @@ import fr.inra.oresing.domain.checker.type.ListType;
 import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.SomethingThatCanProvideEvaluationContext;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+@Tag("domain.model")
 class CodifyOneLineElementTransformerTest {
 
     private final CheckerTarget target = mock(CheckerTarget.class);

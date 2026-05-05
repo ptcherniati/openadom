@@ -4,10 +4,12 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.exception.Disconne
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
 import static fr.inra.oresing.OreSiRequestClient.DISCONECTED_EXCEPTION;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
+@Tag("core.basic")
 class OreSiRequestClientTest {
     static OreSiRequestClientForTest client = new OreSiRequestClientForTest();
 

@@ -1,6 +1,7 @@
 package fr.inra.oresing.workflow.cascade.history;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
 import java.time.Instant;
 import java.util.List;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("domain.model")
 class WorkflowActiveRegistryTest {
 
     private static WorkflowSnapshot snap(UUID cid, UUID userId, String type) {

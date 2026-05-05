@@ -21,6 +21,7 @@ import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.rest.model.configuration.ValidationError;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.postgresql.util.PSQLException;
@@ -36,6 +37,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.when;
 
+@Tag("domain.model")
 class OreExceptionHandlerTest {
     private OreExceptionHandler exceptionHandler;
     private ObjectMapper objectMapper;

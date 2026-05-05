@@ -9,6 +9,7 @@ import fr.inra.oresing.rest.data.DataService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.MockitoAnnotations;
@@ -32,6 +33,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 @DisplayName("test de csv builder")
+@Tag("domain.model")
 public class DataCsvBuilderTest {
     public static final String DATA_NAME = "pem";
     public static final String DATA_ZIP_OUT = "/tmp/testBuildShouldReturnUUIDsfromDataOut.zip";

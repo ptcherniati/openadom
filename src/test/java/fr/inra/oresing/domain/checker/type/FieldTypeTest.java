@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 import static org.mockito.Mockito.when;
 
+@Tag("domain.checker")
 class FieldTypeTest {
     @Mock
     LineChecker.OneChecker lineChecker;

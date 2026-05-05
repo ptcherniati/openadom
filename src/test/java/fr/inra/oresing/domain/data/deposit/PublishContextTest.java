@@ -8,6 +8,7 @@ import fr.inra.oresing.domain.file.FileOrUUID;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.mockito.Mockito;
 
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.function.Function;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@Tag("domain.model")
 class PublishContextTest {
     public static final String DATA_NAME = "dataName";
     private final List<String> currentRow = List.of("val3", "val4");

@@ -3,10 +3,12 @@ package fr.inra.oresing.domain.application.configuration.checker;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
 import java.time.LocalDate;
 import java.util.Set;
 
+@Tag("core.config")
 class CheckerDescriptionTest {
 
     @Test

@@ -4,12 +4,14 @@ import com.google.common.collect.ImmutableList;
 import fr.inra.oresing.domain.data.DataDatum;
 import fr.inra.oresing.domain.data.Datum;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+@Tag("domain.model")
 class ChainTransformersLineTransformerTest {
 
     @Test
