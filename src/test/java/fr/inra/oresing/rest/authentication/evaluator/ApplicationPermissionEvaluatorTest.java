@@ -22,10 +22,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@Tag("core.auth")
 @DisplayName("Tests de l'évaluateur de permissions annotation @PreAuthorize")
 class ApplicationPermissionEvaluatorTest {
 
@@ -81,6 +81,10 @@ class ApplicationPermissionEvaluatorTest {
         OreSiAuthenticationToken applicationToken = createToken(UUID.randomUUID(), "nobody");
         applicationToken.setApplicationName("testApplication");
         applicationToken.setDataName("testData");
+
+        // Token avec applicationName mais sans dataName (pour APPLICATION_DATA_READ_SOME et APPLICATION_DATA_DOWNLOAD_BUNDLE)
+        OreSiAuthenticationToken applicationTokenNoData = createToken(UUID.randomUUID(), "nobody");
+        applicationTokenNoData.setApplicationName("testApplication");
 
         return List.of(
                 // Tests pour le domaine SYSTEM
@@ -186,6 +190,13 @@ class ApplicationPermissionEvaluatorTest {
                 ),
                 new UserTest(
                         ApplicationPermissionEvaluator.APPLICATION,
+                        ApplicationPermissionEvaluator.APPLICATION_DATA_READ_SOME,
+                        "Lecture partielle de données (sans dataName requis)",
+                        List.of(applicationToken, applicationTokenNoData),
+                        List.of(applicationAdminUser) // Token sans nom d'application
+                ),
+                new UserTest(
+                        ApplicationPermissionEvaluator.APPLICATION,
                         ApplicationPermissionEvaluator.APPLICATION_DATA_WRITE,
                         "Écriture de données",
                         List.of(applicationToken),
@@ -207,6 +218,13 @@ class ApplicationPermissionEvaluatorTest {
                         List.of(applicationToken),
                         List.of(applicationDeleteUser, applicationPublishWriterUser,
                                 applicationCreatorUser, applicationManagerUser) // Token sans nom d'application
+                ),
+                new UserTest(
+                        ApplicationPermissionEvaluator.APPLICATION,
+                        ApplicationPermissionEvaluator.APPLICATION_DATA_DOWNLOAD_BUNDLE,
+                        "Téléchargement du bundle de données",
+                        List.of(applicationToken, applicationTokenNoData),
+                        List.of(applicationAdminUser) // Token sans nom d'application
                 )
         );
     }
@@ -328,6 +346,24 @@ class ApplicationPermissionEvaluatorTest {
     }
 
     /**
+     * Teste que hasPermission(Serializable) renvoie toujours false (signature non implémentée)
+     */
+    @Test
+    @DisplayName("hasPermission(Serializable) renvoie toujours false")
+    void hasPermission_serializable_alwaysReturnsFalse() {
+        OreSiAuthenticationToken token = createToken(UUID.randomUUID(), "anyUser");
+        assertFalse(
+                permissionEvaluator.hasPermission(token, UUID.randomUUID(), "ANY_TYPE", "ANY_PERMISSION"),
+                "La surcharge Serializable doit toujours retourner false"
+        );
+        assertFalse(
+                permissionEvaluator.hasPermission(null, UUID.randomUUID(), "ANY_TYPE", "ANY_PERMISSION"),
+                "La surcharge Serializable avec token null doit toujours retourner false"
+        );
+    }
+
+
+    /**
      * Configuration d'un cas de test pour l'évaluateur de permissions
      */
     record UserTest(
@@ -364,6 +400,9 @@ class ApplicationPermissionEvaluatorTest {
                         lenient().when(assessor.forAdministrationManagement()).thenReturn((OpenAdomAdmin) getOrCreateSystemPersona("OpenAdomAdmin"));
                         lenient().when(assessor.forCreateApplication()).thenReturn((ApplicationCreator) getOrCreateSystemPersona("ApplicationCreator"));
                         break;
+                    default:
+                        // Autres domaines système : aucun setup spécifique nécessaire pour les tests actuels
+                        break;
                 }
 
                 return assessor;
@@ -383,6 +422,8 @@ class ApplicationPermissionEvaluatorTest {
                                         .thenReturn((ApplicationManager) getOrCreateApplicationPersona("ApplicationManager"));
                                 lenient().when(assessor.forManageAdministrator())
                                         .thenReturn((ApplicationAdminUser) getOrCreateApplicationPersona("ApplicationAdminUser"));
+                                lenient().when(assessor.forDownloadBundle())
+                                        .thenReturn(getOrCreateApplicationPersona("ApplicationManager"));
                                 break;
                             case DATA_MANAGEMENT:
                                 lenient().when(assessor.forManageAuthorizations())
@@ -392,6 +433,8 @@ class ApplicationPermissionEvaluatorTest {
                                 break;
                             case DATA_READ:
                                 lenient().when(assessor.forDataRead(anyString()))
+                                        .thenReturn((ApplicationDataReaderUser) getOrCreateApplicationPersona("ApplicationDataReader"));
+                                lenient().when(assessor.forDataReadSome())
                                         .thenReturn((ApplicationDataReaderUser) getOrCreateApplicationPersona("ApplicationDataReader"));
                                 lenient().when(assessor.forDataDelete(anyString()))
                                         .thenReturn((ApplicationDataDelete) getOrCreateApplicationPersona("ApplicationDeleteUser"));
@@ -407,7 +450,8 @@ class ApplicationPermissionEvaluatorTest {
                                         .thenReturn((ApplicationDataWriter) getOrCreateApplicationPersona("ApplicationPublishWriter"));
                                 break;
                             default:
-                                throw new IllegalStateException("Unexpected value: " + d);
+                                // Autres domaines application : aucun setup spécifique nécessaire
+                                break;
                         }
 
                         return assessor;

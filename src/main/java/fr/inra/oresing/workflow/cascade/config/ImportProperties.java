@@ -24,6 +24,13 @@ public class ImportProperties {
     /** Nombre de lignes CSV par chunk. */
     private volatile int chunkSizeLines = 1000;
 
+    /**
+     * Parallelisme global du pipeline (nombre de workers source/transform).
+     * Règle : parallelism ≤ cascade.pool.transform (défaut 4) ET ≤ hikari.maximum-pool-size - 2.
+     * Ex. : pool=10 → parallelism max raisonnable = 6 (laisse 4 connexions pour le reste).
+     */
+    private volatile int parallelism = 4;
+
     /** Granularité des notifications de progression ( en lignes ). */
     private volatile int progressBatchSize = 100;
 
@@ -51,8 +58,32 @@ public class ImportProperties {
     private volatile boolean enableMetrics = false;
 
     // ------------------------------------------------------------------ //
-    //  cascade 1.7.0 strategy flags
+    //  Caches de pré-calcul (Axe A référentiel + Axe B Groovy)            //
     // ------------------------------------------------------------------ //
+
+    /**
+     * Plafond absolu du cache Axe A (ReferenceType.precomputedResults) par instance.
+     * Au-delà, les nouvelles valeurs ne sont plus mises en cache (seenOnce continue).
+     * Surcharger via CASCADE_IMPORT_REFERENCE_CACHE_MAX_ENTRIES.
+     */
+    private volatile int referenceCacheMaxEntries = 5000;
+
+    /**
+     * Plafond absolu du cache Axe B (DataValidator.groovyTransformationCache) par import.
+     * Au-delà, aucune nouvelle entrée Groovy n'est mise en cache.
+     * Surcharger via CASCADE_IMPORT_GROOVY_CACHE_MAX_ENTRIES.
+     */
+    private volatile int groovyCacheMaxEntries = 1000;
+
+    /**
+     * Active le mode « récursion ordonnée » globalement : les parents sont garantis
+     * d'apparaître <em>avant</em> leurs enfants dans le CSV récursif.
+     * En mode ordonné, un parent introuvable génère une erreur immédiate au lieu
+     * d'être différé dans missingParentLine.
+     * Par tag YAML : {@code __ORDER_STRICT__} (activation par datatype).
+     * Ce flag est le fallback global pour tous les datatypes.
+     */
+    private volatile boolean orderedRecursionMode = false;
 
     /** Sink strategy ( MERGE_FILE legacy , DIRECT_COPY production ) . */
     private volatile SinkStrategy sinkStrategy = SinkStrategy.MERGE_FILE;
@@ -147,8 +178,8 @@ public class ImportProperties {
     }
 
     public int getChunkSizeLines()        { return chunkSizeLines; }
-    public int getProgressBatchSize()     { return progressBatchSize; }
-    public int getMaxErrorsThreshold()    { return maxErrorsThreshold; }
+    public int getParallelism()            { return parallelism; }
+    public int getProgressBatchSize()     { return progressBatchSize; }    public int getMaxErrorsThreshold()    { return maxErrorsThreshold; }
     public String getChunksTempDir()      { return chunksTempDir; }
     public String getProcessedTempDir()   { return processedTempDir; }
     public int getCollectorChunkSize()    { return collectorChunkSize; }
@@ -161,8 +192,12 @@ public class ImportProperties {
     public int getStagingSharedOrphanTtlMinutes() { return stagingSharedOrphanTtlMinutes; }
     public boolean isSkipCsvReencoding() { return skipCsvReencoding; }
     public int getFinalizeStatementTimeoutMinutes() { return finalizeStatementTimeoutMinutes; }
+    public int getReferenceCacheMaxEntries()  { return referenceCacheMaxEntries; }
+    public int getGroovyCacheMaxEntries()     { return groovyCacheMaxEntries; }
+    public boolean isOrderedRecursionMode()   { return orderedRecursionMode; }
 
     public void setChunkSizeLines(int v)      { this.chunkSizeLines = v; }
+    public void setParallelism(int v)          { this.parallelism = v; }
     public void setProgressBatchSize(int v)   { this.progressBatchSize = v; }
     public void setMaxErrorsThreshold(int v)  { this.maxErrorsThreshold = v; }
     public void setChunksTempDir(String v)    { this.chunksTempDir = v; }
@@ -177,4 +212,7 @@ public class ImportProperties {
     public void setStagingSharedOrphanTtlMinutes(int v) { this.stagingSharedOrphanTtlMinutes = v; }
     public void setSkipCsvReencoding(boolean v) { this.skipCsvReencoding = v; }
     public void setFinalizeStatementTimeoutMinutes(int v) { this.finalizeStatementTimeoutMinutes = v; }
+    public void setReferenceCacheMaxEntries(int v) { this.referenceCacheMaxEntries = v; }
+    public void setGroovyCacheMaxEntries(int v)    { this.groovyCacheMaxEntries = v; }
+    public void setOrderedRecursionMode(boolean v) { this.orderedRecursionMode = v; }
 }

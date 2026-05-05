@@ -230,9 +230,21 @@ public class CascadeImportPipeline {
             // proprietes JVM cascade.pool.{stage} ) avec fallback sur le
             // default cascade ( 4 ) . openAdom n'expose plus de bouton
             // global parallelism : la source de verite est cascade.
-            final int chunkSizeLines       = importProperties.getChunkSizeLines();
-            final int sourcePoolSize       = resolvePoolSize("source",    DEFAULT_PARALLELISM);
-            final int transformPoolSize    = resolvePoolSize("transform", DEFAULT_PARALLELISM);
+
+            // Pour les referentiels recursifs, l'algorithme de resolution des parents
+            // (missingParentLine / testLinesRegardingRecursivity dans DataValidator) suppose
+            // un traitement sequentiel fichier entier : une ligne dont le parent n'est pas
+            // encore connu est mise en attente, et re-traitee des que le parent est rencontre.
+            // Ce mecanisme est brise si le fichier est decoupe en plusieurs chunks paralleles
+            // (un chunk peut chercher un parent qui sera traite par un autre chunk non demarre).
+            // On force donc chunkSizeLines=MAX_VALUE pour garantir 1 seul chunk (tout le fichier).
+            // Consequence : meme avec plusieurs workers dans le pool, il n'y a qu'une seule
+            // unite de travail => le traitement est de facto sequentiel.
+            final boolean isRecursive = dataImporter.getDataImporterContext().isRecursive();
+            final int chunkSizeLines  = effectiveChunkSizeLines(importProperties, isRecursive);
+            final int parallelism     = effectiveParallelism(importProperties, isRecursive);
+            final int sourcePoolSize       = resolvePoolSize("source",    parallelism);
+            final int transformPoolSize    = resolvePoolSize("transform", parallelism);
             final int rawSinkPoolSize      = resolvePoolSize("sink",      DEFAULT_PARALLELISM);
             final int maxErrors            = importProperties.getMaxErrorsThreshold();
             final int collectorChunkSize   = importProperties.getCollectorChunkSize();
@@ -770,6 +782,46 @@ public class CascadeImportPipeline {
                 }
             }
         }
+    }
+
+    // ---------------------------------------------------------------- //
+    //  Helpers de configuration — visibles pour les tests unitaires   //
+    // ---------------------------------------------------------------- //
+
+    /**
+     * Taille de chunk effective selon la strategie recursive :
+     * <ul>
+     *   <li>{@code isRecursive=false} → valeur configuree dans {@link ImportProperties}</li>
+     *   <li>{@code isRecursive=true, isStrictOrdered=true} → valeur configuree (chunks normaux ;
+     *       le mode &laquo; recursion ordonnee &raquo; n'a pas besoin du fichier entier en RAM)</li>
+     *   <li>{@code isRecursive=true, isStrictOrdered=false} → {@link Integer#MAX_VALUE} (fichier
+     *       entier en un seul chunk, necessaire pour le lazy-loading des parents)</li>
+     * </ul>
+     *
+     * @see fr.inra.oresing.domain.data.deposit.transformation.DataValidator#testLinesRegardingRecursivity
+     * @see fr.inra.oresing.domain.application.configuration.Tag.OrderStrictTag
+     */
+    static int effectiveChunkSizeLines(ImportProperties props, boolean isRecursive, boolean isStrictOrdered) {
+        if (!isRecursive) return props.getChunkSizeLines();
+        return isStrictOrdered ? props.getChunkSizeLines() : Integer.MAX_VALUE;
+    }
+
+    /**
+     * Surcharge de compatibilité : {@code isStrictOrdered = false} (comportement legacy).
+     *
+     * @see #effectiveChunkSizeLines(ImportProperties, boolean, boolean)
+     */
+    static int effectiveChunkSizeLines(ImportProperties props, boolean isRecursive) {
+        return effectiveChunkSizeLines(props, isRecursive, false);
+    }
+
+    /**
+     * Parallelisme effectif : {@code 1} pour les imports recursifs, valeur configuree sinon.
+     * <p>Meme en mode &laquo; recursion ordonnee &raquo;, le parallelisme est force a 1 pour
+     * eviter les race conditions sur {@code missingParentLine}.
+     */
+    static int effectiveParallelism(ImportProperties props, boolean isRecursive) {
+        return isRecursive ? 1 : props.getParallelism();
     }
 
     // ---------------------------------------------------------------- //

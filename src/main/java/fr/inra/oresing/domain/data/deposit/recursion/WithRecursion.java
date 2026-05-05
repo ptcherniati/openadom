@@ -27,13 +27,29 @@ import java.util.stream.Collectors;
 
 public record WithRecursion(
         AsynchroneFileImporterContext dataImporterContext,
-        ConcurrentHashMap<DataValue.LineIdentityColumnName, Ltree> parentReferenceMap) implements RecursionStrategy {
+        ConcurrentHashMap<DataValue.LineIdentityColumnName, Ltree> parentReferenceMap,
+        boolean orderedMode) implements RecursionStrategy {
     /**
-     * When we have the hierarchical key, we can recover the natural key as the leaf of the ltree.
-     * In this case you must remove the reference to the data type "[^\\.][a-z][a-z]*K"
+     * Constructeur principal (mode standard, non ordonné).
      */
     public WithRecursion(final AsynchroneFileImporterContext dataImporterContext) {
-        this(dataImporterContext, new ConcurrentHashMap<>());
+        this(dataImporterContext, new ConcurrentHashMap<>(), false);
+    }
+
+    /**
+     * Crée une stratégie en mode « récursion ordonnée » :
+     * les parents apparaissent guarantis avant leurs enfants dans le CSV.
+     *
+     * @param dataImporterContext contexte de l'import
+     * @return stratégie récursive en mode ordonné
+     */
+    public static WithRecursion ordered(final AsynchroneFileImporterContext dataImporterContext) {
+        return new WithRecursion(dataImporterContext, new ConcurrentHashMap<>(), true);
+    }
+
+    @Override
+    public boolean isOrderedMode() {
+        return orderedMode;
     }
 
 

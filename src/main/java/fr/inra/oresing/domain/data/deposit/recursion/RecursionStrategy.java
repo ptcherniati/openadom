@@ -35,4 +35,13 @@ public interface RecursionStrategy {
     Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> getReferenceValuesForSelfType();
 
     void addReferenceValuesForSelfType(DataValue.LineIdentityColumnName key, ImmutableSet<UUID> uuids);
+
+    /**
+     * Retourne {@code true} si cette stratégie opère en mode « récursion ordonnée »
+     * ({@code __ORDER_STRICT__} ou {@code orderedRecursionMode=true}).
+     * Par défaut {@code false} (mode standard, lazy-loading des parents).
+     */
+    default boolean isOrderedMode() {
+        return false;
+    }
 }

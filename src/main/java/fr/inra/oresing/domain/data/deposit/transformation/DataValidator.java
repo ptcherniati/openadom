@@ -86,7 +86,10 @@ public class DataValidator {
         boolean isErrorInvalidReferenceWithComponent = validationCheckResults.getValidations().stream()
                 .map(ValidationCheckResult::message)
                 .anyMatch("invalidReferenceWithComponent"::equals);
-        if (isLineCheckerRecusrsiveReference && isErrorInvalidReferenceWithComponent) {
+        // En mode ordonné, un parent manquant est traité comme une erreur immédiate
+        // (pas de différé dans missingParentLine) ; en mode standard, on diffère.
+        if (isLineCheckerRecusrsiveReference && isErrorInvalidReferenceWithComponent
+                && !recursionStrategy.isOrderedMode()) {
             return registerMissingLine(recursionStrategy, rowWithReferenceDatum, lineChecker, referenceDatumBeforeChecking);
         }
         List<ValidationCheckResult> vcrs = validationCheckResults.getValidations().stream().filter(ValidationCheckResult::isError).toList();

@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
+import com.fasterxml.jackson.module.blackbird.BlackbirdModule;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.Mapper;
@@ -260,7 +260,7 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
                 .addSerializer(BinaryFileDataset.class, getBinaryFileDatasetJsonSerializer())
                 .addSerializer(StringGroovyExpression.class, getStringGroovyExpressionJsonSerializer());
         jsonMapper.registerModule(module);
-        jsonMapper.registerModule(new AfterburnerModule());
+        jsonMapper.registerModule(new BlackbirdModule());
         jsonMapper.addHandler(new DeserializationProblemHandler() {
             @Override
             public Object handleUnexpectedToken(DeserializationContext ctxt,
