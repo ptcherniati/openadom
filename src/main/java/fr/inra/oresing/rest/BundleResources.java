@@ -12,7 +12,6 @@ import fr.inra.oresing.domain.data.deposit.bundle.RegisterReactiveResult;
 import fr.inra.oresing.domain.data.rapport.BundleReport;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.rest.data.DataService;
-import fr.inra.oresing.rest.data.publication.DataVersioningResult;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.filesenderclient.BuildBundleReport;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
@@ -426,7 +425,14 @@ public class BundleResources {
                                 throw new RuntimeException(e);
                             }
                             try {
-                                final DataVersioningResult data = createDataUseCase.execute(
+                                // Bundle import : pas de mail individuel
+                                // ( withEmail=false ) , DataVersioningResult
+                                // ignore ( pas de count expose dans le
+                                // rapport bundle ) . Le seul side-effect
+                                // attendu est l execution de la cascade
+                                // pipeline + UPSERT staging -> table finale
+                                // ( synchrone ou differe selon la tx en cours ) .
+                                createDataUseCase.execute(
                                         locale,
                                         application.getName(),
                                         dataName,

@@ -478,8 +478,24 @@ public class OreSiResources {
             if (!applicationDataDelete.get().hasRightForPublishOrUnPublish(storeFile.fileOrUuid())) {
                 throw new NotApplicationDataWriterForPublishException(applicationName, dataName);
             }
-                DataVersioningResult dataVersioningResult = unPublishVersionBeforeDeleteUseCase
-                    .execute(locale, applicationName, id, true);
+            // withEmail=false : le mail "Suppression réussie" est envoyé
+            // post-commit dans finalizePostCommit pour qu il porte le
+            // compteur frais ( cascade 3.0.0 deferred fait tourner le
+            // UPSERT dans afterCommit ; lire le compteur inline donnerait
+            // une valeur stale ) .
+            DataVersioningResult dataVersioningResult = unPublishVersionBeforeDeleteUseCase
+                    .execute(locale, applicationName, id, false);
+            if (dataVersioningResult != null) {
+                // Capture le fileName AVANT removeFileUseCase qui supprime
+                // le binaryFile : sinon le mail aurait fileName=null .
+                String fileName = serviceContainer.binaryFileService()
+                        .getFile(applicationName, id)
+                        .map(fr.inra.oresing.domain.BinaryFile::getName)
+                        .orElse(null);
+                serviceContainer.versioningService().finalizePostCommit(
+                        locale, applicationName, dataName, fileName,
+                        dataVersioningResult, true);
+            }
         }
         Optional<UUID> uuid = removeFileUseCase.execute(application, id);
         if (uuid.isPresent()) {
