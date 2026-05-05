@@ -10,7 +10,6 @@ import fr.inra.oresing.domain.authorization.request.AuthorizationWithRestriction
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.persistence.JsonRowMapper;
-import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.authorization.request.AuthorizationRequestBuilder;
@@ -85,20 +84,7 @@ class CreateAuthorizationRequestTest extends AbstractIntegrationTest {
         StandardDataDescription sitesDescription = Mockito.mock(StandardDataDescription.class);
         Mockito.when(application.findData("type_de_sites")).thenReturn(Optional.of(typeDeSitesDescription));
         Mockito.when(application.findData("sites")).thenReturn(Optional.of(sitesDescription));
-        DataRepositoryWithBuffer dataRepositoryWithBuffer = Mockito.mock(DataRepositoryWithBuffer.class);
         OreSiAuthorization oreSiAuthorization = Mockito.mock(OreSiAuthorization.class);
-        Mockito.doReturn(
-                List.of(
-                        Ltree.fromSql("projetKprojet_atlantique"),
-                        Ltree.fromSql("projetKprojet_manche")
-                )
-        ).when(dataRepositoryWithBuffer).getHierarchicalKeyForEntry(Mockito.any(Map.Entry.class));
-        Mockito.doReturn(
-                List.of(
-                        Ltree.fromSql("projetKprojet_atlantique"),
-                        Ltree.fromSql("projetKprojet_manche")
-                )
-        ).when(dataRepositoryWithBuffer).getHierarchicalKeyForEntry(Mockito.any(Map.Entry.class));
         AuthorizationRequestBuilder authorizationRequestBuilder = new AuthorizationRequestBuilder(
                 application,
                 userIds,
