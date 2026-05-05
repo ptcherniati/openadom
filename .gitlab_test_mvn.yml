@@ -13,6 +13,7 @@
     DOCKER_TLS_CERTDIR: ""
   artifacts:
     when: always
+    expire_in: 2 days
     reports:
       junit: target/surefire-reports/*.xml
     paths:
@@ -40,6 +41,7 @@
   needs: ["maven_build"]
   artifacts:
     when: always
+    expire_in: 2 days
     reports:
       junit: target/surefire-reports/*.xml
     paths:
