@@ -12,6 +12,12 @@ import java.util.concurrent.atomic.AtomicLong;
  * compteur en memoire par {@code correlationId} et trace une ligne de log
  * a chaque batch.
  *
+ * <p>Dès que {@link #onTotalLinesKnown} a été appelé, les logs affichent
+ * une barre de progression ASCII sur 25 caractères :
+ * <pre>
+ *   [uuid] [█████████████░░░░░░░░░░░░] 52% (2500 / 4843) Δ+100
+ * </pre>
+ *
  * <p>Pas de persistence : si la JVM redemarre, l'historique est perdu.
  * Pour exposer la progression a un endpoint REST ou un dashboard, ajouter
  * une seconde implementation et l'injecter en {@code @Primary}.
@@ -20,14 +26,35 @@ import java.util.concurrent.atomic.AtomicLong;
 @Component
 public class LoggingImportProgressReporter implements ImportProgressReporter {
 
-    private final Map<String, AtomicLong> totals = new ConcurrentHashMap<>();
+    /** Largeur de la barre de progression en caractères. */
+    private static final int BAR_WIDTH = 25;
+    private static final String FILLED = "█";
+    private static final String EMPTY  = "░";
+
+    private final Map<String, AtomicLong> totals      = new ConcurrentHashMap<>();
+    private final Map<String, Long>       grandTotals = new ConcurrentHashMap<>();
+
+    @Override
+    public void onTotalLinesKnown(String correlationId, long totalLines) {
+        grandTotals.put(correlationId, totalLines);
+        log.info("[{}] Import démarré — {} lignes de données à traiter", correlationId, totalLines);
+    }
 
     @Override
     public void onLinesProcessed(String correlationId, int delta) {
-        long total = totals
+        long processed = totals
                 .computeIfAbsent(correlationId, k -> new AtomicLong())
                 .addAndGet(delta);
-        log.debug("[{}] +{} lignes traitées (total : {})", correlationId, delta, total);
+        Long grand = grandTotals.get(correlationId);
+        if (grand != null && grand > 0) {
+            int pct    = (int) (processed * 100 / grand);
+            int filled = (int) (BAR_WIDTH * processed / grand);
+            int empty  = BAR_WIDTH - filled;
+            String bar = "[" + FILLED.repeat(filled) + EMPTY.repeat(empty) + "]";
+            log.debug("[{}] {} {}% ({} / {}) Δ+{}", correlationId, bar, pct, processed, grand, delta);
+        } else {
+            log.debug("[{}] +{} lignes traitées (total : {})", correlationId, delta, processed);
+        }
     }
 
     /**
@@ -43,6 +70,7 @@ public class LoggingImportProgressReporter implements ImportProgressReporter {
         if (correlationId == null) {
             return 0L;
         }
+        grandTotals.remove(correlationId);
         AtomicLong removed = totals.remove(correlationId);
         return removed != null ? removed.get() : 0L;
     }

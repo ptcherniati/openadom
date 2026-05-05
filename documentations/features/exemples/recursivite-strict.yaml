@@ -1,0 +1,46 @@
+# Exemple de configuration YAML utilisant le tag __ORDER_STRICT__
+#
+# Le tag __ORDER_STRICT__ sur la validation portant le checker récursif
+# indique que le fichier CSV source est garanti ordonné (parents avant enfants).
+#
+# Cela active le mode "récursion ordonnée" uniquement pour ce datatype,
+# sans modifier la propriété Spring globale `cascade.import.ordered-recursion-mode`.
+#
+# Avantage : la chunk size reste normale (pas MAX_VALUE), ce qui permet
+# le chunking et le parallélisme même sur un référentiel récursif.
+#
+# Prérequis : le fichier CSV doit avoir les lignes parentes AVANT leurs enfants.
+
+version: "1.0.0"
+applicationName: exemple_recursivite_strict
+
+references:
+  taxon:
+    OA_columns:
+      nom_taxon:
+        OA_type: text
+      taxon_superieur:
+        OA_type: text
+
+    OA_validations:
+      # Le tag __ORDER_STRICT__ active le mode récursion ordonnée
+      # pour ce référentiel sans changer la configuration globale.
+      nomDuTaxonSuperieur:
+        OA_tags:
+          - __ORDER_STRICT__
+        OA_components:
+          - taxon_superieur
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: taxon
+              OA_isRecursive: true
+
+# Comparaison des modes :
+#
+# | Mode                          | Chunk size   | Parallélisme | Contrainte CSV       |
+# |-------------------------------|--------------|--------------|----------------------|
+# | Récursif standard             | MAX_VALUE    | 1            | Aucune               |
+# | Récursif ordonné (__ORDER_STRICT__ ou cascade.import.ordered-recursion-mode=true) |
+# |                               | normale      | configuré    | Parents avant enfants |

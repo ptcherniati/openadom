@@ -6,6 +6,8 @@ import fr.inra.oresing.domain.application.configuration.ComponentDescription;
 import fr.inra.oresing.domain.application.configuration.HierarchicalNode;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
+import fr.inra.oresing.domain.application.configuration.Tag;
+import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
 import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
 import fr.inra.oresing.domain.checker.LineChecker;
@@ -128,6 +130,22 @@ public record AsynchroneFileImporterContext(
      */
     public boolean isRecursive() {
         return getRecursiveComponentDescription().isPresent();
+    }
+
+    /**
+     * Retourne {@code true} si la validation portant le checker récursif est annotée
+     * avec le tag {@link Tag.OrderStrictTag} ({@code __ORDER_STRICT__}).
+     *
+     * <p>Ce tag indique que le fichier CSV est garanti ordonné (parents avant enfants),
+     * ce qui permet d'activer le mode à récursion ordonnée sans configuration Spring Boot
+     * globale.
+     */
+    public boolean isOrderStrictTaggedOnRecursiveValidation() {
+        return contextConstants().dataConfiguration().validations().values().stream()
+                .filter(vd -> vd.checkers().values().stream()
+                        .anyMatch(cd -> cd instanceof ReferenceChecker rc && rc.isRecursive()))
+                .anyMatch(vd -> vd.tags() != null
+                        && vd.tags().stream().anyMatch(Tag.OrderStrictTag.class::isInstance));
     }
 
     private Optional<HierarchicalNode> getRecursiveComponentDescription() {

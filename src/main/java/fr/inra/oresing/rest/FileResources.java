@@ -1,7 +1,15 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.domain.BinaryFile;
+import fr.inra.oresing.domain.ReferencedBinaryFiles;
+import fr.inra.oresing.persistence.BinaryFileInfos;
+import fr.inra.oresing.rest.model.data.BinaryFileResult;
+import fr.inra.oresing.rest.model.data.UserDescriptionResult;
+import fr.inra.oresing.rest.usecases.security.authorization.GetAllUsersUseCase;
+import fr.inra.oresing.rest.usecases.storage.binaryfile.GetFileUseCase;
 import fr.inra.oresing.rest.usecases.storage.binaryfile.GetFileWithDataUseCase;
+import fr.inra.oresing.rest.usecases.storage.binaryfile.GetReferencedBinaryFilesUseCase;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -16,8 +24,13 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -26,14 +39,25 @@ import java.util.UUID;
 public class FileResources {
 
     private final GetFileWithDataUseCase getFileWithDataUseCase;
+    private final GetFileUseCase getFileUseCase;
+    private final GetAllUsersUseCase getAllUsersUseCase;
+    private final GetReferencedBinaryFilesUseCase getReferencedBinaryFilesUseCase;
 
-    public FileResources(GetFileWithDataUseCase getFileWithDataUseCase) {
+    public FileResources(
+            GetFileWithDataUseCase getFileWithDataUseCase,
+            GetFileUseCase getFileUseCase,
+            GetAllUsersUseCase getAllUsersUseCase,
+            GetReferencedBinaryFilesUseCase getReferencedBinaryFilesUseCase) {
         this.getFileWithDataUseCase = getFileWithDataUseCase;
+        this.getFileUseCase = getFileUseCase;
+        this.getAllUsersUseCase = getAllUsersUseCase;
+        this.getReferencedBinaryFilesUseCase = getReferencedBinaryFilesUseCase;
     }
 
     public static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
     public static final String HEADER_ATTACHMENT_FILENAME = "attachment;filename=%1$s";
 
+    @Operation(summary = "Télécharger le contenu binaire d'un fichier")
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{name}/file/{id}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> getFile(
@@ -59,5 +83,42 @@ public class FileResources {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @Operation(summary = "Récupérer les métadonnées d'un fichier (sans le contenu binaire)")
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
+    @GetMapping(value = "/applications/{name}/file/{id}/info", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<BinaryFileResult> getFileInfo(
+            @PathVariable("name") final String name,
+            @PathVariable("id") final UUID id) {
+        return getFileUseCase.execute(name, id)
+                .map(binaryFile -> {
+                    Map<UUID, UserDescriptionResult> users = getAllUsersUseCase.execute()
+                            .stream()
+                            .map(UserDescriptionResult::of)
+                            .collect(Collectors.toMap(UserDescriptionResult::id, Function.identity()));
+                    UserDescriptionResult createUser = Optional.ofNullable(binaryFile.getParams())
+                            .map(BinaryFileInfos::createuser)
+                            .map(users::get)
+                            .orElse(null);
+                    UserDescriptionResult publishedUser = Optional.ofNullable(binaryFile.getParams())
+                            .map(BinaryFileInfos::publisheduser)
+                            .map(users::get)
+                            .orElse(null);
+                    List<ReferencedBinaryFiles> referencedFiles = getReferencedFiles(binaryFile);
+                    return ResponseEntity.ok(BinaryFileResult.of(binaryFile, createUser, publishedUser, referencedFiles));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    private List<ReferencedBinaryFiles> getReferencedFiles(BinaryFile binaryFile) {
+        if (Optional.ofNullable(binaryFile.getParams())
+                .stream().noneMatch(BinaryFileInfos::published)) {
+            return null;
+        }
+        return getReferencedBinaryFilesUseCase.execute(
+                binaryFile.getApplication(),
+                binaryFile.getParams().binaryFiledataset().getDatatype(),
+                Set.of(binaryFile.getId()));
     }
 }

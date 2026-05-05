@@ -33,4 +33,8 @@ public class TagBuilder {
     public static Tag.DomainTag domainTag(String tagName) {
         return new Tag.DomainTag(tagName);
     }
+
+    public static Tag.OrderStrictTag orderStrictTag() {
+        return Tag.OrderStrictTag.instance();
+    }
 }

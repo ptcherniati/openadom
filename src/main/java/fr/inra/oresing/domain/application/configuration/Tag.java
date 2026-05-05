@@ -74,6 +74,7 @@ public sealed interface Tag {
         ORDER_TAG(OrderTag.ORDER_TAG, OrderTag::buildOrderTag, OrderTag.getTagPattern()),
         FILTER_TEXT_TAG(FilterTextTag.FILTER_TEXT_TAG, w -> FilterTextTag.instance(), FilterTextTag.getTagPattern()),
         FILTER_LIST_TAG(FilterListTag.FILTER_LIST_TAG, w -> FilterListTag.instance(), FilterListTag.getTagPattern()),
+        ORDER_STRICT_TAG(OrderStrictTag.ORDER_STRICT_TAG, w -> OrderStrictTag.instance(), OrderStrictTag.getTagPattern()),
         NO_TAG(NoTag.NO_TAG, w -> NoTag.instance(), NoTag.getTagPattern()),
         DOMAIN_TAG(DomainTag.DOMAIN_TAG, DomainTag::buildDomainTag, DomainTag.getTagPattern());
         final Predicate<String> isA;
@@ -109,7 +110,7 @@ public sealed interface Tag {
         }
     }
 
-    sealed interface DefinedTag extends Tag permits DataTag, FilterTag, HiddenTag, NoTag, OrderTag, ReferenceTag {
+    sealed interface DefinedTag extends Tag permits DataTag, FilterTag, HiddenTag, NoTag, OrderTag, OrderStrictTag, ReferenceTag {
 
     }
 
@@ -305,6 +306,45 @@ public sealed interface Tag {
 
         public static String getTagPattern() {
             return ORDER_TAG_PATTERN.pattern();
+        }
+    }
+
+    /**
+     * Tag système {@code __ORDER_STRICT__} indiquant que le fichier CSV est garanti
+     * ordonné (parents avant enfants), ce qui permet d'activer le mode récursion
+     * ordonnée sans configuration Spring Boot globale.
+     *
+     * <p>Exemple YAML :
+     * <pre>{@code
+     * OA_validations:
+     *   nomDuTaxonSuperieur:
+     *     OA_tags: [ __ORDER_STRICT__ ]
+     *     OA_components: [ taxon_superieur ]
+     *     OA_checker:
+     *       OA_name: OA_reference
+     *       OA_params:
+     *         OA_reference:
+     *           OA_name: taxon
+     *           OA_isRecursive: true
+     * }</pre>
+     *
+     * <p>Peut aussi être activé globalement via la propriété Spring
+     * {@code cascade.import.ordered-recursion-mode=true}.
+     */
+    record OrderStrictTag(TagDefinitions tagDefinition) implements DefinedTag {
+        public static final String ORDER_STRICT_PATTERN = "__ORDER_STRICT__";
+        public static final Predicate<String> ORDER_STRICT_TAG = ORDER_STRICT_PATTERN::equals;
+
+        public OrderStrictTag() {
+            this(TagDefinitions.ORDER_STRICT_TAG);
+        }
+
+        public static OrderStrictTag instance() {
+            return new OrderStrictTag();
+        }
+
+        public static String getTagPattern() {
+            return ORDER_STRICT_PATTERN;
         }
     }
 

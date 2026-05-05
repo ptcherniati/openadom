@@ -241,7 +241,9 @@ public class CascadeImportPipeline {
             // Consequence : meme avec plusieurs workers dans le pool, il n'y a qu'une seule
             // unite de travail => le traitement est de facto sequentiel.
             final boolean isRecursive = dataImporter.getDataImporterContext().isRecursive();
-            final int chunkSizeLines  = effectiveChunkSizeLines(importProperties, isRecursive);
+            final boolean isStrictOrdered = dataImporter.getDataImporterContext().isOrderStrictTaggedOnRecursiveValidation()
+                    || importProperties.isOrderedRecursionMode();
+            final int chunkSizeLines  = effectiveChunkSizeLines(importProperties, isRecursive, isStrictOrdered);
             final int parallelism     = effectiveParallelism(importProperties, isRecursive);
             final int sourcePoolSize       = resolvePoolSize("source",    parallelism);
             final int transformPoolSize    = resolvePoolSize("transform", parallelism);
@@ -276,6 +278,10 @@ public class CascadeImportPipeline {
             // recordsProcessed / chunksProcessed en temps réel.
             ImportProgressReporter teeingReporter = buildRegistryAwareReporter(
                     progressReporter, corrUuid, fileSizeBytes, liveRecords, liveChunks);
+
+            // R-P1-4 — Notifie de suite le nombre total de lignes pour activer
+            // la barre de progression ASCII dans LoggingImportProgressReporter.
+            teeingReporter.onTotalLinesKnown(correlationId, recordsTotal);
 
             DataImporterTransformation transformation = new DataImporterTransformation(
                     dataImporter,
@@ -938,18 +944,26 @@ public class CascadeImportPipeline {
             ImportProgressReporter delegate, UUID corrUuid, long fileSizeBytes,
             java.util.concurrent.atomic.AtomicLong liveRecords,
             java.util.concurrent.atomic.AtomicInteger liveChunks) {
-        return (cid, delta) -> {
-            try {
-                delegate.onLinesProcessed(cid, delta);
-            } finally {
-                // Emet vers les interceptors cascade ( best effort : si
-                // l'orchestrator n'a pas bind d'emetteur , c'est un NOOP ).
-                fr.inrae.ore.cascade.model.progress.ProgressContext.current().emit(delta);
+        return new ImportProgressReporter() {
+            @Override
+            public void onTotalLinesKnown(String cid, long totalLines) {
+                delegate.onTotalLinesKnown(cid, totalLines);
+            }
 
-                if (corrUuid != null) {
-                    long records = liveRecords.addAndGet(delta);
-                    int chunks = liveChunks.incrementAndGet();
-                    activeRegistry.update(corrUuid, records, 0L, chunks, null, fileSizeBytes);
+            @Override
+            public void onLinesProcessed(String cid, int delta) {
+                try {
+                    delegate.onLinesProcessed(cid, delta);
+                } finally {
+                    // Emet vers les interceptors cascade ( best effort : si
+                    // l'orchestrator n'a pas bind d'emetteur , c'est un NOOP ).
+                    fr.inrae.ore.cascade.model.progress.ProgressContext.current().emit(delta);
+
+                    if (corrUuid != null) {
+                        long records = liveRecords.addAndGet(delta);
+                        int chunks = liveChunks.incrementAndGet();
+                        activeRegistry.update(corrUuid, records, 0L, chunks, null, fileSizeBytes);
+                    }
                 }
             }
         };

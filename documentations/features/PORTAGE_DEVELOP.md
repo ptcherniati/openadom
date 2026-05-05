@@ -615,10 +615,15 @@ Lot 1 — Correctifs immédiats (R-P0-1, R-P0-2, R-P0-3)
     surcharge 3-params + effectiveParallelism ⏳), R-P0-2 ✅, R-P0-3 ✅
 
 Lot 2 — Fonctionnalités (R-P1-1, R-P1-2, R-P1-3, R-P1-4)
-  → R-P1-1 : mode récursion ordonnée — 5 fichiers à modifier + 1 nouveau champ
-    ImportProperties (cascade.import.ordered-recursion-mode, défaut false)
-  → R-P1-2 : sécurisation migration + R-P1-3 : endpoint info + R-P1-4 : barre de progression
-  → Durée estimée : 1 jour
+  → R-P1-1 : mode récursion ordonnée — Tag.java (OrderStrictTag) ✅, AsynchroneFileImporterContext (isOrderStrictTaggedOnRecursiveValidation) ✅, DataImporter ✅, CascadeImportPipeline (isStrictOrdered + 3-args) ✅
+  → R-P1-2 : sécurisation migration ✅ (MigrationProperties.java créé, ApplicationService injecté, application.properties mis à jour)
+  → R-P1-3 : endpoint info ✅ (GET /api/v1/applications/{name}/file/{id}/info branché)
+  → R-P1-4 : barre de progression ASCII ✅ (ImportProgressReporter.onTotalLinesKnown, LoggingImportProgressReporter barre ASCII, CascadeImportPipeline.buildRegistryAwareReporter forwarde onTotalLinesKnown)
+  → Tests P1 ✅ : TagTest +5 (OrderStrictTag), MigrationPropertiesTest +4, LoggingImportProgressReporterTest +10
+  → CI sonar ✅ : image maven:3.9.11 déplacée dans le job sonarqube-check (corrige exit 127)
+  → .env-default ✅ : cascade.import.*, openadom.migration.*, HikariCP, executors documentés
+  → .env ✅ : tuning 8 cœurs / 31 Go (CASCADE_IMPORT_PARALLELISM=6, pool=25, executors calibrés)
+  → État : **P1 COMPLET** — 211/211 core.config ✅, 104/104 domain.model ✅ — compilation sans erreur ✅
 
 Lot 3 — Performances import (R-P2-1 à R-P2-5) — après Lot 1
   → Porter en bloc (les caches sont interdépendants)

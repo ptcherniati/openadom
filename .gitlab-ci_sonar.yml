@@ -1,4 +1,6 @@
-image: maven:3.9.11-amazoncorretto-25
+# Configuration SonarQube CI
+# Note : l'image Maven est définie au niveau de chaque job (pas en global)
+# pour ne pas entrer en conflit avec l'image docker:stable du pipeline principal.
 
 variables:
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Emplacement du cache de l'analyse Sonar
@@ -13,6 +15,9 @@ stages:
 
 sonarqube-check:
   stage: sonarqube-check
+  # Image Maven embarquée dans le job (non héritée du global docker:stable).
+  # Sans cette ligne, le runner utilisait l'image docker:stable (sans mvn) → exit 127.
+  image: maven:3.9.11-amazoncorretto-25
   # Télécharge les artefacts (surefire-reports/ + jacoco-*.exec) de TOUS les jobs de test.
   # Le stage "sonarqube-check" est défini APRÈS "test" dans .gitlab-ci.yml,
   # donc tous ces jobs sont garantis terminés quand ce job démarre.

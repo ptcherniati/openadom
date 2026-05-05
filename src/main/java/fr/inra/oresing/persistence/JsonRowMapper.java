@@ -188,6 +188,7 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
                                     .map(JsonNode::asText)
                                     .map(Tag.DomainTag::new)
                                     .orElse(new Tag.DomainTag(""));
+                    case ORDER_STRICT_TAG -> Tag.OrderStrictTag.instance();
                 };
             }
 

@@ -79,4 +79,30 @@ class TagTest {
         Assertions.assertEquals(Tag.TagDefinitions.DOMAIN_TAG, tag.tagDefinition());
         Assertions.assertEquals("mytag", tag.tagName());
     }
+
+    @Test
+    void testOrderStrictTagBuilder() {
+        Tag.OrderStrictTag tag = TagBuilder.orderStrictTag();
+        Assertions.assertEquals(Tag.TagDefinitions.ORDER_STRICT_TAG, tag.tagDefinition());
+    }
+
+    @Test
+    void testOrderStrictTagFromBuildTag() {
+        // Le parsing YAML => Java passe par Tag.buildTag(String) ; vérifie
+        // que la chaîne "__ORDER_STRICT__" produit bien un OrderStrictTag.
+        Tag tag = Tag.buildTag(Tag.OrderStrictTag.ORDER_STRICT_PATTERN);
+        Assertions.assertInstanceOf(Tag.OrderStrictTag.class, tag);
+        Assertions.assertEquals(Tag.TagDefinitions.ORDER_STRICT_TAG, tag.tagDefinition());
+    }
+
+    @Test
+    void testOrderStrictTagIsDefinedTag() {
+        Tag.OrderStrictTag tag = Tag.OrderStrictTag.instance();
+        Assertions.assertInstanceOf(Tag.DefinedTag.class, tag);
+    }
+
+    @Test
+    void testOrderStrictTagPatternConstant() {
+        Assertions.assertEquals("__ORDER_STRICT__", Tag.OrderStrictTag.ORDER_STRICT_PATTERN);
+    }
 }

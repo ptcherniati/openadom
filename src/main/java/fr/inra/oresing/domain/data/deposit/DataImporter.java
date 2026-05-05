@@ -3,6 +3,7 @@ package fr.inra.oresing.domain.data.deposit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
+import fr.inra.oresing.workflow.cascade.config.ImportProperties;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
@@ -70,10 +71,24 @@ public class DataImporter {
     private final CsvReader csvReader;
 
     public DataImporter(final AsynchroneFileImporterContext dataImporterContext) {
+        this(dataImporterContext, null);
+    }
+
+    /**
+     * Constructeur principal avec support du mode récursion ordonnée.
+     *
+     * @param dataImporterContext contexte de l'import
+     * @param importProperties    configuration (peut être {@code null} → valeurs par défaut utilisées)
+     */
+    public DataImporter(final AsynchroneFileImporterContext dataImporterContext, final ImportProperties importProperties) {
         super();
         this.dataImporterContext = dataImporterContext;
         if (getDataImporterContext().isRecursive()) {
-            recursionStrategy = new WithRecursion(dataImporterContext);
+            boolean ordered = (importProperties != null && importProperties.isOrderedRecursionMode())
+                    || getDataImporterContext().isOrderStrictTaggedOnRecursiveValidation();
+            recursionStrategy = ordered
+                    ? WithRecursion.ordered(dataImporterContext)
+                    : new WithRecursion(dataImporterContext);
         } else {
             recursionStrategy = new WithoutRecursion(dataImporterContext);
         }

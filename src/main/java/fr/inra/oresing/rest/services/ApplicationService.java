@@ -9,6 +9,7 @@ import fr.inra.oresing.domain.application.ApplicationInformation;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.application.configuration.migration.plan.MigrationMode;
+import fr.inra.oresing.domain.application.configuration.migration.MigrationProperties;
 import fr.inra.oresing.domain.application.configuration.migration.report.MigrationResult;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationCreator;
@@ -62,6 +63,7 @@ public class ApplicationService {
     private final OreSiRepository repository;
     private final MigrationService migrationService;
     private final MigrateService flywayMigrateService;
+    private final MigrationProperties migrationProperties;
     @Setter
     private ServiceContainer serviceContainer;
 
@@ -69,11 +71,13 @@ public class ApplicationService {
             OreSiRepository repository,
             ServiceContainer serviceContainer,
             MigrationService migrationService,
-            MigrateService flywayMigrateService) {
+            MigrateService flywayMigrateService,
+            MigrationProperties migrationProperties) {
         this.repository = repository;
         this.serviceContainer = serviceContainer;
         this.migrationService = migrationService;
         this.flywayMigrateService = flywayMigrateService;
+        this.migrationProperties = migrationProperties;
     }
 
     public Application getApplication(final String nameOrId) {
@@ -243,11 +247,26 @@ public class ApplicationService {
         //TODO test à faire entre version ancienne et nouvelle
         final Version oldVersion = oldConfiguration.applicationDescription().version();
         final Version newVersion = newConfiguration.applicationDescription().version();
+        final boolean bypass = migrationProperties.isBypassConfigurationCheck();
         try {
-            Preconditions.checkArgument(newVersion.compareTo(oldVersion) > 0, "l'application " + applicationName + " est déjà dans la version " + oldVersion);
+            if (!bypass) {
+                // Mode sécurisé (openadom.migration.bypass-configuration-check=false) :
+                // la version doit obligatoirement être incrémentée, sinon la mise à jour est bloquée.
+                Preconditions.checkArgument(newVersion.compareTo(oldVersion) > 0,
+                        "l'application " + applicationName + " est déjà dans la version " + oldVersion);
+            } else if (newVersion.compareTo(oldVersion) <= 0) {
+                // Bypass actif (valeur par défaut) : comportement historique —
+                // avertissement non bloquant, la mise à jour se poursuit.
+                if (log.isWarnEnabled()) {
+                    log.warn("openadom.migration.bypass-configuration-check=true : " +
+                            "version non incrémentée ({} → {}) pour '{}', mise à jour acceptée malgré tout",
+                            oldVersion, newVersion, applicationName);
+                }
+                eventHelper.pushMessage(START, Map.of("application", applicationName,
+                        "oldVersion", oldVersion.version(), "newVersion", newVersion.version()));
+            }
         } catch (final IllegalArgumentException e) {
             eventHelper.pushError(e);
-            eventHelper.pushMessage(START, Map.of("application", applicationName, "oldVersion", oldVersion.version(), "newVersion", newVersion.version()));
         }
         if (log.isInfoEnabled()) {
             log.info("va migrer les données de {} de la version actuelle {} à la nouvelle version {}", applicationName, oldVersion, newVersion);
