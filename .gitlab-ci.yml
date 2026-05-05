@@ -31,9 +31,9 @@ variables:
 stages:
   - build
   - pages
+  - test
   - sonarqube-check
   - sonarqube-vulnerability-report
-  - test
   - package
   # Docker image build
   - build_env

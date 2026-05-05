@@ -17,6 +17,9 @@
       junit: target/surefire-reports/*.xml
     paths:
       - target/surefire-reports/
+      # Rapport JaCoCo binaire renommé par profil pour éviter les collisions lors
+      # de la fusion dans le job sonarqube-check (jacoco:merge glob jacoco-*.exec)
+      - target/jacoco-*.exec
   script:
     - |
       if [[ "$CI_JOB_NAME" == "test_all" ]]; then
@@ -26,6 +29,8 @@
       fi
       echo "Utilisation du profil Maven: $MAVEN_PROFILE"
     - mvn --batch-mode test -P$MAVEN_PROFILE -Dsurefire.excludedGroups=docker-required
+    # Renommer jacoco.exec avec le nom du profil pour que le job Sonar puisse les fusionner
+    - cp target/jacoco.exec target/jacoco-${MAVEN_PROFILE}.exec || true
 
 # ── Template Docker : tests d'intégration nécessitant Testcontainers/PostgreSQL ──
 # Docker (DinD) est disponible globalement (services + variables dans .gitlab-ci.yml)
@@ -39,11 +44,15 @@
       junit: target/surefire-reports/*.xml
     paths:
       - target/surefire-reports/
+      # Rapport JaCoCo binaire renommé par profil (cf. commentaire du template standard)
+      - target/jacoco-*.exec
   script:
     - |
       export MAVEN_PROFILE=$(echo "$CI_JOB_NAME" | sed -e 's/^test_//' -e 's/_/./')
       echo "Utilisation du profil Maven (Docker): $MAVEN_PROFILE"
     - mvn --batch-mode test -P$MAVEN_PROFILE -Dsurefire.excludedGroups=
+    # Renommer jacoco.exec avec le nom du profil pour que le job Sonar puisse les fusionner
+    - cp target/jacoco.exec target/jacoco-${MAVEN_PROFILE}.exec || true
 
 test_core_basic:
   <<: *docker_test_template

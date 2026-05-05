@@ -1,8 +1,11 @@
-image: maven:3-eclipse-temurin-17
+image: maven:3.9.11-amazoncorretto-25
 
 variables:
-  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
-  GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Emplacement du cache de l'analyse Sonar
+  GIT_DEPTH: "0"  # Récupère toutes les branches (requis par l'analyse Sonar)
+  SONAR_HOST_URL: "https://sonarqube.dev.gissol.fr"
+  MAVEN_OPTS: "-Djava.awt.headless=true -Dmaven.repo.local=./.m2/repository"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version"
 
 stages:
   - sonarqube-check
@@ -10,10 +13,54 @@ stages:
 
 sonarqube-check:
   stage: sonarqube-check
-
+  # Télécharge les artefacts (surefire-reports/ + jacoco-*.exec) de TOUS les jobs de test.
+  # Le stage "sonarqube-check" est défini APRÈS "test" dans .gitlab-ci.yml,
+  # donc tous ces jobs sont garantis terminés quand ce job démarre.
+  # when: always → le job Sonar se lance même si certains tests ont échoué,
+  # afin de produire quand même un rapport de qualité de code.
+  when: always
+  dependencies:
+    - maven_build
+    - test_core_basic
+    - test_core_config
+    - test_core_auth
+    - test_domain_model
+    - test_domain_checker
+    - test_domain_i18n
+    - test_integration_persistence
+    - test_app_monsoere
+    - test_app_haute_frequence
+    - test_app_acbb
+    - test_app_olac
+    - test_app_foret
+    - test_app_pattern
+    - test_app_recursivity
+    - test_app_teledetection
+    - test_integration_bundle
+    - test_use-cases
+    - test_no-tags
   script:
-    - mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+    # Phase 1 : Fusion de tous les target/jacoco-<profil>.exec → target/jacoco.exec
+    #           + génération du rapport XML target/site/jacoco/jacoco.xml
+    #           (le profil sonar-aggregate lie jacoco:merge à la phase generate-resources ;
+    #            l'exécution "report" du build principal est liée à la phase test
+    #            et s'exécute même avec -DskipTests)
+    - mvn ${MAVEN_CLI_OPTS} verify
+      -DskipTests
+      -Psonar-aggregate
+    # Phase 2 : Analyse SonarQube (réutilise target/site/jacoco/jacoco.xml et
+    #           target/surefire-reports/*.xml téléchargés depuis les jobs de test)
+    - mvn ${MAVEN_CLI_OPTS} sonar:sonar
+      -DskipTests
+      -Dsonar.host.url=${SONAR_HOST_URL}
+      -Dsonar.token=${SONAR_TOKEN}
+      -Dsonar.qualitygate.wait=true
   allow_failure: true
+  cache:
+    key: "${CI_COMMIT_REF_SLUG}-sonar"
+    paths:
+      - .sonar/cache
+      - .m2/repository/
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     - if: $CI_COMMIT_BRANCH == 'master'

@@ -1017,7 +1017,7 @@
                               (défaut: docker-required ; vide en CI Docker pour tout inclure).
                             -->
                             <excludedGroups>
-                                SUITE,core.basic,core.config,core.auth,
+                                SUITE,OTHERS_TEST,core.basic,core.config,core.auth,
                                 domain.model,domain.checker,domain.i18n,
                                 integration.rest,integration.persistence,integration.bundle,
                                 app.monsoere,app.haute_frequence,app.acbb,
@@ -1035,6 +1035,47 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
+        </profile>
+
+        <!--
+          Profil sonar-aggregate : utilisé UNIQUEMENT par le job CI "sonarqube-check".
+          Il fusionne les fichiers jacoco-<profil>.exec produits par chaque job de test
+          en un seul jacoco.exec, puis le rapport XML est généré par l'exécution "report"
+          déjà déclarée dans le build principal (phase test, -DskipTests ne la saute pas).
+          Ne jamais activer en local (les fichiers jacoco-*.exec n'y existent pas).
+        -->
+        <profile>
+            <id>sonar-aggregate</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>0.8.13</version>
+                        <executions>
+                            <!-- Fusion de tous les jacoco-<profil>.exec → jacoco.exec avant la phase test -->
+                            <execution>
+                                <id>merge-all-profiles</id>
+                                <phase>generate-resources</phase>
+                                <goals>
+                                    <goal>merge</goal>
+                                </goals>
+                                <configuration>
+                                    <fileSets>
+                                        <fileSet>
+                                            <directory>${project.build.directory}</directory>
+                                            <includes>
+                                                <include>jacoco-*.exec</include>
+                                            </includes>
+                                        </fileSet>
+                                    </fileSets>
+                                    <destFile>${project.build.directory}/jacoco.exec</destFile>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 
