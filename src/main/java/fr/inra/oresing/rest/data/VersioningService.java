@@ -135,14 +135,18 @@ public class VersioningService {
                     .checkAndStoreFile(filesToStore, serviceContainer.binaryFileService(), binaryFileRepository(application));
 
             UUID dataId = publishData(dataName, fileOrUUID, application, state);
-            final List<ApplicationResult.DataSynthesis> dataSynthesis = Optional.ofNullable(serviceContainer.dataService().getReferenceSynthesis(application)).orElseGet(List::of);
-            DataVersioningResult dataVersioningResult = DataVersioningResult.of(nameOrId, dataName, dataId, dataSynthesis);
+            // Cascade 3.0.0 deferred : le UPSERT staging -> table finale
+            // tourne dans afterCommit ; lire le compteur ici donnerait une
+            // valeur stale . On differe le calcul de dataSynthesis a
+            // finalizePostCommit ( appele par la couche REST post .get() ) .
+            // De meme pour le mail : sinon il porterait un compteur stale .
             if (unPublishedVersions.isRepository()) {
                 uploadState = fileOrUUIDOpt.map(FileOrUUID::topublish).orElse(false) ? EmailService.UPLOAD_STATE.PUBLISHED :
                         (beforeDelete ? EmailService.UPLOAD_STATE.DELETED : EmailService.UPLOAD_STATE.UNPUBLISHED);
             } else {
                 uploadState = EmailService.UPLOAD_STATE.UPLOADED;
             }
+            DataVersioningResult dataVersioningResult = DataVersioningResult.of(nameOrId, dataName, dataId, List.of(), uploadState);
             if (withEmail) {
                 safeSendUploadSuccessMail(application, dataName, fileName, uploadState, locale, dataVersioningResult);
                 if (compId != null) compensationLogService.confirm(compId);
@@ -154,8 +158,7 @@ public class VersioningService {
         } else {
             uploadState = EmailService.UPLOAD_STATE.UPLOADED;
         }
-        final List<ApplicationResult.DataSynthesis> dataSynthesis = Optional.ofNullable(serviceContainer.dataService().getReferenceSynthesis(application)).orElseGet(List::of);
-        DataVersioningResult dataVersioningResult = DataVersioningResult.of(nameOrId, dataName, state.binaryFile().getId(), dataSynthesis);
+        DataVersioningResult dataVersioningResult = DataVersioningResult.of(nameOrId, dataName, state.binaryFile().getId(), List.of(), uploadState);
         if (withEmail) {
             safeSendUploadSuccessMail(application, dataName, fileName, uploadState, locale, dataVersioningResult);
         }
@@ -176,6 +179,42 @@ public class VersioningService {
             }
             throw ex;
         }
+    }
+
+    /**
+     * Finalisation post-commit du cycle createData : recalcule
+     * {@code dataSynthesis} ( compteur de lignes ) sur la table finale a
+     * jour ( apres que le UPSERT differe cascade 3.0.0 ait fire dans
+     * afterCommit ) , optionnellement envoie le mail de notification avec
+     * cette valeur fraiche , et renvoie le {@link DataVersioningResult}
+     * enrichi pour la reponse HTTP .
+     *
+     * <p>A appeler par la couche REST APRES {@code Future.get()} ( ou
+     * apres le retour de {@code createData} en mode synchrone ) ; pas
+     * pendant la transaction Spring qui fait le publish , sinon la
+     * lecture verrait l etat pre-storeAll et le compteur serait stale .
+     *
+     * @param sendMail {@code true} pour envoyer le mail de notification
+     *                 ( appel le plus courant depuis OreSiResources ) ;
+     *                 {@code false} pour les flows qui ne notifient pas
+     *                 ( admin , tests )
+     */
+    public DataVersioningResult finalizePostCommit(Locale locale,
+                                                    String nameOrId,
+                                                    String dataName,
+                                                    String fileName,
+                                                    DataVersioningResult dataVersioningResult,
+                                                    boolean sendMail) {
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        List<ApplicationResult.DataSynthesis> freshSynthesis = Optional
+                .ofNullable(serviceContainer.dataService().getReferenceSynthesis(application))
+                .orElseGet(List::of);
+        DataVersioningResult fresh = dataVersioningResult.withDataSynthesis(freshSynthesis);
+        if (sendMail && fresh.uploadState() != null) {
+            safeSendUploadSuccessMail(application, dataName, fileName,
+                    fresh.uploadState(), locale, fresh);
+        }
+        return fresh;
     }
 
     /**

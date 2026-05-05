@@ -845,8 +845,13 @@ public class OreSiResources {
             final DataVersioningResult dataVersioningResult = heavyExecutorService.submit(() -> {
                 SecurityContextHolder.setContext(context);
                 try {
+                    // withEmail=false : le mail est envoye post-.get() dans
+                    // VersioningService.finalizePostCommit pour qu il porte
+                    // le compteur frais ( cascade 3.0.0 deferred fait tourner
+                    // le UPSERT dans afterCommit , donc lire la table finale
+                    // ICI pendant le @Transactional donne un compteur stale ) .
                     return createDataUseCase.execute(
-                            locale, nameOrId, dataName, finalDataFile, false, true);
+                            locale, nameOrId, dataName, finalDataFile, false, false);
                 } catch (InvalidDatasetContentException invalidDatasetContentException) {
                     List<ValidationCheckResultRest> validations = invalidDatasetContentException.getErrors()
                             .stream()
@@ -877,21 +882,19 @@ public class OreSiResources {
                     throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
                 }
             }).get();
-            // #58 - Reconstruire le cache des filtres après un dépôt réussi ( asynchrone )
+            // Post-commit : afterCommit du @Transactional interne au .get() a
+            // fire , le UPSERT staging -> table finale ( cascade 3.0.0 deferred )
+            // est termine . On recalcule dataSynthesis sur la table finale a
+            // jour , et on envoie le mail avec ce compteur frais . Reconstruire
+            // aussi le cache des filtres ( #58 ) .
             Application application = serviceContainer.applicationService().getApplication(nameOrId);
             serviceContainer.dataService().refreshFilterListCache(application, dataName);
-            // En mode deferred ( cascade 3.0.0 ) le UPSERT staging -> table finale
-            // tourne dans afterCommit du @Transactional interne au .get() . Quand
-            // VersioningService.createData calcule dataSynthesis , afterCommit
-            // n a pas encore fire et la table finale est encore stale . On
-            // recalcule ici , post .get() , pour que la reponse HTTP reflete
-            // le compteur reel ( sinon le front voit l ancien total ) .
-            final List<ApplicationResult.DataSynthesis> freshSynthesis = Optional
-                    .ofNullable(serviceContainer.dataService().getReferenceSynthesis(application))
-                    .orElseGet(List::of);
+            String fileName = file == null ? null : file.getOriginalFilename();
+            DataVersioningResult finalized = serviceContainer.versioningService()
+                    .finalizePostCommit(locale, nameOrId, dataName, fileName, dataVersioningResult, true);
             return ResponseEntity
-                    .created(URI.create(dataVersioningResult.uri()))
-                    .body(Map.of("id", dataVersioningResult.dataId().toString(), "referenceSynthesis", freshSynthesis));
+                    .created(URI.create(finalized.uri()))
+                    .body(Map.of("id", finalized.dataId().toString(), "referenceSynthesis", finalized.dataSynthesis()));
         } catch (ExecutionException e) {
             Throwable cause = unwrapException(e.getCause());
             throw switch (cause) {
