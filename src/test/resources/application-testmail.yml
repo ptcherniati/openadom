@@ -7,6 +7,29 @@ spring:
     url: jdbc:tc:postgresql:18.3:///test?TC_INITSCRIPT=migration/openadom_user.sql&loggerLevel=INFO
     username: openAdomTechUser
     password: "z2I<i}qclq)D?xqT"
+    hikari:
+      # Désactive la détection de fuite (faux positif) : CreateDataUseCase.execute()
+      # est @Transactional et tient la connexion pendant toute la durée de l'import
+      # (~20-30 s pour 2600 rows), ce qui dépasse le seuil par défaut de HikariCP.
+      # Flyway ouvre également plusieurs connexions simultanées (schema history,
+      # migration connection, event connection) déclenchant de faux avertissements.
+      leak-detection-threshold: 0
+      # Pool plus large pour absorber les imports parallèles + multiples contextes
+      # Spring créés par @DirtiesContext (chacun a son propre pool).
+      maximum-pool-size: 20
+      # ── Timeouts pour éviter le blocage des pools zombies (@DirtiesContext) ──
+      # Problème : @DirtiesContext crée un nouveau contexte Spring par méthode de test.
+      # Quand @AfterAll arrête le conteneur Docker (fin de classe), les HikariPools
+      # des anciens contextes pas encore entièrement garbage-collectés cherchent
+      # indéfiniment à reconnecter (défaut: 30min max-lifetime, 30s connection-timeout).
+      #
+      # max-lifetime 120s : valeur minimale HikariCP (> keepalive-time obligatoire).
+      #   - assez court pour que les pools zombies expirent dans la minute qui suit l'arrêt du container
+      #   - assez long pour ne pas interrompre une migration Flyway (V1__init_schema ≈ 1-5s)
+      #   - la règle HikariCP impose max-lifetime > keepalive-time
+      max-lifetime: 120000         # 120s — les pools zombies expirent 2 min après l'arrêt du container
+      connection-timeout: 5000     # 5s — abandon rapide si DB inaccessible (était 30s)
+      keepalive-time: 60000        # 60s — détecte les connexions closes sans surcharger PG (< max-lifetime)
 
   sql:
     init:
@@ -70,8 +93,39 @@ logging:
     org.flywaydb.test: info
     org.springframework.security: info
     fr.inra.oresing: DEBUG
+    # ── Diagnostic SQL / transactions ──────────────────────────────────────────
+    # Désactivés par défaut : passer en DEBUG/TRACE pour déboguer un problème SQL,
+    # de transaction ou de rôle PostgreSQL.
+    org.springframework.jdbc.core.JdbcTemplate: info
+    org.springframework.jdbc.core.StatementCreatorUtils: info
+    org.springframework.transaction.interceptor: info
+    org.springframework.transaction.support.AbstractPlatformTransactionManager: info
+    org.postgresql: info
+    # Les requêtes diagnostiques de AbstractIntegrationTest sont en log.debug :
+    # passer à DEBUG pour les réactiver (ex. pour analyser un problème de droits PG).
+    fr.inra.oresing.rest.services.AbstractIntegrationTest: info
 
 viewStrategy: DISABLED
+
+# Désactive les virtual threads pour les executors custom en test :
+# Spring MockMvc + StreamingResponseBody + virtual thread → ConcurrentModificationException
+# sur MockHttpServletResponse (non thread-safe en écriture concurrente de headers).
+executor:
+  use-virtual-threads: false
+  # En test, limiter les threads pour ne pas saturer le pool HikariCP avec des
+  # transactions longues concurrentes (heavy = imports CSV longs).
+  # Le parallélisme cascade (transform-N) est piloté dynamiquement par
+  # AbstractIntegrationTest.configureProperties() via cascade.import.parallelism
+  # et cascade.pool.transform (system property) — calibrés sur availableProcessors().
+  heavy:
+    core-pool-size: 4
+    max-pool-size: 4
+  normal:
+    core-pool-size: 2
+    max-pool-size: 2
+  fast:
+    core-pool-size: 4
+    max-pool-size: 4
 
 filesender:
   baseurl: https://filesender.renater.fr/rest.php
