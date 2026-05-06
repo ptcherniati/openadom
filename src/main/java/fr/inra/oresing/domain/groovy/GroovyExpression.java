@@ -17,9 +17,38 @@ public non-sealed class GroovyExpression implements Expression<Object> {
 
     private static final ScriptEngine ENGINE = new ScriptEngineManager().getEngineByName("groovy");
 
+    // ─── R-P2-4 : sentinelle pour les résultats null dans la ConcurrentHashMap ─
+    // ConcurrentHashMap interdit les valeurs null ; on utilise ce marqueur à la place.
+    private static final Object NULL_SENTINEL = new Object();
+
     private final String expression;
 
     private final CompiledScript script;
+
+    // ─── R-P2-4 : cache des résultats d'évaluation Groovy ───────────────────
+    // Clé : contexte d'entrée (Map<String,Object>) — même entrée → même sortie
+    // pour les expressions sans effets de bord. Les expressions utilisant
+    // currentRowNumber sont exclues du cache (via isCacheable).
+    // Bounded par maxCacheEntries pour limiter la pression mémoire par import.
+    private final ConcurrentHashMap<Map<String, Object>, Object> resultCache =
+            new ConcurrentHashMap<>();
+    private volatile int maxCacheEntries = 1_000;
+
+    /**
+     * Configure le plafond du cache de résultats (R-P2-4).
+     * Appelé depuis DataImporter après lecture de {@code ImportProperties}.
+     */
+    public void setMaxCacheEntries(int max) {
+        this.maxCacheEntries = max;
+    }
+
+    /**
+     * R-P2-4 — Une expression est cacheable si elle ne contient pas
+     * {@code currentRowNumber} (variable qui change à chaque ligne).
+     */
+    private static boolean isCacheable(String expression) {
+        return !expression.contains("currentRowNumber");
+    }
 
     public GroovyExpression(final String expression) {
         super();
@@ -78,11 +107,24 @@ public non-sealed class GroovyExpression implements Expression<Object> {
 
     @Override
     public Object evaluate(final Map<String, Object> context) {
-        Map<String, Object> mutableContext = new HashMap<>(context);
-        ScriptConstantProvider.addAllToContext(mutableContext);
+        // R-P2-4 : consulter le cache uniquement si l'expression est statique
+        // ET si le contexte ne contient pas "currentRow" (présent dans TOUS les
+        // contextes de validation de données — change à chaque ligne).
+        // Sans ce guard, on paierait hashCode(context) + Map.copyOf(context)
+        // à chaque évaluation sans jamais toucher le cache → régression pure.
+        final boolean tryCache = isCacheable(expression) && !context.containsKey("currentRow");
+        if (tryCache) {
+            Object cached = resultCache.get(context);
+            if (cached != null) {
+                return cached == NULL_SENTINEL ? null : cached;
+            }
+        }
+
+        // R-P2-5 : fusionne le contexte + les constantes en une seule copie HashMap
+        // (avant : new HashMap<>(context) + putAll dans SimpleBindings = 2 copies).
+        final Bindings bindings = new SimpleBindings(new HashMap<>(context));
+        ScriptConstantProvider.addAllToContext(bindings);
         try {
-            final Bindings bindings = new SimpleBindings();
-            bindings.putAll(mutableContext);
             final Object evaluation = script.eval(bindings);
 
             // Vérifier si le résultat est une GroovyException
@@ -90,7 +132,13 @@ public non-sealed class GroovyExpression implements Expression<Object> {
                 throw (GroovyException) evaluation;
             }
 
+            // R-P2-4 : stocker dans le cache si le contexte est purement statique
+            if (tryCache && resultCache.size() < maxCacheEntries) {
+                resultCache.put(Map.copyOf(context), evaluation != null ? evaluation : NULL_SENTINEL);
+            }
+
             return evaluation;
+
         } catch (ScriptException e) {
             // Vérifier si la cause originale est une GroovyException
             Throwable cause = e.getCause();

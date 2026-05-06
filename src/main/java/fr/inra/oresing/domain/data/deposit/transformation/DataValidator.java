@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 
 public class DataValidator {
 
-    private static List<ReferenceDatumAfterChecking> checkLineForChecker(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker lineChecker, DataDatum referenceDatumBeforeChecking, Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo, DataDatum referenceDatum, ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder) {
+    private List<ReferenceDatumAfterChecking> checkLineForChecker(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker lineChecker, DataDatum referenceDatumBeforeChecking, Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo, DataDatum referenceDatum, ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder) {
         if (matchingTarget(rowWithReferenceDatum, lineChecker)) {
             return null;
         }
@@ -139,7 +139,7 @@ public class DataValidator {
                 ));
     }
 
-    static CheckerValidationCheckResult testValues(RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker<? extends FieldType<?>> lineChecker, Map<String, Object> context, DataDatum referenceDatumBeforeChecking) {
+    CheckerValidationCheckResult testValues(RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker<? extends FieldType<?>> lineChecker, Map<String, Object> context, DataDatum referenceDatumBeforeChecking) {
         switch (lineChecker.transformer()) {
             case LineChecker.LineTransformer.ChainTransformersLineTransformer transformers -> {
                 for (LineChecker.LineTransformer transformer : transformers.transformers()) {

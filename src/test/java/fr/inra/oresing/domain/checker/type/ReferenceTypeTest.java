@@ -68,4 +68,126 @@ class ReferenceTypeTest {
         Assertions.assertEquals(uuid1, checkGoodValueNotLabel.matchedReferenceId().stream().findFirst().orElse(null));
         Assertions.assertFalse(checkBad.isSuccess());
     }
+
+    // ─── R-P2-1 : index O(1) ─────────────────────────────────────────────────
+
+    /**
+     * R-P2-1 — La même valeur trouvée deux fois doit retourner le même résultat
+     * (couverture de la branche naturalKeyIndex O(1) vs ancien stream O(N)).
+     */
+    @Test
+    @Tag("PERF")
+    void checkReturnsConsistentResultOnRepeat() {
+        ReferenceType rt = buildReference();
+        var r1 = (ReferenceValidationCheckResult) rt.check(goodValue, checker);
+        var r2 = (ReferenceValidationCheckResult) rt.check(goodValue, checker);
+        Assertions.assertTrue(r1.isSuccess());
+        Assertions.assertTrue(r2.isSuccess());
+        Assertions.assertEquals(
+                r1.matchedReferenceHierarchicalKey(),
+                r2.matchedReferenceHierarchicalKey(),
+                "Le naturalKeyIndex doit retourner le même résultat à chaque appel");
+        Assertions.assertEquals(
+                r1.matchedReferenceId(),
+                r2.matchedReferenceId());
+    }
+
+    // ─── R-P2-2 : promotion seenOnce → precomputedResults ───────────────────
+
+    /**
+     * R-P2-2 — Après deux appels avec la même valeur, le résultat doit être
+     * promu dans precomputedResults (via seenOnce → promote).
+     * Le troisième appel doit bénéficier du cache.
+     */
+    @Test
+    @Tag("PERF")
+    void checkPromotesValueToCacheAfterSecondOccurrence() {
+        ReferenceType rt = buildReference();
+        // 1er appel : entre dans seenOnce
+        var r1 = (ReferenceValidationCheckResult) rt.check(goodValue, checker);
+        // 2e appel : promu dans precomputedResults
+        var r2 = (ReferenceValidationCheckResult) rt.check(goodValue, checker);
+        // 3e appel : doit venir du cache (même résultat)
+        var r3 = (ReferenceValidationCheckResult) rt.check(goodValue, checker);
+
+        Assertions.assertTrue(r1.isSuccess());
+        Assertions.assertTrue(r2.isSuccess());
+        Assertions.assertTrue(r3.isSuccess());
+        // Tous trois doivent pointer vers le même UUID
+        Assertions.assertEquals(r1.matchedReferenceId(), r3.matchedReferenceId());
+    }
+
+    /**
+     * R-P2-2 — Le plafond maxCacheEntries=0 doit empêcher toute entrée dans
+     * precomputedResults, mais les vérifications restent correctes via naturalKeyIndex.
+     */
+    @Test
+    @Tag("PERF")
+    void checkRespectsMaxCacheEntriesZero() {
+        ReferenceType rt = buildReference();
+        rt.setMaxCacheEntries(0);
+        // Appels répétés : ne doit pas crasher et doit retourner le bon résultat
+        var r1 = (ReferenceValidationCheckResult) rt.check(goodValue, checker);
+        var r2 = (ReferenceValidationCheckResult) rt.check(goodValue, checker);
+        var r3 = (ReferenceValidationCheckResult) rt.check(goodValue, checker);
+        Assertions.assertTrue(r1.isSuccess());
+        Assertions.assertTrue(r2.isSuccess());
+        Assertions.assertTrue(r3.isSuccess());
+    }
+
+    // ─── R-P2-2 : partage du cache entre copies ──────────────────────────────
+
+    /**
+     * R-P2-2 — une copie Cascade partage les structures seenOnce et
+     * precomputedResults avec l'instance d'origine.
+     * Un hit sur la copie doit être visible depuis l'original et vice-versa.
+     */
+    @Test
+    @Tag("PERF")
+    void copySharesCacheWithOriginal() {
+        ReferenceType original = buildReference();
+        // 1er appel sur l'original : entre dans seenOnce
+        original.check(goodValue, checker);
+
+        // Créer une copie (simule un worker Cascade)
+        ReferenceType copy = (ReferenceType) original.copy();
+        // 2e appel sur la COPIE : doit promouvoir la valeur dans precomputedResults
+        var rCopy = (ReferenceValidationCheckResult) copy.check(goodValue, checker);
+        Assertions.assertTrue(rCopy.isSuccess());
+
+        // 3e appel sur l'ORIGINAL : doit bénéficier du cache promu par la copie
+        var rOriginal = (ReferenceValidationCheckResult) original.check(goodValue, checker);
+        Assertions.assertTrue(rOriginal.isSuccess());
+        Assertions.assertEquals(rCopy.matchedReferenceId(), rOriginal.matchedReferenceId());
+    }
+
+    /**
+     * R-P2-2 — setReferenceValues() doit invalider seenOnce et precomputedResults.
+     */
+    @Test
+    @Tag("PERF")
+    void setReferenceValuesClearsCaches() {
+        ReferenceType rt = buildReference();
+        // Remplir le cache
+        rt.check(goodValue, checker);
+        rt.check(goodValue, checker); // → promote dans precomputedResults
+
+        UUID uuid2 = UUID.randomUUID();
+        String newValue = "geneve";
+        ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> newRefs =
+                ImmutableMap.of(
+                        new DataValue.LineIdentityColumnName(Ltree.fromSql(newValue), Ltree.fromSql(newValue), ""),
+                        ImmutableSet.of(uuid2));
+
+        rt.setReferenceValues(newRefs);
+
+        // L'ancienne valeur ne doit plus être trouvée (plus dans l'index ni dans le cache)
+        var rOld = (ReferenceValidationCheckResult) rt.check(goodValue, checker);
+        Assertions.assertFalse(rOld.isSuccess(), "L'ancienne valeur ne doit plus être valide après setReferenceValues");
+
+        // La nouvelle valeur doit être trouvée
+        var rNew = (ReferenceValidationCheckResult) rt.check(newValue, checker);
+        Assertions.assertTrue(rNew.isSuccess());
+        Assertions.assertEquals(uuid2, rNew.matchedReferenceId().stream().findFirst().orElse(null));
+    }
 }

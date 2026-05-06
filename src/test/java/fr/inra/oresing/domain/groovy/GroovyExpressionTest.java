@@ -307,6 +307,76 @@ class GroovyExpressionTest {
         }
     }
 
+    // ─── R-P2-4 : cache des résultats Groovy ─────────────────────────────────
+
+    /**
+     * R-P2-4 — Quand le contexte contient "currentRow" (cas normal des
+     * validations ligne par ligne), le cache NE DOIT PAS être utilisé.
+     * Les deux appels doivent retourner le bon résultat sans erreur.
+     */
+    @Test
+    @Tag("PERF")
+    void evaluate_contextAvecCurrentRow_cacheBypasse() {
+        Map<String, Object> ctx = new HashMap<>(context);
+        ctx.put("currentRow", List.of("Paris", "75001"));
+        ctx.put("currentRowNumber", 1);
+
+        GroovyExpression expr = GroovyExpression.forExpression("x + y");
+        // Deux appels avec currentRow différent : doivent retourner le bon résultat
+        // sans que le cache produise un résultat périmé
+        ctx.put("x", 5);
+        ctx.put("y", 3);
+        Object r1 = expr.evaluate(ctx);
+        ctx = new HashMap<>(ctx);
+        ctx.put("currentRow", List.of("Lyon", "69000"));
+        ctx.put("x", 10);
+        ctx.put("y", 2);
+        Object r2 = expr.evaluate(ctx);
+
+        assertEquals(8,  r1, "Premier appel x=5+y=3");
+        assertEquals(12, r2, "Second appel x=10+y=2 (cache ne doit pas masquer le nouveau résultat)");
+    }
+
+    /**
+     * R-P2-4 — Quand le contexte est purement statique (pas de "currentRow"),
+     * le cache DOIT fonctionner : deux appels avec le même contexte doivent
+     * retourner le même résultat sans ré-évaluation (comportement observable
+     * indirectement : pas de différence de résultat attendu).
+     */
+    @Test
+    @Tag("PERF")
+    void evaluate_contextStatiqueSansCurrent_cacheActif() {
+        Map<String, Object> staticCtx = Map.of("x", 5, "y", 3);
+        GroovyExpression expr = GroovyExpression.forExpression("x * y");
+        Object r1 = expr.evaluate(staticCtx);
+        Object r2 = expr.evaluate(staticCtx); // doit venir du cache
+        assertEquals(15, r1);
+        assertEquals(r1, r2, "Le cache doit retourner le même résultat pour un contexte statique identique");
+    }
+
+    /**
+     * R-P2-4 — Les expressions contenant "currentRowNumber" ne sont pas
+     * cacheables (isCacheable retourne false).
+     */
+    @Test
+    @Tag("PERF")
+    void evaluate_expressionAvecCurrentRowNumber_cacheBypasse() {
+        Map<String, Object> ctx = new HashMap<>();
+        ctx.put("currentRowNumber", 1);
+        ctx.put("x", 5);
+
+        GroovyExpression expr = GroovyExpression.forExpression("x + currentRowNumber");
+        Object r1 = expr.evaluate(ctx);
+
+        ctx = new HashMap<>(ctx);
+        ctx.put("currentRowNumber", 10);
+        Object r2 = expr.evaluate(ctx);
+
+        assertEquals(6,  r1, "x=5 + currentRowNumber=1");
+        assertEquals(15, r2, "x=5 + currentRowNumber=10 (pas de faux hit de cache)");
+    }
+
+
     public record ReferenceBuilder(String naturalKey, Map<String, Object> refValues) implements GroovyDecorator {
 
         @Override

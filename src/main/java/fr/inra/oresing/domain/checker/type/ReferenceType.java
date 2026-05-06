@@ -19,6 +19,7 @@ import org.apache.commons.collections4.MapUtils;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -37,14 +38,68 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
     DataValue.LineIdentityColumnName lineIdentityColumnName;
     private Set<String> knownSpecialCharacters = new HashSet<>();
 
-    public ReferenceType(final CheckerTarget target, final String refType, final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues, final LineChecker.Transformer transformer, DataValue.LineIdentityColumnName lineIdentityColumnName) {
+    // ─── R-P2-1 : index O(1) naturalKey → LineIdentityColumnName ──────────────
+    // Construit une seule fois dans le constructeur et dans setReferenceValues().
+    // Remplace le stream().filter().findFirst() O(N) dans check().
+    private Map<Ltree, DataValue.LineIdentityColumnName> naturalKeyIndex = new HashMap<>();
+
+    // ─── R-P2-2 : cache lazy partagé entre l'original et toutes ses copies ────
+    // ConcurrentHashMap → thread-safe pour les workers Cascade parallèles.
+    // seenOnce : valeurs vues exactement une fois (pas encore en cache).
+    // precomputedResults : valeurs vues ≥ 2 fois → résultat mis en cache.
+    // Les deux maps sont partagées entre l'original et toutes ses copies
+    // (passées par référence dans le constructeur de copie).
+    private final Set<Ltree> seenOnce;
+    private final Map<Ltree, DataValue.LineIdentityColumnName> precomputedResults;
+    /** Plafond du cache. Configurable via cascade.import.reference-cache-max-entries. */
+    private volatile int maxCacheEntries = 5_000;
+
+    /** Constructeur principal (instance originale, crée ses propres caches). */
+    public ReferenceType(final CheckerTarget target, final String refType,
+                         final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues,
+                         final LineChecker.Transformer transformer,
+                         DataValue.LineIdentityColumnName lineIdentityColumnName) {
         super();
         this.target = target;
         this.refType = refType;
         this.referenceValues = referenceValues;
         this.transformer = transformer;
         this.lineIdentityColumnName = lineIdentityColumnName;
-        clone = () -> new ReferenceType(target, refType, referenceValues, transformer, this.lineIdentityColumnName);
+        this.seenOnce = ConcurrentHashMap.newKeySet();
+        this.precomputedResults = new ConcurrentHashMap<>();
+        buildNaturalKeyIndex(referenceValues);
+        clone = () -> new ReferenceType(target, refType, referenceValues, transformer,
+                this.lineIdentityColumnName, this.seenOnce, this.precomputedResults);
+    }
+
+    /**
+     * Constructeur de copie partagée (utilisé par copy() et clone).
+     * Les caches {@code seenOnce} et {@code precomputedResults} sont PARTAGÉS
+     * avec l'instance parente → les résultats calculés par un worker bénéficient
+     * à tous les autres workers sans recalcul.
+     */
+    ReferenceType(final CheckerTarget target, final String refType,
+                  final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues,
+                  final LineChecker.Transformer transformer,
+                  DataValue.LineIdentityColumnName lineIdentityColumnName,
+                  Set<Ltree> sharedSeenOnce,
+                  Map<Ltree, DataValue.LineIdentityColumnName> sharedPrecomputedResults) {
+        super();
+        this.target = target;
+        this.refType = refType;
+        this.referenceValues = referenceValues;
+        this.transformer = transformer;
+        this.lineIdentityColumnName = lineIdentityColumnName;
+        this.seenOnce = sharedSeenOnce;
+        this.precomputedResults = sharedPrecomputedResults;
+        buildNaturalKeyIndex(referenceValues);
+        clone = () -> new ReferenceType(target, refType, referenceValues, transformer,
+                this.lineIdentityColumnName, this.seenOnce, this.precomputedResults);
+    }
+
+    /** Configure le plafond du cache. Appelé depuis DataImporter après importProperties. */
+    public void setMaxCacheEntries(int max) {
+        this.maxCacheEntries = max;
     }
 
     @JsonIgnore
@@ -57,8 +112,26 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
     }
 
     public void setReferenceValues(ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues) {
+        // Invalider les caches : les valeurs de référence ont changé (ex. import récursif
+        // → addKnownIdToReferenceValues ajoute des UUID parents en cours de traitement).
+        seenOnce.clear();
+        precomputedResults.clear();
         this.referenceValues = referenceValues;
+        buildNaturalKeyIndex(referenceValues);
         buildKnownSpecialCharacters(referenceValues);
+    }
+
+    /**
+     * R-P2-1 — Construit l'index O(1) naturalKey → LineIdentityColumnName.
+     * Remplace le scan O(N) {@code referenceValues.keySet().stream().filter(...).findFirst()}
+     * dans {@link #check}. Rebuild complet à chaque appel de setReferenceValues.
+     */
+    private void buildNaturalKeyIndex(ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues) {
+        Map<Ltree, DataValue.LineIdentityColumnName> index = new HashMap<>(referenceValues.size() * 2);
+        for (DataValue.LineIdentityColumnName key : referenceValues.keySet()) {
+            index.put(key.naturalKey(), key);
+        }
+        this.naturalKeyIndex = index;
     }
 
     private void buildKnownSpecialCharacters(ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues) {
@@ -93,23 +166,43 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
     public CheckerValidationCheckResult check(final String rawValue, final LineChecker lineChecker) {
         final String localRawValue = Ltree.escapeToLabel(rawValue, knownSpecialCharacters);
         final CheckerTarget target = lineChecker.target();
-
         value = Ltree.fromSql(localRawValue);
-        Predicate<DataValue.LineIdentityColumnName> matchesValue = v -> v.naturalKey().equals(value);
-        Optional<DataValue.LineIdentityColumnName> optionalKey = referenceValues.keySet().stream()
-                .filter(matchesValue)
-                .findFirst();
-        if (optionalKey.isPresent()) {
-            value = optionalKey.get().naturalKey();
-            uuid = referenceValues.get(optionalKey.get());
-            lineIdentityColumnName = optionalKey.get();
-            return ReferenceValidationCheckResult.success(target,
-                    localRawValue,
-                    Set.of(value),
-                    referenceValues.get(optionalKey.get()),
-                    this);
+
+        // ── R-P2-2 : vérifier le cache des résultats pré-calculés (O(1)) ────────
+        DataValue.LineIdentityColumnName cachedKey = precomputedResults.get(value);
+        if (cachedKey != null) {
+            value = cachedKey.naturalKey();
+            uuid = referenceValues.get(cachedKey);
+            lineIdentityColumnName = cachedKey;
+            return ReferenceValidationCheckResult.success(target, localRawValue,
+                    Set.of(value), uuid, this);
         }
-        return ReferenceValidationCheckResult.error(target, localRawValue, target.getInternationalizedKey("invalidReference"), ImmutableMap.of(
+
+        // ── R-P2-1 : lookup O(1) via l'index naturalKey ─────────────────────────
+        DataValue.LineIdentityColumnName foundKey = naturalKeyIndex.get(value);
+        if (foundKey != null) {
+            value = foundKey.naturalKey();
+            uuid = referenceValues.get(foundKey);
+            lineIdentityColumnName = foundKey;
+
+            // ── R-P2-2 : mettre en cache après la 2e occurrence ─────────────────
+            if (seenOnce.contains(value)) {
+                // Valeur vue ≥ 2 fois → promouvoir dans precomputedResults
+                if (precomputedResults.size() < maxCacheEntries) {
+                    precomputedResults.put(value, foundKey);
+                }
+            } else {
+                seenOnce.add(value);
+            }
+
+            return ReferenceValidationCheckResult.success(target, localRawValue,
+                    Set.of(value), referenceValues.get(foundKey), this);
+        }
+
+        // Valeur non trouvée → erreur
+        return ReferenceValidationCheckResult.error(target, localRawValue,
+                target.getInternationalizedKey("invalidReference"),
+                ImmutableMap.of(
                         "component", ((DataColumn) target).column(),
                         "referenceValues", Optional.ofNullable(referenceValues)
                                 .filter(MapUtils::isNotEmpty)
@@ -131,14 +224,19 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
 
     @Override
     public FieldType copy() {
+        // R-P2-2 : copie avec partage des caches seenOnce + precomputedResults
+        // → les workers Cascade parallèles alimentent et consomment le même cache.
         final ReferenceType referenceType = new ReferenceType(
                 this.target,
                 this.refType,
                 this.referenceValues,
                 this.transformer,
-                this.lineIdentityColumnName
+                this.lineIdentityColumnName,
+                this.seenOnce,          // partagé
+                this.precomputedResults  // partagé
         );
         referenceType.value = value;
+        referenceType.maxCacheEntries = this.maxCacheEntries;
         return referenceType;
 
     }

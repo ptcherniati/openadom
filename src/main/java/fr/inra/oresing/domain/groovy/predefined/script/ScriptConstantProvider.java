@@ -1,8 +1,5 @@
 package fr.inra.oresing.domain.groovy.predefined.script;
 
-import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
-
-import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
 /**
@@ -11,20 +8,25 @@ import java.util.Map;
  */
 public sealed interface ScriptConstantProvider permits BuildCompositeKey, BuildExceptionProvider, BuildManyCompositeKey, EscapeLabelProvider, NaturalKeyProvider {
 
-    static void addAllToContext(Map<String, Object> context) {
-        // Utilisation de getPermittedSubclasses pour obtenir les implémentations
-        Class<?>[] implementations = ScriptConstantProvider.class.getPermittedSubclasses();
+    /**
+     * Tableau statique pré-instancié de tous les providers.
+     * <p>
+     * R-P2-5 — Remplace la boucle {@code getPermittedSubclasses() + newInstance()} qui
+     * instanciait 5 providers par réflexion à chaque appel Groovy. Sur un import SWC de
+     * 100 lignes × ~48 expressions, cette boucle générait ~21 600 instanciations inutiles.
+     * Avec ce tableau statique, le coût est nul après le chargement de la classe.
+     */
+    ScriptConstantProvider[] PROVIDERS = {
+            new BuildCompositeKey(),
+            new BuildExceptionProvider(),
+            new BuildManyCompositeKey(),
+            new EscapeLabelProvider(),
+            new NaturalKeyProvider()
+    };
 
-        for (Class<?> impl : implementations) {
-            try {
-                // Instancier le record en utilisant le constructeur par défaut
-                ScriptConstantProvider provider = (ScriptConstantProvider) impl.getDeclaredConstructor().newInstance();
-                provider.bindToContext(context);
-            } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                throw new OreSiTechnicalException("Erreur lors de l'instanciation de " + impl.getName(), e);
-            } catch (NoSuchMethodException e) {
-                throw new OreSiTechnicalException("Le constructeur sans arguments est manquant pour " + impl.getName(), e);
-            }
+    static void addAllToContext(Map<String, Object> context) {
+        for (ScriptConstantProvider provider : PROVIDERS) {
+            provider.bindToContext(context);
         }
     }
 

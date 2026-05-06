@@ -38,9 +38,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -64,11 +62,16 @@ public class DataImporter {
      */
     private static final JsonRowMapper<Object> SHARED_JSON_ROW_MAPPER = new JsonRowMapper<>();
 
+    /** R-P2-3 : seuil min d'occurrences pour pré-calculer une valeur de référence. */
+    private static final int PRECOMPUTE_CACHE_THRESHOLD = 2;
+
     private final AsynchroneFileImporterContext dataImporterContext;
     private final RecursionStrategy recursionStrategy;
     private final DataTransformer dataTransformer;
     private final DataValidator dataValidator;
     private final CsvReader csvReader;
+    // R-P2-1/R-P2-3 : configurer le plafond du cache ReferenceType + pré-warmer dans prepareContextForDataTreatment.
+    private final ImportProperties importProperties;
 
     public DataImporter(final AsynchroneFileImporterContext dataImporterContext) {
         this(dataImporterContext, null);
@@ -83,6 +86,7 @@ public class DataImporter {
     public DataImporter(final AsynchroneFileImporterContext dataImporterContext, final ImportProperties importProperties) {
         super();
         this.dataImporterContext = dataImporterContext;
+        this.importProperties = importProperties;
         if (getDataImporterContext().isRecursive()) {
             boolean ordered = (importProperties != null && importProperties.isOrderedRecursionMode())
                     || getDataImporterContext().isOrderStrictTaggedOnRecursiveValidation();
@@ -158,6 +162,24 @@ public class DataImporter {
         getDataImporterContext().setTransformedLineCheckers(getRecursionStrategy(),
                 csvReader.buildLineCheckers(getDataImporterContext().dataHeaderReader().constantValues().values()));
 
+        // R-P2-1/R-P2-2 : configurer le plafond de cache sur tous les ReferenceType
+        // et construire la liste (colName → ReferenceType) pour le pré-warmer.
+        Map<String, ReferenceType> refTypeByColumnName = new HashMap<>();
+        if (importProperties != null) {
+            int maxCache = importProperties.getReferenceCacheMaxEntries();
+            getDataImporterContext().transformedLineCheckers().stream()
+                    .map(LineChecker::fieldTypeForOne)
+                    .filter(ReferenceType.class::isInstance)
+                    .map(ReferenceType.class::cast)
+                    .forEach(rt -> rt.setMaxCacheEntries(maxCache));
+        }
+        getDataImporterContext().transformedLineCheckers().forEach(lc -> {
+            if (lc.fieldTypeForOne() instanceof ReferenceType rt) {
+                String col = lc.target().column();
+                refTypeByColumnName.put(col, rt);
+            }
+        });
+
         // === Body write ===
         try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8)) {
             if (skipCsvReencoding) {
@@ -188,6 +210,13 @@ public class DataImporter {
                 }
             }
         }
+        // R-P2-3 : pré-warmer sélectif — compter les fréquences de chaque valeur
+        // par colonne référence, puis pré-calculer les valeurs vues ≥ THRESHOLD fois.
+        // Un seul passage sur le fichier temp (déjà en cache OS ou SSD).
+        if (!refTypeByColumnName.isEmpty()) {
+            prewarmReferenceCache(tempFile, refTypeByColumnName);
+        }
+
         return tempFile;
     }
 
@@ -331,6 +360,92 @@ public class DataImporter {
         // Supprimer les guillemets échappés dans la valeur timescope
         String cleaned = json.substring(start, end).replace("\\\"", "");
         return json.substring(0, start) + cleaned + json.substring(end);
+    }
+
+    /**
+     * R-P2-3 — Pré-warmer sélectif par fréquence.
+     *
+     * <p>Scanne le fichier temp CSV une fois pour compter les occurrences de chaque
+     * valeur brute dans les colonnes qui ont un {@link ReferenceType} associé. Toute
+     * valeur vue ≥ {@link #PRECOMPUTE_CACHE_THRESHOLD} fois est pré-calculée en appelant
+     * {@link ReferenceType#check} ce qui l'injecte dans {@code precomputedResults}
+     * (via le chemin seenOnce → precomputedResults décrit dans R-P2-2).
+     *
+     * <p>Ce pre-calcul est effectué avant le démarrage des workers Cascade, de sorte
+     * que le premier vrai appel à {@code check} pour ces valeurs trouve directement
+     * le résultat dans le cache.
+     *
+     * @param tempFile           fichier CSV headerless écrit par prepareContextForDataTreatment
+     * @param refTypeByColumnName mapping colonne → ReferenceType (déjà initialisé)
+     */
+    private void prewarmReferenceCache(Path tempFile,
+                                        Map<String, ReferenceType> refTypeByColumnName) {
+        if (refTypeByColumnName.isEmpty()) return;
+
+        final char sep = getDataImporterContext().contextConstants().dataConfiguration().separator();
+        final CSVFormat fmt = CSVFormat.Builder.create(CSVFormat.DEFAULT)
+                .setDelimiter(sep).setSkipHeaderRecord(false).get();
+
+        // Récupérer les en-têtes de colonnes pour mapper index → colonne
+        @SuppressWarnings("unchecked")
+        ImmutableList<String> headerRow = (ImmutableList<String>)
+                getDataImporterContext().publishContextBuilder().headerRow;
+        if (headerRow == null || headerRow.isEmpty()) return;
+
+        // Compter les occurrences : colIndex → valeur → compte
+        Map<Integer, Map<String, Integer>> freq = new HashMap<>();
+        Map<Integer, ReferenceType> refTypeByColIndex = new HashMap<>();
+        for (int i = 0; i < headerRow.size(); i++) {
+            String col = headerRow.get(i);
+            ReferenceType rt = refTypeByColumnName.get(col);
+            if (rt != null) {
+                freq.put(i, new HashMap<>());
+                refTypeByColIndex.put(i, rt);
+            }
+        }
+        if (refTypeByColIndex.isEmpty()) return;
+
+        try (InputStream is = Files.newInputStream(tempFile)) {
+            CSVParser parser = CSVParser.parse(is, StandardCharsets.UTF_8, fmt);
+            for (CSVRecord record : parser) {
+                for (Map.Entry<Integer, ReferenceType> entry : refTypeByColIndex.entrySet()) {
+                    int colIdx = entry.getKey();
+                    if (colIdx < record.size()) {
+                        String val = record.get(colIdx);
+                        // Ignorer les valeurs vides : Ltree.escapeToLabel("") lève nullLabel
+                        if (val != null && !val.isBlank()) {
+                            freq.get(colIdx).merge(val, 1, Integer::sum);
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            // Non fatal : le pré-warmer est une optimisation, pas une exigence
+            return;
+        }
+
+        // Pré-calculer les valeurs fréquentes : appeler check() 2 fois pour
+        // déclencher la promotion seenOnce → precomputedResults (logique R-P2-2)
+        for (Map.Entry<Integer, Map<String, Integer>> colEntry : freq.entrySet()) {
+            ReferenceType rt = refTypeByColIndex.get(colEntry.getKey());
+            LineChecker<?> lc = getDataImporterContext().transformedLineCheckers().stream()
+                    .filter(checker -> checker.fieldTypeForOne() == rt)
+                    .findFirst().orElse(null);
+            if (lc == null) continue;
+
+            for (Map.Entry<String, Integer> valEntry : colEntry.getValue().entrySet()) {
+                if (valEntry.getValue() >= PRECOMPUTE_CACHE_THRESHOLD) {
+                    try {
+                        // Deux appels : 1er → seenOnce, 2e → precomputedResults
+                        rt.check(valEntry.getKey(), lc);
+                        rt.check(valEntry.getKey(), lc);
+                    } catch (Exception e) {
+                        // Non fatal : le pré-warmer est une optimisation, pas une exigence
+                        // Ex. valeur invalide pour Ltree (ne produira qu'un miss de cache)
+                    }
+                }
+            }
+        }
     }
 
 }

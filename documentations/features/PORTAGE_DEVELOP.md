@@ -596,7 +596,7 @@ répétant les mêmes valeurs (cas typiques : SWC/ACBB 16 colonnes de référenc
 |---|---|
 | `documentations/features/ARCHITECTURE_DEPOT_FICHIER.md` | Filière d'import complète bout en bout : configuration YAML → phases de validation → parallélisme Cascade → cas récursif |
 | `documentations/features/ARCHITECTURE_LECTURE_CONFIGURATION.md` | Chaîne YAML → Configuration → JSONB PostgreSQL. Remplace `REFACTORING_ARBRE_HIERARCHIQUE.md`. Recettes concrètes pour ajouter une section YAML, un tag, un checker. |
-| `documentations/features/ERREURS_DEPOT_FICHIER.md` | Catalogue exhaustif des messages d'erreur produits par l'import (types, paramètres, exemples JSON, conditions de déclenchement) |
+| `documentations/features/ERREURS_DEPOT_FICHIER.md` | Catalogue exhaustif des messages d'erreur produits par l'import (types, paramètres, exemples JSON, conditions de déclenchement) ✅ créé |
 | `documentations/features/MODE_RECURSION_ORDONNEE.md` | Documentation du tag `__ORDER_STRICT__` : tableau comparatif des modes (chunk size / parallélisme), activation par YAML ou par propriété Spring |
 | `documentations/features/PERF_IMPORT_REFERENCE_PRECOMPUTATION.md` | Spécification des 5 niveaux de cache référence : architecture, axes, thread-safety, cas d'usage SWC/ACBB |
 | `documentations/features/REORGANISATION_USE_CASES.md` | Historique et anomalies de la réorganisation use cases (dont GetFileUseCase orphelin, résolu par R-P1-3) |
@@ -625,12 +625,17 @@ Lot 2 — Fonctionnalités (R-P1-1, R-P1-2, R-P1-3, R-P1-4)
   → .env ✅ : tuning 8 cœurs / 31 Go (CASCADE_IMPORT_PARALLELISM=6, pool=25, executors calibrés)
   → État : **P1 COMPLET** — 211/211 core.config ✅, 104/104 domain.model ✅ — compilation sans erreur ✅
 
-Lot 3 — Performances import (R-P2-1 à R-P2-5) — après Lot 1
-  → Porter en bloc (les caches sont interdépendants)
-  → Les propriétés cascade.import.reference-cache-max-entries et
-    cascade.import.groovy-cache-max-entries sont déjà dans application.properties
-    mais sans effet (champs ImportProperties absents, caches non implémentés)
-  → Durée estimée : 1,5 jour
+Lot 3 — Performances import (R-P2-1  R-P2-5) — aprs Lot 1
+  → Porter en bloc (les caches sont interdpendants)
+  → Les proprits cascade.import.reference-cache-max-entries et
+    cascade.import.groovy-cache-max-entries sont dj dans application.properties
+    mais sans effet (champs ImportProperties absents, caches non implments)
+  → Dure estime : 1,5 jour
+  → État : **P2 COMPLET** — commit c52a133 ✅
+  → Correctif R-P2-3 (nullLabel) : commit 7b981d92 ✅
+    prewarmReferenceCache() plantait sur les cellules CSV vides
+    (Ltree.escapeToLabel('') → IllegalStateException: nullLabel).
+    Fix : ignorer val.isBlank() dans le compteur + try-catch autour de rt.check().
 
 Lot 4 — Qualité / Tests (R-P3-1 à R-P3-5)
   → Peut être fait sur plusieurs sprints
