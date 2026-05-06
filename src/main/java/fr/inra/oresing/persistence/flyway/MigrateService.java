@@ -111,12 +111,50 @@ public class MigrateService {
     }
 
     private void updateAuthorizationIndexes(Flyway flyway) {
+        long t0 = System.nanoTime();
         try (Connection connection = flyway.getConfiguration().getDataSource().getConnection()) {
             AuthorizationIndex authorizationIndex = new AuthorizationIndex(application, null);
+
+            // AUDIT 06-05-26 #3 option A : si tous les index attendus existent
+            // deja en DB et qu aucun extra n est present , on skip totalement
+            // le DROP + CREATE ( gain 99 % des boots sur grosses bases ) .
+            // Le check coute 1 SELECT pg_indexes , vs N CREATE INDEX bloquants
+            // qui posent un AccessExclusiveLock sur referencevalue .
+            try {
+                java.util.Set<String> expected = authorizationIndex.expectedIndexNames();
+                java.util.Set<String> actual = new java.util.HashSet<>();
+                String pgIdxSql = "SELECT indexname FROM pg_indexes "
+                        + "WHERE schemaname = ? AND indexname LIKE 'authorization\\_%' ESCAPE '\\'";
+                try (java.sql.PreparedStatement ps = connection.prepareStatement(pgIdxSql)) {
+                    ps.setString(1, application.getName());
+                    try (java.sql.ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) actual.add(rs.getString(1));
+                    }
+                }
+                if (actual.equals(expected)) {
+                    long ms = (System.nanoTime() - t0) / 1_000_000L;
+                    log.info("updateAuthorizationIndexes : skip ( {} index attendus tous presents en DB pour {} en {} ms )",
+                            expected.size(), application.getName(), ms);
+                    return;
+                }
+                java.util.Set<String> missing = new java.util.HashSet<>(expected);
+                missing.removeAll(actual);
+                java.util.Set<String> extra = new java.util.HashSet<>(actual);
+                extra.removeAll(expected);
+                log.info("updateAuthorizationIndexes : diff detecte pour {} ( manquants={} , obsoletes={} ) -> rebuild complet",
+                        application.getName(), missing.size(), extra.size());
+            } catch (SQLException diffErr) {
+                log.warn("updateAuthorizationIndexes : diff pg_indexes a echoue ( fallback rebuild complet ) : {}",
+                        diffErr.getMessage());
+            }
+
             String createIndexesSql = authorizationIndex.createIndexes();
             try (Statement statement = connection.createStatement()) {
                 statement.execute(createIndexesSql);
             }
+            long ms = (System.nanoTime() - t0) / 1_000_000L;
+            log.info("updateAuthorizationIndexes : rebuild complet termine pour {} en {} ms",
+                    application.getName(), ms);
         } catch (SQLException e) {
             log.error("Erreur lors de la création des index d'autorisation pour l'application {}", application.getName(), e);
         }

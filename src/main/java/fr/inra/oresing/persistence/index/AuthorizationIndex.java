@@ -250,4 +250,39 @@ public record AuthorizationIndex(Application application, Set<String> dataNames)
     public String indexName(String dataname) {
         return "authorization_%1$s_index".formatted(dataname);
     }
+
+    /**
+     * Calcule l'ensemble des noms d'index ATTENDUS pour les dataNames de
+     * cette application . Utilise par {@code MigrateService} pour faire
+     * un diff vs {@code pg_indexes} et skip le DROP+CREATE complet quand
+     * l'etat reel correspond deja ( cf AUDIT 06-05-26 #3 option A ) .
+     *
+     * <p>Les noms generes ici doivent correspondre EXACTEMENT a ceux
+     * produits par {@link #createIndex(String)} ( meme prefix , meme
+     * suffix ) sinon le diff genere des faux positifs .
+     */
+    public Set<String> expectedIndexNames() {
+        Set<String> expected = new HashSet<>();
+        Set<String> dataNamesForIndexes = dataNames().isEmpty()
+                ? application().getConfiguration().dataDescription().keySet()
+                : dataNames();
+        for (String dataname : dataNamesForIndexes) {
+            String prefix = indexName(dataname);
+            // _refvalues_index : toujours genere
+            expected.add(prefix + "_refvalues_index");
+            // _auth_index / _timescope_index : conditionnels selon
+            // configuration authorization.scope / timescope
+            application().findData(dataname)
+                    .map(StandardDataDescription::authorization)
+                    .ifPresent(auth -> {
+                        if (auth.authorizationScope() != null && !auth.authorizationScope().isEmpty()) {
+                            expected.add(prefix + "_auth_index");
+                        }
+                        if (!Strings.isNullOrEmpty(auth.timeScope())) {
+                            expected.add(prefix + "_timescope_index");
+                        }
+                    });
+        }
+        return expected;
+    }
 }
