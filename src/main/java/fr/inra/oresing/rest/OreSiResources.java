@@ -220,6 +220,7 @@ public class OreSiResources {
     private final ExtractionRateLimiter extractionRateLimiter;
     private final OpenadomMetrics metrics;
     private final WorkflowLogWriter workflowLogWriter;
+    private final fr.inra.oresing.workflow.extraction.ExtractionLifecycle extractionLifecycle;
     Executor fastExecutor;
     Executor normalExecutor;
     Executor heavyExecutor;
@@ -284,7 +285,8 @@ public class OreSiResources {
             SendUploadErrorsMailUseCase sendUploadErrorsMailUseCase,
             ExtractionRateLimiter extractionRateLimiter,
             OpenadomMetrics metrics,
-            WorkflowLogWriter workflowLogWriter
+            WorkflowLogWriter workflowLogWriter,
+            fr.inra.oresing.workflow.extraction.ExtractionLifecycle extractionLifecycle
     ) {
         this.userRepository = userRepository;
         this.serviceContainer = serviceContainer;
@@ -341,6 +343,7 @@ public class OreSiResources {
         this.extractionRateLimiter = extractionRateLimiter;
         this.metrics = metrics;
         this.workflowLogWriter = workflowLogWriter;
+        this.extractionLifecycle = extractionLifecycle;
     }
 
     /**
@@ -799,26 +802,20 @@ public class OreSiResources {
         extractionRateLimiter.acquireOrThrow(userId, "csv");
 
         final StreamingResponseBody streamResponseBody = out -> {
-            final Instant startedAt = Instant.now();
             final org.apache.commons.io.output.CountingOutputStream counting =
                     new org.apache.commons.io.output.CountingOutputStream(out);
-            String finalStatus = WorkflowLogEntry.STATUS_FAILED;
-            String fatalError = null;
-            metrics.markExtractionStart("csv");
-            try {
-                getDataCsvStreamUseCase.execute(counting, nameOrId, refType, language, false);
-                finalStatus = WorkflowLogEntry.STATUS_COMPLETED;
-            } catch (RuntimeException ex) {
-                fatalError = ex.getMessage();
-                throw ex;
+            try (var lc = extractionLifecycle.start(
+                    WorkflowLogEntry.TYPE_EXTRACT_CSV,
+                    java.util.UUID.fromString(userId), resolveCurrentLogin(),
+                    nameOrId, refType, refType + ".csv", 0L)) {
+                try {
+                    getDataCsvStreamUseCase.execute(counting, nameOrId, refType, language, false);
+                    lc.complete(counting.getByteCount());
+                } catch (RuntimeException ex) {
+                    lc.fail(ex);
+                    throw ex;
+                }
             } finally {
-                Duration duration = Duration.between(startedAt, Instant.now());
-                long bytes = counting.getByteCount();
-                metrics.recordExtractionCompleted("csv", nameOrId, refType, finalStatus, duration, bytes);
-                metrics.markExtractionEnd("csv");
-                logExtractionEvent(WorkflowLogEntry.TYPE_EXTRACT_CSV,
-                        userId, nameOrId, refType, refType + ".csv",
-                        startedAt, duration, finalStatus, bytes, fatalError);
                 extractionRateLimiter.release(userId);
             }
         };
@@ -999,26 +996,20 @@ public class OreSiResources {
             response.setHeader("Content-Security-Policy", "frame-ancestors %s".formatted(frontendOrigin));
             streamResponseBody = out -> {
                 org.springframework.security.core.context.SecurityContextHolder.setContext(capturedSecurityCtx);
-                final Instant startedAt = Instant.now();
                 final org.apache.commons.io.output.CountingOutputStream counting =
                         new org.apache.commons.io.output.CountingOutputStream(out);
-                String finalStatus = WorkflowLogEntry.STATUS_FAILED;
-                String fatalError = null;
-                metrics.markExtractionStart(extractionType);
-                try {
-                    getCharteUseCase.execute(counting, response, nameOrId, additionalFilesInfos);
-                    finalStatus = WorkflowLogEntry.STATUS_COMPLETED;
-                } catch (RuntimeException ex) {
-                    fatalError = ex.getMessage();
-                    throw ex;
+                try (var lc = extractionLifecycle.start(
+                        WorkflowLogEntry.TYPE_EXTRACT_CHARTE,
+                        java.util.UUID.fromString(userId), resolveCurrentLogin(),
+                        nameOrId, dataType, "charte.pdf", 0L)) {
+                    try {
+                        getCharteUseCase.execute(counting, response, nameOrId, additionalFilesInfos);
+                        lc.complete(counting.getByteCount());
+                    } catch (RuntimeException ex) {
+                        lc.fail(ex);
+                        throw ex;
+                    }
                 } finally {
-                    Duration duration = Duration.between(startedAt, Instant.now());
-                    long bytes = counting.getByteCount();
-                    metrics.recordExtractionCompleted(extractionType, nameOrId, dataType, finalStatus, duration, bytes);
-                    metrics.markExtractionEnd(extractionType);
-                    logExtractionEvent(WorkflowLogEntry.TYPE_EXTRACT_CHARTE,
-                            userId, nameOrId, dataType, "charte.pdf",
-                            startedAt, duration, finalStatus, bytes, fatalError);
                     extractionRateLimiter.release(userId);
                     org.springframework.security.core.context.SecurityContextHolder.clearContext();
                 }
@@ -1026,30 +1017,24 @@ public class OreSiResources {
         } else {
             streamResponseBody = out -> {
                 org.springframework.security.core.context.SecurityContextHolder.setContext(capturedSecurityCtx);
-                final Instant startedAt = Instant.now();
                 final org.apache.commons.io.output.CountingOutputStream counting =
                         new org.apache.commons.io.output.CountingOutputStream(out);
-                String finalStatus = WorkflowLogEntry.STATUS_FAILED;
-                String fatalError = null;
-                metrics.markExtractionStart(extractionType);
-                try (final ZipOutputStream zipOutputStream = new KeepAliveZipOutputStream(counting)) {
-                    getAdditionalFilesZipStreamUseCase.execute(zipOutputStream, nameOrId, additionalFilesInfos);
-                    finalStatus = WorkflowLogEntry.STATUS_COMPLETED;
-                } catch (final IOException ioe) {
-                    fatalError = ioe.getMessage();
-                    switch (OreSiResources.getDefaultLocale().getLanguage()) {
-                        case FR -> log.error(IO_ERROR_FR, ioe);
-                        case EN -> log.error(IO_ERROR_EN, ioe);
-                        default -> log.error(IO_ERROR_EN, ioe);
+                try (var lc = extractionLifecycle.start(
+                        WorkflowLogEntry.TYPE_EXTRACT_ADDITIONAL_FILES,
+                        java.util.UUID.fromString(userId), resolveCurrentLogin(),
+                        nameOrId, dataType, "additionalFiles.zip", 0L)) {
+                    try (final ZipOutputStream zipOutputStream = new KeepAliveZipOutputStream(counting)) {
+                        getAdditionalFilesZipStreamUseCase.execute(zipOutputStream, nameOrId, additionalFilesInfos);
+                        lc.complete(counting.getByteCount());
+                    } catch (final IOException ioe) {
+                        switch (OreSiResources.getDefaultLocale().getLanguage()) {
+                            case FR -> log.error(IO_ERROR_FR, ioe);
+                            case EN -> log.error(IO_ERROR_EN, ioe);
+                            default -> log.error(IO_ERROR_EN, ioe);
+                        }
+                        lc.fail(ioe);
                     }
                 } finally {
-                    Duration duration = Duration.between(startedAt, Instant.now());
-                    long bytes = counting.getByteCount();
-                    metrics.recordExtractionCompleted(extractionType, nameOrId, dataType, finalStatus, duration, bytes);
-                    metrics.markExtractionEnd(extractionType);
-                    logExtractionEvent(WorkflowLogEntry.TYPE_EXTRACT_ADDITIONAL_FILES,
-                            userId, nameOrId, dataType, "additionalFiles.zip",
-                            startedAt, duration, finalStatus, bytes, fatalError);
                     extractionRateLimiter.release(userId);
                     org.springframework.security.core.context.SecurityContextHolder.clearContext();
                 }
@@ -1262,85 +1247,73 @@ public class OreSiResources {
 
         StreamingResponseBody body = outputStream -> {
             SecurityContextHolder.setContext(securityContext);
-            Path diskCopy = null;
-            boolean streamedOk = false;
-            final Instant startedAt = Instant.now();
-            long bytesStreamed = 0L;
-            String fatalError = null;
-            metrics.markExtractionStart("zip");
+            // ExtractionLifecycle = recordStart + activeRegistry.start + heartbeat
+            // + métriques + recordEnd ( synchrone retry ) . AutoCloseable :
+            // si exception non gérée , le close() force fail() . Garantit
+            // qu'aucun workflow ne reste bloqué en IN_PROGRESS .
+            try (var lc = extractionLifecycle.start(
+                    WorkflowLogEntry.TYPE_EXTRACT_ZIP,
+                    java.util.UUID.fromString(userId), resolveCurrentLogin(),
+                    nameOrId, dataType, fileName + ".zip", 0L)) {
 
-            try {
-                diskCopy = Files.createTempFile(Paths.get(TMP), fileName + "-", ".zip");
+                Path diskCopy = null;
+                boolean streamedOk = false;
+                long bytesStreamed = 0L;
+                Throwable streamError = null;
 
-                try (OutputStream diskOut  = new BufferedOutputStream(Files.newOutputStream(diskCopy));
-                     TeeOutputStream tee   = new TeeOutputStream(
-                             org.apache.commons.io.output.CloseShieldOutputStream.wrap(outputStream),
-                             diskOut);
-                     ZipOutputStream zip   = new ZipOutputStream(tee)) {
+                try {
+                    diskCopy = Files.createTempFile(Paths.get(TMP), fileName + "-", ".zip");
 
-                    try {
-                        serviceContainer.dataService().streamDataZipTo(zip, downloadDatasetQuery);
-                        streamedOk = true;
-                    } catch (Exception buildEx) {
-                        log.error(IO_WRITING_CSV_ERROR, buildEx);
-                        fatalError = buildEx.getMessage();
-                        writeErrorEntryToZip(zip, buildEx);
+                    try (OutputStream diskOut  = new BufferedOutputStream(Files.newOutputStream(diskCopy));
+                         TeeOutputStream tee   = new TeeOutputStream(
+                                 org.apache.commons.io.output.CloseShieldOutputStream.wrap(outputStream),
+                                 diskOut);
+                         ZipOutputStream zip   = new ZipOutputStream(tee)) {
+
+                        try {
+                            serviceContainer.dataService().streamDataZipTo(zip, downloadDatasetQuery);
+                            streamedOk = true;
+                        } catch (Exception buildEx) {
+                            log.error(IO_WRITING_CSV_ERROR, buildEx);
+                            streamError = buildEx;
+                            writeErrorEntryToZip(zip, buildEx);
+                        }
                     }
-                }
 
-                // Taille finale du ZIP produit ( identique cote client et cote disque )
-                if (diskCopy != null) {
-                    try {
-                        bytesStreamed = Files.size(diskCopy);
-                    } catch (IOException ignored) {
-                        // metrics best-effort
+                    if (diskCopy != null) {
+                        try { bytesStreamed = Files.size(diskCopy); }
+                        catch (IOException ignored) { /* metrics best-effort */ }
+                    }
+
+                    if (streamedOk) {
+                        final Path finalDiskCopy = diskCopy;
+                        final OreSiUser finalUser = currentUser;
+                        heavyExecutorService.submit(() -> {
+                            SecurityContextHolder.setContext(securityContext);
+                            try {
+                                sendZipLinkByMailUseCase.execute(finalDiskCopy, downloadDatasetQuery, finalUser);
+                            } catch (RuntimeException ex) {
+                                log.error(EMAIL_ERROR, ex);
+                            } finally {
+                                try { Files.deleteIfExists(finalDiskCopy); }
+                                catch (IOException ex) { log.warn(IO_DELETE_ERROR, ex); }
+                            }
+                        });
+                        diskCopy = null; // ownership transferee au submit async
+                    }
+                } finally {
+                    if (diskCopy != null) {
+                        try { Files.deleteIfExists(diskCopy); }
+                        catch (IOException ex) { log.warn(IO_DELETE_ERROR, ex); }
                     }
                 }
 
                 if (streamedOk) {
-                    // Streaming OK : le fichier disque est complet , on lance
-                    // l'upload FileSender + mail en async. Le client a deja
-                    // recu tous les bytes , cette tache n'influe plus sur la
-                    // reponse HTTP.
-                    final Path finalDiskCopy = diskCopy;
-                    final OreSiUser finalUser = currentUser;
-                    heavyExecutorService.submit(() -> {
-                        SecurityContextHolder.setContext(securityContext);
-                        try {
-                            sendZipLinkByMailUseCase.execute(finalDiskCopy, downloadDatasetQuery, finalUser);
-                        } catch (RuntimeException ex) {
-                            log.error(EMAIL_ERROR, ex);
-                        } finally {
-                            try {
-                                Files.deleteIfExists(finalDiskCopy);
-                            } catch (IOException ex) {
-                                log.warn(IO_DELETE_ERROR, ex);
-                            }
-                        }
-                    });
-                    diskCopy = null; // ownership transferee au submit async
+                    lc.complete(bytesStreamed);
+                } else {
+                    lc.fail(streamError);
                 }
             } finally {
-                // Nettoyage du fichier disque si le streaming a echoue ou si
-                // on n'a pas pu atteindre le submit async ( ex : RuntimeException
-                // pendant createTempFile ).
-                if (diskCopy != null) {
-                    try {
-                        Files.deleteIfExists(diskCopy);
-                    } catch (IOException ex) {
-                        log.warn(IO_DELETE_ERROR, ex);
-                    }
-                }
-                Duration duration = Duration.between(startedAt, Instant.now());
-                String finalStatus = streamedOk
-                        ? WorkflowLogEntry.STATUS_COMPLETED
-                        : WorkflowLogEntry.STATUS_FAILED;
-                metrics.recordExtractionCompleted("zip", nameOrId, dataType,
-                        finalStatus, duration, bytesStreamed);
-                metrics.markExtractionEnd("zip");
-                logExtractionEvent(WorkflowLogEntry.TYPE_EXTRACT_ZIP,
-                        userId, nameOrId, dataType, fileName + ".zip",
-                        startedAt, duration, finalStatus, bytesStreamed, fatalError);
                 SecurityContextHolder.clearContext();
                 extractionRateLimiter.release(userId);
             }
