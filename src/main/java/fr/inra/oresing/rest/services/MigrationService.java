@@ -3,6 +3,7 @@ package fr.inra.oresing.rest.services;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
+import fr.inra.oresing.domain.application.configuration.migration.MigrationProperties;
 import fr.inra.oresing.domain.application.configuration.migration.change.ConfigurationChange;
 import fr.inra.oresing.domain.application.configuration.migration.change.DataAdded;
 import fr.inra.oresing.domain.application.configuration.migration.change.IgnorableChange;
@@ -28,6 +29,8 @@ import org.javers.core.metamodel.object.ValueObjectId;
 import org.jeasy.rules.api.Facts;
 import org.jeasy.rules.api.Rules;
 import org.jeasy.rules.api.RulesEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -37,6 +40,9 @@ import java.util.Set;
 
 @Service
 public class MigrationService {
+
+    private static final Logger log = LoggerFactory.getLogger(MigrationService.class);
+
     private final ServiceContainer serviceContainer;
     private final Javers javers;
     private final MigrationConfiguration.MigrationRepositories migrationRepositories;
@@ -44,8 +50,13 @@ public class MigrationService {
     private final Rules migrationRules;
     private final JsonRowMapper jsonRowMapper;
     private final MigrationExecutor executor;
+    private final MigrationProperties migrationProperties;
 
-    public MigrationService(ServiceContainer serviceContainer, Javers javers, MigrationConfiguration.MigrationRepositories migrationRepositories, RulesEngine rulesEngine, Rules migrationRules, JsonRowMapper jsonRowMapper, MigrationExecutor executor) {
+    public MigrationService(ServiceContainer serviceContainer, Javers javers,
+                            MigrationConfiguration.MigrationRepositories migrationRepositories,
+                            RulesEngine rulesEngine, Rules migrationRules,
+                            JsonRowMapper jsonRowMapper, MigrationExecutor executor,
+                            MigrationProperties migrationProperties) {
         this.serviceContainer = serviceContainer;
         this.javers = javers;
         this.migrationRepositories = migrationRepositories;
@@ -53,6 +64,7 @@ public class MigrationService {
         this.migrationRules = migrationRules;
         this.jsonRowMapper = jsonRowMapper;
         this.executor = executor;
+        this.migrationProperties = migrationProperties;
     }
 
     private List<ConfigurationChange> toConfigurationChange(
@@ -151,19 +163,44 @@ public class MigrationService {
         rulesEngine.fire(migrationRules, facts);
     }
 
+    /**
+     * Exécute ou simule la migration d'une configuration OpenADOM.
+     *
+     * <p>Lorsque {@code openadom.migration.bypass-configuration-check=true} (valeur par défaut),
+     * les vérifications de compatibilité du schéma sont ignorées : tout changement de
+     * configuration est accepté sans contrainte, quelle que soit la nature du changement.
+     *
+     * <p>Lorsque {@code openadom.migration.bypass-configuration-check=false} (mode sécurisé),
+     * les changements incompatibles avec le schéma existant (changements non résolus,
+     * actions nécessitant une confirmation) bloquent la mise à jour et retournent un résultat
+     * avec statut {@link MigrationStatus#REQUIRES_CONFIRMATION} ou {@link MigrationStatus#FAILED}.
+     *
+     * @param oldApplication    ancienne configuration de l'application
+     * @param newApplication    nouvelle configuration à appliquer
+     * @param acceptedWarnings  identifiants des avertissements explicitement acceptés par l'utilisateur
+     * @param migrationMode     {@link MigrationMode#DRY_RUN} pour simuler, {@link MigrationMode#EXECUTE} pour appliquer
+     * @return le résultat de la migration
+     */
     public MigrationResult executeMigration(
             Application oldApplication,
             Application newApplication,
             Set<String> acceptedWarnings,
             MigrationMode migrationMode
-    ) { List<ConfigurationChange> changes = new LinkedList<>();
+    ) {
+        final boolean bypass = migrationProperties.isBypassConfigurationCheck();
+        if (bypass && log.isDebugEnabled()) {
+            log.debug("openadom.migration.bypass-configuration-check=true : " +
+                    "vérifications de compatibilité désactivées — la mise à jour s'effectue sans contrainte.");
+        }
+
+        List<ConfigurationChange> changes = new LinkedList<>();
         Configuration oldConfig = oldApplication.getConfiguration();
         Configuration newConfig = newApplication.getConfiguration();
         List<String> oldData = oldApplication.getData();
         List<String> newData = newApplication.getData();
         final Collection<String> addedData = CollectionUtils.subtract(newData, oldData);
         final Collection<String> removedData = CollectionUtils.subtract(oldData, newData);
-        addedData.forEach(newRef->{
+        addedData.forEach(newRef -> {
             final StandardDataDescription newDataDescription = newApplication.getConfiguration().dataDescription().get(newRef);
             changes.add(new DataAdded(newRef, newDataDescription));
             oldApplication.getConfiguration().dataDescription().put(newRef, newDataDescription);
@@ -171,12 +208,29 @@ public class MigrationService {
         });
 
         final List<ConfigurationChange> remainingChanges = detectChanges(oldConfig, newConfig);
-        if(!remainingChanges.isEmpty()) {
-            return MigrationResult.onError(changes);
+        if (!remainingChanges.isEmpty()) {
+            if (bypass) {
+                // Mode permissif : on logue les changements non résolus mais on ne bloque pas
+                if (log.isWarnEnabled()) {
+                    log.warn("Changements de configuration non résolus détectés pour l'application '{}' " +
+                                    "(bypass activé — mise à jour acceptée malgré tout) : {}",
+                            newConfig.applicationDescription().name(),
+                            remainingChanges.stream()
+                                    .map(Object::toString)
+                                    .reduce((a, b) -> a + ", " + b)
+                                    .orElse("(aucun détail disponible)"));
+                }
+                // On continue avec les seuls changements résolus (addedData)
+            } else {
+                // Mode sécurisé : on bloque la mise à jour
+                return MigrationResult.onError(remainingChanges);
+            }
         }
+
         if (changes.isEmpty()) {
             return MigrationResult.noChanges();
         }
+
         String applicationName = newConfig.applicationDescription().name();
         MigrationContext context = buildContext(applicationName, oldApplication, newApplication);
         MigrationPlan plan = new MigrationPlan(
@@ -189,8 +243,16 @@ public class MigrationService {
             evaluateChange(change, plan, context);
         }
 
-        if (plan.status().get() == MigrationStatus.REQUIRES_CONFIRMATION) {
+        if (!bypass && plan.status().get() == MigrationStatus.REQUIRES_CONFIRMATION) {
+            // Mode sécurisé : on bloque si une confirmation est requise
             return MigrationResult.blocked(plan.warnings());
+        }
+        if (bypass && plan.status().get() == MigrationStatus.REQUIRES_CONFIRMATION && log.isWarnEnabled()) {
+            // Mode permissif : on logue l'avertissement mais on continue l'exécution
+            log.warn("Des avertissements bloquants ont été détectés pour l'application '{}' " +
+                            "(bypass activé — exécution forcée) : {}",
+                    applicationName,
+                    plan.warnings());
         }
 
         return executor.execute(plan, context);
