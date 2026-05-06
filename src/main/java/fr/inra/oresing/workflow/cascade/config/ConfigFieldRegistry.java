@@ -31,6 +31,13 @@ public class ConfigFieldRegistry {
     private final PoolReloader     poolReloader;
     private final fr.inra.oresing.workflow.cascade.ImportRateLimiter     importRateLimiter;
     private final fr.inra.oresing.workflow.cascade.ExtractionRateLimiter extractionRateLimiter;
+    /**
+     * Optional : le bean est conditionnel ( {@code @ConditionalOnProperty}
+     * sur {@code app.workflow.zombie-enabled} ) . Si désactivé , le
+     * threshold n'apparaît pas dans le ConfigEditPanel ( cohérent avec
+     * "feature off" ) .
+     */
+    private final java.util.Optional<fr.inra.oresing.workflow.cascade.history.WorkflowZombieSweeper> workflowZombieSweeper;
 
     private final Map<String, ConfigField<?>> fields = new LinkedHashMap<>();
 
@@ -121,6 +128,22 @@ public class ConfigFieldRegistry {
                 .getter(() -> importProperties.getPipelineMode().name())
                 .setter(s -> importProperties.setPipelineMode(PipelineMode.valueOf(s)))
                 .build());
+
+        // ---- Workflow lifecycle - Zombie sweeper ( hot ) ----
+        workflowZombieSweeper.ifPresent(sweeper -> register(
+                ConfigField.intField("workflow.zombieThresholdMinutes")
+                        .description("Seuil ( minutes ) au-delà duquel un workflow IN_PROGRESS "
+                                + "sans heartbeat récent est marqué CANCELLED par le sweeper "
+                                + "( fatal_error = 'presumed dead' ) . Évalué sur "
+                                + "COALESCE(last_heartbeat_at, start_time) . Augmenter si des "
+                                + "imports légitimes restent silencieux > seuil ( ex. JVM GC "
+                                + "long ) ; réduire pour détecter les vrais zombies plus vite . "
+                                + "Le cron de sweep ( 5 min par défaut ) reste env-only . "
+                                + "Mutation à chaud effective au prochain tick .")
+                        .getter(sweeper::getThresholdMinutes)
+                        .setter(sweeper::setThresholdMinutes)
+                        .range(1, 360)
+                        .build()));
 
         register(ConfigField.intField("pipelineQueueCapacity")
                 .description("Capacite de la queue inter-stage transform / sink "

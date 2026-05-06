@@ -48,7 +48,13 @@ import org.springframework.stereotype.Component;
 public class WorkflowZombieSweeper {
 
     private final WorkflowLogRepository repository;
-    private final int                   thresholdMinutes;
+    /**
+     * Volatile pour autoriser la mutation à chaud via {@code ConfigEditPanel}
+     * admin ( cf {@code ConfigFieldRegistry.workflow.zombieThresholdMinutes} ) .
+     * La valeur est lue à chaque tick {@link #sweepZombies} : pas de cache ,
+     * pas de redémarrage requis pour appliquer un changement .
+     */
+    private volatile int                thresholdMinutes;
 
     public WorkflowZombieSweeper(
             WorkflowLogRepository repository,
@@ -57,6 +63,20 @@ public class WorkflowZombieSweeper {
         this.thresholdMinutes = thresholdMinutes;
         log.info("WorkflowZombieSweeper configure : seuil={} min ( IN_PROGRESS plus vieux que ca = presumes morts )",
                 thresholdMinutes);
+    }
+
+    public int getThresholdMinutes() {
+        return thresholdMinutes;
+    }
+
+    public void setThresholdMinutes(int v) {
+        if (v < 1) {
+            throw new IllegalArgumentException("zombieThresholdMinutes must be >= 1 ( got " + v + " )");
+        }
+        int old = this.thresholdMinutes;
+        this.thresholdMinutes = v;
+        log.info("WorkflowZombieSweeper threshold change : {} min -> {} min",
+                old, v);
     }
 
     /**
