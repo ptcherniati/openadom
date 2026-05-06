@@ -122,6 +122,18 @@ public class ConfigFieldRegistry {
                 .setter(s -> importProperties.setPipelineMode(PipelineMode.valueOf(s)))
                 .build());
 
+        register(ConfigField.intField("pipelineQueueCapacity")
+                .description("Capacite de la queue inter-stage transform / sink "
+                        + "( mode PIPELINED uniquement ) . Trop bas ( ex 2 ) provoque "
+                        + "du backpressure inutile : les workers transform bloquent "
+                        + "en attendant un slot . Trop haut consomme de la heap . "
+                        + "Defaut 50 ( cascade benchmarks transform >> sink ) . "
+                        + "Ignore en mode STAGED .")
+                .getter(importProperties::getPipelineQueueCapacity)
+                .setter(importProperties::setPipelineQueueCapacity)
+                .range(1, 10_000)
+                .build());
+
         // ---- Quotas par utilisateur ( hot ) ----
         register(ConfigField.intField("rateLimit.import.maxConcurrentPerUser")
                 .description("Quota d'imports concurrents par utilisateur . "

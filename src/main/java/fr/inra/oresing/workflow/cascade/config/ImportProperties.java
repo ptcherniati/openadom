@@ -99,6 +99,24 @@ public class ImportProperties {
             fr.inrae.ore.cascade.model.workflow.PipelineMode.STAGED;
 
     /**
+     * Capacite de la {@link java.util.concurrent.ArrayBlockingQueue}
+     * inter-stage transform / sink utilisee uniquement quand
+     * {@link #pipelineMode} = PIPELINED ( cf cascade 2.1.0 ) . Trop bas
+     * ( ex. 2 ) provoque du backpressure inutile : le sink ne consomme
+     * pas assez vite pour vider la queue , les workers transform
+     * bloquent en attendant un slot . Trop haut consomme inutilement de
+     * la heap ( N chunks bufferises ) . Defaut 50 : compromis transform
+     * 6-12 min vs sink secondes/minutes ( cascade perf benchmarks ) .
+     *
+     * <p>Surcharge via env var {@code CASCADE_IMPORT_PIPELINE_QUEUE_CAPACITY}
+     * ou property {@code cascade.import.pipeline-queue-capacity} . Mutable
+     * via ConfigEditPanel admin .
+     *
+     * @since AUDIT 06-05-26 #6
+     */
+    private volatile int pipelineQueueCapacity = 50;
+
+    /**
      * Staging table strategy when {@link #sinkStrategy} = DIRECT_COPY .
      *
      * <p><b>Defaut prod : SHARED_UNLOGGED</b> ( table UNLOGGED partagee
@@ -187,6 +205,7 @@ public class ImportProperties {
 
     public SinkStrategy getSinkStrategy() { return sinkStrategy; }
     public fr.inrae.ore.cascade.model.workflow.PipelineMode getPipelineMode() { return pipelineMode; }
+    public int getPipelineQueueCapacity() { return pipelineQueueCapacity; }
     public StagingStrategy getStagingStrategy() { return stagingStrategy; }
     public String getStagingSharedTableName() { return stagingSharedTableName; }
     public int getStagingSharedOrphanTtlMinutes() { return stagingSharedOrphanTtlMinutes; }
@@ -207,6 +226,7 @@ public class ImportProperties {
 
     public void setSinkStrategy(SinkStrategy v) { this.sinkStrategy = v; }
     public void setPipelineMode(fr.inrae.ore.cascade.model.workflow.PipelineMode v) { this.pipelineMode = v; }
+    public void setPipelineQueueCapacity(int v) { this.pipelineQueueCapacity = v; }
     public void setStagingStrategy(StagingStrategy v) { this.stagingStrategy = v; }
     public void setStagingSharedTableName(String v) { this.stagingSharedTableName = v; }
     public void setStagingSharedOrphanTtlMinutes(int v) { this.stagingSharedOrphanTtlMinutes = v; }

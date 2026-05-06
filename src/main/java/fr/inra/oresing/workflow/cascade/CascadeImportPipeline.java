@@ -447,7 +447,8 @@ public class CascadeImportPipeline {
                             .withSourceChunkSize(chunkSizeLines)
                             .withCollectorChunkSize(collectorChunkSize)
                             .withMaxErrors(maxErrors)
-                            .withPipelineMode(effectivePipelineMode);
+                            .withPipelineMode(effectivePipelineMode)
+                            .withPipelineQueueCapacity(importProperties.getPipelineQueueCapacity());
 
             // Sink parallelism wiring ( cascade 2.1.0 ) :
             //   - DIRECT_COPY + PER_CONNECTION_TEMP : sticky connection ,
