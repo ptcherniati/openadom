@@ -795,9 +795,26 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     }
 
     public Flux<DataRows> findAllByDataTypeFlux(final DownloadDatasetQuery downloadDatasetQuery) {
-        final Stream result;
+        return findAllByDataTypeFlux(downloadDatasetQuery, getNamedParameterJdbcTemplate());
+    }
+
+    /**
+     * Variante streaming acceptant un {@link NamedParameterJdbcTemplate}
+     * explicite . Permet aux endpoints de telechargement
+     * ( CSV / ZIP / charte / additional files ) de router leur cursor
+     * sur le pool Hikari dedie {@code streamingDataSource} sans
+     * impacter le pool main utilise par cascade + API + schedulers .
+     *
+     * @param downloadDatasetQuery requete de download ( SQL + parametres )
+     * @param template             template JDBC a utiliser ( typiquement
+     *                              {@code streamingNamedJdbcTemplate} )
+     * @since AUDIT 06-05-26 streaming pool isolation phase 2
+     */
+    public Flux<DataRows> findAllByDataTypeFlux(final DownloadDatasetQuery downloadDatasetQuery,
+                                                final org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate template) {
         final SqlRequest sqlRequest = DataRequestBuilder.buildSelectRequest(downloadDatasetQuery);
-        result = getNamedParameterJdbcTemplate().queryForStream(sqlRequest.sql(), sqlRequest.parameterSource(), new JsonRowMapper<DataRows>());
+        final Stream<DataRows> result = template.queryForStream(
+                sqlRequest.sql(), sqlRequest.parameterSource(), new JsonRowMapper<DataRows>());
         return Flux.<DataRows>fromStream(result);
     }
 

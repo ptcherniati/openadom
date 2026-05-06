@@ -307,10 +307,26 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
 
 
     public InputStream retrieveFileContentAsInputStream(UUID fileId) {
+        return retrieveFileContentAsInputStream(fileId, jdbcTemplate);
+    }
+
+    /**
+     * Variante streaming acceptant un {@link JdbcTemplate} explicite .
+     * Permet aux endpoints de download ( charte , ZIP attached files ,
+     * additional files ) d'ouvrir leur cursor lo / blob sur le pool
+     * Hikari dedie {@code streamingDataSource} sans impacter le pool
+     * main utilise par cascade + API + schedulers .
+     *
+     * @param fileId   identifiant du blob a streamer
+     * @param template template JDBC a utiliser ( typiquement
+     *                  {@code streamingJdbcTemplate} )
+     * @since AUDIT 06-05-26 streaming pool isolation phase 2
+     */
+    public InputStream retrieveFileContentAsInputStream(UUID fileId, JdbcTemplate template) {
         String query = "SELECT fileData FROM %s WHERE id = ?::uuid".formatted(getTable().getSqlIdentifier());
         LobHandler lobHandler = new DefaultLobHandler();
 
-        return jdbcTemplate.execute(query, (PreparedStatementCallback<InputStream>) ps -> {
+        return template.execute(query, (PreparedStatementCallback<InputStream>) ps -> {
             ps.setObject(1, fileId.toString());
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {

@@ -91,6 +91,9 @@ public class DataService {
     Executor heavyExecutor;
     Executor backupExecutor;
 
+    private final org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate streamingNamedJdbcTemplate;
+    private final org.springframework.jdbc.core.JdbcTemplate streamingJdbcTemplate;
+
     public DataService(
             OreSiRepository repo,
             JsonRowMapper jsonRowMapper,
@@ -101,7 +104,9 @@ public class DataService {
             @Qualifier("fastServiceExecutor") Executor fastExecutor,      // ✅ Fast executor
             @Qualifier("normalServiceExecutor") Executor normalExecutor,  // ✅ Normal executor
             @Qualifier("heavyServiceExecutor") Executor heavyExecutor,    // ✅ Heavy executor
-            @Qualifier("backupExecutor") Executor backupExecutor
+            @Qualifier("backupExecutor") Executor backupExecutor,
+            @Qualifier("streamingNamedJdbcTemplate") org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate streamingNamedJdbcTemplate,
+            @Qualifier("streamingJdbcTemplate") org.springframework.jdbc.core.JdbcTemplate streamingJdbcTemplate
     ) {
         this.repo = repo;
         this.jsonRowMapper = jsonRowMapper;
@@ -114,6 +119,17 @@ public class DataService {
         this.normalExecutor = normalExecutor;
         this.heavyExecutor = heavyExecutor;
         this.backupExecutor = backupExecutor;
+        this.streamingNamedJdbcTemplate = streamingNamedJdbcTemplate;
+        this.streamingJdbcTemplate = streamingJdbcTemplate;
+    }
+
+    /** Templates Hikari pool dedie aux endpoints de telechargement long-held . */
+    public org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate streamingNamedJdbcTemplate() {
+        return streamingNamedJdbcTemplate;
+    }
+
+    public org.springframework.jdbc.core.JdbcTemplate streamingJdbcTemplate() {
+        return streamingJdbcTemplate;
     }
 
     /**
@@ -289,6 +305,19 @@ public class DataService {
 
 
     public Flux<DataRow> findDataFlux(final DownloadDatasetQuery downloadDatasetQuery) {
+        return findDataFlux(downloadDatasetQuery, null);
+    }
+
+    /**
+     * Variante streaming acceptant un {@link org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate}
+     * explicite . Si {@code template} est non-null , le cursor est ouvert
+     * sur le pool dedie aux downloads ( {@code streamingDataSource} ) ,
+     * sinon retombe sur le pool main ( comportement historique ) .
+     *
+     * @since AUDIT 06-05-26 streaming pool isolation phase 2
+     */
+    public Flux<DataRow> findDataFlux(final DownloadDatasetQuery downloadDatasetQuery,
+                                      final org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate template) {
         final Application application = downloadDatasetQuery.application();
         if (application.findData(downloadDatasetQuery.dataName())
                 .map(StandardDataDescription::tags)
@@ -298,12 +327,14 @@ public class DataService {
         }
         DataRepository dataRepository = getDataRepository(downloadDatasetQuery);
         serviceContainer.authenticationService().setRoleForClient();
-        return dataRepository.findAllByDataTypeFlux(downloadDatasetQuery)
-                .map(dataRows -> DataRow
-                        .of(downloadDatasetQuery.application()
-                                        .findData(downloadDatasetQuery.dataName()
-                                        ).orElse(null)
-                                , dataRows));
+        Flux<DataRows> rows = (template != null)
+                ? dataRepository.findAllByDataTypeFlux(downloadDatasetQuery, template)
+                : dataRepository.findAllByDataTypeFlux(downloadDatasetQuery);
+        return rows.map(dataRows -> DataRow
+                .of(downloadDatasetQuery.application()
+                                .findData(downloadDatasetQuery.dataName()
+                                ).orElse(null)
+                        , dataRows));
     }
 
     private DataRepository getDataRepository(DownloadDatasetQuery downloadDatasetQuery) {
@@ -337,7 +368,10 @@ public class DataService {
                 Set.of(),
                 horizontalDisplay
         );
-        final Flux<DataRow> datas = findDataFlux(downloadDatasetQuery);
+        // Streaming pool : cursor JDBC ouvert sur streamingDataSource pour
+        // ne pas retenir une connexion du pool main pendant la duree du
+        // download ( peut atteindre plusieurs heures sur gros referentiels ) .
+        final Flux<DataRow> datas = findDataFlux(downloadDatasetQuery, streamingNamedJdbcTemplate);
         Optional<StandardDataDescription> data = downloadDatasetQuery.application()
                 .findData(downloadDatasetQuery.dataName());
         final StandardDataDescription dataDescription = data
