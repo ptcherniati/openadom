@@ -1,11 +1,13 @@
 package fr.inra.oresing.domain.application.configuration;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.exceptions.application.SiOreConfigurationFormatException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.springframework.lang.Nullable;
 
 import java.util.*;
 import java.util.function.Function;
@@ -66,6 +68,13 @@ public sealed interface Tag {
 
     @JsonProperty("tagDefinition")
     TagDefinitions tagDefinition();
+
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonProperty("tagName")
+    default String tagName() {
+        return null;
+    }
 
     enum TagDefinitions {
         HIDDEN_TAG(HiddenTag.HIDDEN_TAG, w -> HiddenTag.instance(), HiddenTag.getTagPattern()),

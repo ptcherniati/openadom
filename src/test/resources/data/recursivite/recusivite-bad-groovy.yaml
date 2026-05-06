@@ -1,0 +1,113 @@
+OA_version: 2.0.1
+OA_application:
+  OA_defaultLanguage: fr
+  OA_i18n:
+    OA_title:
+      fr: Récursivité Groovy Invalide
+      en: Recusivity Bad Groovy
+    OA_description:
+      fr: Récursivité Groovy Invalide
+      en: Recusivity Bad Groovy
+  OA_comment: Fichier de test avec expression Groovy invalide
+  OA_name: recursivite
+  OA_version: 3.0.1
+
+OA_data:
+  proprietes_taxon:
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_i18n:
+      OA_title:
+        fr: Propriétés de Taxon
+        en: Properties of Taxa
+      OA_description:
+        fr: Propriétés de Taxon
+        en: Properties of Taxa
+    OA_naturalKey: [propriete_key]
+    OA_basicComponents:
+      propriete_key:
+        OA_importHeader: nom de la propriété_key
+      propriete_fr:
+        OA_importHeader: nom de la propriété_fr
+      valeur_int:
+        OA_importHeader: ordre d'affichage
+  site:
+    OA_i18n:
+      OA_title:
+        fr: Site
+        en: Site
+      OA_description:
+        fr: Site
+        en: Site
+    OA_naturalKey: [site_key]
+    OA_basicComponents:
+      site_key:
+        OA_importHeader: nom du site_key
+  taxon:
+    OA_i18n:
+      OA_title:
+        fr: Taxons
+        en: Taxa
+      OA_description:
+        fr: Taxons
+        en: Taxa
+    OA_naturalKey: [nom]
+    OA_basicComponents:
+      nom:
+        OA_importHeader: nom du taxon déterminé
+  condition_prelevements:
+    OA_tags: ["__DATA__"]
+    OA_naturalKey:
+      - date_day
+      - siteName
+    OA_i18n:
+      OA_title:
+        fr: Condition de prélèvement
+        en: Collection condition
+      OA_description:
+        fr: Condition de prélèvement
+        en: Collection condition
+    OA_validations:
+      groovyInvalide:
+        OA_i18n:
+          fr: Expression Groovy invalide
+          en: Invalid Groovy expression
+        OA_components: [siteName]
+        OA_checker:
+          OA_name: OA_groovyExpression
+          OA_params:
+            OA_groovy:
+              OA_expression: "CECI N'EST PAS DU GROOVY VALIDE !!!"
+    OA_basicComponents:
+      date_day:
+        OA_importHeader: "date de prelevement"
+        OA_required: true
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+      siteName:
+        OA_importHeader: "Nom du site"
+        OA_required: true
+    OA_submission:
+      OA_strategy: OA_VERSIONING
+      OA_submissionScope:
+        OA_referenceScopes:
+          - OA_i18n:
+              OA_title:
+                fr: Nom du site
+                en: Site name
+              OA_description:
+                fr: Nom du site
+                en: Site name
+            OA_reference: site
+            OA_component: siteName
+            OA_exportHeader:
+              OA_title:
+                fr: Nom du site
+                en: Site name
+              OA_description:
+                fr: Nom du site
+                en: Site name
+        OA_timeScope:
+          OA_component: date_day

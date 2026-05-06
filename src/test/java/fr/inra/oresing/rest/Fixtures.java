@@ -378,6 +378,11 @@ public class Fixtures {
                 "38;martin",
                 "[{\"type\":\"ReferenceValidationCheckResult\",\"message\":\"invalidReferenceWithComponent\",\"params\":{\"component\":\"site\",\"referenceValues\":[],\"refType\":\"site\",\"value\":\"martin\"},\"lineNumber\":39}]"
         ));
+        referentielErrors.put("missingMandatoryColumns", List.of(
+                ";nom de la propriété_key",
+                "",
+                "[{\"type\":\"DefaultValidationCheckResult\",\"message\":\"missingMandatoryColumns\",\"params\":{\"missingMandatoryColumns\":[\"nom de la propriété_key\"]},\"lineNumber\":1}]"
+        ));
         referentielErrors.put("patternNotMatchedWithComponent", List.of(
                 "02/01/2016",
                 "12:00:00",
@@ -421,6 +426,36 @@ public class Fixtures {
         final Map<String, String> referentielFiles = new LinkedHashMap<>();
         referentielFiles.put("taxon", "/data/recursivite/taxons_du_phytoplancton_test.csv");
         return referentielFiles;
+    }
+
+    public static Map<String, String> getParametresMesuresReferentielOrderFiles() {
+        final Map<String, String> referentielFiles = new LinkedHashMap<>();
+        referentielFiles.put("parametres_mesures", "/data/recursivite/parametres_mesures_test.csv");
+        return referentielFiles;
+    }
+
+    public static Map<String, List<String>> getParametresMesuresReferentielErrorsStringReplace() {
+        final Map<String, List<String>> referentielErrors = new LinkedHashMap<>();
+        referentielErrors.put("badIntervalIntegerWithComponent", List.of(
+                ";50;",
+                ";5000;",
+                "[{\"type\":\"IntegerValidationCheckResult\",\"message\":\"badIntervalIntegerWithComponent\",\"params\":{\"component\":\"valeur_int\",\"value\":\"5000\",\"type\":\"HIGHER_THAN_MAX\",\"bound\":100},\"lineNumber\":2}]"
+        ));
+        referentielErrors.put("badIntervalFloatWithComponent", List.of(
+                ";50.5",
+                ";5000.5",
+                "[{\"type\":\"FloatValidationCheckResult\",\"message\":\"badIntervalFloatWithComponent\",\"params\":{\"component\":\"valeur_float\",\"value\":\"5000.5\",\"type\":\"HIGHER_THAN_MAX\",\"bound\":100.0},\"lineNumber\":2}]"
+        ));
+        referentielErrors.put("patternNotMatchedWithComponent", List.of(
+                "AAA001",
+                "aaa001",
+                "[{\"type\":\"DefaultCheckerValidationCheckResult\",\"message\":\"patternNotMatchedWithComponent\",\"params\":{\"component\":\"code_mesure\",\"pattern\":\"[A-Z]{3}[0-9]{3}\",\"value\":\"aaa001\"},\"lineNumber\":2}]"
+        ));
+        return referentielErrors;
+    }
+
+    public static String getRecursivityApplicationWithBadGroovyResourceName() {
+        return "/data/recursivite/recusivite-bad-groovy.yaml";
     }
 
     public static String getMigrationApplicationConfigurationResourceName(final int version) {

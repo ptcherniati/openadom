@@ -550,21 +550,41 @@
                             <outputFileType>implementationFile</outputFileType>
                             <classes>
                                 <class>fr.inra.oresing.rest.model.application.ApplicationResult</class>
+                                <class>fr.inra.oresing.rest.model.application.ApplicationLightResult</class>
                                 <class>fr.inra.oresing.rest.model.rightsrequest.GetAdditionalFilesResult</class>
+                                <class>fr.inra.oresing.rest.model.rightsrequest.GetRightsRequestResult</class>
+                                <class>fr.inra.oresing.rest.model.rightsrequest.CreateRightsRequestRequest</class>
                                 <class>fr.inra.oresing.rest.model.authorization.GetAuthorizationResult</class>
                                 <class>fr.inra.oresing.rest.model.authorization.LoginAdminResult</class>
+                                <class>fr.inra.oresing.rest.model.authorization.GetGrantableResult</class>
                                 <class>fr.inra.oresing.domain.OreSiUser</class>
                                 <class>fr.inra.oresing.rest.model.authorization.CreateAdditionalFileAuthorizationRequest</class>
                                 <class>fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery</class>
+                                <class>fr.inra.oresing.rest.model.data.GetDataResult</class>
                                 <class>fr.inra.oresing.rest.model.data.BinaryFileResult</class>
                                 <class>fr.inra.oresing.rest.CreateUserResult</class>
                                 <class>fr.inra.oresing.rest.CreateUserRequest</class>
                                 <class>fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResultRest</class>
+                                <class>fr.inra.oresing.domain.data.deposit.validation.DefaultValidationCheckResult</class>
                                 <class>fr.inra.oresing.domain.application.configuration.Tag</class>
+                                <!-- Dashboard oa-live (issue #62) -->
+                                <class>fr.inra.oresing.rest.dashboard.DashboardWorkflowDTO</class>
+                                <class>fr.inra.oresing.rest.dashboard.DashboardConfigDTO</class>
+                                <class>fr.inra.oresing.rest.dashboard.DashboardService$CancelResult</class>
                             </classes>
                             <customTypeMappings>
                                 <mapping>java.util.Locale:string</mapping>
+                                <mapping>java.sql.Timestamp:number</mapping>
+                                <mapping>java.time.Instant:string</mapping>
                             </customTypeMappings>
+                            <optionalProperties>useSpecifiedAnnotations</optionalProperties>
+                            <optionalPropertiesDeclaration>questionMark</optionalPropertiesDeclaration>
+                            <optionalAnnotations>
+                                <annotation>org.springframework.lang.Nullable</annotation>
+                            </optionalAnnotations>
+                            <excludeClasses>
+                                <class>com.google.common.base.Predicate</class>
+                            </excludeClasses>
                             <outputFile>${project.basedir}/../frontend/src/types/generated/generated-backend-types-module.ts
                             </outputFile>
                         </configuration>

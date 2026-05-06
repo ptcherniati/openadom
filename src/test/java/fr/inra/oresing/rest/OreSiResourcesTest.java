@@ -65,6 +65,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
 @Slf4j
+@Tag("docker-required")
 public class OreSiResourcesTest extends AbstractIntegrationTest {
 
     public static final String SELECT_ROW_BY_ID = """
@@ -91,11 +92,17 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
     private MeterRegistry meterRegistry;
 
     /**
-     * Écrit {@code jsonContent} dans {@code filePath}.
+     * Écrit {@code jsonContent} dans {@code filePath} <strong>uniquement</strong> si la propriété
+     * système {@value fr.inra.oresing.rest.fixtures.CypressFixtureWriter#BASE_DIR_PROPERTY}
+     * est explicitement définie.
      *
-     * <p>Le chemin est interprété comme relatif au répertoire défini par la propriété système
-     * {@value fr.inra.oresing.rest.fixtures.CypressFixtureWriter#BASE_DIR_PROPERTY}, ou au
-     * répertoire de travail courant du JVM si cette propriété n'est pas définie.
+     * <p>Sans cette propriété, la méthode ne fait rien : les fichiers de fixtures ne doivent être
+     * générés que lors d'une exécution dédiée (tag {@code GENERATE_CYPRESS_FIXTURES} ou
+     * {@code -Dcypress.fixtures.base.dir=<dir>}), jamais pendant une batterie de tests ordinaire.
+     * Cela évite que des fichiers {@code ui/cypress/fixtures/} non sanitisés apparaissent après
+     * chaque run CI.
+     *
+     * <p>Le chemin est interprété comme relatif au répertoire défini par la propriété système.
      * Les répertoires parents sont créés à la volée si nécessaire.
      *
      * @param filePath    chemin relatif du fichier cible
@@ -103,9 +110,11 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
      */
     public static void registerFile(final String filePath, final String jsonContent) throws IOException {
         String baseDirProp = System.getProperty(fr.inra.oresing.rest.fixtures.CypressFixtureWriter.BASE_DIR_PROPERTY);
-        final File errorsFile = baseDirProp != null
-                ? new File(baseDirProp, filePath)
-                : new File(filePath);
+        if (baseDirProp == null) {
+            log.debug("registerFile ignoré (propriété {} non définie) : {}", fr.inra.oresing.rest.fixtures.CypressFixtureWriter.BASE_DIR_PROPERTY, filePath);
+            return;
+        }
+        final File errorsFile = new File(baseDirProp, filePath);
         log.info("register file {}", errorsFile.getAbsolutePath());
         if (errorsFile.getParentFile() != null) {
             errorsFile.getParentFile().mkdirs();
@@ -139,7 +148,6 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @Tag("SWAGGER_BUILD")
     @Tag("core.basic")
     public void services_model() throws Exception {
         final String services_model = mockMvc.perform(get("/api-docs.yaml").accept(MediaType.parseMediaType("application/vnd.oai.openapi"))).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();

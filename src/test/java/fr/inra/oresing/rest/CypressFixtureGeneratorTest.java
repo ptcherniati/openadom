@@ -53,6 +53,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest(classes = {OreSiNg.class})
 @Tag(CypressFixtureGeneratorTest.TAG)
+@Tag("docker-required")
 @DisplayName("Génération des fixtures Cypress – ORE/MONSORE")
 @Slf4j
 public class CypressFixtureGeneratorTest extends AbstractIntegrationTest {
