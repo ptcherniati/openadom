@@ -45,6 +45,7 @@ public record AsynchroneFileImporterContext(
         ConcurrentHashMap<Ltree, List<RowWithReferenceDatum>> missingParentLine,
         ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences,
         ImmutableMap<HkPatternKey, UUID> storedReferencesByHkPattern,
+        Map<NaturalKeyPattern, UUID> naturalKeyPatternIndex,
         SetMultimap<Ltree, Long> encounteredHierarchicalKeysForConflictDetection, //asynchronous
         Set<Column> columnsWithPatternColumns,
         Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey,
@@ -61,6 +62,16 @@ public record AsynchroneFileImporterContext(
      * l'un des hot path les plus chers du pipeline.
      */
     public record HkPatternKey(Ltree hierarchicalKey, String patternColumnName) {}
+
+    /**
+     * Cle composite ( naturalKey , patternColumnName ) pour le lookup O(1)
+     * dans {@link #getKnownId} . Pendant la recursion ,
+     * {@link fr.inra.oresing.domain.data.deposit.recursion.WithRecursion}
+     * doit passer par {@link #putAfterPreload} pour maintenir l'index .
+     * Cf AUDIT 06-05-26 #2 .
+     */
+    public record NaturalKeyPattern(Ltree naturalKey, String patternColumnName) {}
+
     public static final String COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR = "__";
 
     /**
@@ -105,6 +116,18 @@ public record AsynchroneFileImporterContext(
         }
         ImmutableMap<HkPatternKey, UUID> hkIndex = ImmutableMap.copyOf(hkIndexTmp);
 
+        // AUDIT 06-05-26 #2 : index secondaire ( naturalKey , patternColumnName )
+        // -> UUID pour ramener getKnownId d'un scan O(N) a un lookup O(1) .
+        // Mutable ConcurrentHashMap car WithRecursion ajoute des entries
+        // pendant la phase transform via putAfterPreload .
+        Map<NaturalKeyPattern, UUID> nkIndex = new ConcurrentHashMap<>(storedReferences.size() * 2);
+        for (Map.Entry<DataValue.LineIdentityColumnName, UUID> entry : storedReferences.entrySet()) {
+            DataValue.LineIdentityColumnName k = entry.getKey();
+            nkIndex.putIfAbsent(
+                    new NaturalKeyPattern(k.naturalKey(), k.patternColomnName()),
+                    entry.getValue());
+        }
+
         return new AsynchroneFileImporterContext(
                 constants,
                 publishContextBuilder,
@@ -115,6 +138,7 @@ public record AsynchroneFileImporterContext(
                 new ConcurrentHashMap<>(),
                 storedReferences,
                 hkIndex,
+                nkIndex,
                 Multimaps.synchronizedSetMultimap(HashMultimap.create()),
                 new HashSet<>(),
                 displayNamesByReferenceAndNaturalKey,
@@ -166,12 +190,38 @@ public record AsynchroneFileImporterContext(
     }
 
     public Optional<UUID> getKnownId(final Ltree naturalKey, String patternColumnName) {
+        // AUDIT 06-05-26 #2 : index secondaire O(1) sur ( naturalKey ,
+        // patternColumnName ) -> UUID , maintenu en parallele de
+        // afterPreloadReferenceUuids . Pre-rempli dans of(...) a partir
+        // de storedReferences ; les puts ulterieurs ( WithRecursion )
+        // doivent passer par putAfterPreload pour rester coherents .
+        // Si l'index miss ( workflows pre-fix qui appellent .put direct
+        // sans maintenir l'index ) , fallback sur scan O(N) defensif .
+        Map<NaturalKeyPattern, UUID> idx = naturalKeyPatternIndex();
+        if (idx != null) {
+            UUID hit = idx.get(new NaturalKeyPattern(naturalKey, patternColumnName));
+            if (hit != null) return Optional.of(hit);
+        }
         return afterPreloadReferenceUuids().entrySet().stream()
                 .filter(entry -> entry.getKey().naturalKey().equals(naturalKey) &&
                                  entry.getKey().patternColomnName().equals(patternColumnName)
                 )
                 .map(Map.Entry::getValue)
                 .findFirst();
+    }
+
+    /**
+     * Wrapper de mutation a utiliser au lieu de
+     * {@code afterPreloadReferenceUuids().put(...)} pour garantir la
+     * coherence avec l'index secondaire {@link #naturalKeyPatternIndex} .
+     * Cf AUDIT 06-05-26 #2 .
+     */
+    public void putAfterPreload(DataValue.LineIdentityColumnName key, UUID value) {
+        afterPreloadReferenceUuids().put(key, value);
+        Map<NaturalKeyPattern, UUID> idx = naturalKeyPatternIndex();
+        if (idx != null) {
+            idx.put(new NaturalKeyPattern(key.naturalKey(), key.patternColomnName()), value);
+        }
     }
 
     public void setTransformedLineCheckers(RecursionStrategy recursionStrategy, Set<? extends LineChecker<?>> transformedLineCheckers) {

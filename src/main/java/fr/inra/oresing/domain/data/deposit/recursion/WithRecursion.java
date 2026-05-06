@@ -158,7 +158,7 @@ public record WithRecursion(
         Optional<UUID> knownId = dataImporterContext().getKnownId(keys.naturalKey(), keys.patternColumnName());
         DataValue.LineIdentityColumnName key = new DataValue.LineIdentityColumnName(keys.naturalKey(), keys.hierarchicalKey(), keys.patternColumnName());
         if (knownId.isEmpty()) {
-            dataImporterContext().afterPreloadReferenceUuids().put(key, UUID.randomUUID());
+            dataImporterContext().putAfterPreload(key, UUID.randomUUID());
             dataImporterContext().getKnownId(keys.naturalKey(), keys.patternColumnName());
         }
         return List.of(referenceDatumAfterChecking);
@@ -194,7 +194,7 @@ public record WithRecursion(
         uuids.stream()
                 .findFirst()
                 .ifPresent(uuid ->
-                        dataImporterContext().afterPreloadReferenceUuids().put(key, uuid)
+                        dataImporterContext().putAfterPreload(key, uuid)
                 );
     }
 }
