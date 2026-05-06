@@ -27,6 +27,15 @@
 | Tests use-cases | 55 / 55 ✅ |
 | Branches correctifs fermées | `fix-develop` et autres |
 
+### Nouveautés `develop` post-P2 (2026-05-06)
+
+| Commit | Thème | Impact docs |
+|---|---|---|
+| `4f2dd688` | perf: index O(1) `getKnownId` via `NaturalKeyPattern` | ✅ PERF_IMPORT + ARCHITECTURE_DEPOT_FICHIER mis à jour |
+| `b043a111` | perf: skip MigrateService DROP+CREATE si index OK | ✅ ARCHITECTURE_DEPOT_FICHIER mis à jour |
+| `d509efd8` | feat: `pipelineQueueCapacity` configurable (défaut 50) | ✅ ARCHITECTURE_DEPOT_FICHIER mis à jour |
+| `6c98698d` | fix: timeout HTTP streaming configurable (défaut 6h) | ✅ ARCHITECTURE_DEPOT_FICHIER mis à jour |
+
 ---
 
 ## Transformations réalisées
@@ -640,10 +649,26 @@ Lot 3 — Performances import (R-P2-1  R-P2-5) — aprs Lot 1
 Lot 4 — Qualité / Tests (R-P3-1 à R-P3-5)
   → Peut être fait sur plusieurs sprints
   → Durée estimée : 2 jours
+  → État : ❌ non commencé (R-P3-4 déjà fait : ba889faf)
+    - R-P3-1 : refactoring arbre hiérarchique TDD (Node, HierarchicalDependancesBuilder,
+      RootBuilder, ReferenceGraphBuilder) → commits 395d46d4 + 777606bd dans Refactoring_deposit
+    - R-P3-2 : 95+ tests unitaires purs → ~20 commits dans Refactoring_deposit
+      (domain, migration, security, persistence, dashboard, reactive)
+    - R-P3-3 : auto-calibrage parallélisme (@DynamicPropertySource, AbstractIntegrationTest,
+      AsyncExecutorConfiguration) → commits 168873ed + 255ac785 dans Refactoring_deposit
+    - R-P3-5 : sonar-project.properties → déjà présent et suivi à la racine ✅
 
 Lot 5 — Documentation (P4)
   → Copy-only, aucun risque
   → Durée estimée : 0,5 jour
+  → État : **PARTIELLEMENT FAIT** (2026-05-06)
+    ✅ ERREURS_DEPOT_FICHIER.md (fcba26d5)
+    ✅ ARCHITECTURE_LECTURE_CONFIGURATION.md (porté depuis Refactoring_deposit)
+    ✅ TESTCONTAINERS_CONTAINER_MIGRATION.md (porté depuis Refactoring_deposit)
+    ✅ REORGANISATION_USE_CASES.md (porté depuis Refactoring_deposit)
+    ✅ ARCHITECTURE_DEPOT_FICHIER.md mis à jour (ordre transformer/validator + optimisations develop)
+    ✅ PERF_IMPORT_REFERENCE_PRECOMPUTATION.md mis à jour (Niveau 4 getKnownId)
+    ⏳ .github/copilot-instructions.md (à étoffer — version Refactoring_deposit minimale)
 ```
 
 ### Travaux de `Refactoring_deposit` devenus **obsolètes** dans `develop`
