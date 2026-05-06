@@ -120,7 +120,7 @@ public class ApplicationConfigurationServiceTest extends AbstractIntegrationTest
                             final ValidationError validationError = errors.getFirst();
                             assertEquals(ConfigurationException.BAD_TAGS_PATTERNS.getMessage(), validationError.getMessage());
                             assertEquals("OA_data > especes", validationError.getParam("path"));
-                            assertEquals(Set.of("__HIDDEN__", "__REFERENCE__", "test", "__FILTER_TEXT__", "__FILTER_LIST__", "context", "no-tag", "__ORDER_(\\d*)__", "__DATA__"), validationError.getParam(("acceptedTagPatterns")));
+                            assertEquals(Set.of("__HIDDEN__", "__REFERENCE__", "test", "__FILTER_TEXT__", "__FILTER_LIST__", "context", "no-tag", "__ORDER_(\\d*)__", "__DATA__", "__ORDER_STRICT__"), validationError.getParam(("acceptedTagPatterns")));
                         }
                 ),
                 new TestCase(
@@ -154,7 +154,7 @@ public class ApplicationConfigurationServiceTest extends AbstractIntegrationTest
                             final ValidationError validationError = errors.getFirst();
                             assertEquals(ConfigurationException.BAD_TAGS_PATTERNS.getMessage(), validationError.getMessage());
                             assertEquals("OA_data > sites > OA_dynamicComponents > proprieteDeTaxon > OA_tags", validationError.getParam("path"));
-                            assertEquals(Set.of("__HIDDEN__", "__REFERENCE__", "test", "__FILTER_TEXT__", "__FILTER_LIST__", "context", "no-tag", "__ORDER_(\\d*)__", "__DATA__"), validationError.getParam(("acceptedTagPatterns")));
+                            assertEquals(Set.of("__HIDDEN__", "__REFERENCE__", "test", "__FILTER_TEXT__", "__FILTER_LIST__", "context", "no-tag", "__ORDER_(\\d*)__", "__DATA__", "__ORDER_STRICT__"), validationError.getParam(("acceptedTagPatterns")));
                         }
                 ),
                 new TestCase(
