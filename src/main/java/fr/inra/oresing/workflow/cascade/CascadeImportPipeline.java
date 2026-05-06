@@ -602,12 +602,27 @@ public class CascadeImportPipeline {
                 final fr.inra.oresing.workflow.cascade.staging.StagingMode finalStagingMode = stagingMode;
                 final java.util.UUID finalStagingCompId = stagingCompensationIdRef.get();
 
+                final String finalAppSchema = referenceValueRepository.getSchemaName();
+                final java.util.UUID finalBinaryFileId = sourceBinaryFileId;
                 final Runnable markCompleted = () -> {
                     if (corrUuid != null) {
                         activeRegistry.markFinalizeFinished(corrUuid, Instant.now());
                     }
                     long effective = effectiveRecordsProcessed(finalResult, finalSink);
                     Duration dur   = Duration.between(startedAt, Instant.now());
+
+                    // AUDIT 06-05-26 #1 : COUNT(*) authoritatif post-afterCommit .
+                    // Reajuste le registry AVANT finish pour que le dernier poll
+                    // WorkflowFinalizeBadge voie la valeur exacte . Persiste
+                    // dans workflow_log.final_count pour que les polls
+                    // ulterieurs ( IntegrityView , dashboard ) lisent la
+                    // colonne au lieu de refaire COUNT(*) systematiquement .
+                    Long authoritativeCount = countReferencevaluePostCommit(
+                            referenceValueRepository, finalAppSchema, finalBinaryFileId, correlationId);
+                    if (authoritativeCount != null && corrUuid != null) {
+                        activeRegistry.setFinalRowsAuthoritative(corrUuid, authoritativeCount);
+                    }
+
                     metrics.recordImportCompleted(applicationName, dataType, WorkflowLogEntry.STATUS_COMPLETED,
                             dur, effective, finalResult.recordsFailed(),
                             finalResult.chunksProcessed(), finalFileSize);
@@ -615,7 +630,7 @@ public class CascadeImportPipeline {
                             startedAt, dur, WorkflowLogEntry.STATUS_COMPLETED,
                             effective, finalResult.recordsFailed(),
                             finalResult.chunksProcessed(), finalFileSize,
-                            finalResult.errors(), null);
+                            finalResult.errors(), null, null, authoritativeCount);
                     // PER_WORKFLOW_TABLE : DROP table dediee post-succes .
                     if (finalStagingMode != null && finalStagingMode.dropTableSql() != null) {
                         try (java.sql.Connection c = referenceValueRepository.getDataSource().getConnection();
@@ -1015,6 +1030,42 @@ public class CascadeImportPipeline {
         }
     }
 
+    /**
+     * Execute UN SELECT COUNT(*) FROM &lt;schema&gt;.referencevalue WHERE binaryfile=?
+     * post-afterCommit pour capturer le rowcount authoritatif . Best-effort :
+     * tout echec ( DB transient down , schema invalide ) est avale et le
+     * caller persiste {@code null} dans workflow_log.final_count ;
+     * IntegrityService refera un COUNT a la demande dans ce cas ( cache TTL ) .
+     *
+     * @return count ou {@code null} si echec / parametres invalides
+     */
+    private static final java.util.regex.Pattern SAFE_SCHEMA_IDENT =
+            java.util.regex.Pattern.compile("^[a-z_][a-z0-9_]*$");
+
+    private static Long countReferencevaluePostCommit(
+            fr.inra.oresing.persistence.DataRepository repo,
+            String schema, UUID binaryFileId, String correlationId) {
+        if (schema == null || binaryFileId == null) {
+            return null;
+        }
+        if (!SAFE_SCHEMA_IDENT.matcher(schema).matches()) {
+            log.warn("[{}] schema invalide '{}' , skip COUNT authoritatif", correlationId, schema);
+            return null;
+        }
+        try (java.sql.Connection c = repo.getDataSource().getConnection();
+             java.sql.PreparedStatement ps = c.prepareStatement(
+                     "SELECT COUNT(*) FROM \"" + schema + "\".referencevalue WHERE binaryfile = ?")) {
+            ps.setObject(1, binaryFileId);
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getLong(1);
+            }
+        } catch (java.sql.SQLException ex) {
+            log.warn("[{}] COUNT authoritatif post-afterCommit a echoue ( IntegrityService refera la query a la demande ) : {}",
+                    correlationId, ex.getMessage());
+        }
+        return null;
+    }
+
     private static UUID safeUuid(String raw) {
         if (raw == null) return null;
         try {
@@ -1139,19 +1190,29 @@ public class CascadeImportPipeline {
             long recordsProcessed, long recordsFailed,
             int chunksProcessed, long fileSizeBytes,
             List<String> errors, String fatalError, String failedStage) {
+        logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
+                startedAt, duration, status, recordsProcessed, recordsFailed,
+                chunksProcessed, fileSizeBytes, errors, fatalError, failedStage, null);
+    }
+
+    /**
+     * Variante avec {@code finalCount} : compteur authoritatif COUNT(*) capture
+     * au markCompleted ( cf AUDIT 06-05-26 #1 ) . Persiste dans
+     * {@code workflow_log.final_count} pour que IntegrityService et
+     * DashboardService.finalizeProgress puissent eviter de refaire COUNT(*) au poll .
+     */
+    private void logImportEvent(
+            String correlationId, String userId, String userLogin,
+            String applicationName, String dataType, String resourceName,
+            Instant startedAt, Duration duration, String status,
+            long recordsProcessed, long recordsFailed,
+            int chunksProcessed, long fileSizeBytes,
+            List<String> errors, String fatalError, String failedStage,
+            Long finalCount) {
         try {
             UUID corrUuid = UUID.fromString(correlationId);
             UUID userUuid = UUID.fromString(userId);
-            // Capture des info config + parallelism + JVM stats dans
-            // metadata pour analyse post-mortem . Delegue au
-            // WorkflowMetadataCollector ( testable isolement ) .
             java.util.Map<String, Object> metadata = metadataCollector.collect(corrUuid);
-            // Use recordEnd ( synchronous + retry ) for terminal events to
-            // guarantee that the row reflects the workflow's true status
-            // even when the DB is transiently unhealthy ( the async queue
-            // drops entries on flush failure , which would leave a workflow
-            // stuck IN_PROGRESS forever and invisible in History / Integrity
-            // until {@link WorkflowZombieSweeper} kicks in ) .
             logWriter.recordEnd(new WorkflowLogEntry(
                     corrUuid,
                     WorkflowLogEntry.TYPE_IMPORT,
@@ -1171,7 +1232,8 @@ public class CascadeImportPipeline {
                     errors == null ? List.of() : errors,
                     fatalError,
                     metadata,
-                    failedStage));
+                    failedStage,
+                    finalCount));
         } catch (IllegalArgumentException e) {
             log.warn("Format UUID invalide , skip log entry [correlationId={} , userId={}]",
                     correlationId, userId);

@@ -461,18 +461,46 @@ public class DashboardService {
 
         long expectedTotal = snap.recordsTotal() > 0 ? snap.recordsTotal() : snap.recordsProcessed();
 
-        // Final count : SELECT count referencevalue WHERE binaryfile = ?
+        // AUDIT 06-05-26 #1 : ordre de resolution , privilegie les
+        // sources sans COUNT(*) :
+        //   1. registry.finalRows ( reajuste a la valeur authoritative
+        //      au markCompleted ; sinon valeur live incremental approximative )
+        //   2. workflow_log.final_count ( pour les workflows post-finish ,
+        //      le registry a deja ete vide par activeRegistry.finish )
+        //   3. fallback COUNT(*) ( workflows legacy ou COUNT failed )
         long finalCount = -1L;
         String appName = snap.applicationName();
-        if (binaryFileId != null && appName != null && SAFE_IDENT.matcher(appName).matches()) {
+        long registryFinal = registry.finalRows(correlationId);
+        if (registryFinal > 0) {
+            finalCount = registryFinal;
+        } else {
+            // Lit la colonne workflow_log.final_count si disponible .
             try {
-                String sql = "SELECT COUNT(*) FROM \"" + appName + "\".referencevalue WHERE binaryfile = :bf";
-                Long n = jdbc.queryForObject(sql,
-                        new MapSqlParameterSource("bf", binaryFileId), Long.class);
-                finalCount = n != null ? n : 0L;
+                Long persisted = jdbc.queryForObject(
+                        "SELECT final_count FROM oa_audit.workflow_log WHERE correlation_id = :cid",
+                        new MapSqlParameterSource("cid", correlationId), Long.class);
+                if (persisted != null) {
+                    finalCount = persisted;
+                }
             } catch (RuntimeException ex) {
-                log.debug("finalizeProgress : count referencevalue failed for {}.{} : {}",
-                        appName, correlationId, ex.getMessage());
+                log.debug("finalizeProgress : final_count read failed for {} : {}",
+                        correlationId, ex.getMessage());
+            }
+            // Fallback ultime : COUNT(*) direct ( workflows legacy ou
+            // COUNT failed lors du markCompleted ) .
+            if (finalCount < 0
+                    && binaryFileId != null
+                    && appName != null
+                    && SAFE_IDENT.matcher(appName).matches()) {
+                try {
+                    String sql = "SELECT COUNT(*) FROM \"" + appName + "\".referencevalue WHERE binaryfile = :bf";
+                    Long n = jdbc.queryForObject(sql,
+                            new MapSqlParameterSource("bf", binaryFileId), Long.class);
+                    finalCount = n != null ? n : 0L;
+                } catch (RuntimeException ex) {
+                    log.debug("finalizeProgress : count referencevalue failed for {}.{} : {}",
+                            appName, correlationId, ex.getMessage());
+                }
             }
         }
 

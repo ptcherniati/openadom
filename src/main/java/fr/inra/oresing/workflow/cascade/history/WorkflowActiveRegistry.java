@@ -154,6 +154,24 @@ public class WorkflowActiveRegistry implements WorkflowListener {
                 k -> new java.util.concurrent.atomic.AtomicLong()).addAndGet(delta);
     }
 
+    /**
+     * Remplace le compteur {@code finalRows} par la valeur authoritative
+     * issue d'un {@code COUNT(*) FROM <app>.referencevalue WHERE binaryfile=?}
+     * post-afterCommit . Appele par {@code CascadeImportPipeline.markCompleted}
+     * AVANT {@link #finish(UUID)} pour que le dernier poll de
+     * {@code WorkflowFinalizeBadge} voie la valeur exacte ( les compteurs
+     * incrementaux pendant la phase finalize sont des approximations
+     * alimentees par callbacks ; ils peuvent diverger legerement du count
+     * DB reel a cause des batches UPSERT non encore committes ) .
+     *
+     * <p>Cf AUDIT 06-05-26 #1 .
+     */
+    public void setFinalRowsAuthoritative(UUID correlationId, long count) {
+        if (correlationId == null || count < 0) return;
+        finalRowsByCid.computeIfAbsent(correlationId,
+                k -> new java.util.concurrent.atomic.AtomicLong()).set(count);
+    }
+
     public long stagingRows(UUID correlationId) {
         var c = stagingRowsByCid.get(correlationId);
         return c == null ? 0L : c.get();

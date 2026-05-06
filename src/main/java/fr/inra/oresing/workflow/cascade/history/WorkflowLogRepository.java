@@ -25,14 +25,16 @@ import java.util.Collection;
 @Repository
 public class WorkflowLogRepository {
 
-    // Wrapper SECURITY DEFINER ; voir V2__oa_audit_schema.sql .
+    // Wrapper SECURITY DEFINER ; voir V5__record_workflow_final_count.sql .
+    // Le dernier parametre p_final_count ( bigint ) est nullable : NULL pour
+    // les workflows non-IMPORT ou si le COUNT post-afterCommit a echoue .
     private static final String INSERT_SQL = """
             SELECT oa_audit.record_workflow(
                 ?::uuid, ?::varchar(32), ?::uuid, ?::varchar(128),
                 ?::varchar(256), ?::varchar(256), ?::varchar(512),
                 ?::timestamptz, ?::timestamptz, ?::bigint, ?::varchar(16),
                 ?::bigint, ?::bigint, ?::int,
-                ?::bigint, ?::jsonb, ?::text, ?::jsonb, ?::varchar(32))
+                ?::bigint, ?::jsonb, ?::text, ?::jsonb, ?::varchar(32), ?::bigint)
             """;
 
     private static final String DELETE_OLDER_THAN_SQL =
@@ -203,6 +205,11 @@ public class WorkflowLogRepository {
         setNullableString(ps, 17, e.fatalError());
         setNullableString(ps, 18, serializeMetadata(e.metadata()));
         setNullableString(ps, 19, e.failedStage());
+        if (e.finalCount() != null) {
+            ps.setLong(20, e.finalCount());
+        } else {
+            ps.setNull(20, Types.BIGINT);
+        }
     }
 
     private String serializeMetadata(java.util.Map<String, Object> metadata) {

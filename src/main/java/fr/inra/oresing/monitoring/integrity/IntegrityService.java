@@ -47,6 +47,51 @@ public class IntegrityService {
     private final AuthenticationService authenticationService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * Cache TTL des COUNT(*) referencevalue par binaryFile pour les
+     * workflows legacy ( pre-V4 sans final_count persiste ) ou les
+     * workflows dont le markCompleted COUNT a echoue . Evite que les
+     * polls IntegrityView 10 s declenchent N COUNT massifs sur la table
+     * referencevalue . TTL 5 min : largement plus que la frequence de
+     * poll , et un binaryFile committe ne change plus de count sauf
+     * delete explicite ( rare , et le prochain delete invalide le cache
+     * via {@link #invalidateCount} ) .
+     *
+     * <p>Cf AUDIT 06-05-26 #1 .
+     */
+    private static final long CACHE_TTL_MILLIS = 5L * 60L * 1000L;
+    private final java.util.concurrent.ConcurrentMap<String, CacheEntry> countCache =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    private record CacheEntry(long count, long expiresAt) { }
+
+    private static String cacheKey(String appSchema, UUID binaryFileId) {
+        return appSchema + "|" + binaryFileId;
+    }
+
+    private Long countCacheGet(String appSchema, UUID binaryFileId) {
+        CacheEntry e = countCache.get(cacheKey(appSchema, binaryFileId));
+        if (e == null || System.currentTimeMillis() > e.expiresAt) {
+            return null;
+        }
+        return e.count;
+    }
+
+    private void countCachePut(String appSchema, UUID binaryFileId, long count) {
+        countCache.put(cacheKey(appSchema, binaryFileId),
+                new CacheEntry(count, System.currentTimeMillis() + CACHE_TTL_MILLIS));
+    }
+
+    /**
+     * Invalide le cache pour un binaryFile donne ( a appeler post-delete
+     * du binaryFile pour eviter de servir un count perime ) .
+     */
+    public void invalidateCount(String appSchema, UUID binaryFileId) {
+        if (appSchema != null && binaryFileId != null) {
+            countCache.remove(cacheKey(appSchema, binaryFileId));
+        }
+    }
+
     private void requireAdmin() {
         if (!authenticationService.getCurrentUserRoles().isOpenAdomAdmin()) {
             throw new AccessDeniedException("Reserved to openAdomAdmin users");
@@ -64,10 +109,13 @@ public class IntegrityService {
         requireAdmin();
 
         // 1. Recupere workflows IMPORT recents
+        // AUDIT 06-05-26 #1 : SELECT additionnel de final_count pour eviter
+        // le COUNT(*) systematique sur referencevalue ( la colonne est remplie
+        // au markCompleted post-afterCommit ) .
         String workflowSql = """
                 SELECT correlation_id, workflow_type, application_name, data_type,
                        status, records_processed, start_time, end_time,
-                       last_heartbeat_at, metadata
+                       last_heartbeat_at, metadata, final_count
                 FROM oa_audit.workflow_log
                 WHERE workflow_type = 'IMPORT'
                   AND start_time > now() - (? || ' hours')::interval
@@ -88,6 +136,8 @@ public class IntegrityService {
                     m.put("endTime",            rs.getTimestamp("end_time"));
                     m.put("lastHeartbeatAt",    rs.getTimestamp("last_heartbeat_at"));
                     m.put("metadata",           rs.getString("metadata"));
+                    long fc = rs.getLong("final_count");
+                    m.put("finalCount",         rs.wasNull() ? null : fc);
                     return m;
                 },
                 lookbackHours, limit);
@@ -105,20 +155,31 @@ public class IntegrityService {
                 log.warn("listIntegrity : staging count failed for {} : {}", corrId, ex.getMessage());
             }
 
-            // referencevalue count : on lit metadata.binaryFileId pour
-            // retrouver les rows {@code referencevalue WHERE binaryfile = ?} .
-            // Si le workflow_log n'a pas ce champ ( workflows historiques
-            // anterieurs au refactor #62 ) , finalCount reste a -1 et l'UI
-            // affiche N/A sans declencher DATA_LOSS .
+            // AUDIT 06-05-26 #1 : ordre de resolution du finalCount :
+            //   1. workflow_log.final_count ( colonne capturee au markCompleted
+            //      post-afterCommit ) -> 0 query supplementaire
+            //   2. cache TTL 5 min ( meme cle ) -> 0 query
+            //   3. fallback COUNT(*) ( workflows legacy V4- ou COUNT failed
+            //      lors du markCompleted ) -> 1 query mise en cache
+            //   4. final = -1 si encore impossible -> UI affiche N/A
             String appName = (String) w.get("applicationName");
             UUID binaryFileId = extractBinaryFileId((String) w.get("metadata"));
             long finalCount = -1L;
-            if (appName != null && SAFE_IDENT.matcher(appName).matches() && binaryFileId != null) {
-                try {
-                    finalCount = countReferencevalueByBinaryFile(appName, binaryFileId);
-                } catch (RuntimeException ex) {
-                    log.warn("listIntegrity : referencevalue count failed for {}.{} : {}",
-                            appName, corrId, ex.getMessage());
+            Long persistedFinalCount = (Long) w.get("finalCount");
+            if (persistedFinalCount != null) {
+                finalCount = persistedFinalCount;
+            } else if (appName != null && SAFE_IDENT.matcher(appName).matches() && binaryFileId != null) {
+                Long cached = countCacheGet(appName, binaryFileId);
+                if (cached != null) {
+                    finalCount = cached;
+                } else {
+                    try {
+                        finalCount = countReferencevalueByBinaryFile(appName, binaryFileId);
+                        countCachePut(appName, binaryFileId, finalCount);
+                    } catch (RuntimeException ex) {
+                        log.warn("listIntegrity : referencevalue count failed for {}.{} : {}",
+                                appName, corrId, ex.getMessage());
+                    }
                 }
             }
 

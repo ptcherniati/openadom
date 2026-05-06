@@ -61,9 +61,18 @@ public record WorkflowLogEntry(
          * COLLECTOR | SINK | TEARDOWN | UNKNOWN . NULL pour status
          * non FAILED .
          */
-        String        failedStage) {
+        String        failedStage,
+        /**
+         * Compteur authoritatif COUNT(*) FROM &lt;app&gt;.referencevalue WHERE
+         * binaryfile = ? capture au markCompleted ( post-afterCommit Phase B ) .
+         * NULL pour les statuses non terminaux ou si le COUNT a echoue
+         * post-commit ( DB transitoirement down ) . Source de verite pour
+         * IntegrityService et DashboardService.finalizeProgress qui evite
+         * les COUNT repetes au poll . Cf AUDIT 06-05-26 #1 .
+         */
+        Long          finalCount) {
 
-    /** Compat constructor : entries sans metadata ni failedStage . */
+    /** Compat constructor : entries sans metadata , failedStage , finalCount . */
     public WorkflowLogEntry(
             UUID correlationId, String workflowType, UUID userId, String userLogin,
             String applicationName, String dataType, String resourceName,
@@ -74,11 +83,10 @@ public record WorkflowLogEntry(
              applicationName, dataType, resourceName,
              startTime, endTime, duration, status,
              recordsProcessed, recordsFailed, chunksProcessed,
-             bytesTotal, errors, fatalError, null, null);
+             bytesTotal, errors, fatalError, null, null, null);
     }
 
-    /** Compat constructor : entries sans failedStage ( workflows pre-cascade-2.2.0
-     *  ou phases sans contexte cascade ) . */
+    /** Compat constructor : entries sans failedStage ni finalCount . */
     public WorkflowLogEntry(
             UUID correlationId, String workflowType, UUID userId, String userLogin,
             String applicationName, String dataType, String resourceName,
@@ -90,7 +98,22 @@ public record WorkflowLogEntry(
              applicationName, dataType, resourceName,
              startTime, endTime, duration, status,
              recordsProcessed, recordsFailed, chunksProcessed,
-             bytesTotal, errors, fatalError, metadata, null);
+             bytesTotal, errors, fatalError, metadata, null, null);
+    }
+
+    /** Compat constructor : entries sans finalCount . */
+    public WorkflowLogEntry(
+            UUID correlationId, String workflowType, UUID userId, String userLogin,
+            String applicationName, String dataType, String resourceName,
+            Instant startTime, Instant endTime, Duration duration, String status,
+            long recordsProcessed, long recordsFailed, int chunksProcessed,
+            long bytesTotal, List<String> errors, String fatalError,
+            Map<String, Object> metadata, String failedStage) {
+        this(correlationId, workflowType, userId, userLogin,
+             applicationName, dataType, resourceName,
+             startTime, endTime, duration, status,
+             recordsProcessed, recordsFailed, chunksProcessed,
+             bytesTotal, errors, fatalError, metadata, failedStage, null);
     }
 
     public static final String TYPE_IMPORT                    = "IMPORT";
@@ -128,6 +151,6 @@ public record WorkflowLogEntry(
                 correlationId, workflowType, userId, userLogin,
                 applicationName, dataType, resourceName,
                 startTime, null, null, STATUS_IN_PROGRESS,
-                0L, 0L, 0, bytesTotal, List.of(), null, null, null);
+                0L, 0L, 0, bytesTotal, List.of(), null, null, null, null);
     }
 }
