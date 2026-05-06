@@ -173,6 +173,21 @@ public class CascadeImportPipeline {
         final java.util.concurrent.atomic.AtomicBoolean runnerWillFinalize =
                 new java.util.concurrent.atomic.AtomicBoolean(false);
 
+        // Heartbeat lifecycle au scope pipeline ( couvre tout le cycle de
+        // vie openADOM : pre-cascade , cascade.execute() , post-cascade ,
+        // afterCommit ) . Ferme le trou que CascadeHeartbeatBridge ne
+        // couvre que pendant cascade.execute() et que HeartbeatService
+        // dans la finalize hook ne reprend qu'au moment du UPSERT
+        // staging -> table finale . Sans ce wrap , entre la sortie de
+        // cascade.execute() et le declenchement de afterCommit ( mode
+        // deferred Phase B ) le workflow peut rester sans heartbeat
+        // plusieurs minutes -> le sweeper le marque "presumed dead"
+        // alors qu il tourne legitimement . Le handle est ferme par
+        // les lambdas markCompleted / markPostCommitFailure /
+        // markTxRolledBack , avec safety net dans le finally .
+        final java.util.concurrent.atomic.AtomicReference<fr.inra.oresing.workflow.cascade.history.HeartbeatService.Heartbeat> pipelineHeartbeat =
+                new java.util.concurrent.atomic.AtomicReference<>(fr.inra.oresing.workflow.cascade.history.HeartbeatService.Heartbeat.NOOP);
+
         // Initialise hors du try uniquement quand l'expression est
         // garantie sans throw . userLogin est inside-try parce que
         // resolveCurrentLogin() peut lever une RuntimeException .
@@ -198,6 +213,13 @@ public class CascadeImportPipeline {
             final UUID userUuid = safeUuid(userId);
             registerWorkflowStart(corrUuid, userUuid, userLogin, applicationName, dataType,
                     resourceName, startedAt, fileSizeBytes);
+
+            // Heartbeat lifecycle pipeline-wide ( cf doc pipelineHeartbeat
+            // ci-dessus ) . Demarre apres recordStart pour que l UPDATE
+            // beat_workflow trouve la row IN_PROGRESS deja persistee .
+            if (corrUuid != null) {
+                pipelineHeartbeat.set(heartbeatService.start(corrUuid));
+            }
 
             // Publie le binaryfile source pour que WorkflowMetadataCollector
             // puisse l'inclure dans workflow_log.metadata.binaryFileId .
@@ -605,6 +627,10 @@ public class CascadeImportPipeline {
                 final String finalAppSchema = referenceValueRepository.getSchemaName();
                 final java.util.UUID finalBinaryFileId = sourceBinaryFileId;
                 final Runnable markCompleted = () -> {
+                    // Stop heartbeat AVANT l UPDATE final pour eviter qu un
+                    // beat tardif ( race condition entre cancel et tick )
+                    // ne reouvre la row en IN_PROGRESS apres notre flip .
+                    closeHeartbeatQuietly(pipelineHeartbeat);
                     if (corrUuid != null) {
                         activeRegistry.markFinalizeFinished(corrUuid, Instant.now());
                     }
@@ -661,6 +687,7 @@ public class CascadeImportPipeline {
                     // consommateurs live basculent en rouge ; le merged.csv / staging row reste
                     // pour replay manuel ( compensation_log + sweeper s en
                     // chargent en background ) .
+                    closeHeartbeatQuietly(pipelineHeartbeat);
                     if (corrUuid != null) {
                         activeRegistry.markRollbackStarted(corrUuid, Instant.now(), 0L,
                                 formatThrowable(err));
@@ -687,6 +714,7 @@ public class CascadeImportPipeline {
                     // simplement retirer le workflow de l active registry
                     // ( car le finally a ete instruit de skip via
                     // runnerWillFinalize=true ) .
+                    closeHeartbeatQuietly(pipelineHeartbeat);
                     if (corrUuid != null) {
                         activeRegistry.finish(corrUuid);
                     }
@@ -756,6 +784,7 @@ public class CascadeImportPipeline {
                 // pas de feedback granulaire sur le rollback ( atomique ) ,
                 // on capture juste le timestamp + le delta de rows pour
                 // post-mortem .
+                closeHeartbeatQuietly(pipelineHeartbeat);
                 if (corrUuid != null) {
                     activeRegistry.markRollbackStarted(corrUuid, Instant.now(), 0L,
                             formatThrowable(e));
@@ -777,6 +806,11 @@ public class CascadeImportPipeline {
                 throw e;
             }
         } finally {
+            // Safety net heartbeat : si une exception precoce ( avant
+            // markCompleted / catch ) sort de la pipeline , le close
+            // ici garantit que le scheduler s arrete et qu il ne
+            // continue pas a beat indefiniment . Idempotent .
+            closeHeartbeatQuietly(pipelineHeartbeat);
             importRateLimiter.release(userId);
             // #62 - Toujours retirer le snapshot du registry , quel que soit
             // le chemin de sortie ( succès , erreur , annulation ). Sans ce
@@ -1041,6 +1075,22 @@ public class CascadeImportPipeline {
      */
     private static final java.util.regex.Pattern SAFE_SCHEMA_IDENT =
             java.util.regex.Pattern.compile("^[a-z_][a-z0-9_]*$");
+
+    /**
+     * Ferme idempotemment et silencieusement le handle heartbeat
+     * pipeline . Remplace le contenu de la reference par {@code NOOP}
+     * pour eviter qu un appel ulterieur ( safety net finally ) tente
+     * une 2eme fermeture sur le meme future deja annule . Tout echec
+     * de close est avale ( best-effort ) .
+     */
+    private static void closeHeartbeatQuietly(
+            java.util.concurrent.atomic.AtomicReference<fr.inra.oresing.workflow.cascade.history.HeartbeatService.Heartbeat> ref) {
+        fr.inra.oresing.workflow.cascade.history.HeartbeatService.Heartbeat hb =
+                ref.getAndSet(fr.inra.oresing.workflow.cascade.history.HeartbeatService.Heartbeat.NOOP);
+        if (hb != null) {
+            try { hb.close(); } catch (RuntimeException ignore) { /* best-effort */ }
+        }
+    }
 
     private static Long countReferencevaluePostCommit(
             fr.inra.oresing.persistence.DataRepository repo,

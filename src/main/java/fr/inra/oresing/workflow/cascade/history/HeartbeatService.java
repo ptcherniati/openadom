@@ -129,7 +129,7 @@ public class HeartbeatService {
      */
     public static final class Heartbeat implements AutoCloseable {
 
-        static final Heartbeat NOOP = new Heartbeat(null, null);
+        public static final Heartbeat NOOP = new Heartbeat(null, null);
 
         private final ScheduledFuture<?> future;
         private final UUID               correlationId;
