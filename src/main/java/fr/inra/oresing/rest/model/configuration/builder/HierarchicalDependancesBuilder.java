@@ -7,7 +7,6 @@ import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public record HierarchicalDependancesBuilder(
@@ -85,42 +84,11 @@ public record HierarchicalDependancesBuilder(
                         }
                     });
         }
-        //addRecursivlyDepends(nodes.values());
         return Node.buildNode(
                 nodes.values(),
                 new Validation(buildErrorWithValidationParams, null, Map.of("domainTags", domainTags)));
     }
 
-    private static void addRecursivlyDepends(Collection<BuilderNode> nodes) {
-        Map<String, BuilderNode> nodeMap = nodes.stream()
-                .collect(Collectors.toMap(BuilderNode::nodeName, node -> node));
-        Map<String, Set<String>> dependsByNodeNames = new HashMap<>();
-        for (String nodeName : nodeMap.keySet()) {
-            collectDependencies(nodeName, nodeMap, dependsByNodeNames);
-        }
-        nodes
-                .forEach(node -> {
-                    node.depends().clear();
-                    String nodeName = node.nodeName();
-                    dependsByNodeNames.get(nodeName).stream()
-                            .filter(Predicate.not(nodeName::equals))
-                            .forEach(node.depends()::add);
-                });
-    }
-
-    private static void collectDependencies(String nodeName, Map<String, BuilderNode> nodeMap, Map<String, Set<String>> dependsByNodeNames) {
-        BuilderNode node = nodeMap.get(nodeName);
-        if (node == null) return;
-        dependsByNodeNames.putIfAbsent(nodeName, new HashSet<>());
-        Set<String> dependencies = dependsByNodeNames.get(nodeName);
-        dependencies.addAll(node.depends());
-        for (String childName : node.children()) {
-            if (!dependsByNodeNames.containsKey(childName)) {
-                collectDependencies(childName, nodeMap, dependsByNodeNames);
-            }
-            dependencies.addAll(dependsByNodeNames.get(childName));
-        }
-    }
 
     public SortedSet<Node> build(Consumer<ValidationParams> buildErrorWithValidationParams) {
         return buildHierchicalDependances(

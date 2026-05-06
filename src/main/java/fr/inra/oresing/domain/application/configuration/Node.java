@@ -24,131 +24,109 @@ public record Node(
     }
 
     public static SortedSet<Node> buildNode(final Collection<BuilderNode> nodes, final Validation validation) {
-        record Builder(Collection<BuilderNode> fromNodes, Set<Node> buildedNodes, Set<Node> currentParentsNodes,
-                       Validation validation) {
-            static SortedSet<Node> build(final Collection<BuilderNode> fromNodes, final Validation validation) {
-                Map<String, BuilderNode> nodesWithAllDepends = fromNodes.stream()
-                        .map(node -> node.withAllDepends(fromNodes))
-                        .collect(Collectors.toMap(BuilderNode::nodeName, Function.identity()));
-                final Set<Node> buildedNodes = BuilderNode.getNodeLeaves(nodesWithAllDepends.values()).stream()
-                        .map(node -> new Node(
-                                node.level(),
-                                node.nodeName(),
-                                node.componentKey(),
-                                node.columnToLookUpForRecursive(),
-                                Optional.of(node).map(BuilderNode::parent).map(BuilderNode::nodeName).orElse(null),
-                                new TreeSet<>(),
-                                node.depends(),
-                                node.order(),
-                                node.isRecursive())
-                        )
-                        .collect(Collectors.toCollection(TreeSet::new));
-                Map<String, BuilderNode> notBuildedNodes = nodesWithAllDepends.entrySet().stream()
-                        .filter(node -> buildedNodes.stream()
-                                .noneMatch(bn -> bn.nodeName().equals(node.getValue().nodeName())))
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)
-                        );
-                return buildNodesRecursively(buildedNodes, notBuildedNodes.values());
-            }
-
-            private static SortedSet<Node> buildNodesRecursively(Set<Node> buildedNodes, Collection<BuilderNode> notBuildedNodes) {
-                Map<Boolean, List<Node>> nodesByNoParent = buildedNodes.stream()
-                        .collect(Collectors.partitioningBy(Node::isRoot));
-                SortedSet<Node> rootNodes = new TreeSet<>(nodesByNoParent.get(true));
-                Map<String, List<Node>> nodeWithParent = nodesByNoParent.get(false).stream()
-                        .collect(Collectors.groupingBy(Node::parent));
-                Function<BuilderNode, Node> findNode = node -> new Node(
+        Map<String, BuilderNode> nodesWithAllDepends = nodes.stream()
+                .map(node -> node.withAllDepends(nodes))
+                .collect(Collectors.toMap(BuilderNode::nodeName, Function.identity()));
+        // Construire d'abord les feuilles (nœuds sans enfants dans BuilderNode)
+        Map<String, Node> buildedByName = BuilderNode.getNodeLeaves(nodesWithAllDepends.values()).stream()
+                .map(node -> new Node(
                         node.level(),
                         node.nodeName(),
                         node.componentKey(),
                         node.columnToLookUpForRecursive(),
-                        (node.parent() != null ? node.parent().nodeName() : null),
+                        Optional.of(node).map(BuilderNode::parent).map(BuilderNode::nodeName).orElse(null),
                         new TreeSet<>(),
                         node.depends(),
                         node.order(),
-                        node.isRecursive());
-                while (!nodeWithParent.isEmpty()) {
-                    Set<Node> parentNodes = new HashSet<>();
-                    for (Map.Entry<String, List<Node>> nodeEntry : nodeWithParent.entrySet()) {
-                        String parentName = nodeEntry.getKey();
-                        Node parent = buildedNodes.stream()
-                                .filter(node -> node.nodeName().equals(parentName))
-                                .findFirst()
-                                .orElse(null);
-                        if (parent == null) {
-                            parent = notBuildedNodes.stream()
-                                    .filter(node -> node.nodeName().equals(parentName))
-                                    .map(findNode)
-                                    .findFirst()
-                                    .orElseThrow(() -> new IllegalArgumentException(parentName));
-                        }
-                        Node finalParent = parent;
-                        nodeEntry.getValue()
-                                .forEach(child -> finalParent.children().add(child));
-                        notBuildedNodes = notBuildedNodes.stream()
-                                .filter(node -> !node.nodeName().equals(parentName))
-                                .toList();
-                        buildedNodes.add(parent);
-                        if (parent.isRoot()) {
-                            rootNodes.add(parent);
-                        } else {
-                            parentNodes.add(parent);
-                        }
-
-                    }
-                    nodesByNoParent = parentNodes.stream()
-                            .collect(Collectors.partitioningBy(Node::isRoot));
-
-                    nodeWithParent = nodesByNoParent.get(false).stream()
-                            .collect(Collectors.groupingBy(Node::parent));
-                }
-                notBuildedNodes.stream()
-                        .map(findNode)
-                        .forEach(rootNodes::add);
-                return rootNodes;
-            }
-
-            private Node findNode(final String nodeName) {
-                return buildedNodes().stream().filter(node -> node.nodeName().equals(nodeName)).findFirst().orElse(null);
-            }
-
-            private Node findOrCreateNode(final String childNodeName) {
-                final Node childNode = findNode(childNodeName);
-                if (childNode != null) {
-                    return childNode;
-                }
-                final BuilderNode builderNode = fromNodes().stream()
-                        .filter(node -> node.nodeName().equals(childNodeName))
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalArgumentException("pas ici"));
-                return new Node(
-                        builderNode.level(),
-                        builderNode.nodeName(),
-                        builderNode.componentKey(),
-                        builderNode.columnToLookUpForRecursive(),
-                        Optional.of(builderNode)
-                                .map(BuilderNode::parent)
-                                .map(BuilderNode::nodeName)
-                                .orElse(null),
-                        new TreeSet<>(),
-                        builderNode.depends(),
-                        builderNode.order(),
-                        builderNode.isRecursive());
-            }
-        }
-        return Builder.build(nodes, validation);
+                        node.isRecursive()))
+                .collect(Collectors.toMap(Node::nodeName, Function.identity()));
+        Map<String, BuilderNode> remainingBuilderNodes = nodesWithAllDepends.entrySet().stream()
+                .filter(e -> !buildedByName.containsKey(e.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return buildNodesRecursively(buildedByName, remainingBuilderNodes);
     }
+
+    /**
+     * Construit l'arbre de nœuds récursivement sans muter les objets existants.
+     * Les nœuds parents sont reconstruits avec leurs enfants (immuabilité respectée).
+     *
+     * @param buildedByName     map nom→nœud des nœuds déjà construits (feuilles au départ)
+     * @param remainingBuilders nœuds BuilderNode non encore créés comme Node
+     */
+    private static SortedSet<Node> buildNodesRecursively(
+            Map<String, Node> buildedByName,
+            Map<String, BuilderNode> remainingBuilders) {
+
+        Map<Boolean, List<Node>> nodesByNoParent = buildedByName.values().stream()
+                .collect(Collectors.partitioningBy(Node::isRoot));
+        SortedSet<Node> rootNodes = new TreeSet<>(nodesByNoParent.get(true));
+        Map<String, List<Node>> nodeWithParent = nodesByNoParent.get(false).stream()
+                .collect(Collectors.groupingBy(Node::parent));
+
+        Function<BuilderNode, Node> toNode = bn -> new Node(
+                bn.level(), bn.nodeName(), bn.componentKey(), bn.columnToLookUpForRecursive(),
+                (bn.parent() != null ? bn.parent().nodeName() : null),
+                new TreeSet<>(), bn.depends(), bn.order(), bn.isRecursive());
+
+        while (!nodeWithParent.isEmpty()) {
+            Set<Node> parentNodes = new HashSet<>();
+            for (Map.Entry<String, List<Node>> nodeEntry : nodeWithParent.entrySet()) {
+                String parentName = nodeEntry.getKey();
+
+                // Trouver le nœud parent existant ou le créer depuis remainingBuilders
+                Node parent = buildedByName.get(parentName);
+                if (parent == null) {
+                    BuilderNode parentBuilder = remainingBuilders.get(parentName);
+                    if (parentBuilder == null) {
+                        throw new IllegalArgumentException("Nœud parent introuvable : " + parentName);
+                    }
+                    parent = toNode.apply(parentBuilder);
+                }
+
+                // Reconstruire le parent avec ses enfants (pas de mutation)
+                // On remplace les enfants existants ayant le même nodeName pour éviter les doublons
+                SortedSet<Node> mergedChildren = new TreeSet<>(parent.children());
+                for (Node newChild : nodeEntry.getValue()) {
+                    mergedChildren.removeIf(c -> c.nodeName().equals(newChild.nodeName()));
+                    mergedChildren.add(newChild);
+                }
+                Node updatedParent = new Node(
+                        parent.level(), parent.nodeName(), parent.componentKey(),
+                        parent.columnToLookUpForRecursive(), parent.parent(),
+                        mergedChildren, parent.depends(), parent.order(), parent.isRecursive());
+
+                buildedByName.put(parentName, updatedParent);
+                remainingBuilders = remainingBuilders.entrySet().stream()
+                        .filter(e -> !e.getKey().equals(parentName))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+                if (updatedParent.isRoot()) {
+                    // Supprimer l'ancienne version du même nœud racine avant d'ajouter la nouvelle
+                    rootNodes.removeIf(n -> n.nodeName().equals(updatedParent.nodeName()));
+                    rootNodes.add(updatedParent);
+                } else {
+                    parentNodes.add(updatedParent);
+                }
+            }
+            nodesByNoParent = parentNodes.stream()
+                    .collect(Collectors.partitioningBy(Node::isRoot));
+            nodeWithParent = nodesByNoParent.get(false).stream()
+                    .collect(Collectors.groupingBy(Node::parent));
+        }
+        // Ajouter les nœuds restants de remainingBuilders (racines sans enfants)
+        remainingBuilders.values().stream()
+                .map(toNode)
+                .forEach(rootNodes::add);
+        return rootNodes;
+    }
+
 
 
     private boolean isRoot() {
         return parent()==null || parent().isEmpty();
     }
 
-    private List<String> dependsRecursively() {
-        Set<String> result = new HashSet<>(depends());
-        children().forEach(child -> result.addAll(child.dependsRecursively()));
-        return new ArrayList<>(result);
-    }@Override
+    @Override
     public int compareTo(final Node o) {
         if (o == null) {
             return 1;

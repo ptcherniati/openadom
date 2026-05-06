@@ -71,7 +71,8 @@ public class RootBuilder {
     @Getter
     Set<Tag> domainTags = Set.of();
     private ReactiveEventHelper eventHelper;
-    private boolean hasErrors;
+    /** Accumulateur d'erreurs — remplace le flag mutable {@code boolean hasErrors}. */
+    private final List<ValidationParams> collectedErrors = new ArrayList<>();
     @Getter
     final Consumer<ValidationParams> buildErrorWithValidationParams =
             validationParams -> buildError(validationParams.exception(), validationParams.params(), validationParams.path());
@@ -93,16 +94,26 @@ public class RootBuilder {
     }
 
     public void buildError(final ConfigurationException exception, Map<String, Object> params, final String path) {
-        hasErrors = true;
         Map<String, Object> params1 = new HashMap<>(params);
         params1.put("path", path);
+        collectedErrors.add(new ValidationParams(exception, params1, path));
         eventHelper.pushError(exception, params1);
     }
 
     public void buildError(final ConfigurationException exception, final String path) {
-        hasErrors = true;
         final Map<String, String> params = Map.of("path", path);
+        collectedErrors.add(new ValidationParams(exception, new HashMap<>(params), path));
         eventHelper.pushError(exception, new HashMap<>(params));
+    }
+
+    /** @return {@code true} si au moins une erreur a été collectée. */
+    public boolean hasErrors() {
+        return !collectedErrors.isEmpty();
+    }
+
+    /** @return liste non-modifiable des erreurs collectées (pour les tests). */
+    public List<ValidationParams> getCollectedErrors() {
+        return List.copyOf(collectedErrors);
     }
 
     public Configuration build(InputStream inputStreams, final String comment) {
@@ -111,7 +122,7 @@ public class RootBuilder {
         if (version == null) return null;
         new NodeSchemaValidator(this).testSchema(RootType.EMPTY_INSTANCE(), rootNode, "").get();
         dataAndComponentTestDoublon.testUniqueComponentsForData(rootNode.findPath(OA_DATA));
-        if (hasErrors || dataAndComponentTestDoublon.hasErrors()) {
+        if (hasErrors() || dataAndComponentTestDoublon.hasErrors()) {
             return null;
         }
         eventHelper.pushMessage("Starting parsing of configuration", Map.of());
@@ -153,7 +164,7 @@ public class RootBuilder {
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .convertValue(
                         i18n.i18n(), Internationalizations.class);
-        if (hasErrors) {
+        if (hasErrors()) {
             return null;
         }
         return new Configuration(
