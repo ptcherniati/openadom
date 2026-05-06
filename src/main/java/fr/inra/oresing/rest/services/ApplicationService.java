@@ -248,25 +248,21 @@ public class ApplicationService {
         final Version oldVersion = oldConfiguration.applicationDescription().version();
         final Version newVersion = newConfiguration.applicationDescription().version();
         final boolean bypass = migrationProperties.isBypassConfigurationCheck();
-        try {
-            if (!bypass) {
-                // Mode sécurisé (openadom.migration.bypass-configuration-check=false) :
-                // la version doit obligatoirement être incrémentée, sinon la mise à jour est bloquée.
-                Preconditions.checkArgument(newVersion.compareTo(oldVersion) > 0,
-                        "l'application " + applicationName + " est déjà dans la version " + oldVersion);
-            } else if (newVersion.compareTo(oldVersion) <= 0) {
-                // Bypass actif (valeur par défaut) : comportement historique —
-                // avertissement non bloquant, la mise à jour se poursuit.
-                if (log.isWarnEnabled()) {
-                    log.warn("openadom.migration.bypass-configuration-check=true : " +
-                            "version non incrémentée ({} → {}) pour '{}', mise à jour acceptée malgré tout",
-                            oldVersion, newVersion, applicationName);
-                }
-                eventHelper.pushMessage(START, Map.of("application", applicationName,
-                        "oldVersion", oldVersion.version(), "newVersion", newVersion.version()));
+        if (!bypass) {
+            // Mode sécurisé (openadom.migration.bypass-configuration-check=false) :
+            // la version doit obligatoirement être incrémentée, sinon la mise à jour est bloquée.
+            Preconditions.checkArgument(newVersion.compareTo(oldVersion) > 0,
+                    "l'application " + applicationName + " est déjà dans la version " + oldVersion);
+        } else if (newVersion.compareTo(oldVersion) <= 0) {
+            // Bypass actif (valeur par défaut) : comportement historique —
+            // avertissement non bloquant, la mise à jour se poursuit.
+            if (log.isWarnEnabled()) {
+                log.warn("openadom.migration.bypass-configuration-check=true : " +
+                        "version non incrémentée ({} → {}) pour '{}', mise à jour acceptée malgré tout",
+                        oldVersion, newVersion, applicationName);
             }
-        } catch (final IllegalArgumentException e) {
-            eventHelper.pushError(e);
+            eventHelper.pushMessage(START, Map.of("application", applicationName,
+                    "oldVersion", oldVersion.version(), "newVersion", newVersion.version()));
         }
         if (log.isInfoEnabled()) {
             log.info("va migrer les données de {} de la version actuelle {} à la nouvelle version {}", applicationName, oldVersion, newVersion);
@@ -274,8 +270,6 @@ public class ApplicationService {
 
         final boolean deleted = repository.getRepository(application).binaryFile().delete(oldConfigFileId);
         Preconditions.checkState(deleted);
-
-        serviceContainer.relationalService().createViews(nameOrId);
         return application.getId();
     }
 
@@ -362,8 +356,16 @@ public class ApplicationService {
                 // puis on la met à jour après l'enregistrement du fichier de configuration.
                 repository.application().store(newApplication);
             } else {
-                // Mise à jour: exécuter le pipeline de migration de configuration.
-                migrationService.executeMigration(oldApplication, newApplication, Set.of(), MigrationMode.EXECUTE);
+                // Mise à jour : exécuter le pipeline de migration de configuration.
+                final MigrationResult migrationResult = migrationService.executeMigration(
+                        oldApplication, newApplication, Set.of(), MigrationMode.EXECUTE);
+                if (log.isInfoEnabled()) {
+                    log.info("résultat de la migration de configuration pour '{}' : {}", applicationName, migrationResult);
+                }
+                eventHelper.pushMessage(MIGRATION_REPORT, Map.of(
+                        APPLICATION_NAME, applicationName,
+                        "migrationResult", migrationResult.toString()
+                ));
             }
             final UUID confId = serviceContainer.binaryFileService().storeFile(newApplication, configurationFile, comment1, null);
             newApplication.setConfigFile(confId);

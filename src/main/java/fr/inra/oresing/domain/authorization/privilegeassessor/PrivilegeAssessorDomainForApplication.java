@@ -42,7 +42,15 @@ public record PrivilegeAssessorDomainForApplication<P extends PrivilegeApplicati
 
 
     /*
-    Test if is applicationManagerUserForCreateRights
+     * Test if is applicationManagerUserForCreateRights
+     *
+     * TODO dead-code potentiel : ApplicationPermissionEvaluator appelle forManageAuthorizations()
+     * pour le case APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD (qui accepte isApplicationManager
+     * OU isUserManager), alors que cette méthode exige isUserManager uniquement et lève
+     * NotApplicationUserReaderRightsException. Un applicationManager peut donc ajouter une
+     * autorisation via l'évaluateur, mais serait rejeté par ce domaine s'il était appelé
+     * directement. Décision à prendre : supprimer forAddAuthorization() ou faire appeler
+     * l'évaluateur forAddAuthorization() pour APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD.
      */
     public ApplicationManager forAddAuthorization() {
         if (!authorizations.isUserManager()) {

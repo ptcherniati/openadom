@@ -265,11 +265,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         Map<String, AuthorizationForScope> filteredAuthorizations = oreSiAuthorization.getAuthorizations().entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        Map.Entry::getValue/*entry -> validateAndGetAuthForScope(
-                                entry,
-                                true,
-                                authorizationListForCurrentUser,
-                                application)*/
+                        Map.Entry::getValue
                 ));
 
         if (filteredAuthorizations.isEmpty()) {
@@ -599,44 +595,6 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
                 isApplicationUser,
                 isActiveApplicationUser
         );
-    }/*
-
-    @Transactional
-    public UUID revokeAdditionalFiles(final String applicationNameOrId, final UUID authorizationId) {
-        *//*UpdateRolesOnAdditionalFilesManagement updateRolesOnManagement = new UpdateRolesOnAdditionalFilesManagement(repository, db, serviceContainer.authenticationService());
-        Application application = getApplication(applicationNameOrId);
-        CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
-        boolean isApplicationCreator = rolesForCurrentUser.memberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
-        UUID requestUserId = OreSiApiRequestContext.getRequestUserId();
-        final List<OreSiAuthorization> authorizationsForCurrentUser = findUserAuthorizationsForApplication(application);
-        if (!isApplicationCreator && authorizationsForCurrentUser.stream().allMatch(
-                a -> a.getAuthorizations().get(application.getName()).get(OperationType.admin).isEmpty()
-        )) {
-            throw new NotApplicationCanSetRightsReferencesException(application.getName());
-        }
-        final OreSiAdditionalFileAuthorization oreSiAuthorization = repository.getRepository(application).authorizationAdditionalFiles().findById(authorizationId);
-        List<AuthorizationForScope> authorizationListForCurrentUser = authorizationsForCurrentUser.stream()
-                .map(OreSiAuthorization::getAuthorizations)
-                .filter(operationTypeListMap -> operationTypeListMap.containsKey(OperationType.admin))
-                .map(operationTypeListMap -> operationTypeListMap.get(OperationType.admin))
-                .flatMap(List::stream)
-                .toList();
-
-        Map<OperationAdditionalFileType, List<String>> filteredAuthorizations = oreSiAuthorization.getAdditionalFiles().entrySet().stream()
-                .peek(authByTypeEntry -> {
-                    if (!isApplicationCreator) {
-                        boolean canRemoveEntry = new HashSet<>(authorizationListForCurrentUser).containsAll(authByTypeEntry.getValue());
-                        if (!canRemoveEntry) {
-                            throw new NotApplicationCanDeleteReferencesRightsException(application.getName(), authorizationListForCurrentUser);
-                        }
-                    }
-                })
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        if (filteredAuthorizations.isEmpty()) {
-            return null;
-        }
-        return updateRolesOnManagement.revoke(application, authorizationId);*//*
-        return null;
     }
 
     public ImmutableSet<GetAuthorizationAdditionalFilesResult> getAdditionalFilesuthorizations(final String applicationNameOrId, final AuthorizationsAdditionalFilesResult authorizationsForUser, final MultiValueMap<String, String> params) {
