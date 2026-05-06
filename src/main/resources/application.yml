@@ -22,7 +22,11 @@ spring:
       idle-timeout: ${SPRING_DATASOURCE_HIKARI_IDLE-TIMEOUT:600000}
       max-lifetime: ${SPRING_DATASOURCE_HIKARI_MAX-LIFETIME:1800000}
       auto-commit: ${SPRING_DATASOURCE_HIKARI_AUTO-COMMIT:true}
-      leak-detection-threshold: ${SPRING_DATASOURCE_HIKARI_LEAK-DETECTION-THRESHOLD:30000}
+      # 0 = leak detection désactivé ( recommandé pour les exports
+      # streaming qui tiennent légitimement une connexion plusieurs
+      # heures ; sans cela les logs sont noyés sous des warnings
+      # "Apparent connection leak detected" qui ne sont pas des fuites ) .
+      leak-detection-threshold: ${OPENADOM_DB_POOL_LEAK_DETECTION:30000}
 
   flyway:
     locations: classpath:migration/main

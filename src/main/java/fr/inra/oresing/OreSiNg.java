@@ -61,6 +61,26 @@ public class OreSiNg implements WebMvcConfigurer {
     private final MigrateService migrate;
     @Value("${allowed.origin}")
     private String allowedOrigin;
+    /**
+     * Timeout des requêtes HTTP streaming ( {@code StreamingResponseBody} ,
+     * {@code Callable} , {@code DeferredResult} ) . Compteur démarre
+     * quand le controller retourne le body async ; couvre toute la
+     * durée du streaming ( exports ZIP / CSV qui sortent les rows au
+     * fur et à mesure ) . Indépendant du timeout TCP Tomcat
+     * ( {@code server.connection-timeout} ) qui gouverne l'inactivité
+     * réseau ; les writes périodiques sur le ZIP empêchent ce dernier
+     * de déclencher en pratique .
+     *
+     * <p>Format Spring {@link java.time.Duration} : {@code 6h} ,
+     * {@code 30m} , {@code 45s} ou ISO-8601 {@code PT6H} . Default
+     * {@code 6h} : couvre les exports de gros volumes dont les
+     * requêtes Postgres pures peuvent durer plusieurs heures . À
+     * ajuster selon volumétrie réelle de l'environnement .
+     * Surcharge via env {@code OPENADOM_HTTP_STREAMING_TIMEOUT}
+     * ( ex. {@code 6h} ) .
+     */
+    @Value("${openadom.http.streaming.timeout:6h}")
+    private java.time.Duration httpStreamingTimeout;
     private final JsonRequestParamArgumentResolver jsonRequestParamArgumentResolver;
     private final Executor normalServiceExecutor;
 
@@ -98,6 +118,14 @@ public class OreSiNg implements WebMvcConfigurer {
     @Override
     public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
         configurer.setTaskExecutor(new ConcurrentTaskExecutor(normalServiceExecutor));
+        // Sans cet appel , Tomcat applique son default ( 30 s ou 90 s
+        // selon distribution ) , ce qui interrompt les exports ZIP /
+        // CSV streaming sur gros volumes : le thread async est
+        // interrompu , la socket Postgres ferme en cours de fetch ,
+        // erreur en cascade Hikari + rollback + AsyncRequestTimeout .
+        configurer.setDefaultTimeout(httpStreamingTimeout.toMillis());
+        log.info("HTTP async support : taskExecutor=normalServiceExecutor , streamingTimeout={}",
+                httpStreamingTimeout);
     }
 
     @EventListener(ApplicationReadyEvent.class)
