@@ -21,6 +21,8 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.MountableFile;
 
 import java.sql.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
@@ -64,6 +66,44 @@ public abstract class AbstractIntegrationTest {
         registry.add("spring.datasource.url", () ->
                 "jdbc:postgresql://" + postgres.getHost() + ":" + postgres.getMappedPort(5432)
                         + "/" + PG_DATABASE + "?preparedStatementCacheQueries=0");
+
+        // ── Parallélisme auto-calibré sur le nombre de cœurs logiques ─────────
+        // Auto-calibrage UNIQUEMENT si cascade.import.parallelism n'est pas déjà défini
+        // (propriété système ou Spring) — on respecte la configuration explicite.
+        // Règles de dimensionnement :
+        //   • minimum 2 workers (évite le mode séquentiel sur petites CI)
+        //   • maximum hikariCP test pool / 2 (application-testmail.yml : maximum-pool-size=20)
+        //     → 10 connexions max pour les imports, 10 pour le reste (Flyway, diagnostics…)
+        //   • plafonné à availableProcessors() : inutile d'avoir plus de workers que de cœurs
+        //     sur du CPU-bound (validation Groovy, parsing CSV).
+        //
+        // Deux variables pilotées en parallèle :
+        //   cascade.import.parallelism  → nb de chunks soumis simultanément au pool transform
+        //   cascade.pool.transform      → taille du pool de threads cascade (system property)
+        // Elles doivent être égales ; sinon les tâches s'exécutent en série dans le pool.
+        if (System.getProperty("cascade.import.parallelism") == null
+                && System.getenv("CASCADE_IMPORT_PARALLELISM") == null) {
+            int logicalCores = Runtime.getRuntime().availableProcessors();
+            int testParallelism = Math.clamp(logicalCores, 2, 10);
+
+            // System property lue par ExecutionResourceManager (singleton cascade, JVM-level) :
+            // doit être positionnée AVANT la première initialisation du contexte Spring.
+            if (System.getProperty("cascade.pool.transform") == null) {
+                System.setProperty("cascade.pool.transform", String.valueOf(testParallelism));
+            }
+            if (System.getProperty("cascade.pool.source") == null) {
+                System.setProperty("cascade.pool.source", String.valueOf(Math.max(1, testParallelism / 2)));
+            }
+            if (System.getProperty("cascade.pool.sink") == null) {
+                System.setProperty("cascade.pool.sink", String.valueOf(Math.max(1, testParallelism / 2)));
+            }
+
+            registry.add("cascade.import.parallelism", () -> testParallelism);
+            log.info("[test-config] parallélisme auto-calibré : {} workers (logical cores={})",
+                    testParallelism, logicalCores);
+        } else {
+            log.info("[test-config] parallélisme configuré explicitement, auto-calibrage ignoré");
+        }
     }
 
     /** Démarre le conteneur une seule fois pour toute la classe de tests. */
@@ -146,6 +186,31 @@ public abstract class AbstractIntegrationTest {
         try (Connection conn = DriverManager.getConnection(jdbcUrl, PG_SUPER_USER, PG_SUPER_PASSWORD);
              Statement stmt = conn.createStatement()) {
 
+            // ── Préambule : terminer toutes les connexions actives (HikariCP, Flyway,
+            //    subscriptions réactives fire-and-forget) pour prévenir les deadlocks
+            //    de verrous avec DROP SCHEMA ... CASCADE.
+            //    La connexion courante (cleanDatabase) est exclue via pg_backend_pid().
+            try (ResultSet rs = stmt.executeQuery("""
+                    SELECT pg_terminate_backend(pid), pid, usename, state, left(query, 80) AS query
+                    FROM pg_stat_activity
+                    WHERE datname = current_database()
+                      AND pid != pg_backend_pid()
+                    """)) {
+                int count = 0;
+                while (rs.next()) {
+                    count++;
+                    log.debug("[cleanDatabase] connexion terminée: pid={} user={} state={} query={}",
+                            rs.getInt("pid"), rs.getString("usename"),
+                            rs.getString("state"), rs.getString("query"));
+                }
+                if (count > 0) {
+                    log.info("[cleanDatabase] {} connexion(s) terminée(s) avant nettoyage", count);
+                    // Attente active : on interroge pg_stat_activity jusqu'à ce que
+                    // toutes les connexions soient effectivement fermées (ou timeout).
+                    waitForConnectionsToDrain(conn, 5_000);
+                }
+            }
+
             // ── Étape 1 : supprimer tous les schémas applicatifs ─────────────────
             stmt.execute("""
                     DO $$
@@ -223,6 +288,51 @@ public abstract class AbstractIntegrationTest {
         } catch (SQLException e) {
             log.error("Erreur lors du nettoyage de la base de données entre les tests", e);
             throw new RuntimeException("Échec du nettoyage de la base de données", e);
+        }
+    }
+
+    /**
+     * Attend activement que toutes les connexions autres que la connexion courante
+     * soient fermées sur la base de données, sans utiliser {@code Thread.sleep}.
+     *
+     * <p>Interroge {@code pg_stat_activity} par paliers de 50 ms via
+     * {@link LockSupport#parkNanos(long)} jusqu'à ce que le compteur tombe à 0
+     * ou que {@code maxWaitMs} soit écoulé.
+     *
+     * @param conn      connexion active (super-utilisateur) — réutilisée pour éviter une
+     *                  nouvelle ouverture de connexion
+     * @param maxWaitMs délai maximum d'attente en millisecondes
+     */
+    private void waitForConnectionsToDrain(Connection conn, long maxWaitMs) throws SQLException {
+        final long pollIntervalNs = TimeUnit.MILLISECONDS.toNanos(50);
+        final long deadlineNs     = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(maxWaitMs);
+
+        try (PreparedStatement ps = conn.prepareStatement("""
+                SELECT count(*)
+                FROM pg_stat_activity
+                WHERE datname = current_database()
+                  AND pid != pg_backend_pid()
+                """)) {
+
+            while (true) {
+                int remaining;
+                try (ResultSet rs = ps.executeQuery()) {
+                    rs.next();
+                    remaining = rs.getInt(1);
+                }
+                if (remaining == 0) {
+                    log.debug("[cleanDatabase] toutes les connexions sont fermées");
+                    return;
+                }
+                if (System.nanoTime() >= deadlineNs) {
+                    log.warn("[cleanDatabase] {} connexion(s) toujours active(s) après {}ms — DROP peut échouer",
+                            remaining, maxWaitMs);
+                    return;
+                }
+                log.debug("[cleanDatabase] {} connexion(s) en cours de fermeture, nouvelle vérification dans 50ms",
+                        remaining);
+                LockSupport.parkNanos(pollIntervalNs);
+            }
         }
     }
 
