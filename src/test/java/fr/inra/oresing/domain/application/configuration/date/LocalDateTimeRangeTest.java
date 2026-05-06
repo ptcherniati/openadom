@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.checker.type.DateType;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Tag;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -227,5 +228,227 @@ class LocalDateTimeRangeTest {
             String toDate
     ) {
 
+    }
+
+    // =========================================================================
+    //  Méthodes non couvertes : since/until(LocalDateTime), testIsStandardDate,
+    //  parseSql variantes, getLowerPointOrMin / getUpperEndpointOrMax
+    // =========================================================================
+
+    @Test
+    @DisplayName("since(LocalDateTime) crée un range sans borne supérieure")
+    void sinceLocalDateTime() {
+        LocalDateTime dt = LocalDateTime.of(2020, 6, 1, 12, 0, 0);
+        LocalDateTimeRange range = LocalDateTimeRange.since(dt);
+        Assertions.assertEquals(dt, range.getRange().lowerEndpoint());
+        Assertions.assertFalse(range.getRange().hasUpperBound());
+    }
+
+    @Test
+    @DisplayName("until(LocalDateTime) crée un range sans borne inférieure")
+    void untilLocalDateTime() {
+        LocalDateTime dt = LocalDateTime.of(2021, 6, 1, 23, 59, 59);
+        LocalDateTimeRange range = LocalDateTimeRange.until(dt);
+        Assertions.assertFalse(range.getRange().hasLowerBound());
+        Assertions.assertEquals(dt, range.getRange().upperEndpoint());
+    }
+
+    @Test
+    @DisplayName("testIsStandardDate retourne true pour une date valide")
+    void testIsStandardDateValid() {
+        Assertions.assertTrue(LocalDateTimeRange.testIsStandardDate("2020-06-15 12:00:00"));
+    }
+
+    @Test
+    @DisplayName("testIsStandardDate retourne false pour une chaîne invalide")
+    void testIsStandardDateInvalid() {
+        Assertions.assertFalse(LocalDateTimeRange.testIsStandardDate("not-a-date"));
+        Assertions.assertFalse(LocalDateTimeRange.testIsStandardDate(""));
+    }
+
+    @Test
+    @DisplayName("getLowerPointOrMin retourne lower quand la borne existe")
+    void getLowerPointOrMinWithBound() {
+        LocalDateTime lower = LocalDateTime.of(2020, 1, 1, 0, 0);
+        LocalDateTimeRange range = LocalDateTimeRange.since(lower);
+        Assertions.assertEquals(lower, range.getLowerPointOrMin());
+    }
+
+    @Test
+    @DisplayName("getLowerPointOrMin retourne LocalDateTime.MIN quand pas de borne inférieure")
+    void getLowerPointOrMinWithoutBound() {
+        LocalDateTimeRange range = LocalDateTimeRange.always();
+        Assertions.assertEquals(LocalDateTime.MIN, range.getLowerPointOrMin());
+    }
+
+    @Test
+    @DisplayName("getUpperEndpointOrMax retourne upper quand la borne existe")
+    void getUpperEndpointOrMaxWithBound() {
+        LocalDateTime upper = LocalDateTime.of(2022, 1, 1, 0, 0);
+        LocalDateTimeRange range = LocalDateTimeRange.until(upper);
+        Assertions.assertEquals(upper, range.getUpperEndpointOrMax());
+    }
+
+    @Test
+    @DisplayName("getUpperEndpointOrMax retourne LocalDateTime.MAX quand pas de borne supérieure")
+    void getUpperEndpointOrMaxWithoutBound() {
+        LocalDateTimeRange range = LocalDateTimeRange.always();
+        Assertions.assertEquals(LocalDateTime.MAX, range.getUpperEndpointOrMax());
+    }
+
+    @Test
+    @DisplayName("parseSql(,(,)) retourne un range illimité")
+    void parseSqlAll() {
+        LocalDateTimeRange range = LocalDateTimeRange.parseSql("(,)");
+        Assertions.assertFalse(range.getRange().hasLowerBound());
+        Assertions.assertFalse(range.getRange().hasUpperBound());
+    }
+
+    @Test
+    @DisplayName("parseSql atMost : (,\"2020-12-31 00:00:00\"]")
+    void parseSqlAtMost() {
+        LocalDateTimeRange range = LocalDateTimeRange.parseSql("(,\"2020-12-31 00:00:00\"]");
+        Assertions.assertFalse(range.getRange().hasLowerBound());
+        Assertions.assertEquals(com.google.common.collect.BoundType.CLOSED, range.getRange().upperBoundType());
+    }
+
+    @Test
+    @DisplayName("parseSql lessThan : (,\"2020-12-31 00:00:00\")")
+    void parseSqlLessThan() {
+        LocalDateTimeRange range = LocalDateTimeRange.parseSql("(,\"2020-12-31 00:00:00\")");
+        Assertions.assertFalse(range.getRange().hasLowerBound());
+        Assertions.assertEquals(com.google.common.collect.BoundType.OPEN, range.getRange().upperBoundType());
+    }
+
+    @Test
+    @DisplayName("parseSql atLeast : [\"2020-01-01 00:00:00\",)")
+    void parseSqlAtLeast() {
+        LocalDateTimeRange range = LocalDateTimeRange.parseSql("[\"2020-01-01 00:00:00\",)");
+        Assertions.assertTrue(range.getRange().hasLowerBound());
+        Assertions.assertFalse(range.getRange().hasUpperBound());
+        Assertions.assertEquals(com.google.common.collect.BoundType.CLOSED, range.getRange().lowerBoundType());
+    }
+
+    @Test
+    @DisplayName("parseSql greaterThan : (\"2020-01-01 00:00:00\",)")
+    void parseSqlGreaterThan() {
+        LocalDateTimeRange range = LocalDateTimeRange.parseSql("(\"2020-01-01 00:00:00\",)");
+        Assertions.assertTrue(range.getRange().hasLowerBound());
+        Assertions.assertEquals(com.google.common.collect.BoundType.OPEN, range.getRange().lowerBoundType());
+        Assertions.assertFalse(range.getRange().hasUpperBound());
+    }
+
+    @Test
+    @DisplayName("parseSql openClosed : (\"2020-01-01 00:00:00\",\"2021-01-01 00:00:00\"]")
+    void parseSqlOpenClosed() {
+        LocalDateTimeRange range = LocalDateTimeRange.parseSql("(\"2020-01-01 00:00:00\",\"2021-01-01 00:00:00\"]");
+        Assertions.assertEquals(com.google.common.collect.BoundType.OPEN, range.getRange().lowerBoundType());
+        Assertions.assertEquals(com.google.common.collect.BoundType.CLOSED, range.getRange().upperBoundType());
+    }
+
+    @Test
+    @DisplayName("parseSql open : (\"2020-01-01 00:00:00\",\"2021-01-01 00:00:00\")")
+    void parseSqlOpen() {
+        LocalDateTimeRange range = LocalDateTimeRange.parseSql("(\"2020-01-01 00:00:00\",\"2021-01-01 00:00:00\")");
+        Assertions.assertEquals(com.google.common.collect.BoundType.OPEN, range.getRange().lowerBoundType());
+        Assertions.assertEquals(com.google.common.collect.BoundType.OPEN, range.getRange().upperBoundType());
+    }
+
+    @Test
+    @DisplayName("parseSql closed : [\"2020-01-01 00:00:00\",\"2021-01-01 00:00:00\"]")
+    void parseSqlClosed() {
+        LocalDateTimeRange range = LocalDateTimeRange.parseSql("[\"2020-01-01 00:00:00\",\"2021-01-01 00:00:00\"]");
+        Assertions.assertEquals(com.google.common.collect.BoundType.CLOSED, range.getRange().lowerBoundType());
+        Assertions.assertEquals(com.google.common.collect.BoundType.CLOSED, range.getRange().upperBoundType());
+    }
+
+    @Test
+    @DisplayName("toSqlExpression pour range open (greaterThan) commence par (")
+    void toSqlExpressionOpen() {
+        LocalDateTimeRange range = LocalDateTimeRange.since(LocalDateTime.of(2020, 1, 1, 0, 0, 0));
+        String sql = range.toSqlExpression();
+        Assertions.assertTrue(sql.startsWith("["));
+        Assertions.assertTrue(sql.endsWith(")"));
+    }
+
+    @Test
+    @DisplayName("of(DatePattern, null, null) retourne always()")
+    void ofWithNullBounds() {
+        DatePattern<java.time.temporal.TemporalAccessor> pattern = DatePattern.of(DatePattern.DD_MM_YYYY);
+        LocalDateTimeRange range = LocalDateTimeRange.of(pattern, (String) null, (String) null);
+        Assertions.assertFalse(range.getRange().hasLowerBound());
+        Assertions.assertFalse(range.getRange().hasUpperBound());
+    }
+
+    @Test
+    @DisplayName("of(DatePattern, from, null) retourne always() car l'un des deux est null")
+    void ofWithNullTo() {
+        DatePattern<java.time.temporal.TemporalAccessor> pattern = DatePattern.of(DatePattern.DD_MM_YYYY);
+        LocalDateTimeRange range = LocalDateTimeRange.of(pattern, "01/01/2020", (String) null);
+        // si from||to == null, retourne always()
+        Assertions.assertFalse(range.getRange().hasLowerBound());
+        Assertions.assertFalse(range.getRange().hasUpperBound());
+    }
+
+    @Test
+    @DisplayName("of(DatePattern, null, to) retourne always() car l'un des deux est null")
+    void ofWithNullFrom() {
+        DatePattern<java.time.temporal.TemporalAccessor> pattern = DatePattern.of(DatePattern.DD_MM_YYYY);
+        LocalDateTimeRange range = LocalDateTimeRange.of(pattern, (String) null, "31/12/2020");
+        // si from||to == null, retourne always()
+        Assertions.assertFalse(range.getRange().hasLowerBound());
+        Assertions.assertFalse(range.getRange().hasUpperBound());
+    }
+
+    @Test
+    @DisplayName("parse(String, DateType) avec pattern MM/yyyy")
+    void parseStringMonthYear() {
+        DateType dateType = new DateType("MM/yyyy", null, null, null);
+        LocalDateTimeRange range = LocalDateTimeRange.parse("06/2020", dateType);
+        Assertions.assertEquals(LocalDateTime.of(2020, 6, 1, 0, 0, 0), range.getRange().lowerEndpoint());
+    }
+
+    @Test
+    @DisplayName("parse(String, DateType) avec pattern dd/MM/yyyy")
+    void parseStringDay() {
+        DateType dateType = new DateType("dd/MM/yyyy", null, null, null);
+        LocalDateTimeRange range = LocalDateTimeRange.parse("15/06/2020", dateType);
+        Assertions.assertEquals(LocalDateTime.of(2020, 6, 15, 0, 0, 0), range.getRange().lowerEndpoint());
+    }
+
+    @Test
+    @DisplayName("parse(String, DateType) avec pattern dd/MM/yyyy HH:mm:ss")
+    void parseStringDateTime() {
+        DateType dateType = new DateType("dd/MM/yyyy HH:mm:ss", null, null, null);
+        LocalDateTimeRange range = LocalDateTimeRange.parse("15/06/2020 10:30:00", dateType);
+        Assertions.assertEquals(LocalDateTime.of(2020, 6, 15, 0, 0, 0), range.getRange().lowerEndpoint());
+    }
+
+    @Test
+    @DisplayName("parse(LocalDateTime, DateType) avec pattern MM/yyyy retourne null (converter non supporté)")
+    void parseLocalDateTimeMonthYear() {
+        // Le converter MM/yyyy retourne explicitement null pour LocalDateTime
+        DateType dateType = new DateType("MM/yyyy", null, null, null);
+        LocalDateTime dt = LocalDateTime.of(2021, 6, 15, 10, 30);
+        LocalDateTimeRange result = LocalDateTimeRange.parse(dt, dateType);
+        Assertions.assertNull(result);
+    }
+
+    @Test
+    @DisplayName("parse(LocalDateTime, DateType) avec pattern dd/MM/yyyy")
+    void parseLocalDateTimeDay() {
+        DateType dateType = new DateType("dd/MM/yyyy", null, null, null);
+        LocalDateTime dt = LocalDateTime.of(2021, 6, 15, 10, 30);
+        LocalDateTimeRange range = LocalDateTimeRange.parse(dt, dateType);
+        Assertions.assertEquals(LocalDateTime.of(2021, 6, 15, 0, 0, 0), range.getRange().lowerEndpoint());
+    }
+
+    @Test
+    @DisplayName("parse(LocalDateTime, DateType) avec pattern dd/MM/yyyy HH:mm:ss")
+    void parseLocalDateTimeDateTimePattern() {
+        DateType dateType = new DateType("dd/MM/yyyy HH:mm:ss", null, null, null);
+        LocalDateTime dt = LocalDateTime.of(2021, 6, 15, 10, 30);
+        LocalDateTimeRange range = LocalDateTimeRange.parse(dt, dateType);
+        Assertions.assertEquals(LocalDateTime.of(2021, 6, 15, 0, 0, 0), range.getRange().lowerEndpoint());
     }
 }

@@ -1,7 +1,8 @@
 package fr.inra.oresing.workflow.cascade.history;
 
+import fr.inrae.ore.cascade.model.listener.WorkflowEvents;
+import fr.inrae.ore.cascade.model.workflow.ProcessingStatus;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 
 import java.time.Instant;
 import java.util.List;
@@ -13,9 +14,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.Tag;
 
 @Tag("domain.model")
 class WorkflowActiveRegistryTest {
@@ -25,7 +27,7 @@ class WorkflowActiveRegistryTest {
                 cid, type, userId, "tester",
                 "app1", "type1", "file.csv",
                 Instant.now(), "IN_PROGRESS",
-                0L, 0L, 0, null, 0L, 0L, List.of(), List.of(), List.of(), null, null, List.of(), null, null);
+                0L, 0L, 0, null, 0L, 0L, List.of(), List.of());
     }
 
     @Test
@@ -89,9 +91,9 @@ class WorkflowActiveRegistryTest {
         Instant newer = Instant.now();
 
         reg.start(new WorkflowSnapshot(oldCid, "IMPORT", u, null, null, null, null,
-                older, "IN_PROGRESS", 0, 0, 0, null, 0, 0, List.of(), List.of(), List.of(), null, null, List.of(), null, null));
+                older, "IN_PROGRESS", 0, 0, 0, null, 0, 0, List.of(), List.of()));
         reg.start(new WorkflowSnapshot(newCid, "IMPORT", u, null, null, null, null,
-                newer, "IN_PROGRESS", 0, 0, 0, null, 0, 0, List.of(), List.of(), List.of(), null, null, List.of(), null, null));
+                newer, "IN_PROGRESS", 0, 0, 0, null, 0, 0, List.of(), List.of()));
 
         List<WorkflowSnapshot> ordered = reg.list(null);
         assertEquals(newCid, ordered.get(0).correlationId());
@@ -134,5 +136,211 @@ class WorkflowActiveRegistryTest {
         assertTrue(s.recordsProcessed() > 0);
         assertEquals(s.recordsProcessed() * 10L, s.bytesTotal(),
                 "all fields should come from the same update call ( atomic replace )");
+    }
+
+    // =========================================================================
+    //  finish() – cas limites
+    // =========================================================================
+
+    @Test
+    void finish_on_unknown_id_is_a_noop() {
+        WorkflowActiveRegistry reg = new WorkflowActiveRegistry();
+        assertDoesNotThrow(() -> reg.finish(UUID.randomUUID()));
+        assertEquals(0, reg.size());
+    }
+
+    // =========================================================================
+    //  start() – idempotent (putIfAbsent)
+    // =========================================================================
+
+    @Test
+    void start_is_idempotent_keeps_first_entry() {
+        WorkflowActiveRegistry reg = new WorkflowActiveRegistry();
+        UUID cid = UUID.randomUUID();
+        UUID uid1 = UUID.randomUUID();
+        UUID uid2 = UUID.randomUUID();
+        reg.start(snap(cid, uid1, "IMPORT"));
+        reg.start(snap(cid, uid2, "IMPORT")); // second call ignored
+        assertEquals(1, reg.size());
+        assertEquals(uid1, reg.find(cid).orElseThrow().userId());
+    }
+
+    // =========================================================================
+    //  replace()
+    // =========================================================================
+
+    @Test
+    void replace_overwrites_existing_snapshot() {
+        WorkflowActiveRegistry reg = new WorkflowActiveRegistry();
+        UUID cid = UUID.randomUUID();
+        UUID uid1 = UUID.randomUUID();
+        UUID uid2 = UUID.randomUUID();
+        reg.start(snap(cid, uid1, "IMPORT"));
+        reg.replace(snap(cid, uid2, "EXPORT"));
+        assertEquals(uid2, reg.find(cid).orElseThrow().userId());
+        assertEquals("EXPORT", reg.find(cid).orElseThrow().workflowType());
+    }
+
+    // =========================================================================
+    //  setRecordsTotal()
+    // =========================================================================
+
+    @Test
+    void setRecordsTotal_updates_snapshot() {
+        WorkflowActiveRegistry reg = new WorkflowActiveRegistry();
+        UUID cid = UUID.randomUUID();
+        reg.start(snap(cid, UUID.randomUUID(), "IMPORT"));
+        reg.setRecordsTotal(cid, 4200L);
+        assertEquals(4200L, reg.find(cid).orElseThrow().recordsTotal());
+    }
+
+    @Test
+    void setRecordsTotal_on_unknown_id_is_a_noop() {
+        WorkflowActiveRegistry reg = new WorkflowActiveRegistry();
+        assertDoesNotThrow(() -> reg.setRecordsTotal(UUID.randomUUID(), 100L));
+    }
+
+    // =========================================================================
+    //  Cascade listener – onChunkStart / onChunkProgress / onChunkEnd
+    // =========================================================================
+
+    @Test
+    void onChunkStart_creates_running_chunk() {
+        WorkflowActiveRegistry reg = new WorkflowActiveRegistry();
+        UUID cid = UUID.randomUUID();
+        reg.start(snap(cid, UUID.randomUUID(), "IMPORT"));
+
+        WorkflowEvents.ChunkStartEvent event = mock(WorkflowEvents.ChunkStartEvent.class);
+        when(event.correlationId()).thenReturn(cid.toString());
+        when(event.chunkIndex()).thenReturn(0);
+        when(event.recordsExpected()).thenReturn(100L);
+        when(event.workerName()).thenReturn("worker-1");
+        when(event.startTime()).thenReturn(Instant.now());
+        reg.onChunkStart(event);
+
+        List<ChunkSnapshot> chunks = reg.find(cid).orElseThrow().chunks();
+        assertEquals(1, chunks.size());
+        assertEquals("RUNNING", chunks.get(0).status());
+        assertEquals(0, chunks.get(0).chunkIndex());
+    }
+
+    @Test
+    void onChunkStart_invalid_uuid_is_noop() {
+        WorkflowActiveRegistry reg = new WorkflowActiveRegistry();
+        WorkflowEvents.ChunkStartEvent event = mock(WorkflowEvents.ChunkStartEvent.class);
+        when(event.correlationId()).thenReturn("not-a-uuid");
+        assertDoesNotThrow(() -> reg.onChunkStart(event));
+    }
+
+    @Test
+    void onChunkProgress_updates_processed_count() {
+        WorkflowActiveRegistry reg = new WorkflowActiveRegistry();
+        UUID cid = UUID.randomUUID();
+        reg.start(snap(cid, UUID.randomUUID(), "IMPORT"));
+
+        WorkflowEvents.ChunkStartEvent start = mock(WorkflowEvents.ChunkStartEvent.class);
+        when(start.correlationId()).thenReturn(cid.toString());
+        when(start.chunkIndex()).thenReturn(0);
+        when(start.recordsExpected()).thenReturn(200L);
+        when(start.workerName()).thenReturn("w");
+        when(start.startTime()).thenReturn(Instant.now());
+        reg.onChunkStart(start);
+
+        WorkflowEvents.ChunkProgressEvent prog = mock(WorkflowEvents.ChunkProgressEvent.class);
+        when(prog.correlationId()).thenReturn(cid.toString());
+        when(prog.chunkIndex()).thenReturn(0);
+        when(prog.totalProcessedSoFar()).thenReturn(75L);
+        reg.onChunkProgress(prog);
+
+        assertEquals(75L, reg.find(cid).orElseThrow().chunks().get(0).recordsProcessed());
+    }
+
+    @Test
+    void onChunkProgress_on_unknown_workflow_is_noop() {
+        WorkflowActiveRegistry reg = new WorkflowActiveRegistry();
+        WorkflowEvents.ChunkProgressEvent prog = mock(WorkflowEvents.ChunkProgressEvent.class);
+        when(prog.correlationId()).thenReturn(UUID.randomUUID().toString());
+        when(prog.chunkIndex()).thenReturn(0);
+        when(prog.totalProcessedSoFar()).thenReturn(1L);
+        assertDoesNotThrow(() -> reg.onChunkProgress(prog));
+    }
+
+    @Test
+    void onChunkEnd_marks_chunk_completed() {
+        WorkflowActiveRegistry reg = new WorkflowActiveRegistry();
+        UUID cid = UUID.randomUUID();
+        reg.start(snap(cid, UUID.randomUUID(), "IMPORT"));
+
+        WorkflowEvents.ChunkStartEvent start = mock(WorkflowEvents.ChunkStartEvent.class);
+        when(start.correlationId()).thenReturn(cid.toString());
+        when(start.chunkIndex()).thenReturn(0);
+        when(start.recordsExpected()).thenReturn(10L);
+        when(start.workerName()).thenReturn("w");
+        when(start.startTime()).thenReturn(Instant.now());
+        reg.onChunkStart(start);
+
+        WorkflowEvents.ChunkEndEvent end = mock(WorkflowEvents.ChunkEndEvent.class);
+        when(end.correlationId()).thenReturn(cid.toString());
+        when(end.chunkIndex()).thenReturn(0);
+        when(end.status()).thenReturn(ProcessingStatus.SUCCESS);
+        when(end.recordsProcessed()).thenReturn(10L);
+        when(end.endTime()).thenReturn(Instant.now());
+        when(end.errorMessage()).thenReturn(null);
+        reg.onChunkEnd(end);
+
+        assertEquals("COMPLETED", reg.find(cid).orElseThrow().chunks().get(0).status());
+    }
+
+    @Test
+    void onChunkEnd_failed_chunk_has_failed_status() {
+        WorkflowActiveRegistry reg = new WorkflowActiveRegistry();
+        UUID cid = UUID.randomUUID();
+        reg.start(snap(cid, UUID.randomUUID(), "IMPORT"));
+
+        WorkflowEvents.ChunkStartEvent start = mock(WorkflowEvents.ChunkStartEvent.class);
+        when(start.correlationId()).thenReturn(cid.toString());
+        when(start.chunkIndex()).thenReturn(0);
+        when(start.recordsExpected()).thenReturn(10L);
+        when(start.workerName()).thenReturn("w");
+        when(start.startTime()).thenReturn(Instant.now());
+        reg.onChunkStart(start);
+
+        WorkflowEvents.ChunkEndEvent end = mock(WorkflowEvents.ChunkEndEvent.class);
+        when(end.correlationId()).thenReturn(cid.toString());
+        when(end.chunkIndex()).thenReturn(0);
+        when(end.status()).thenReturn(ProcessingStatus.FAILED);
+        when(end.recordsProcessed()).thenReturn(5L);
+        when(end.endTime()).thenReturn(Instant.now());
+        when(end.errorMessage()).thenReturn("something went wrong");
+        reg.onChunkEnd(end);
+
+        ChunkSnapshot chunk = reg.find(cid).orElseThrow().chunks().get(0);
+        assertEquals("FAILED", chunk.status());
+        assertEquals("something went wrong", chunk.errorMessage());
+    }
+
+    // =========================================================================
+    //  ChunkSnapshot - helpers
+    // =========================================================================
+
+    @Test
+    void chunkSnapshot_progressPercentage_null_when_total_zero() {
+        ChunkSnapshot cs = new ChunkSnapshot(0, "RUNNING", 0L, 0L, "w",
+                Instant.now(), null, null);
+        assertNull(cs.progressPercentage());
+    }
+
+    @Test
+    void chunkSnapshot_progressPercentage_capped_at_100() {
+        ChunkSnapshot cs = new ChunkSnapshot(0, "RUNNING", 300L, 100L, "w",
+                Instant.now(), null, null);
+        assertEquals(100.0, cs.progressPercentage());
+    }
+
+    @Test
+    void chunkSnapshot_progressPercentage_calculation() {
+        ChunkSnapshot cs = new ChunkSnapshot(0, "RUNNING", 25L, 100L, "w",
+                Instant.now(), null, null);
+        assertEquals(25.0, cs.progressPercentage());
     }
 }

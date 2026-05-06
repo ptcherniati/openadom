@@ -1,0 +1,176 @@
+package fr.inra.oresing.persistence;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Tag;
+
+/**
+ * Tests unitaires des types légers du package persistence.
+ * Aucun contexte Spring.
+ */
+@DisplayName("Persistence lightweight types")
+@Tag("core.config")
+class PersistenceLightweightTypesTest {
+
+    // ---------------------------------------------------------
+    // SqlPrimitiveType
+    // ---------------------------------------------------------
+
+    @Nested
+    @DisplayName("SqlPrimitiveType enum")
+    class SqlPrimitiveTypeTest {
+
+        @Test
+        void allValues() {
+            assertThat(SqlPrimitiveType.values()).containsExactlyInAnyOrder(
+                    SqlPrimitiveType.UUID, SqlPrimitiveType.LTREE, SqlPrimitiveType.TEXT,
+                    SqlPrimitiveType.INTEGER, SqlPrimitiveType.NUMERIC,
+                    SqlPrimitiveType.COMPOSITE_DATE, SqlPrimitiveType.BOOLEAN,
+                    SqlPrimitiveType.JSONB);
+        }
+
+        @Test
+        void getSqlReturnsName() {
+            for (SqlPrimitiveType type : SqlPrimitiveType.values()) {
+                assertThat(type.getSql()).isEqualTo(type.name());
+            }
+        }
+
+        @Test
+        void isEmptyStringValidValueOnlyForTextAndLtree() {
+            assertThat(SqlPrimitiveType.TEXT.isEmptyStringValidValue()).isTrue();
+            assertThat(SqlPrimitiveType.LTREE.isEmptyStringValidValue()).isTrue();
+            assertThat(SqlPrimitiveType.UUID.isEmptyStringValidValue()).isFalse();
+            assertThat(SqlPrimitiveType.INTEGER.isEmptyStringValidValue()).isFalse();
+            assertThat(SqlPrimitiveType.BOOLEAN.isEmptyStringValidValue()).isFalse();
+            assertThat(SqlPrimitiveType.JSONB.isEmptyStringValidValue()).isFalse();
+        }
+    }
+
+    // ---------------------------------------------------------
+    // OperationReferenceType
+    // ---------------------------------------------------------
+
+    @Nested
+    @DisplayName("OperationReferenceType enum")
+    class OperationReferenceTypeTest {
+
+        @Test
+        void allValues() {
+            assertThat(OperationReferenceType.values())
+                    .containsExactlyInAnyOrder(
+                            OperationReferenceType.admin,
+                            OperationReferenceType.manage);
+        }
+
+        @Test
+        void authorizationColumnsDescriptionNotNull() {
+            for (OperationReferenceType t : OperationReferenceType.values()) {
+                assertThat(t.getAuthorizationColumnsDescription())
+                        .as("authorizationColumnsDescription de %s", t.name())
+                        .isNotNull();
+            }
+        }
+    }
+
+    // ---------------------------------------------------------
+    // OperationAdditionalFileType
+    // ---------------------------------------------------------
+
+    @Nested
+    @DisplayName("OperationAdditionalFileType enum")
+    class OperationAdditionalFileTypeTest {
+
+        @Test
+        void allValues() {
+            assertThat(OperationAdditionalFileType.values())
+                    .containsExactlyInAnyOrder(
+                            OperationAdditionalFileType.admin,
+                            OperationAdditionalFileType.delete,
+                            OperationAdditionalFileType.depot,
+                            OperationAdditionalFileType.extraction);
+        }
+
+        @Test
+        void authorizationColumnsDescriptionNotNull() {
+            for (OperationAdditionalFileType t : OperationAdditionalFileType.values()) {
+                assertThat(t.getAuthorizationColumnsDescription())
+                        .as("authorizationColumnsDescription de %s", t.name())
+                        .isNotNull();
+            }
+        }
+    }
+
+    // ---------------------------------------------------------
+    // FilterList
+    // ---------------------------------------------------------
+
+    @Nested
+    @DisplayName("FilterList record")
+    class FilterListTest {
+
+        @Test
+        void recordAccessors() {
+            FilterList fl = new FilterList("myList", List.of());
+            assertThat(fl.listName()).isEqualTo("myList");
+            assertThat(fl.refsLinkeds()).isEmpty();
+        }
+
+        @Test
+        void nullRefsLinkeds() {
+            FilterList fl = new FilterList("x", null);
+            assertThat(fl.listName()).isEqualTo("x");
+            assertThat(fl.refsLinkeds()).isNull();
+        }
+    }
+
+    // ---------------------------------------------------------
+    // Uniqueness
+    // ---------------------------------------------------------
+
+    @Nested
+    @DisplayName("Uniqueness (HashMap extension)")
+    class UniquenessTest {
+
+        @Test
+        void defaultConstructorCreatesEmptyMap() {
+            Uniqueness u = new Uniqueness();
+            assertThat(u).isEmpty();
+        }
+
+        @Test
+        void canStoreAndRetrieveEntries() {
+            Uniqueness u = new Uniqueness();
+            u.put("key1", List.of("a", "b"));
+            assertThat(u.get("key1")).containsExactly("a", "b");
+        }
+    }
+
+    // ---------------------------------------------------------
+    // DataRepository.Order
+    // ---------------------------------------------------------
+
+    @Nested
+    @DisplayName("DataRepository.Order enum")
+    class DataRepositoryOrderTest {
+
+        @Test
+        void allValues() {
+            assertThat(DataRepository.Order.values())
+                    .containsExactlyInAnyOrder(
+                            DataRepository.Order.ASC,
+                            DataRepository.Order.DESC);
+        }
+
+        @Test
+        void valueOf() {
+            assertThat(DataRepository.Order.valueOf("ASC"))
+                    .isEqualTo(DataRepository.Order.ASC);
+        }
+    }
+}

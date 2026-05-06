@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.util.*;
 
 @Slf4j
+@org.junit.jupiter.api.Tag("domain.model")
 class DownloadDatasetQueryTest {
     public static final long OFFSET = 6L;
     public static final long LIMIT = 10L;
