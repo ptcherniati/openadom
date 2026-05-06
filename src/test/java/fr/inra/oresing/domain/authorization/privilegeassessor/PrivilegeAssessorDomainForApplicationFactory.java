@@ -136,6 +136,18 @@ public class PrivilegeAssessorDomainForApplicationFactory {
                             .build())
             .build();
 
+    /**
+     * PrivilegeAssessorDomainForApplication avec le rôle "writer" dans la liste des rôles.
+     * Permet de valider que forDataReadSome() accepte un utilisateur ayant le rôle "writer".
+     * (La logique inspecte authorizations().roles().contains("writer"))
+     */
+    public static final PrivilegeAssessorDomainForApplication DATA_WRITER_WITH_WRITER_ROLE = builder()
+            .withAuthorizations(
+                    AuthorizationsForApplicationUserFactory.builder()
+                            .withRoles(List.of("writer"))
+                            .build())
+            .build();
+
     // Initialisation des constantes nécessitant des mocks
     static {
         // Initialisation de DATA_READER

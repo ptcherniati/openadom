@@ -3,6 +3,7 @@ package fr.inra.oresing.rest.authentication.evaluator;
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.domain.authorization.privilegeassessor.PrivilegeAssessorDomainForApplication;
 import fr.inra.oresing.domain.authorization.privilegeassessor.PrivilegeAssessorDomainForSystem;
+
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.domain.services.authorization.AuthorizationService;
@@ -450,7 +451,8 @@ class ApplicationPermissionEvaluatorTest {
                                         .thenReturn((ApplicationDataWriter) getOrCreateApplicationPersona("ApplicationPublishWriter"));
                                 break;
                             default:
-                                // Autres domaines application : aucun setup spécifique nécessaire
+                                // DATA_ACCESS, ADDITIONAL_FILE_MANAGEMENT, AUTHORIZATION_MANAGEMENT,
+                                // RIGHTS_REQUEST_MANAGEMENT : aucun setup spécifique pour les tests actuels
                                 break;
                         }
 

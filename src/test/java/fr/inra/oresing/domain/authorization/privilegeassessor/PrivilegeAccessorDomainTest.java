@@ -5,8 +5,8 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DynamicNode;
-import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.TestFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,8 +22,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
-@DisplayName("Tests organisés des méthodes de PrivilegeAssessorDomainForApplication")
 @Tag("core.auth")
+@DisplayName("Tests organisés des méthodes de PrivilegeAssessorDomainForApplication")
 public class PrivilegeAccessorDomainTest {
     /**
      * Définition des méthodes à tester avec leurs assessors autorisés et non autorisés
@@ -222,6 +222,76 @@ public class PrivilegeAccessorDomainTest {
                                 DATA_DELETE_WITHOUT_REPOSITORY,
                                 USER_MANAGER
                         )
+                ),
+
+                // Test pour forDeleteAuthorization — declenché par APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_DELETE
+                new MethodeApplicationInfo(
+                        "forDeleteAuthorization",
+                        "Suppression d'une autorisation",
+                        assessor -> ((PrivilegeAssessorDomainForApplication) assessor).forDeleteAuthorization(),
+                        ApplicationAdminUser.class,
+                        NotApplicationManagerRightsException.class,
+                        List.of(
+                                USER_MANAGER_FOR_ADD_AUTHORIZATION,
+                                APPLICATION_MANAGER,
+                                APPLICATION_MANAGER_FOR_ADMIN,
+                                APPLICATION_MANAGER_FOR_UPDATE,
+                                APPLICATION_MANAGER_FOR_DELETE_AUTHORIZATION
+                        ),
+                        List.of(
+                                USER_MANAGER,
+                                DATA_READER,
+                                DATA_DEPOSIT_WRITER,
+                                DATA_PUBLISH_WRITER,
+                                DATA_DELETE_WITH_REPOSITORY,
+                                DATA_DELETE_WITHOUT_REPOSITORY,
+                                NO_RIGHTS
+                        )
+                ),
+
+                // Test pour forDataReadSome — déclenché par APPLICATION_DATA_READ_SOME
+                // Accepte : isApplicationManager OU isUserManager OU roles.contains("writer")
+                new MethodeApplicationInfo(
+                        "forDataReadSome",
+                        "Lecture partielle des données",
+                        assessor -> ((PrivilegeAssessorDomainForApplication) assessor).forDataReadSome(),
+                        ApplicationDataReaderUser.class,
+                        NotApplicationDataReaderException.class,
+                        List.of(
+                                APPLICATION_MANAGER,
+                                USER_MANAGER,
+                                USER_MANAGER_FOR_ADD_AUTHORIZATION,
+                                DATA_WRITER_WITH_WRITER_ROLE
+                        ),
+                        List.of(
+                                DATA_READER,   // extraction seulement, pas de rôle "writer"
+                                NO_RIGHTS
+                        )
+                ),
+
+                // Test pour forDownloadBundle — déclenché par APPLICATION_DATA_DOWNLOAD_BUNDLE
+                new MethodeApplicationInfo(
+                        "forDownloadBundle",
+                        "Téléchargement du bundle complet",
+                        assessor -> ((PrivilegeAssessorDomainForApplication) assessor).forDownloadBundle(),
+                        ApplicationAdminUser.class,
+                        NotApplicationManagerRightsException.class,
+                        List.of(
+                                USER_MANAGER_FOR_ADD_AUTHORIZATION,
+                                APPLICATION_MANAGER,
+                                APPLICATION_MANAGER_FOR_ADMIN,
+                                APPLICATION_MANAGER_FOR_UPDATE,
+                                APPLICATION_MANAGER_FOR_DELETE_AUTHORIZATION
+                        ),
+                        List.of(
+                                USER_MANAGER,
+                                DATA_READER,
+                                DATA_DEPOSIT_WRITER,
+                                DATA_PUBLISH_WRITER,
+                                DATA_DELETE_WITH_REPOSITORY,
+                                DATA_DELETE_WITHOUT_REPOSITORY,
+                                NO_RIGHTS
+                        )
                 )
         );
     }
@@ -256,6 +326,8 @@ public class PrivilegeAccessorDomainTest {
             return "APPLICATION_MANAGER_FOR_DELETE_AUTHORIZATION";
         } else if (assessor == USER_MANAGER_FOR_MANAGE_AUTHORIZATIONS) {
             return "USER_MANAGER_FOR_MANAGE_AUTHORIZATIONS";
+        } else if (assessor == DATA_WRITER_WITH_WRITER_ROLE) {
+            return "DATA_WRITER_WITH_WRITER_ROLE";
         } else if (assessor == OPENADOM_ADMIN) {
             return "OPENADOM_ADMIN";
         } else if (assessor == APPLICATION_CREATOR) {
@@ -353,6 +425,7 @@ public class PrivilegeAccessorDomainTest {
         allAssessors.add(DATA_PUBLISH_WRITER);
         allAssessors.add(DATA_DELETE_WITH_REPOSITORY);
         allAssessors.add(DATA_DELETE_WITHOUT_REPOSITORY);
+        allAssessors.add(DATA_WRITER_WITH_WRITER_ROLE);
         allAssessors.add(NO_RIGHTS);
 
         return allAssessors.stream()
@@ -461,6 +534,7 @@ public class PrivilegeAccessorDomainTest {
                 DATA_DEPOSIT_WRITER,
                 DATA_PUBLISH_WRITER,
                 APPLICATION_MANAGER_FOR_UPDATE,
+                DATA_WRITER_WITH_WRITER_ROLE,
                 NO_RIGHTS
         );
 
