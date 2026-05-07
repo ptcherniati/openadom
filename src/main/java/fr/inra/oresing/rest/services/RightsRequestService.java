@@ -11,6 +11,9 @@ import fr.inra.oresing.mail.rightsrequest.RightsRequestNotificationService;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.RightsRequestRepository;
 import fr.inra.oresing.persistence.RightsRequestSearchHelper;
+import fr.inra.oresing.persistence.UserRepository;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
+import fr.inra.oresing.domain.rightsrequest.TreatmentDecision;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
@@ -18,6 +21,7 @@ import fr.inra.oresing.rest.model.rightsrequest.CreateRightsRequestRequest;
 import fr.inra.oresing.rest.model.rightsrequest.GetRightsRequestResult;
 import fr.inra.oresing.rest.model.rightsrequest.RightsRequestInfos;
 import fr.inra.oresing.rest.model.rightsrequest.RightsRequestResult;
+import fr.inra.oresing.rest.model.rightsrequest.TreatRightsRequestRequest;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -37,13 +41,16 @@ public class RightsRequestService {
 
     private final OreSiRepository repository;
     private final RightsRequestNotificationService notificationService;
+    private final UserRepository userRepository;
 
     public RightsRequestService(OreSiRepository repository,
                                 ServiceContainer serviceContainer,
-                                RightsRequestNotificationService notificationService) {
+                                RightsRequestNotificationService notificationService,
+                                UserRepository userRepository) {
         this.repository = repository;
         this.serviceContainer = serviceContainer;
         this.notificationService = notificationService;
+        this.userRepository = userRepository;
     }
 
     void addRightsRequest(final Application app, final String refType, final MultipartFile file, final UUID fileId) {
@@ -88,8 +95,47 @@ public class RightsRequestService {
                 authorizationsParsed);
         return new RightsRequestResult(
                 rightsRequest,
-                authorizationsParsed
+                authorizationsParsed,
+                resolveTreatedByLogin(rightsRequest.getTreatedBy()),
+                resolveUserEmail(rightsRequest.getUser())
         );
+    }
+
+    /**
+     * Résout l'email du demandeur ( affichage UI uniquement ). Renvoie
+     * {@code null} si l'utilisateur a été supprimé.
+     */
+    private String resolveUserEmail(final UUID userId) {
+        if (userId == null) {
+            return null;
+        }
+        try {
+            return Optional.ofNullable(userRepository.findById(userId))
+                    .map(OreSiUser::getEmail)
+                    .orElse(null);
+        } catch (final Exception e) {
+            log.warn("Cannot resolve requester email for user {} : {}", userId, e.toString());
+            return null;
+        }
+    }
+
+    /**
+     * Résout le login du gestionnaire ayant traité une demande à partir de
+     * son UUID. Renvoie {@code null} si la demande n'a pas été traitée ou
+     * si l'utilisateur n'est plus en base ( cas de suppression ).
+     */
+    private String resolveTreatedByLogin(final UUID treatedBy) {
+        if (treatedBy == null) {
+            return null;
+        }
+        try {
+            return Optional.ofNullable(userRepository.findById(treatedBy))
+                    .map(OreSiUser::getLogin)
+                    .orElse(null);
+        } catch (final Exception e) {
+            log.warn("Cannot resolve treatedBy login for user {} : {}", treatedBy, e.toString());
+            return null;
+        }
     }
 
 
@@ -152,5 +198,85 @@ public class RightsRequestService {
         return storedRequestId;
     }
 
+    /**
+     * Marque une demande de droits comme traitée et associe le gestionnaire
+     * courant au traitement ( #487 Phase 3 ).
+     *
+     * <p>Périmètre actuel : on persiste uniquement le marqueur {@code setted}
+     * et l'identifiant du gestionnaire ; la {@code updateDate} est mise à
+     * jour automatiquement par le trigger SQL. L'attribution effective des
+     * autorisations sélectionnées et l'envoi du mail de notification au
+     * demandeur sont prévus dans une étape ultérieure.</p>
+     *
+     * @return la demande mise à jour, sérialisée pour l'affichage frontend
+     * @throws OreSiTechnicalException si la demande est introuvable
+     */
+    @Transactional()
+    public RightsRequestResult treat(final String nameOrId, final UUID requestId,
+                                     final TreatRightsRequestRequest body) {
+        serviceContainer.authenticationService().setRoleForClient();
+        final Application application = serviceContainer.applicationService()
+                .getApplicationOrApplicationAccordingToRights(nameOrId);
+        final RightsRequestRepository rightsRequestRepository = repository.getRepository(application).rightsRequestRepository();
 
+        final RightsRequest rightsRequest = Optional.ofNullable(rightsRequestRepository.findById(requestId))
+                .orElseThrow(() -> new OreSiTechnicalException(
+                        "Rights request " + requestId + " not found for application " + application.getName()));
+
+        // Verrou strict ( #487 ) : une demande deja traitee ne peut plus
+        // jamais etre re-validee, ni cote frontend ( icone oeil seulement ),
+        // ni cote API. Renvoi explicite plutot que de laisser passer un
+        // overwrite silencieux des champs treatmentDecision / treatedBy /
+        // updateDate, qui falsifierait l'audit.
+        if (rightsRequest.isSetted()) {
+            throw new OreSiTechnicalException(
+                    "Rights request " + requestId + " has already been treated and cannot be modified");
+        }
+
+        rightsRequest.setSetted(true);
+        final OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();
+        if (currentUser != null) {
+            rightsRequest.setTreatedBy(currentUser.getId());
+        }
+        // Décision normalisée + payload du traitement persistés tels quels :
+        // ils permettent au frontend de réafficher la page en consultation
+        // seule sans avoir à les recalculer.
+        final TreatmentDecision decision = TreatmentDecision.fromNullable(body.status());
+        rightsRequest.setTreatmentDecision(decision.name());
+        rightsRequest.setTreatmentComment(body.treatmentComment());
+        rightsRequest.setTreatmentMailSubject(body.suppressMail() ? null : body.mailSubject());
+        rightsRequest.setTreatmentMailBody(body.suppressMail() ? null : body.mailBody());
+        rightsRequest.setLinkedAuthorizationIds(
+                decision == TreatmentDecision.REJECTED || body.linkedAuthorizationIds() == null
+                        ? List.of()
+                        : List.copyOf(body.linkedAuthorizationIds()));
+        rightsRequestRepository.store(rightsRequest);
+        final RightsRequest updated = rightsRequestRepository.findById(requestId);
+
+        // Notifications fire-and-forget ( un échec n'invalide pas la
+        // persistance du traitement, cf. RightsRequestNotificationService ) :
+        //  - mail au demandeur ( contenu = texte saisi par le gestionnaire )
+        //  - mail à tous les applicationManager / userManager de l'application
+        //    ( template d'audit, traçabilité interne ).
+        // TODO Phase 4 : si decision == APPROVED, attribuer effectivement les
+        // autorisations listées dans body.linkedAuthorizationIds au demandeur.
+        try {
+            final OreSiUser requester = userRepository.findById(updated.getUser());
+            notificationService.notifyRequestTreated(
+                    application,
+                    requester,
+                    currentUser,
+                    decision,
+                    body.mailSubject(),
+                    body.mailBody(),
+                    body.suppressMail(),
+                    LocaleContextHolder.getLocale()
+            );
+        } catch (final Exception e) {
+            log.error("Treatment notification dispatch failed for requestId={} : {}",
+                    requestId, e.toString(), e);
+        }
+
+        return getRightsRequestResult(updated, application);
+    }
 }

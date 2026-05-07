@@ -87,7 +87,10 @@ public class RightsRequestRepository extends JsonTableInApplicationSchemaReposit
         return String.format("""
                         INSERT INTO %1$s AS t (
                             id, creationdate, updatedate, application, "user", comment,
-                            rightsRequestForm, rightsRequest, setted
+                            rightsRequestForm, rightsRequest, setted,
+                            treatedBy, treatmentDecision, treatmentComment,
+                            treatmentMailSubject, treatmentMailBody,
+                            linkedAuthorizationIds
                         )
                         SELECT
                             id,
@@ -98,14 +101,26 @@ public class RightsRequestRepository extends JsonTableInApplicationSchemaReposit
                             comment,
                             rightsRequestForm,
                             rightsRequest,
-                            COALESCE(setted, false)
+                            COALESCE(setted, false),
+                            treatedBy,
+                            treatmentDecision,
+                            treatmentComment,
+                            treatmentMailSubject,
+                            treatmentMailBody,
+                            linkedAuthorizationIds
                         FROM json_populate_recordset(NULL::%1$s, :json::json)
                         ON CONFLICT (id)
                         DO UPDATE SET
                             updatedate = current_timestamp,
-                            rightsRequestForm = EXCLUDED.rightsRequestForm,
-                            rightsRequest = EXCLUDED.rightsRequest,
-                            setted = EXCLUDED.setted
+                            rightsRequestForm       = EXCLUDED.rightsRequestForm,
+                            rightsRequest           = EXCLUDED.rightsRequest,
+                            setted                  = EXCLUDED.setted,
+                            treatedBy               = EXCLUDED.treatedBy,
+                            treatmentDecision       = EXCLUDED.treatmentDecision,
+                            treatmentComment        = EXCLUDED.treatmentComment,
+                            treatmentMailSubject    = EXCLUDED.treatmentMailSubject,
+                            treatmentMailBody       = EXCLUDED.treatmentMailBody,
+                            linkedAuthorizationIds  = EXCLUDED.linkedAuthorizationIds
                         RETURNING id
                         """,
                 getTable().getSqlIdentifier()
