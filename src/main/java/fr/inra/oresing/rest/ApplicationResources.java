@@ -10,6 +10,8 @@ import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.model.rightsrequest.CreateRightsRequestRequest;
 import fr.inra.oresing.rest.model.rightsrequest.GetRightsRequestResult;
 import fr.inra.oresing.rest.model.rightsrequest.RightsRequestInfos;
+import fr.inra.oresing.rest.model.rightsrequest.RightsRequestResult;
+import fr.inra.oresing.rest.model.rightsrequest.TreatRightsRequestRequest;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
 import fr.inra.oresing.rest.services.RelationalService;
@@ -229,5 +231,22 @@ public class ApplicationResources {
                                                  @RequestBody final CreateRightsRequestRequest createRightsRequestRequest) {
         final UUID fileUUID = createOrUpdateRightsRequestUseCase.execute(createRightsRequestRequest, nameOrId);
         return ResponseEntity.ok(fileUUID);
+    }
+
+    /**
+     * Validation du traitement d'une demande de droits par un gestionnaire
+     * de l'application ( #487 Phase 3 ). Marque la demande comme traitée
+     * ( {@code setted=true} ) et persiste l'identité du gestionnaire ainsi
+     * que la date de validation (auto via trigger {@code updateDate}).
+     */
+    @PreAuthorize("isAuthenticated()")
+    @PutMapping(value = "/{nameOrId}/rightsRequest/{requestId}/treat",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<RightsRequestResult> treatRightsRequest(
+            @PathVariable("nameOrId") final String nameOrId,
+            @PathVariable("requestId") final UUID requestId,
+            @RequestBody final TreatRightsRequestRequest body) {
+        final RightsRequestResult result = serviceContainer.rightsRequestService().treat(nameOrId, requestId, body);
+        return ResponseEntity.ok(result);
     }
 }
