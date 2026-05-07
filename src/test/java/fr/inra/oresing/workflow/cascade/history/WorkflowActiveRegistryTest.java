@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Tag;
 class WorkflowActiveRegistryTest {
 
     private static WorkflowSnapshot snap(UUID cid, UUID userId, String type) {
-        return new WorkflowSnapshot(
+        return WorkflowSnapshot.minimal(
                 cid, type, userId, "tester",
                 "app1", "type1", "file.csv",
                 Instant.now(), "IN_PROGRESS",
@@ -90,9 +90,9 @@ class WorkflowActiveRegistryTest {
         Instant older = Instant.now().minusSeconds(30);
         Instant newer = Instant.now();
 
-        reg.start(new WorkflowSnapshot(oldCid, "IMPORT", u, null, null, null, null,
+        reg.start(WorkflowSnapshot.minimal(oldCid, "IMPORT", u, null, null, null, null,
                 older, "IN_PROGRESS", 0, 0, 0, null, 0, 0, List.of(), List.of()));
-        reg.start(new WorkflowSnapshot(newCid, "IMPORT", u, null, null, null, null,
+        reg.start(WorkflowSnapshot.minimal(newCid, "IMPORT", u, null, null, null, null,
                 newer, "IN_PROGRESS", 0, 0, 0, null, 0, 0, List.of(), List.of()));
 
         List<WorkflowSnapshot> ordered = reg.list(null);

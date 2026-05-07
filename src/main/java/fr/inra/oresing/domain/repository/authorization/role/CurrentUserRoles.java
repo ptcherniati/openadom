@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 public record CurrentUserRoles(List<String> memberOf, boolean isDataBaseSuper, OreSiUser user) {
 
     public static final CurrentUserRoles EMPTY = new CurrentUserRoles(null, false, null);
+    /** Alias de {@link #EMPTY} pour la compatibilite des tests. */
+    public static final CurrentUserRoles EMPTY_INSTANCE = EMPTY;
 
 
     public CurrentUserRoles(

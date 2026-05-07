@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest.security;
 
+import fr.inra.oresing.monitoring.session.JwtBlacklistRegistry;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
@@ -49,6 +50,8 @@ class AuthorizationFilterSecurityContextTest {
     private JWTExtractor jwtExtractor;
     @Mock
     private OreExceptionHandler exceptionHandler;
+    @Mock
+    private JwtBlacklistRegistry jwtBlacklist;
 
     private JsonRowMapper<?> realMapper;
     private AuthorizationFilter filter;
@@ -56,7 +59,7 @@ class AuthorizationFilterSecurityContextTest {
     @BeforeEach
     void setUp() {
         realMapper = new JsonRowMapper<>();
-        filter = new AuthorizationFilter(serviceContainer, realMapper, jwtExtractor, exceptionHandler);
+        filter = new AuthorizationFilter(serviceContainer, realMapper, jwtExtractor, exceptionHandler, jwtBlacklist);
         // Nettoyer le SecurityContextHolder entre les tests
         SecurityContextHolder.clearContext();
         // Nettoyer le thread-local OreSiApiRequestContext

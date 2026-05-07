@@ -67,7 +67,7 @@ class DashboardServiceTest {
     }
 
     private static WorkflowSnapshot buildSnapshot(UUID correlationId, UUID userId) {
-        return new WorkflowSnapshot(
+        return WorkflowSnapshot.minimal(
                 correlationId,
                 "IMPORT",
                 userId,

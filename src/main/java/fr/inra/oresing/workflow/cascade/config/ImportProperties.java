@@ -69,6 +69,12 @@ public class ImportProperties {
     private volatile int referenceCacheMaxEntries = 5000;
 
     /**
+     * Plafond du cache Axe B (Groovy expression results) par instance.
+     * Surcharger via CASCADE_IMPORT_GROOVY_CACHE_MAX_ENTRIES.
+     */
+    private volatile int groovyCacheMaxEntries = 1000;
+
+    /**
      * Active le mode « récursion ordonnée » globalement : les parents sont garantis
      * d'apparaître <em>avant</em> leurs enfants dans le CSV récursif.
      * En mode ordonné, un parent introuvable génère une erreur immédiate au lieu
@@ -205,6 +211,7 @@ public class ImportProperties {
     public boolean isSkipCsvReencoding() { return skipCsvReencoding; }
     public int getFinalizeStatementTimeoutMinutes() { return finalizeStatementTimeoutMinutes; }
     public int getReferenceCacheMaxEntries()  { return referenceCacheMaxEntries; }
+    public int getGroovyCacheMaxEntries()     { return groovyCacheMaxEntries; }
     public boolean isOrderedRecursionMode()   { return orderedRecursionMode; }
 
     public void setChunkSizeLines(int v)      { this.chunkSizeLines = v; }
@@ -225,5 +232,6 @@ public class ImportProperties {
     public void setSkipCsvReencoding(boolean v) { this.skipCsvReencoding = v; }
     public void setFinalizeStatementTimeoutMinutes(int v) { this.finalizeStatementTimeoutMinutes = v; }
     public void setReferenceCacheMaxEntries(int v) { this.referenceCacheMaxEntries = v; }
+    public void setGroovyCacheMaxEntries(int v)  { this.groovyCacheMaxEntries = v; }
     public void setOrderedRecursionMode(boolean v) { this.orderedRecursionMode = v; }
 }

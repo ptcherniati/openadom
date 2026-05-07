@@ -28,6 +28,11 @@ public class AdditionalFilesInfos {
     //@ApiModelProperty(notes = "The number of files to return ", required = false)
     Long limit; // default "ALL"
 
+
+    /** Alias de {@link #getAdditionalFilesInfos()} pour la compatibilite des tests. */
+    public Map<String, AdditionalFileInfos> getInfosByFileName() {
+        return additionalFilesInfos;
+    }
     @Getter
     @Setter
     public static class AdditionalFileInfos {

@@ -88,7 +88,7 @@ class WorkflowHistoryRecordsTest {
     class WorkflowSnapshotTest {
 
         private WorkflowSnapshot snapshot() {
-            return new WorkflowSnapshot(
+            return WorkflowSnapshot.minimal(
                     UUID.randomUUID(), "IMPORT", UUID.randomUUID(), "user1",
                     "myapp", "taxon", "data.csv",
                     Instant.now().minusSeconds(10),
@@ -213,7 +213,7 @@ class WorkflowHistoryRecordsTest {
             UUID corrId = UUID.randomUUID();
             UUID userId = UUID.randomUUID();
             Instant start = Instant.now().minusSeconds(60);
-            WorkflowSnapshot s = new WorkflowSnapshot(
+            WorkflowSnapshot s = WorkflowSnapshot.minimal(
                     corrId, "IMPORT", userId, "bob",
                     "myapp", "site", "sites.csv",
                     start, "PROCESSING",
@@ -240,7 +240,7 @@ class WorkflowHistoryRecordsTest {
         void fromSnapshotWithChunks() {
             ChunkSnapshot c = new ChunkSnapshot(0, "COMPLETED", 100, 100,
                     "w0", Instant.now().minusSeconds(5), Instant.now(), null);
-            WorkflowSnapshot s = new WorkflowSnapshot(
+            WorkflowSnapshot s = WorkflowSnapshot.minimal(
                     UUID.randomUUID(), "IMPORT", UUID.randomUUID(), "u",
                     "a", "t", "f.csv", Instant.now().minusSeconds(10),
                     "LOADING_DB", 100, 0, 1, 1.0, 0L, 100L,

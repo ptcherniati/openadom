@@ -85,6 +85,26 @@ public record WorkflowSnapshot(
          */
         Instant lastHeartbeatAt) {
 
+    /**
+     * Factory method de compatibilite pour les tests portés depuis Refactoring_deposit.
+     * Crée un WorkflowSnapshot minimal (17 champs) en mettant les nouveaux champs à null/vide.
+     */
+    public static WorkflowSnapshot minimal(
+            UUID correlationId, String workflowType, UUID userId, String userLogin,
+            String applicationName, String dataType, String resourceName,
+            Instant startTime, String status,
+            long recordsProcessed, long recordsFailed, int chunksProcessed,
+            Double progressPercentage, long bytesTotal, long recordsTotal,
+            List<String> errors, List<ChunkSnapshot> chunks) {
+        return new WorkflowSnapshot(
+                correlationId, workflowType, userId, userLogin,
+                applicationName, dataType, resourceName, startTime, status,
+                recordsProcessed, recordsFailed, chunksProcessed,
+                progressPercentage, bytesTotal, recordsTotal,
+                errors, chunks, List.of(),
+                null, null, List.of(), null, null);
+    }
+
     /** Convenience helper : time elapsed since start in milliseconds. */
     public long elapsedMillis(Instant now) {
         return now.toEpochMilli() - startTime.toEpochMilli();
