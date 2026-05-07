@@ -39,6 +39,7 @@ import fr.inra.oresing.rest.model.authorization.request.AuthorizationRequestBuil
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.MultiValueMap;
 
 import java.sql.Timestamp;
 import java.util.*;
@@ -628,8 +629,21 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
                 )
                 .map(oreSiAuthorization -> toGetAdditionalFilesAuthorizationResult(oreSiAuthorization, publicAuthorizations, authorizationsForUser))
                 .collect(ImmutableSet.toImmutableSet());
-    }*/
+    }
 
+    private GetAuthorizationAdditionalFilesResult toGetAdditionalFilesAuthorizationResult(
+            final OreSiAdditionalFileAuthorization oreSiAuthorization,
+            final List<OreSiAdditionalFileAuthorization> publicAuthorizations,
+            final AuthorizationsAdditionalFilesResult authorizationsForUser) {
+        final List<OreSiUser> all = userRepository.findAll();
+        return new GetAuthorizationAdditionalFilesResult(
+                oreSiAuthorization.getId(),
+                oreSiAuthorization.getName(),
+                getOreSIUSers(all, oreSiAuthorization.getOreSiUsers()),
+                oreSiAuthorization.getApplication(),
+                oreSiAuthorization.getAdditionalFiles()
+        );
+    }
     public ImmutableSortedSet<GetGrantableResult.User> getGrantableUsers() {
         return userRepository.findAll().stream()
                 .map(oreSiUserEntity -> new GetGrantableResult.User(oreSiUserEntity.getId(), oreSiUserEntity.getLogin()))
