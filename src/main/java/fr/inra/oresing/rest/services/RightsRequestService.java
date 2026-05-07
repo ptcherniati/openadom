@@ -2,10 +2,12 @@ package fr.inra.oresing.rest.services;
 
 import com.google.common.collect.ImmutableSortedSet;
 import fr.inra.oresing.domain.OreSiAuthorization;
+import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.RightRequestDescription;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.rightsrequest.RightsRequest;
+import fr.inra.oresing.mail.rightsrequest.RightsRequestNotificationService;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.RightsRequestRepository;
 import fr.inra.oresing.persistence.RightsRequestSearchHelper;
@@ -18,6 +20,7 @@ import fr.inra.oresing.rest.model.rightsrequest.RightsRequestInfos;
 import fr.inra.oresing.rest.model.rightsrequest.RightsRequestResult;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,11 +36,14 @@ public class RightsRequestService {
     private ServiceContainer serviceContainer;
 
     private final OreSiRepository repository;
+    private final RightsRequestNotificationService notificationService;
 
     public RightsRequestService(OreSiRepository repository,
-                                ServiceContainer serviceContainer) {
+                                ServiceContainer serviceContainer,
+                                RightsRequestNotificationService notificationService) {
         this.repository = repository;
         this.serviceContainer = serviceContainer;
+        this.notificationService = notificationService;
     }
 
     void addRightsRequest(final Application app, final String refType, final MultipartFile file, final UUID fileId) {
@@ -123,7 +129,27 @@ public class RightsRequestService {
         rightsRequest.setUser(rightsRequest.getUser() == null ? OreSiApiRequestContext.getRequestUserId() : rightsRequest.getUser());
         rightsRequest.getRightsRequest().setOreSiUsers(Set.of(rightsRequest.getUser()));
         serviceContainer.authenticationService().setRoleForClient();
-        return repository.getRepository(application).rightsRequestRepository().store(rightsRequest);
+        final UUID storedRequestId = repository.getRepository(application).rightsRequestRepository().store(rightsRequest);
+
+        // #487 Phase 1 : notification du demandeur + des gestionnaires de l'application.
+        // Strict scope : seuls les applicationManager / userManager de cette application
+        // sont destinataires (cf. RightsRequestNotificationService). Fire-and-forget,
+        // toute erreur est journalisée mais ne fait pas échouer la création de la demande.
+        try {
+            final OreSiUser requester = serviceContainer.authenticationService().getCurrentUser();
+            notificationService.notifyRequestSubmitted(
+                    application,
+                    storedRequestId,
+                    requester,
+                    rightsRequest.getComment(),
+                    LocaleContextHolder.getLocale()
+            );
+        } catch (final Exception e) {
+            log.error("Rights request notification dispatch failed for requestId={} : {}",
+                    storedRequestId, e.toString(), e);
+        }
+
+        return storedRequestId;
     }
 
 

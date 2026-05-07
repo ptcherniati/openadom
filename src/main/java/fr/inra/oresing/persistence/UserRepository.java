@@ -97,6 +97,29 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
                 .collect(MoreCollectors.toOptional());
     }
 
+    /**
+     * Liste les utilisateurs OpenADOM membres directs du rôle Postgres donné.
+     * <p>
+     * La recherche est volontairement non récursive : seuls les utilisateurs dont
+     * l'UUID de login apparaît directement dans {@code pg_auth_members} pour le
+     * rôle cible sont retournés. Cela garantit un cadrage strict lorsque le rôle
+     * cible est spécifique à une application (ex. {@code <appUuid>_applicationManager}) :
+     * les gestionnaires d'autres applications et les héritages comme
+     * {@code openAdomAdmin} ne sont pas inclus.
+     */
+    public List<OreSiUser> findUsersGrantedRole(final String roleName) {
+        final String query = """
+                SELECT '%1$s' as "@class", to_jsonb(t) as json
+                FROM %2$s t
+                JOIN pg_roles user_role ON user_role.rolname = t.id::text
+                JOIN pg_auth_members m ON m.member = user_role.oid
+                JOIN pg_roles target_role ON target_role.oid = m.roleid
+                WHERE target_role.rolname = :roleName
+                """.formatted(getEntityClass().getName(), getTable().getSqlIdentifier());
+        return getNamedParameterJdbcTemplate().query(query,
+                new MapSqlParameterSource("roleName", roleName), getJsonRowMapper());
+    }
+
     public Map<String, List<String>> getRolesGrantedToRoles(List<String> roles) {
         Map<String, List<String>> result = new HashMap<>();
 
