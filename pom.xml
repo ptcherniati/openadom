@@ -61,7 +61,7 @@
 
         <sonar.organization>openadom</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-        <sonar.projectKey>openadom_openadom</sonar.projectKey>
+        <sonar.projectKey>openadom_si-ore-ng</sonar.projectKey>
 
         <!-- license to use  -->
         <license.licenseName>lgpl_v3</license.licenseName>
