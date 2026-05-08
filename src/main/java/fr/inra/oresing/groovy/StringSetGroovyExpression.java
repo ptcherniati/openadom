@@ -27,11 +27,11 @@ public class StringSetGroovyExpression implements Expression<Set<String>> {
             return null;
         } else if (evaluation instanceof String) {
             return Collections.singleton((String) evaluation);
-        } else if (evaluation instanceof Iterable) {
+        } else if (evaluation instanceof Iterable<?>) {
             Set<String> result = new LinkedHashSet<>();
-            for (Object unknownElement : (Iterable) evaluation) {
+            for (Object unknownElement : (Iterable<?>) evaluation) {
                 if (unknownElement instanceof String) {
-                    result.add((String) evaluation);
+                    result.add((String) unknownElement);
                 } else if (unknownElement instanceof Number) {
                     result.add(unknownElement.toString());
                 } else {
