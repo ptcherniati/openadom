@@ -1080,7 +1080,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
      * pour alimenter la dropdown du frontend ( cf. {@link ColumnDistinctValues} ).
      *
      * <p>Une requête par colonne ; le résultat est mis en cache au niveau du
-     * datatype par {@code DataService.filterListAsJson} ( cache déjà présent
+     * datatype par {@code DataService.getFilterListResult} ( cache déjà présent
      * pour les FilterList , même politique d'invalidation ).
      *
      * <p><b>Multiplicité</b> :
@@ -1161,7 +1161,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
      * <p>Le surcoût par rapport à un simple {@code EXISTS} reste très
      * faible : {@code DISTINCT ... LIMIT 2} sort dès le second row trouvé.
      * Le résultat est mis en cache au niveau du datatype par
-     * {@code DataService.filterListAsJson} ( cache déjà existant ).
+     * {@code DataService.getFilterListResult} ( cache déjà existant ).
      *
      * @param dataName     nom du datatype ( = referenceType en base )
      * @param componentKey clé de la colonne à interroger

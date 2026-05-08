@@ -1007,29 +1007,48 @@ private PlatformTransactionManager transactionManager;
     // Mémoire utilisée :
     //   - Pour un jeu de 105K lignes : le résultat fait ~1.7 MB de JSON
     //   - 50 entrées max = ~85 MB worst case ( en pratique beaucoup moins )
-    private record FilterListCacheEntry(String json, long timestamp) {}
+    private record FilterListCacheEntry(String json, String etag, long timestamp) {}
+
+    /**
+     * Résultat public exposé par {@link #getFilterListResult} : JSON sérialisé
+     * + ETag stable ( hash SHA-256 du JSON , tronqué 64 bits ). L'ETag est
+     * recalculé une seule fois à l'écriture cache et réutilisé tel quel à
+     * chaque hit , de sorte que le coût HTTP/304 côté serveur soit borné à
+     * une comparaison de String.
+     */
+    public record FilterListResult(String json, String etag) {}
+
     private static final java.util.concurrent.ConcurrentHashMap<String, FilterListCacheEntry> filterListCache = new java.util.concurrent.ConcurrentHashMap<>();
     private static final int FILTER_LIST_CACHE_MAX_ENTRIES = 50;
     private static final ObjectMapper cacheObjectMapper = new ObjectMapper();
 
     /**
-     * Retourne le JSON sérialisé des filtres, depuis le cache si disponible.
-     * Si le cache est vide (premier appel ou après refresh=true), exécute la requête SQL,
-     * sérialise le résultat en JSON, et le stocke en cache pour les appels suivants.
+     * Retourne le JSON sérialisé des filtres + son ETag stable , depuis le
+     * cache si disponible. Si le cache est vide ( premier appel ou après
+     * refresh=true ) , exécute la requête SQL , sérialise le résultat en
+     * JSON , calcule l'ETag une fois pour toutes et stocke en cache.
      *
-     * @return le JSON sérialisé prêt à être retourné directement par le endpoint, ou null si aucune donnée
+     * <p>L'ETag permet au endpoint d'honorer {@code If-None-Match} et de
+     * répondre {@code 304 Not Modified} quand le payload n'a pas changé
+     * depuis la dernière réponse vue par le browser ( évite le retransfert
+     * de ~1.7 MB pour les datasets volumineux ).
+     *
+     * @return le JSON + ETag prêts à être retournés directement par le
+     *         endpoint
      */
-    public String filterListAsJson(final Application application, final String refType) {
+    public FilterListResult getFilterListResult(final Application application, final String refType) {
         String cacheKey = application.getName() + "::" + refType;
 
         // Cache désactivé via openadom.cache.filter-list.enabled : on bypass
         // intégralement ( pas de lecture cache, pas d'écriture cache ). Utile
         // pour debug stale-data ou benchmarking comparatif des temps SQL.
+        // L'ETag reste calculé pour préserver la sémantique HTTP côté browser.
         if (!filterListCacheEnabled) {
             log.debug("filterList cache disabled, computing directly for {}", cacheKey);
             List<FilterListEntry> entries = computeFilterListEntries(application, refType);
             try {
-                return cacheObjectMapper.writeValueAsString(entries);
+                String json = cacheObjectMapper.writeValueAsString(entries);
+                return new FilterListResult(json, computeEtag(json));
             } catch (Exception e) {
                 throw new RuntimeException("Failed to serialize filterList JSON for " + cacheKey, e);
             }
@@ -1037,16 +1056,39 @@ private PlatformTransactionManager transactionManager;
 
         FilterListCacheEntry cached = filterListCache.get(cacheKey);
 
-        // Cache hit : retourner le JSON déjà sérialisé (0ms, pas de re-sérialisation Jackson)
+        // Cache hit : retourner le JSON déjà sérialisé + ETag stocké (0ms)
         if (cached != null) {
             log.debug("filterList cache hit for {}", cacheKey);
-            return cached.json();
+            return new FilterListResult(cached.json(), cached.etag());
         }
 
-        // Cache miss : exécuter la requête SQL, sérialiser en JSON, et stocker
+        // Cache miss : exécuter la requête SQL , sérialiser , stocker.
         log.info("filterList cache miss for {}, loading from database", cacheKey);
         List<FilterListEntry> entries = computeFilterListEntries(application, refType);
-        return serializeAndCache(cacheKey, entries);
+        FilterListCacheEntry stored = serializeAndCache(cacheKey, entries);
+        return new FilterListResult(stored.json(), stored.etag());
+    }
+
+    /**
+     * Calcule un ETag stable à partir du JSON cached. SHA-256 tronqué 64 bits
+     * ( 16 hex chars ) suffit largement pour distinguer les variantes de
+     * payload sans collision pratique ; ETag faible ( {@code W/"…"} ) , la
+     * comparaison byte-à-byte n'étant pas requise pour notre besoin.
+     */
+    private static String computeEtag(String json) {
+        try {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(json.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder(20).append("W/\"");
+            for (int i = 0; i < 8; i++) {
+                sb.append(String.format("%02x", hash[i]));
+            }
+            return sb.append('"').toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            // SHA-256 fait partie du JDK standard ; cette branche est
+            // morte sur toute JVM HotSpot / OpenJDK.
+            throw new IllegalStateException("SHA-256 indisponible", e);
+        }
     }
 
     /**
@@ -1110,9 +1152,12 @@ private PlatformTransactionManager transactionManager;
     }
 
     /**
-     * Sérialise la liste d'entrées en JSON et la stocke dans le cache.
+     * Sérialise la liste d'entrées en JSON , calcule l'ETag stable et stocke
+     * le tout dans le cache. Retourne l'entrée pour que les callers ( hit
+     * miss ou refresh asynchrone ) puissent renvoyer JSON + ETag sans aller
+     * relire le cache.
      */
-    private String serializeAndCache(String cacheKey, List<FilterListEntry> list) {
+    private FilterListCacheEntry serializeAndCache(String cacheKey, List<FilterListEntry> list) {
         try {
             String json = cacheObjectMapper.writeValueAsString(list);
             if (filterListCache.size() >= FILTER_LIST_CACHE_MAX_ENTRIES) {
@@ -1120,11 +1165,12 @@ private PlatformTransactionManager transactionManager;
                         .min(java.util.Comparator.comparingLong(e -> e.getValue().timestamp()))
                         .ifPresent(oldest -> filterListCache.remove(oldest.getKey()));
             }
-            filterListCache.put(cacheKey, new FilterListCacheEntry(json, System.currentTimeMillis()));
-            return json;
+            FilterListCacheEntry entry = new FilterListCacheEntry(json, computeEtag(json), System.currentTimeMillis());
+            filterListCache.put(cacheKey, entry);
+            return entry;
         } catch (Exception e) {
             log.error("Failed to serialize filterList for {}", cacheKey, e);
-            return "[]";
+            return new FilterListCacheEntry("[]", computeEtag("[]"), System.currentTimeMillis());
         }
     }
 

@@ -1168,15 +1168,41 @@ public class OreSiResources {
     public ResponseEntity<String> getDataFilters(
             @PathVariable("nameOrId") final String nameOrId,
             @PathVariable("dataType") final String dataName,
-            @RequestParam(defaultValue = "false") boolean refresh) {
+            @RequestParam(defaultValue = "false") boolean refresh,
+            @RequestHeader(value = HttpHeaders.IF_NONE_MATCH, required = false) final String ifNoneMatch) {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
-        // Si refresh=true, on invalide le cache pour forcer un rechargement depuis la base
+        // Si refresh=true , on invalide le cache pour forcer un rechargement depuis la base.
+        // L'ETag change après recompute car le payload a changé , donc 304 sera systématiquement
+        // évité au prochain hit ( comportement attendu d'un refresh manuel ).
         if (refresh) {
             serviceContainer.dataService().invalidateFilterListCache(application, dataName);
         }
-        // Retourne le JSON sérialisé directement depuis le cache (pas de re-sérialisation Jackson)
-        String json = serviceContainer.dataService().filterListAsJson(application, dataName);
-        return okResponse(json);
+        // Récupère JSON + ETag : sur cache hit , les deux sont stockés côte
+        // à côte ( pas de recomputation hash à chaque hit ).
+        fr.inra.oresing.rest.data.DataService.FilterListResult result =
+                serviceContainer.dataService().getFilterListResult(application, dataName);
+        // PERF audit (8/5/26) - HTTP 304 si le browser détient déjà cette
+        // version. Évite le retransfert de ~1.7 MB sur les datasets riches
+        // ( ACBB ) : Tomcat répond ~30 ms sans body au lieu de 1-3 s avec gzip.
+        //
+        // Cache-Control : "no-cache , must-revalidate , private" - le browser
+        // STOCKE la réponse ( contrairement à no-store ) , mais doit la
+        // revalider via If-None-Match à chaque navigation. private = pas de
+        // CDN / proxy cache ( payload contient des données métier protégées
+        // par ACL ). Sans ce header , Spring Security applique son default
+        // "no-store" qui empêche le browser de garder l'ETag.
+        org.springframework.http.CacheControl cacheControl =
+                org.springframework.http.CacheControl.noCache().mustRevalidate().cachePrivate();
+        if (result.etag().equals(ifNoneMatch)) {
+            return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
+                    .eTag(result.etag())
+                    .cacheControl(cacheControl)
+                    .build();
+        }
+        return ResponseEntity.ok()
+                .eTag(result.etag())
+                .cacheControl(cacheControl)
+                .body(result.json());
     }
 
     /**
