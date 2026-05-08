@@ -1,6 +1,7 @@
 package fr.inra.oresing.monitoring.session;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -9,6 +10,9 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+@Tag("domain.model")
+@DisplayName("UserSessionRegistry")
 
 /**
  * Unit tests pour {@link UserSessionRegistry} ( in-memory ) .
@@ -120,5 +124,45 @@ class UserSessionRegistryTest {
         assertEquals(finished.sessionId(), entry.sessionId());
         assertEquals(SessionInfo.END_LOGOUT, entry.endReason());
         assertTrue(entry.durationMs() >= 0);
+    }
+
+    @Test
+    @DisplayName("finish(null) retourne empty Optional")
+    void finishNullSessionId() {
+        UserSessionRegistry reg = new UserSessionRegistry();
+        assertTrue(reg.finish(null, SessionInfo.END_LOGOUT, Instant.now()).isEmpty());
+    }
+
+    @Test
+    @DisplayName("find(unknown) retourne empty Optional")
+    void findUnknownSession() {
+        UserSessionRegistry reg = new UserSessionRegistry();
+        assertTrue(reg.find(UUID.randomUUID()).isEmpty());
+    }
+
+    @Test
+    @DisplayName("listAll inclut actives + terminées")
+    void listAllIncludesBoth() {
+        UserSessionRegistry reg = new UserSessionRegistry();
+        Instant t0 = Instant.now();
+        SessionInfo s1 = session(UUID.randomUUID(), "a", t0, Duration.ofMinutes(30));
+        SessionInfo s2 = session(UUID.randomUUID(), "b", t0, Duration.ofMinutes(30));
+        reg.start(s1);
+        reg.start(s2);
+        reg.finish(s1.sessionId(), SessionInfo.END_LOGOUT, t0.plusSeconds(10));
+
+        List<SessionInfo> all = reg.listAll(t0.plusSeconds(20));
+        assertEquals(2, all.size());
+    }
+
+    @Test
+    @DisplayName("size() retourne le nombre total d'entrées y compris terminées")
+    void sizeIncludesAll() {
+        UserSessionRegistry reg = new UserSessionRegistry();
+        assertEquals(0, reg.size());
+        Instant t0 = Instant.now();
+        reg.start(session(UUID.randomUUID(), "a", t0, Duration.ofMinutes(30)));
+        reg.start(session(UUID.randomUUID(), "b", t0, Duration.ofMinutes(30)));
+        assertEquals(2, reg.size());
     }
 }
