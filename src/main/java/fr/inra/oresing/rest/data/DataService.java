@@ -420,6 +420,24 @@ public class DataService {
         return getReferenceValueRepository(application).buildReferenceSynthesis();
     }
 
+    /**
+     * Délègue à {@link DataRepository#findLastReferencevalueCountStatsUpdate()}.
+     * Utilisé par {@code ApplicationResources.getReferencevalueCountStatsInfo}
+     * pour afficher la date du dernier recompute côté frontend.
+     */
+    public java.util.Optional<java.time.Instant> findLastReferencevalueCountStatsUpdate(final Application application) {
+        return getReferenceValueRepository(application).findLastReferencevalueCountStatsUpdate();
+    }
+
+    /**
+     * Délègue à {@link DataRepository#recomputeReferencevalueCountStats()}.
+     * Utilisé par l'endpoint admin
+     * {@code POST /applications/{name}/admin/recompute-referencevalue-count-stats}.
+     */
+    public java.time.Instant recomputeReferencevalueCountStats(final Application application) {
+        return getReferenceValueRepository(application).recomputeReferencevalueCountStats();
+    }
+
     public Boolean getDataFromStoredCsvStream(
             Manifest manifest,
             Path tempZipDirectory,

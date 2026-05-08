@@ -59,6 +59,15 @@ public class AuthenticationResources {
     @Value("${jwt.expiration:3600}")
     private int jwtExpirationSeconds;
 
+    // Audit OA_FULL_REVIEW (8/5/26) - exposé au frontend pour afficher le
+    // mode actif du compteur de lignes par référencetype dans l'onglet
+    // "Gestion de l'application" ( bouton Recompute ). Si false, les
+    // valeurs sont calculées via SELECT count(*) GROUP BY direct ( mode
+    // dégradé pour debug/benchmark ) et le bouton Recompute n'a pas de
+    // sens ( il sera masqué ou désactivé côté frontend ).
+    @Value("${openadom.referencevalue.count.use-stats-table:true}")
+    private boolean referencevalueCountUseStatsTable;
+
     public AuthenticationResources(AuthenticationService authenticationService,
                                    JWTExtractor jwtExtractor,
                                    UserSessionRegistry sessionRegistry,
@@ -77,7 +86,10 @@ public class AuthenticationResources {
             tags = {"Authentication"})
     @GetMapping(value = "/session/config", produces = MediaType.APPLICATION_JSON_VALUE)
     public Map<String, Object> sessionConfig() {
-        return Map.of("jwtExpirationSeconds", jwtExpirationSeconds);
+        return Map.of(
+                "jwtExpirationSeconds", jwtExpirationSeconds,
+                "referencevalueCountUseStatsTable", referencevalueCountUseStatsTable
+        );
     }
 
     @Operation(

@@ -22,8 +22,10 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.postgresql.PGConnection;
 import org.postgresql.copy.CopyManager;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -54,6 +56,21 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     public static final String REF_TYPE = "refType";
     public static final String[] ORDERED_COLUMNS = new String[]{"id", "patternColumnName", "application", "ReferenceType", "hierarchicalKey", "naturalKey", "refsLinkedTo", "refValues", "binaryFile", "\"authorization\""};
     public static final int PIPE_SIZE = 65536;
+
+    /**
+     * Lecture du compteur via la table de stats {@code referencevalue_count_stats}
+     * ( maintenue par triggers AFTER INSERT/DELETE statement-level , cf.
+     * migration application/V5__referencevalue_count_stats.sql ) plutot que
+     * par un {@code SELECT count(*) GROUP BY referencetype} sur la table
+     * source ( ~12s sur 10M rows , 2-5 min sur 200M ).
+     *
+     * <p>Defaut {@code true}. Pour debug ou benchmark , passer a {@code false}
+     * via la propriete {@code openadom.referencevalue.count.use-stats-table}
+     * ou la variable d'environnement {@code OPENADOM_REFERENCEVALUE_COUNT_USE_STATS_TABLE}
+     * pour forcer le COUNT direct ( cf. {@link #buildReferenceSynthesis} ).</p>
+     */
+    @Value("${openadom.referencevalue.count.use-stats-table:true}")
+    private boolean useReferencevalueCountStatsTable;
 
     public DataRepository(final Application application) {
         super(application);
@@ -629,6 +646,51 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     }
 
     public List<ApplicationResult.DataSynthesis> buildReferenceSynthesis() {
+        if (useReferencevalueCountStatsTable) {
+            try {
+                return readSynthesisFromStatsTable();
+            } catch (final BadSqlGrammarException tableMissing) {
+                // Migration V5 pas encore appliquee sur ce schema ( cas d'un
+                // upgrade sur une instance ou Flyway n'a pas encore tourne ,
+                // ou app cree avant la livraison de la table de stats ).
+                // Fallback automatique sur le COUNT direct pour ne pas casser
+                // l'endpoint pendant la fenetre de migration.
+                log.info("referencevalue_count_stats absente sur {}, fallback COUNT direct ( applicable jusqu'a la prochaine migration Flyway )",
+                        getTable().schema().getSqlIdentifier());
+                return readSynthesisFromDirectCount();
+            }
+        }
+        return readSynthesisFromDirectCount();
+    }
+
+    /**
+     * Lecture rapide depuis la table de stats maintenue par triggers
+     * statement-level ( cf. migration V5 ). Lookup PRIMARY KEY <1ms quel
+     * que soit le volume de la table source {@code referencevalue}.
+     */
+    private List<ApplicationResult.DataSynthesis> readSynthesisFromStatsTable() {
+        final String query = String.format("""
+                        SELECT
+                            referencetype AS ReferenceType,
+                            line_count AS lineCount
+                        FROM %s.referencevalue_count_stats
+                        """,
+                getTable().schema().getSqlIdentifier()
+        );
+        return getNamedParameterJdbcTemplate().query(
+                query,
+                Map.of(),
+                BeanPropertyRowMapper.newInstance(ApplicationResult.DataSynthesis.class)
+        );
+    }
+
+    /**
+     * Mode legacy : COUNT(*) GROUP BY direct sur la table source.
+     * Conserve comme fallback ( table de stats absente ) et activable
+     * explicitement pour debug / benchmark via la propriete
+     * {@code openadom.referencevalue.count.use-stats-table=false}.
+     */
+    private List<ApplicationResult.DataSynthesis> readSynthesisFromDirectCount() {
         final String query = String.format("""
                         SELECT
                             ReferenceType AS ReferenceType,
@@ -643,6 +705,57 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 Map.of(),
                 BeanPropertyRowMapper.newInstance(ApplicationResult.DataSynthesis.class)
         );
+    }
+
+    /**
+     * Renvoie l'horodatage du dernier rafraichissement de la table de stats
+     * pour cette application , ou {@code Optional.empty()} si la table est
+     * absente ou vide. Affiche cote frontend a cote du bouton "Recompute"
+     * pour informer l'admin de la fraicheur du compteur.
+     */
+    public java.util.Optional<java.time.Instant> findLastReferencevalueCountStatsUpdate() {
+        final String query = String.format(
+                "SELECT MAX(updated_at) FROM %s.referencevalue_count_stats",
+                getTable().schema().getSqlIdentifier()
+        );
+        try {
+            final java.sql.Timestamp ts = getNamedParameterJdbcTemplate()
+                    .queryForObject(query, Map.of(), java.sql.Timestamp.class);
+            return java.util.Optional.ofNullable(ts).map(java.sql.Timestamp::toInstant);
+        } catch (final BadSqlGrammarException tableMissing) {
+            return java.util.Optional.empty();
+        }
+    }
+
+    /**
+     * Reconstruit integralement la table de stats depuis l'etat actuel de
+     * {@code referencevalue}. A appeler depuis l'endpoint admin
+     * {@code POST /api/v1/admin/applications/{name}/recompute-stats} pour
+     * resync explicite apres une dérive ( DELETE pgAdmin , restore partiel ,
+     * UPDATE de referencetype , etc. ).
+     *
+     * <p>Cout : 1 SELECT GROUP BY sur la table source ( meme cout que le
+     * COUNT direct legacy , execute uniquement a la demande de l'admin ).
+     * Sur 200M rows ACBB : 2-5 min - acceptable car declenche manuellement.</p>
+     *
+     * @return l'horodatage de la nouvelle ligne updated_at
+     */
+    public java.time.Instant recomputeReferencevalueCountStats() {
+        final String schema = getTable().schema().getSqlIdentifier();
+        final String source = getTable().getSqlIdentifier();
+        // TRUNCATE + INSERT dans une seule transaction pour atomicite :
+        // pendant la duree du recompute , les lectures voient soit l'ancien
+        // etat ( si la transaction n'est pas encore committee ) soit le
+        // nouveau. Pas d'etat intermediaire incoherent visible.
+        getNamedParameterJdbcTemplate().getJdbcTemplate().execute(
+                "TRUNCATE TABLE " + schema + ".referencevalue_count_stats");
+        getNamedParameterJdbcTemplate().getJdbcTemplate().execute(String.format("""
+                INSERT INTO %1$s.referencevalue_count_stats (referencetype, line_count, updated_at)
+                SELECT referencetype, count(*), now()
+                FROM %2$s
+                GROUP BY referencetype
+                """, schema, source));
+        return findLastReferencevalueCountStatsUpdate().orElse(java.time.Instant.now());
     }
 
     public void updateConstraintForeignReferences(final List<UUID> uuids) {

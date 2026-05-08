@@ -249,4 +249,55 @@ public class ApplicationResources {
         final RightsRequestResult result = serviceContainer.rightsRequestService().treat(nameOrId, requestId, body);
         return ResponseEntity.ok(result);
     }
+
+    /**
+     * Renvoie l'horodatage du dernier rafraichissement de la table de stats
+     * {@code referencevalue_count_stats} pour cette application , ou
+     * {@code lastUpdated=null} si la table est absente / vide.
+     *
+     * <p>Affiche cote frontend dans l'onglet "Gestion de l'application"
+     * a cote du bouton "Recompute exact" pour informer l'admin de la
+     * fraicheur du compteur.</p>
+     */
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
+    @GetMapping(value = "/{nameOrId}/admin/referencevalue-count-stats-info",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<java.util.Map<String, Object>> getReferencevalueCountStatsInfo(
+            @PathVariable("nameOrId") final String nameOrId) {
+        final Application application = serviceContainer.applicationService()
+                .getApplicationOrApplicationAccordingToRights(nameOrId);
+        final java.util.Optional<java.time.Instant> lastUpdated = serviceContainer.dataService()
+                .findLastReferencevalueCountStatsUpdate(application);
+        return ResponseEntity.ok(java.util.Map.of(
+                "applicationName", application.getName(),
+                "lastUpdated", lastUpdated.map(java.time.Instant::toString).orElse(null)
+        ));
+    }
+
+    /**
+     * Reconstruit integralement la table de stats des compteurs par
+     * referencetype pour cette application.
+     *
+     * <p>Coût : 1 SELECT GROUP BY sur la table source ( ~12s sur 10M
+     * rows actuels , 2-5 min sur 200M rows cibles ). Reserve aux
+     * gestionnaires d'application , a declencher manuellement apres
+     * une dérive ( DELETE pgAdmin , restore partiel , UPDATE ad-hoc
+     * de referencetype ). Le fonctionnement nominal repose sur les
+     * triggers AFTER INSERT/DELETE qui maintiennent la table en
+     * temps reel ; ce bouton est un garde-fou.</p>
+     */
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
+    @PostMapping(value = "/{nameOrId}/admin/recompute-referencevalue-count-stats",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<java.util.Map<String, Object>> recomputeReferencevalueCountStats(
+            @PathVariable("nameOrId") final String nameOrId) {
+        final Application application = serviceContainer.applicationService()
+                .getApplicationOrApplicationAccordingToRights(nameOrId);
+        final java.time.Instant updatedAt = serviceContainer.dataService()
+                .recomputeReferencevalueCountStats(application);
+        return ResponseEntity.ok(java.util.Map.of(
+                "applicationName", application.getName(),
+                "lastUpdated", updatedAt.toString()
+        ));
+    }
 }
