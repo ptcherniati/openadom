@@ -173,4 +173,59 @@ class PersistenceLightweightTypesTest {
                     .isEqualTo(DataRepository.Order.ASC);
         }
     }
+
+    // ---------------------------------------------------------
+    // OreSiSqlSchema
+    // ---------------------------------------------------------
+
+    @Nested
+    @DisplayName("OreSiSqlSchema enum")
+    class OreSiSqlSchemaTest {
+
+        @Test
+        void singleValueMain() {
+            assertThat(OreSiSqlSchema.values()).containsExactly(OreSiSqlSchema.MAIN);
+        }
+
+        @Test
+        void getNameReturnsPublic() {
+            assertThat(OreSiSqlSchema.MAIN.getName()).isEqualTo("public");
+        }
+
+        @Test
+        void applicationFactoryMethod() {
+            assertThat(OreSiSqlSchema.application()).isNotNull();
+            assertThat(OreSiSqlSchema.application().name()).isEqualTo("application");
+        }
+
+        @Test
+        void binaryFileFactoryMethod() {
+            assertThat(OreSiSqlSchema.binaryFile(OreSiSqlSchema.MAIN)).isNotNull();
+            assertThat(OreSiSqlSchema.binaryFile(OreSiSqlSchema.MAIN).name()).isEqualTo("binaryfile");
+        }
+
+        @Test
+        void referenceValueFactoryMethod() {
+            assertThat(OreSiSqlSchema.referencevalue(OreSiSqlSchema.MAIN)).isNotNull();
+            assertThat(OreSiSqlSchema.referencevalue(OreSiSqlSchema.MAIN).name()).isEqualTo("referencevalue");
+        }
+
+        @Test
+        void authorizationFactoryMethod() {
+            assertThat(OreSiSqlSchema.authorization(OreSiSqlSchema.MAIN)).isNotNull();
+            assertThat(OreSiSqlSchema.authorization(OreSiSqlSchema.MAIN).name()).isEqualTo("oresiauthorization");
+        }
+
+        @Test
+        void oreSiUserFactoryMethod() {
+            assertThat(OreSiSqlSchema.oreSiUser()).isNotNull();
+            assertThat(OreSiSqlSchema.oreSiUser().name()).isEqualTo("oreSiUser");
+        }
+
+        @Test
+        void getSqlIdentifierReturnsName() {
+            // "public" ne contient pas d'espaces ni de tirets → pas d'échappement
+            assertThat(OreSiSqlSchema.MAIN.getSqlIdentifier()).isEqualTo("public");
+        }
+    }
 }
