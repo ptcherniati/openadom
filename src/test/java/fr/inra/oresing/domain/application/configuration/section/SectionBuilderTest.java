@@ -103,4 +103,44 @@ class SectionBuilderTest {
             Assertions.assertNotNull(SectionType.UNDEFINED);
         }
     }
+
+    // ─── Section records ─────────────────────────────────────────────────────
+
+    @org.junit.jupiter.api.Nested
+    @org.junit.jupiter.api.DisplayName("Section sealed interface")
+    class SectionTest {
+
+        private final LabelDescription ld = new LabelDescription("myLabel", new StringType("x"));
+
+        @Test
+        @org.junit.jupiter.api.DisplayName("MandatorySection.buildInstance() crée une section required")
+        void mandatorySectionBuildInstance() {
+            Section.MandatorySection section = Section.MandatorySection.buildInstance(ld);
+            Assertions.assertEquals("myLabel", section.label());
+            Assertions.assertTrue(section.required());
+        }
+
+        @Test
+        @org.junit.jupiter.api.DisplayName("OptionalSection.buildInstance() crée une section non required")
+        void optionalSectionBuildInstance() {
+            Section.OptionalSection section = Section.OptionalSection.buildInstance(ld);
+            Assertions.assertEquals("myLabel", section.label());
+            Assertions.assertFalse(section.required());
+        }
+
+        @Test
+        @org.junit.jupiter.api.DisplayName("AnyOfMandatorySection.buildInstance() crée une section anyOf")
+        void anyOfMandatorySectionBuildInstance() {
+            Section.AnyOfMandatorySection section = Section.AnyOfMandatorySection.buildInstance(ld);
+            Assertions.assertEquals("myLabel", section.label());
+        }
+
+        @Test
+        @org.junit.jupiter.api.DisplayName("matches() retourne true si les labels sont identiques")
+        void matchesReturnsTrueForSameLabel() {
+            Section.MandatorySection section = Section.MandatorySection.buildInstance(ld);
+            Assertions.assertTrue(section.matches("myLabel"));
+            Assertions.assertFalse(section.matches("other"));
+        }
+    }
 }
