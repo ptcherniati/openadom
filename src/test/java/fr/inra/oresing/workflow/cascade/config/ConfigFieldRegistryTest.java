@@ -2,6 +2,7 @@ package fr.inra.oresing.workflow.cascade.config;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.EnumMap;
@@ -10,6 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("domain.model")
 @DisplayName("ConfigFieldRegistry")
 class ConfigFieldRegistryTest {
 
@@ -117,6 +119,27 @@ class ConfigFieldRegistryTest {
         // value should be reflected via getter on next snapshot
         Object v = registry.snapshot().get("rateLimit.import.maxConcurrentPerUser");
         assertEquals(25, v);
+    }
+
+    @Test
+    @DisplayName("find() returns present Optional for known field")
+    void findKnownField() {
+        var opt = registry.find("chunkSizeLines");
+        assertTrue(opt.isPresent());
+        assertEquals("chunkSizeLines", opt.get().name());
+    }
+
+    @Test
+    @DisplayName("find() returns empty Optional for unknown field")
+    void findUnknownField() {
+        var opt = registry.find("does.not.exist");
+        assertFalse(opt.isPresent());
+    }
+
+    @Test
+    @DisplayName("size() retourne au moins le nombre de champs attendus")
+    void sizeAtLeastMinFields() {
+        assertTrue(registry.size() > 10, "Expected more than 10 fields, got " + registry.size());
     }
 
     @Test

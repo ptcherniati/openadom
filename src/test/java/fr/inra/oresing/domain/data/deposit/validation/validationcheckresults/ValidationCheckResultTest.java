@@ -116,4 +116,65 @@ class ValidationCheckResultTest {
             assertThat(result.value()).isSameAs(pt);
         }
     }
+
+    // =========================================================================
+    //  DefaultManyValidationCheckResult
+    // =========================================================================
+
+    @Nested
+    @DisplayName("DefaultManyValidationCheckResult")
+    class DefaultManyValidationCheckResultTest {
+
+        @Test
+        @DisplayName("level() est ERROR si au moins un élément est ERROR")
+        void levelIsErrorWhenAnyError() {
+            StringValidationCheckResult ok = StringValidationCheckResult.success(
+                    TARGET_COL, StringType.getStringTypeFromStringValue("v"));
+            StringValidationCheckResult err = StringValidationCheckResult.error(
+                    TARGET_COL, "err_msg", ImmutableMap.of());
+            DefaultManyValidationCheckResult result = new DefaultManyValidationCheckResult(
+                    java.util.List.of(ok, err), TARGET_COL);
+            assertThat(result.level()).isEqualTo(ValidationLevel.ERROR);
+        }
+
+        @Test
+        @DisplayName("level() est SUCCESS si tous sont SUCCESS")
+        void levelIsSuccessWhenAllSuccess() {
+            StringValidationCheckResult ok1 = StringValidationCheckResult.success(
+                    TARGET_COL, StringType.getStringTypeFromStringValue("a"));
+            StringValidationCheckResult ok2 = StringValidationCheckResult.success(
+                    TARGET_COL, StringType.getStringTypeFromStringValue("b"));
+            DefaultManyValidationCheckResult result = new DefaultManyValidationCheckResult(
+                    java.util.List.of(ok1, ok2), TARGET_COL);
+            assertThat(result.level()).isEqualTo(ValidationLevel.SUCCESS);
+        }
+
+        @Test
+        @DisplayName("message() concatène les messages avec ';'")
+        void messageConcatenates() {
+            StringValidationCheckResult e1 = StringValidationCheckResult.error(
+                    TARGET_COL, "msg1", ImmutableMap.of());
+            StringValidationCheckResult e2 = StringValidationCheckResult.error(
+                    TARGET_COL, "msg2", ImmutableMap.of());
+            DefaultManyValidationCheckResult result = new DefaultManyValidationCheckResult(
+                    java.util.List.of(e1, e2), TARGET_COL);
+            assertThat(result.message()).contains("msg1").contains("msg2");
+        }
+
+        @Test
+        @DisplayName("target() retourne la cible passée au constructeur")
+        void targetIsCorrect() {
+            DefaultManyValidationCheckResult result = new DefaultManyValidationCheckResult(
+                    java.util.List.of(), TARGET_COL);
+            assertThat(result.target()).isEqualTo(TARGET_COL);
+        }
+
+        @Test
+        @DisplayName("getValidations() retourne this")
+        void getValidationsReturnsSelf() {
+            DefaultManyValidationCheckResult result = new DefaultManyValidationCheckResult(
+                    java.util.List.of(), TARGET_COL);
+            assertThat(result.getValidations()).isSameAs(result);
+        }
+    }
 }

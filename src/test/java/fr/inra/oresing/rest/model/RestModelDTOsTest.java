@@ -1,7 +1,11 @@
 package fr.inra.oresing.rest.model;
 
+import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.OreSiUser;
+import fr.inra.oresing.persistence.BinaryFileInfos;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
+import fr.inra.oresing.rest.model.data.BinaryFileDatasetResult;
+import fr.inra.oresing.rest.model.data.BinaryFileInfosResult;
 import fr.inra.oresing.rest.model.data.DataRowResult;
 import fr.inra.oresing.rest.model.data.UserDescriptionResult;
 import fr.inra.oresing.rest.model.reference.GetReferenceResult;
@@ -9,6 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -164,6 +169,122 @@ class RestModelDTOsTest {
             OreSiUser user = new OreSiUser();
             user.setAccountstate(OreSiUser.OreSiUserStates.active);
             assertThat(user.getAccountstate()).isEqualTo(OreSiUser.OreSiUserStates.active);
+        }
+    }
+
+    // ---------------------------------------------------------
+    // BinaryFileDatasetResult
+    // ---------------------------------------------------------
+
+    @Nested
+    @DisplayName("BinaryFileDatasetResult")
+    class BinaryFileDatasetResultTest {
+
+        @Test
+        @DisplayName("of() mappe correctement les champs depuis BinaryFileDataset")
+        void ofMapsFields() {
+            BinaryFileDataset dataset = new BinaryFileDataset();
+            dataset.setDatatype("mytype");
+            dataset.setFrom("2024-01-01");
+            dataset.setTo("2024-12-31");
+            BinaryFileDatasetResult result = BinaryFileDatasetResult.of(dataset);
+            assertThat(result.datatype()).isEqualTo("mytype");
+            assertThat(result.from()).isEqualTo("2024-01-01");
+            assertThat(result.to()).isEqualTo("2024-12-31");
+            assertThat(result.requiredAuthorizations()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("of() avec requiredAuthorizations converties en SQL string")
+        void ofConvertsLtreeAuthorizations() {
+            BinaryFileDataset dataset = new BinaryFileDataset();
+            dataset.setDatatype("dt");
+            dataset.setRequiredAuthorizations(Map.of(
+                    "ref1", List.of(fr.inra.oresing.domain.application.configuration.Ltree.fromSql("a.b"))
+            ));
+            BinaryFileDatasetResult result = BinaryFileDatasetResult.of(dataset);
+            assertThat(result.requiredAuthorizations()).containsKey("ref1");
+            assertThat(result.requiredAuthorizations().get("ref1")).containsExactly("a.b");
+        }
+    }
+
+    // ---------------------------------------------------------
+    // BinaryFileInfosResult
+    // ---------------------------------------------------------
+
+    @Nested
+    @DisplayName("BinaryFileInfosResult")
+    class BinaryFileInfosResultTest {
+
+        @Test
+        @DisplayName("of() mappe correctement les champs depuis BinaryFileInfos")
+        void ofMapsFields() {
+            BinaryFileDataset dataset = new BinaryFileDataset();
+            dataset.setDatatype("dt");
+            BinaryFileInfos infos = new BinaryFileInfos(
+                    true, UUID.randomUUID(), "2024-06-01",
+                    UUID.randomUUID(), "2024-01-01", "my comment", dataset);
+            UUID creatorId = UUID.randomUUID();
+            UserDescriptionResult creator = new UserDescriptionResult(creatorId, "alice", "alice@example.com");
+            BinaryFileInfosResult result = BinaryFileInfosResult.of(infos, creator, null);
+            assertThat(result.published()).isTrue();
+            assertThat(result.comment()).isEqualTo("my comment");
+            assertThat(result.createdate()).isEqualTo("2024-01-01");
+            assertThat(result.createuser()).isEqualTo(creator);
+            assertThat(result.publisheduser()).isNull();
+            assertThat(result.binaryFileDataset()).isNotNull();
+        }
+    }
+
+    // ---------------------------------------------------------
+    // CurrentApplicationUserRolesResult
+    // ---------------------------------------------------------
+
+    @Nested
+    @DisplayName("CurrentApplicationUserRolesResult")
+    class CurrentApplicationUserRolesResultTest {
+
+        @Test
+        @DisplayName("of() mappe tous les champs depuis CurrentUserRoles")
+        void ofMapsFields() {
+            fr.inra.oresing.domain.OreSiUser user = new fr.inra.oresing.domain.OreSiUser();
+            user.setLogin("bob");
+            fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles roles =
+                    new fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles(
+                            List.of("role1"), false, user);
+            UUID appId = UUID.randomUUID();
+            fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult result =
+                    fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult.of(roles, appId);
+            assertThat(result.userId()).isEqualTo(user.getId());
+            assertThat(result.userLogin()).isEqualTo("bob");
+            assertThat(result.isDataBaseSuper()).isFalse();
+            assertThat(result.memberOf()).containsExactly("role1");
+        }
+
+        @Test
+        @DisplayName("of() avec CurrentUserRoles.EMPTY est géré sans NPE")
+        void ofWithEmpty() {
+            UUID appId = UUID.randomUUID();
+            fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult result =
+                    fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult.of(
+                            fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles.EMPTY, appId);
+            assertThat(result.userLogin()).isNull();
+            assertThat(result.userId()).isNull();
+        }
+
+        @Test
+        @DisplayName("record equality")
+        void equality() {
+            fr.inra.oresing.domain.OreSiUser user = new fr.inra.oresing.domain.OreSiUser();
+            fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles roles =
+                    new fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles(
+                            List.of(), true, user);
+            UUID appId = UUID.randomUUID();
+            fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult a =
+                    fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult.of(roles, appId);
+            fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult b =
+                    fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult.of(roles, appId);
+            assertThat(a).isEqualTo(b);
         }
     }
 }

@@ -125,6 +125,60 @@ class OpenadomMetricsTest {
     // ------------------------------------------------------------------
 
     @Nested
+    @DisplayName("recordImportFailed")
+    class RecordImportFailed {
+
+        @Test
+        @DisplayName("alimente oa_import_failed_total avec les bons tags")
+        void incrementsFailedTotal() {
+            metrics.recordImportFailed("myApp", "dataX", "SINK",
+                    Duration.ofSeconds(2), 100L, 5L, 3, 1024L);
+
+            Counter c = registry.find("oa_import_failed_total")
+                    .tags("application", "myApp", "data_type", "dataX", "stage", "SINK")
+                    .counter();
+            assertThat(c).isNotNull();
+            assertThat(c.count()).isEqualTo(1.0);
+        }
+
+        @Test
+        @DisplayName("alimente aussi oa_import_total (via recordImportCompleted interne)")
+        void alsoIncrementsImportTotal() {
+            metrics.recordImportFailed("myApp", "dataX", "TRANSFORM",
+                    Duration.ofMillis(500), 50L, 2L, 1, 512L);
+
+            Counter total = registry.find("oa_import_total")
+                    .tags("application", "myApp", "data_type", "dataX", "status", "FAILED")
+                    .counter();
+            assertThat(total).isNotNull();
+            assertThat(total.count()).isEqualTo(1.0);
+        }
+
+        @Test
+        @DisplayName("application null → tag 'unknown'")
+        void nullApplicationFallsBack() {
+            assertThatCode(() -> metrics.recordImportFailed(
+                    null, "dt", "SOURCE", Duration.ZERO, 0L, 0L, 0, 0L))
+                    .doesNotThrowAnyException();
+
+            Counter c = registry.find("oa_import_failed_total")
+                    .tags("application", "unknown")
+                    .counter();
+            assertThat(c).isNotNull();
+        }
+
+        @Test
+        @DisplayName("failedStage null → tag 'unknown' sans exception")
+        void nullStageFallsBack() {
+            assertThatCode(() -> metrics.recordImportFailed(
+                    "app", "dt", null, Duration.ZERO, 0L, 0L, 0, 0L))
+                    .doesNotThrowAnyException();
+        }
+    }
+
+    // ------------------------------------------------------------------
+
+    @Nested
     @DisplayName("recordExtractionCompleted")
     class RecordExtractionCompleted {
 

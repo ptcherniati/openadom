@@ -157,4 +157,97 @@ class GroovyAndMailEnumsTest {
             assertThat(EmailService.MESSAGES.NEW_ACCOUNT.name()).isEqualTo("NEW_ACCOUNT");
         }
     }
+
+    // ---------------------------------------------------------
+    // BooleanGroovyExpression
+    // ---------------------------------------------------------
+
+    @Nested
+    @DisplayName("BooleanGroovyExpression")
+    class BooleanGroovyExpressionTest {
+
+        private final Map<String, Object> ctx = Map.of("x", true, "y", false);
+
+        @Test
+        @DisplayName("evaluate() retourne true quand l'expression est vraie")
+        void evaluateTrue() {
+            BooleanGroovyExpression expr = BooleanGroovyExpression.forExpression("x", Set.of());
+            assertThat(expr.evaluate(Map.of("x", true))).isTrue();
+        }
+
+        @Test
+        @DisplayName("evaluate() lève GroovyException quand l'expression est fausse")
+        void evaluateFalseThrows() {
+            BooleanGroovyExpression expr = BooleanGroovyExpression.forExpression("y", Set.of());
+            assertThat(org.junit.jupiter.api.Assertions.assertThrows(
+                    fr.inra.oresing.domain.groovy.exception.GroovyException.class,
+                    () -> expr.evaluate(Map.of("y", false))
+            )).isNotNull();
+        }
+
+        @Test
+        @DisplayName("toString() ne lève pas d'exception")
+        void toStringDoesNotThrow() {
+            BooleanGroovyExpression expr = BooleanGroovyExpression.forExpression("true", Set.of());
+            assertThat(expr.toString()).isNotNull();
+        }
+    }
+
+    // ---------------------------------------------------------
+    // StringGroovyExpression
+    // ---------------------------------------------------------
+
+    @Nested
+    @DisplayName("StringGroovyExpression")
+    class StringGroovyExpressionTest {
+
+        @Test
+        @DisplayName("evaluate() retourne la valeur convertie en String")
+        void evaluate() {
+            StringGroovyExpression expr = StringGroovyExpression.forExpression("'hello'", Set.of());
+            assertThat(expr.evaluate(Map.of())).isEqualTo("hello");
+        }
+
+        @Test
+        @DisplayName("evaluate() sur une expression retournant un nombre")
+        void evaluateNumber() {
+            StringGroovyExpression expr = StringGroovyExpression.forExpression("42", Set.of());
+            assertThat(expr.evaluate(Map.of())).isEqualTo("42");
+        }
+
+        @Test
+        @DisplayName("toString() ne lève pas d'exception")
+        void toStringDoesNotThrow() {
+            assertThat(StringGroovyExpression.forExpression("'x'", Set.of()).toString()).isNotNull();
+        }
+    }
+
+    // ---------------------------------------------------------
+    // StringSetGroovyExpression
+    // ---------------------------------------------------------
+
+    @Nested
+    @DisplayName("StringSetGroovyExpression")
+    class StringSetGroovyExpressionTest {
+
+        @Test
+        @DisplayName("evaluate() retourne null quand l'expression retourne null")
+        void evaluateNull() {
+            StringSetGroovyExpression expr = StringSetGroovyExpression.forExpression("null");
+            assertThat(expr.evaluate(Map.of())).isNull();
+        }
+
+        @Test
+        @DisplayName("evaluate() retourne un singleton quand l'expression retourne une String")
+        void evaluateString() {
+            StringSetGroovyExpression expr = StringSetGroovyExpression.forExpression("'abc'");
+            assertThat(expr.evaluate(Map.of())).containsExactly("abc");
+        }
+
+        @Test
+        @DisplayName("toString() ne lève pas d'exception")
+        void toStringDoesNotThrow() {
+            assertThat(StringSetGroovyExpression.forExpression("'x'").toString()).isNotNull();
+        }
+    }
 }
