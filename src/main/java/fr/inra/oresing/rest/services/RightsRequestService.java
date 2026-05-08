@@ -42,15 +42,18 @@ public class RightsRequestService {
     private final OreSiRepository repository;
     private final RightsRequestNotificationService notificationService;
     private final UserRepository userRepository;
+    private final RightsRequestAuthorizationGranter authorizationGranter;
 
     public RightsRequestService(OreSiRepository repository,
                                 ServiceContainer serviceContainer,
                                 RightsRequestNotificationService notificationService,
-                                UserRepository userRepository) {
+                                UserRepository userRepository,
+                                RightsRequestAuthorizationGranter authorizationGranter) {
         this.repository = repository;
         this.serviceContainer = serviceContainer;
         this.notificationService = notificationService;
         this.userRepository = userRepository;
+        this.authorizationGranter = authorizationGranter;
     }
 
     void addRightsRequest(final Application app, final String refType, final MultipartFile file, final UUID fileId) {
@@ -253,13 +256,20 @@ public class RightsRequestService {
         rightsRequestRepository.store(rightsRequest);
         final RightsRequest updated = rightsRequestRepository.findById(requestId);
 
+        // Phase 4 ( #487 ) : sur APPROVED, ajoute le demandeur dans la liste
+        // des bénéficiaires de chaque autorisation cochée par le gestionnaire.
+        // Délégué à un service dédié ( idempotence, tolérance aux suppressions,
+        // audit ). S'exécute dans la transaction parente : un échec ici annule
+        // le marquage setted=true et empêche l'envoi des mails ci-dessous.
+        if (decision == TreatmentDecision.APPROVED) {
+            authorizationGranter.grantAll(application, updated.getUser(), updated.getLinkedAuthorizationIds());
+        }
+
         // Notifications fire-and-forget ( un échec n'invalide pas la
         // persistance du traitement, cf. RightsRequestNotificationService ) :
         //  - mail au demandeur ( contenu = texte saisi par le gestionnaire )
         //  - mail à tous les applicationManager / userManager de l'application
         //    ( template d'audit, traçabilité interne ).
-        // TODO Phase 4 : si decision == APPROVED, attribuer effectivement les
-        // autorisations listées dans body.linkedAuthorizationIds au demandeur.
         try {
             final OreSiUser requester = userRepository.findById(updated.getUser());
             notificationService.notifyRequestTreated(
