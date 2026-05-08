@@ -15,7 +15,6 @@ import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.rest.fixtures.*;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
 import fr.inra.oresing.rest.services.AbstractIntegrationTest;
-import fr.inra.oresing.rest.services.RelationalService;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.ServletException;
 import lombok.extern.slf4j.Slf4j;
@@ -85,8 +84,6 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
     public final Fixtures.CreateUser monsoresimple = new Fixtures.CreateUser("monsoresimple", "xxxxxxxx", "monsoresimple@inrae.fr");
     public final Fixtures.CreateUser withRightsUser = new Fixtures.CreateUser("withrigths", "xxxxxxxx", "withrigths@inrae.fr");
     @Autowired
-    RelationalService relationalService;
-    @Autowired
     private DataSource dataSource;
     @Autowired
     private MeterRegistry meterRegistry;
@@ -114,13 +111,22 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
             log.debug("registerFile ignoré (propriété {} non définie) : {}", fr.inra.oresing.rest.fixtures.CypressFixtureWriter.BASE_DIR_PROPERTY, filePath);
             return;
         }
-        final File errorsFile = new File(baseDirProp, filePath);
-        log.info("register file {}", errorsFile.getAbsolutePath());
-        if (errorsFile.getParentFile() != null) {
-            errorsFile.getParentFile().mkdirs();
-        }
-        try (final BufferedWriter writer = new BufferedWriter(new FileWriter(errorsFile))) {
-            writer.write(jsonContent);
+        log.info("register file {}/{}", baseDirProp, filePath);
+        if (filePath.startsWith("ui/cypress/fixtures/")) {
+            // Fichiers Cypress : sanitisation complète via CypressFixtureWriter
+            // (normalisation UUID, canonicalisation JSON, normalisation timestamps)
+            fr.inra.oresing.rest.fixtures.CypressFixtureWriter writer =
+                    new fr.inra.oresing.rest.fixtures.CypressFixtureWriter(java.nio.file.Paths.get(baseDirProp));
+            writer.write(filePath, jsonContent);
+        } else {
+            // Autres fichiers (openapi.yaml, …) : écriture brute, pas de transformation JSON
+            final File outFile = new File(baseDirProp, filePath);
+            if (outFile.getParentFile() != null) {
+                outFile.getParentFile().mkdirs();
+            }
+            try (final BufferedWriter bw = new BufferedWriter(new FileWriter(outFile))) {
+                bw.write(jsonContent);
+            }
         }
     }
 
@@ -255,7 +261,6 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
                     //.andExpect(jsonPath("$.referenceTypeForReferencingColumns.references", is("reference1"))) // TODO
                     .andExpect(jsonPath("$.rows[0].values.dates", hasItems("date:2002-01-23T00:00:00:dd/MM/yyyy", "date:2002-01-24T00:00:00:dd/MM/yyyy"))).andExpect(jsonPath("$.rows[0].values.projets", hasItems(1, 2))).andExpect(jsonPath("$.rows[0].values.fichiers", hasItems("file1", "file2"))).andExpect(jsonPath("$.rows[0].values.durations", hasItems(3.2, 5.4))).andExpect(jsonPath("$.rows[0].values.references", hasItems("toto__toto1", "tutu__tutu1"))).andReturn().getResponse().getContentAsString();
         }
-        relationalService.createViews("multiplicity", ViewStrategy.VIEW);
     }
 
     @TestFactory
@@ -288,6 +293,7 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
     @Tag("OTHERS_TEST")
     @Tag("app.monsoere")
     @Tag("MONSOERE")
+    @Tag("GENERATE_CYPRESS_FIXTURES")
     public Stream<DynamicNode> addApplicationMonsoreWithRepositoryDynamic() throws Exception {
         AtomicReference<String> oirFilesUUID = new AtomicReference<>();
         AtomicReference<String> fileUUID2 = new AtomicReference<>();

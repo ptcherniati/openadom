@@ -101,14 +101,22 @@ public class CypressFixtureWriter {
 
     /**
      * Crée un writer dont le répertoire de base est lu depuis la propriété système
-     * {@value #BASE_DIR_PROPERTY}, ou le répertoire courant si elle n'est pas définie.
+     * {@value #BASE_DIR_PROPERTY}.
+     *
+     * <p>Si la propriété n'est pas définie, retourne un writer <em>no-op</em> dont le
+     * répertoire pointe vers {@code /dev/null} (les appels à {@link #write} ne produisent
+     * aucun fichier car la propriété absente est détectée dès l'appel).
+     * Cela garantit que les fichiers Cypress ne sont écrits que lorsque le profil
+     * {@code generate-fixtures} est actif.
      */
     public static CypressFixtureWriter defaultWriter() {
         String baseDirProp = System.getProperty(BASE_DIR_PROPERTY);
-        Path baseDir = baseDirProp != null
-                ? Paths.get(baseDirProp)
-                : Paths.get(System.getProperty("user.dir"));
-        return new CypressFixtureWriter(baseDir);
+        if (baseDirProp == null) {
+            log.debug("defaultWriter : propriété {} non définie — writer no-op (aucun fichier ne sera écrit)",
+                    BASE_DIR_PROPERTY);
+            return new NoOpCypressFixtureWriter();
+        }
+        return new CypressFixtureWriter(Paths.get(baseDirProp));
     }
 
     public CypressFixtureWriter(Path baseDir) {
@@ -352,6 +360,32 @@ public class CypressFixtureWriter {
             keys.forEach(k -> sorted.put(k, obj.get(k)));
             obj.removeAll();
             sorted.forEach(obj::set);
+        }
+    }
+
+    // ── No-op writer (propriété cypress.fixtures.base.dir absente) ────────
+
+    /**
+     * Writer no-op retourné par {@link #defaultWriter()} quand la propriété système
+     * {@value #BASE_DIR_PROPERTY} n'est pas définie.
+     * Toutes les opérations d'écriture sont silencieusement ignorées.
+     */
+    private static final class NoOpCypressFixtureWriter extends CypressFixtureWriter {
+
+        NoOpCypressFixtureWriter() {
+            super(Paths.get(System.getProperty("java.io.tmpdir")));
+        }
+
+        @Override
+        public void write(String relativePath, String content) {
+            log.debug("NoOpCypressFixtureWriter.write ignoré (propriété {} non définie) : {}",
+                    BASE_DIR_PROPERTY, relativePath);
+        }
+
+        @Override
+        public void writeAliases(String relativePath) {
+            log.debug("NoOpCypressFixtureWriter.writeAliases ignoré (propriété {} non définie) : {}",
+                    BASE_DIR_PROPERTY, relativePath);
         }
     }
 }

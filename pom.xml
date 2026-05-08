@@ -1058,6 +1058,52 @@
         </profile>
 
         <!--
+          Profil generate-fixtures : génère les fixtures Cypress sanitisées.
+          Auto-suffisant : aucun autre profil ne doit être combiné.
+
+          Ce profil fait TROIS choses essentielles :
+          1. groups=GENERATE_CYPRESS_FIXTURES → seuls les tests qui produisent
+             des fichiers cypress sont exécutés (CypressFixtureGeneratorTest,
+             ApplicationConfigurationServiceTest, TestReferencesErrors,
+             OreSiResourcesTest#addApplicationMonsoreWithRepositoryDynamic)
+          2. excludedGroups explicitement vide → lève l'exclusion par défaut
+             "docker-required" (définie dans <surefire.excludedGroups>). SANS
+             cette ligne, les tests d'intégration (qui héritent du tag
+             docker-required via AbstractIntegrationTest) seraient ignorés et
+             aucun fichier ne serait généré.
+          3. cypress.fixtures.base.dir activé → les gardes écrivent les fichiers
+
+          Usage : mvn test -P generate-fixtures
+        -->
+        <profile>
+            <id>generate-fixtures</id>
+            <properties>
+                <junit.jupiter.tags>GENERATE_CYPRESS_FIXTURES</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${maven-surefire-plugin.version}</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                            <!-- OBLIGATOIRE : lève l'exclusion docker-required définie par défaut
+                                 dans ${surefire.excludedGroups}. Sans cette ligne, tous les tests
+                                 héritant d'AbstractIntegrationTest (@Tag("docker-required")) seraient
+                                 ignorés et aucune fixture ne serait générée. -->
+                            <excludedGroups/>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <systemPropertyVariables>
+                                <cypress.fixtures.base.dir>${project.basedir}</cypress.fixtures.base.dir>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!--
           Profil sonar-aggregate : utilisé UNIQUEMENT par le job CI "sonarqube-check".
           Il fusionne les fichiers jacoco-<profil>.exec produits par chaque job de test
           en un seul jacoco.exec, puis le rapport XML est généré par l'exécution "report"

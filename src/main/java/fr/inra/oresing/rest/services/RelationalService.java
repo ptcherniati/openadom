@@ -1,9 +1,6 @@
 package fr.inra.oresing.rest.services;
 
-import com.google.common.collect.Lists;
-import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.data.DataColumn;
-import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.rest.ViewStrategy;
 import fr.inra.oresing.rest.exceptions.views.FieldNameTooLongForSqlFieldException;
@@ -13,7 +10,6 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,20 +24,8 @@ import java.util.stream.Collectors;
 @Transactional()
 public class RelationalService implements InitializingBean, DisposableBean {
     private static final String IDENTIFIER_PATTERN = "[a-z][a-z_0-9]{%d,%d}";
-    private final SqlService db;
-    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-    private final OreSiRepository repository;
     @Value("${viewStrategy:DISABLED}")
     private ViewStrategy viewStrategy;
-
-    public RelationalService(
-            SqlService db,
-            NamedParameterJdbcTemplate namedParameterJdbcTemplate,
-            OreSiRepository repository) {
-        this.db = db;
-        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
-        this.repository = repository;
-    }
 
     public static Predicate<String> getIsValidIdentifierPattern(int min, int max) {
         int min1 = min > 0 ? min : 1;
@@ -49,37 +33,16 @@ public class RelationalService implements InitializingBean, DisposableBean {
         return Pattern.compile(String.format(IDENTIFIER_PATTERN, min1 - 1, max1 - 1)).asMatchPredicate();
     }
 
+    /**
+     * No-op stub — la logique de construction des vues relationnelles est désormais
+     * gérée par l'endpoint de normalisation ({@code /api/v1/applications/{nameOrId}/normalized}).
+     */
     public void createViews(final String appName) {
         createViews(appName, viewStrategy);
     }
 
-
+    /** @see #createViews(String) */
     public void createViews(final String appName, final ViewStrategy viewStrategy) {
-        //TODO
-        /*Application app = getApplication(appName);
-        createViews(app, viewStrategy);*/
-    }
-
-    private Application getApplication(final String appName) {
-        return repository.application().findApplication(appName);
-    }
-
-    void createViews(final UUID appId, final ViewStrategy viewStrategy) {
-        final Application app = getApplication(appId.toString());
-        createViews(app, viewStrategy);
-    }
-
-    public void createViews(final Application app, final ViewStrategy viewStrategy) {
-       /* log.info("Création des vues : \u001B[32m{}\u001B[0m", app.getName());
-        if (viewStrategy.isEnabled()) {
-            authenticationService.resetRole();
-            final SchemaCreationCommand schemaCreationCommand = getSchemaCreationCommand(app, viewStrategy);
-            create(schemaCreationCommand);
-        } else {
-            if (log.isInfoEnabled()) {
-                log.info("les vues relationnelles sont désactivées, on ne crée pas les vues pour {}", app.getName());
-            }
-        }*/
     }
 
     public void dropViews(final String appName) {
@@ -87,234 +50,14 @@ public class RelationalService implements InitializingBean, DisposableBean {
     }
 
     void dropViews(final String appName, final ViewStrategy viewStrategy) {
-        /*if (viewStrategy.isEnabled()) {
-            authenticationService.resetRole();
-            final Application app = getApplication(appName);
-            final SchemaCreationCommand schemaCreationCommand = getSchemaCreationCommand(app, viewStrategy);
-            drop(schemaCreationCommand);
-        } else {
-            if (log.isInfoEnabled()) {
-                log.info("les vues relationnelles sont désactivées, on ne supprime pas les vues pour {}", appName);
-            }
-        }*/
-    }
-
-    @Transactional()
-    public void create(final SchemaCreationCommand schemaCreationCommand) {
-        final ViewStrategy viewStrategy = schemaCreationCommand.viewStrategy();
-        Application application = schemaCreationCommand.application();
-        final UUID appId = application.getId();
-        final OreSiRightOnApplicationRole owner = OreSiRightOnApplicationRole.adminOn(application);
-        db.createSchema(schemaCreationCommand.schema(), owner);
-
-        for (final ViewCreationCommand viewCreationCommand : schemaCreationCommand.views()) {
-            final SqlTable view = viewCreationCommand.view();
-            final String viewSql = viewCreationCommand.sql();
-            if (viewStrategy == ViewStrategy.VIEW) {
-                db.createView(view, viewSql);
-                db.setViewOwner(view, owner);
-            } else if (viewStrategy == ViewStrategy.TABLE) {
-                db.createTable(view, viewSql);
-                db.enableRowLevelSecurity(view);
-                db.setTableOwner(view, owner);
-//                for (ApplicationRight applicationRight : ApplicationRight.values()) {
-//                    OreSiRightOnApplicationRole roleThatCanReadViews = applicationRight.getRole(appId);
-//                    namedParameterJdbcTemplate.execute("GRANT USAGE ON SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
-//                    namedParameterJdbcTemplate.execute("GRANT SELECT ON ALL TABLES IN SCHEMA " + schemaName + " TO " + roleThatCanReadViews.getSqlIdentifier(), PreparedStatement::execute);
-//                }
-
-                // TODO reste à poser des contraintes de clés étrangères et des indexes
-            } else {
-                throw ViewStrategy.getError(viewStrategy);
-            }
-        }
-    }
-
-    private void drop(final SchemaCreationCommand schemaCreationCommand) {
-        final ViewStrategy viewStrategy = schemaCreationCommand.viewStrategy();
-        final List<ViewCreationCommand> reverse = Lists.reverse(schemaCreationCommand.views());
-        for (final ViewCreationCommand viewCreationCommand : reverse) {
-            final SqlTable view = viewCreationCommand.view();
-            if (viewStrategy == ViewStrategy.VIEW) {
-                final String formatted = """
-                        **************************************
-                        *     Suppression de la vue %s       *
-                        **************************************
-                        """.formatted(view.name());
-                log.info(formatted);
-                db.dropView(view);
-            } else if (viewStrategy == ViewStrategy.TABLE) {
-                final String formatted = """
-                        **************************************
-                        *     Suppression de la table %s     *
-                        **************************************
-                        """.formatted(view.name());
-                log.info(formatted);
-                db.dropTable(view);
-            } else {
-                throw ViewStrategy.getError(viewStrategy);
-            }
-        }
-        db.dropSchema(schemaCreationCommand.schema());
-    }
-/*
-    public SchemaCreationCommand getSchemaCreationCommand(final BrokenApplication app, final ViewStrategy viewStrategy) {
-        final SqlSchemaForRelationalViewsForApplication sqlSchema = SqlSchema.forRelationalViewsOf(app, viewStrategy);
-        final List<ViewCreationCommand> views = new LinkedList<>();
-        //views.addAll(getViewsForReferences(sqlSchema, app));
-        return new SchemaCreationCommand(app, sqlSchema, views, viewStrategy);
-    }*/
-
-    /*
-
-    private List<ViewCreationCommand> getViewsForReferences(final SqlSchemaForRelationalViewsForApplication
-                                                                    sqlSchema, final Application app) {
-        final UUID appId = app.getId();
-        final List<ViewCreationCommand> views = new LinkedList<>();
-        for (final Map.Entry<String, Configuration.ReferenceDescription> entry : app.getConfiguration().getReferences().entrySet()) {
-            final String referenceColumnName = entry.getKey();
-            log.info("Création du schéma du référentiel \u001B[32m{}\u001B[0m de l'application \u001B[32m{}\u001B[0m", referenceColumnName, app.getName());
-            final Configuration.ReferenceDescription referenceDescription = entry.getValue();
-
-            final ImmutableMap<DataColumn, SqlPrimitiveType> sqlTypePerColumns = checkerFactory.getReferenceValidationLineCheckers(app, referenceColumnName).stream()
-                    .filter(lc -> lc.getUnderlyingType() instanceof ReferenceType)
-                    .collect(ImmutableMap.toImmutableMap(rlc -> (DataColumn) rlc.getTarget(), LineCheckerWarper::getSqlType));
-
-            final ImmutableMap<DataColumn, Multiplicity> declaredMultiplicityPerReferenceColumns = checkerFactory.getReferenceValidationLineCheckers(app, referenceColumnName).stream()
-                    .filter(lc -> lc.getUnderlyingType() instanceof ReferenceType)
-                    .collect(ImmutableMap.toImmutableMap(rlc -> (DataColumn) rlc.getTarget(), rt -> rt.getMultiplicity()));
-
-            final ImmutableSetMultimap<Multiplicity, DataColumn> allReferenceColumnsPerMultiplicity = referenceDescription.doGetStaticColumns().stream()
-                    .map(DataColumn::new)
-                    .collect(ImmutableSetMultimap.toImmutableSetMultimap(referenceColumn -> declaredMultiplicityPerReferenceColumns.getOrDefault(referenceColumn, Multiplicity.ONE), Function.identity()));
-
-            final String columnsAsSchema = allReferenceColumnsPerMultiplicity.values().stream()
-                    .map(referenceColumn -> {
-                        final String columnName = IdentifierTest.forReference(referenceColumn).testAndQuote();
-                        final String columnDeclaration = String.format("%s %s", columnName, SqlPrimitiveType.TEXT);
-                        return columnDeclaration;
-                    })
-                    .collect(Collectors.joining(", ", "(", ")"));
-            final String quotedReferenceType = IdentifierTest.forStringIdentifier(referenceColumnName).testAndQuote();
-            final String castedColumnSelect = allReferenceColumnsPerMultiplicity.values().stream()
-                    .map(referenceColumn -> {
-                        final String columnName = IdentifierTest.forReference(referenceColumn).testAndQuote();
-                        final SqlPrimitiveType columnType = sqlTypePerColumns.getOrDefault(referenceColumn, SqlPrimitiveType.TEXT);
-                        final Multiplicity multiplicity = declaredMultiplicityPerReferenceColumns.getOrDefault(referenceColumn, Multiplicity.ONE);
-                        String columnDeclaration = null;
-                        if (multiplicity == Multiplicity.ONE) {
-                            columnDeclaration = String.format("%s.%s::%s", quotedReferenceType, columnName, columnType.getSql());
-                        } else if (multiplicity == Multiplicity.MANY) {
-                            columnDeclaration = String.format("ARRAY(SELECT JSONB_ARRAY_ELEMENTS_TEXT(%s.%s::JSONB))::%s[] AS %s", quotedReferenceType, columnName, columnType.getSql(), columnName);
-                        } else {
-                            //TODO throw Multiplicity.getError(multiplicity);
-                        }
-                        return columnDeclaration;
-                    })
-                    .collect(Collectors.joining(", "));
-
-            // par example "projet"(nom_en text, nom_fr text, nom_key text, definition_en text, definition_fr text)
-            final String schemaDeclaration = quotedReferenceType + columnsAsSchema;
-
-            final String quotedViewIdColumnName = IdentifierTest.forStringIdentifier(referenceColumnName).forId().testAndQuote();
-            final String quotedViewHierarchicalKeyColumnName = IdentifierTest.forStringIdentifier(referenceColumnName).forHierachicalKey().testAndQuote();
-            final String quotedViewNaturalKeyColumnName = IdentifierTest.forStringIdentifier(referenceColumnName).forNaturalKey().testAndQuote();
-            final String referenceValueTableName = SqlSchema.forApplication(app).referenceValue().getSqlIdentifier();
-            final String whereClause = " referenceType = '" + referenceColumnName + "' and application = '" + appId + "'::uuid";
-            final String referenceView = """
-                    select
-                        referenceValue.id as %s,
-                        referenceValue.hierarchicalKey as %s,
-                        referenceValue.naturalKey as %s, %s
-                    from %s, jsonb_to_record(referenceValue.refValues) as %s
-                    where %s
-                    """
-                    .formatted(quotedViewIdColumnName, quotedViewHierarchicalKeyColumnName, quotedViewNaturalKeyColumnName, castedColumnSelect, referenceValueTableName, schemaDeclaration, whereClause);
-
-            if (log.isTraceEnabled()) {
-                log.trace("pour le référentiel {}, la requête pour avoir un vue relationnelle des données JSON est {}", referenceColumnName, referenceView);
-            }
-
-            final SqlTable view = sqlSchema.forReferenceType(referenceColumnName);
-            views.add(new ViewCreationCommand(view, referenceView));
-
-            final Set<ViewCreationCommand> associationViews = allReferenceColumnsPerMultiplicity.get(Multiplicity.MANY).stream()
-                    .map(referenceColumn -> {
-                        final String columnNameForOneValueFromTheManyArray = IdentifierTest.forReference(referenceColumn).forOneValueFromTheManyArray().testAndQuote();
-                        final String columnFromReferenceViewThatContainsTheForeignKeysArray = IdentifierTest.forReference(referenceColumn).testAndQuote();
-                        final String associationViewPattern = String.join("\n"
-                                , "SELECT %s, %s"
-                                , "FROM %s"
-                                , "JOIN LATERAL"
-                                , "    UNNEST(%s) %s ON TRUE"
-                        );
-                        final String associationView = String.format(associationViewPattern
-                                , quotedViewHierarchicalKeyColumnName
-                                , columnNameForOneValueFromTheManyArray
-                                , view.getSqlIdentifier()
-                                , columnFromReferenceViewThatContainsTheForeignKeysArray
-                                , columnNameForOneValueFromTheManyArray
-                        );
-                        return new ViewCreationCommand(sqlSchema.forAssociation(referenceColumnName, referenceColumn), associationView);
-                    })
-                    .collect(Collectors.toUnmodifiableSet());
-
-            views.addAll(associationViews);
-
-            final AtomicInteger dynamicColumnCount = new AtomicInteger(1);
-            final Set<ViewCreationCommand> dynamicColumnViews = referenceDescription.getDynamicColumns().keySet().stream()
-                    .map(dynamicColumn -> {
-                        final String sqlPattern = String.join("\n"
-                                , "SELECT"
-                                , "    referenceValue.hierarchicalKey AS %s,"
-                                , "    (jsonb_each_text(referenceValue.refValues->'%s')).key::LTREE AS %s,"
-                                , "    (jsonb_each_text(referenceValue.refValues->'%s')).value"
-                                , "   FROM %s"
-                                , "  WHERE %s"
-                        );
-                        final String dynamicColumnsView = String.format(sqlPattern,
-                                quotedViewHierarchicalKeyColumnName,
-                                dynamicColumn,
-                                IdentifierTest.forStringIdentifier(dynamicColumn).forDynamicReferenceHierachicakKey(dynamicColumnCount.getAndIncrement()).testAndQuote(),
-                                dynamicColumn,
-                                referenceValueTableName,
-                                whereClause
-                        );
-                        return new ViewCreationCommand(sqlSchema.forAssociation(referenceColumnName, new DataColumn(dynamicColumn)), dynamicColumnsView);
-                    })
-                    .collect(Collectors.toUnmodifiableSet());
-
-            views.addAll(dynamicColumnViews);
-        }
-        return views;
-    }*/
-
-    public List<Map<String, Object>> readView(final String appName, final String dataType, final ViewStrategy viewStrategy) {
-//        authRepository.setRoleForClient();
-        final Application application = getApplication(appName);
-        final SqlTable view = SqlSchema.forRelationalViewsOf(application, viewStrategy).forDataType(dataType);
-        return namedParameterJdbcTemplate.queryForList("select * from " + view.getSqlIdentifier(), Collections.emptyMap());
-    }
-
-    public void onDataUpdate(final String appName) {
-        if (viewStrategy.isRecreationOnDataUpdateRequired()) {
-            dropViews(appName);
-            createViews(appName);
-        }
     }
 
     @Override
     public void afterPropertiesSet() {
-        dropSchemas();
         if (viewStrategy.isEnabled()) {
             if (log.isInfoEnabled()) {
                 log.info("création des vues relationnelles pour les applications existantes");
             }
-            //TODO philippe
-            final List<Application> allApplications = repository.application().findAll();
-            /*allApplications.stream()
-                    .map(BrokenApplication::getName)
-                    .forEach(this::createViews);*/
         }
     }
 
@@ -325,33 +68,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
                 \u001B[32mextinction des feux good night\u001B[0m
                 
                 """);
-        //dropsViews();
     }
-
-    private void dropSchemas() {
-        if (viewStrategy.isEnabled()) {
-            if (log.isInfoEnabled()) {
-                log.info(" suppression des vues relationnelles pour les application existantes");
-            }
-            // TODO philippe
-            final List<Application> allApplications = repository.application().findAll();
-            /*allApplications.stream()
-                    .forEach(this::dropSchema);*/
-        }
-    }
-
-    private void dropSchema(final Application application) {
-        final SqlSchemaForRelationalViewsForApplication schema = SqlSchema.forRelationalViewsOf(application, viewStrategy);
-        final String formatted = """
-                \u001B[35m
-                **************************************
-                *     Suppression du schema %s       *
-                **************************************\u001B[0m
-                """.formatted(schema.getSqlIdentifier());
-        log.info(formatted);
-        db.dropSchema(schema);
-    }
-
 
     sealed interface SQLVariable permits SQLVariableForData, SQLVariableForRefsLinkedTo {
         String name();
@@ -444,11 +161,6 @@ public class RelationalService implements InitializingBean, DisposableBean {
         }
     }
 
-    private record SchemaCreationCommand(Application application, SqlSchemaForRelationalViewsForApplication schema,
-                                         List<ViewCreationCommand> views, ViewStrategy viewStrategy) {
-
-    }
-
     record ViewCreationCommand(SqlTable view, String sql) {
 
     }
@@ -479,15 +191,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
                     .map(IdentifierTest::new)
                     .orElseThrow(() -> new FieldNameTooLongForSqlFieldException(identifier));
             return new IdentifierTest(identifier);
-        }/*
-
-        public static List<IdentifierTest> getColumnNamesForReferenceDynamicColumns(final Configuration.ReferenceDescription referenceDescription) {
-            final AtomicInteger count = new AtomicInteger(1);
-            return referenceDescription.getDynamicColumns().keySet().stream()
-                    .map(IdentifierTest::new)
-                    .map(labelTest -> labelTest.forDynamicReferenceHierachicakKey(count.getAndIncrement()))
-                    .toList();
-        }*/
+        }
 
         @Deprecated
         private String toQuotedIdentifier() {
@@ -595,27 +299,6 @@ public class RelationalService implements InitializingBean, DisposableBean {
         record SqlViewPrimitiveType(String cast, String multiplicity) {
 
             static final SqlViewPrimitiveType DEFAULT = new SqlViewPrimitiveType("TEXT", "");
-
-            /*public static SqlViewPrimitiveType getSqlType(final LineCheckerWarper checkerWarper) {
-                final String multiplicity = switch (checkerWarper) {
-                    case final ManyCheckerWarper manyCheckerWarper -> "[]";
-                    case final OneCheckerWarper oneCheckerWarper -> "";
-                    case null, default -> "";
-                };
-                return switch (checkerWarper.getUnderlyingType()) {
-                    case final ReferenceType referenceType ->
-                            new SqlViewPrimitiveType("LTREE%1$s".formatted(multiplicity), multiplicity);
-                    case final BooleanType booleanType ->
-                            new SqlViewPrimitiveType("BOOLEAN%1$s".formatted(multiplicity), multiplicity);
-                    case final DateType dateType ->
-                            new SqlViewPrimitiveType("COMPOSITE_DATE%s::TIMESTAMP%1$s".formatted(multiplicity), multiplicity);
-                    case final FloatType floatType ->
-                            new SqlViewPrimitiveType("NUMERIC%1$s".formatted(multiplicity), multiplicity);
-                    case final IntegerType integerType ->
-                            new SqlViewPrimitiveType("INTEGER%1$s".formatted(multiplicity), multiplicity);
-                    case null, default -> new SqlViewPrimitiveType("TEXT%1$s".formatted(multiplicity), multiplicity);
-                };
-            }*/
         }
     }
 
