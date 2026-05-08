@@ -1,13 +1,14 @@
 package fr.inra.oresing.domain;
 
+import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.domain.application.ApplicationInformation;
 import fr.inra.oresing.domain.application.normalized.SqlTypes;
 import fr.inra.oresing.domain.checker.CheckerReturnType;
-import org.junit.jupiter.api.Tag;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.checker.type.TypeOfDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -175,6 +176,70 @@ class DomainEnumsTest {
             PolicyDescription pd = new PolicyDescription();
             pd.setPolicyname("pol");
             assertThat(pd.toString()).contains("pol");
+        }
+    }
+
+    // ---------------------------------------------------------
+    // ValidationLevel
+    // ---------------------------------------------------------
+
+    @Nested
+    @DisplayName("ValidationLevel")
+    class ValidationLevelTest {
+
+        @Test
+        void successIsSuccessNotError() {
+            assertThat(ValidationLevel.SUCCESS.isSuccess()).isTrue();
+            assertThat(ValidationLevel.SUCCESS.isError()).isFalse();
+        }
+
+        @Test
+        void errorIsErrorNotSuccess() {
+            assertThat(ValidationLevel.ERROR.isError()).isTrue();
+            assertThat(ValidationLevel.ERROR.isSuccess()).isFalse();
+        }
+
+        @Test
+        void warnIsNeitherSuccessNorError() {
+            assertThat(ValidationLevel.WARN.isSuccess()).isFalse();
+            assertThat(ValidationLevel.WARN.isError()).isFalse();
+        }
+
+        @Test
+        void allValues() {
+            assertThat(ValidationLevel.values()).hasSize(3);
+        }
+    }
+
+    // ---------------------------------------------------------
+    // ComponentPresenceConstraint
+    // ---------------------------------------------------------
+
+    @Nested
+    @DisplayName("ComponentPresenceConstraint")
+    class ComponentPresenceConstraintTest {
+
+        @Test
+        void mandatoryIsMandatoryAndExpected() {
+            assertThat(ComponentPresenceConstraint.MANDATORY.isMandatory()).isTrue();
+            assertThat(ComponentPresenceConstraint.MANDATORY.isExpected()).isTrue();
+        }
+
+        @Test
+        void optionalIsNotMandatoryButExpected() {
+            assertThat(ComponentPresenceConstraint.OPTIONAL.isMandatory()).isFalse();
+            assertThat(ComponentPresenceConstraint.OPTIONAL.isExpected()).isTrue();
+        }
+
+        @Test
+        void absentIsNotExpectedAndNotMandatory() {
+            assertThat(ComponentPresenceConstraint.ABSENT.isMandatory()).isFalse();
+            assertThat(ComponentPresenceConstraint.ABSENT.isExpected()).isFalse();
+        }
+
+        @Test
+        void valuesSetContainsAll() {
+            assertThat(ComponentPresenceConstraint.VALUES).containsExactlyInAnyOrder("MANDATORY", "OPTIONAL", "ABSENT");
         }
     }
 }
