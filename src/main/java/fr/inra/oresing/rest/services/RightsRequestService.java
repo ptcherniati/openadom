@@ -176,7 +176,13 @@ public class RightsRequestService {
                 .orElse(null);
         rightsRequest.setRightsRequest(authorizations);
         rightsRequest.setUser(rightsRequest.getUser() == null ? OreSiApiRequestContext.getRequestUserId() : rightsRequest.getUser());
-        rightsRequest.getRightsRequest().setOreSiUsers(Set.of(rightsRequest.getUser()));
+        // Le payload `rightsRequest` du DTO est optionnel : si absent, `authorizations`
+        // vaut null ( cf. `.orElse(null)` ci-dessus ) et la demande est purement
+        // declarative. Dans ce cas, pas de propagation `oreSiUsers` a faire ;
+        // sinon NPE 500 systematique sur POST /rightsRequest sans corps complet.
+        if (authorizations != null) {
+            authorizations.setOreSiUsers(Set.of(rightsRequest.getUser()));
+        }
         serviceContainer.authenticationService().setRoleForClient();
         final UUID storedRequestId = repository.getRepository(application).rightsRequestRepository().store(rightsRequest);
 
@@ -220,6 +226,24 @@ public class RightsRequestService {
         serviceContainer.authenticationService().setRoleForClient();
         final Application application = serviceContainer.applicationService()
                 .getApplicationOrApplicationAccordingToRights(nameOrId);
+
+        // Garde-fou metier ( #487 Phase 4 ) : seul un applicationManager ou un
+        // userManager de l'application cible peut valider une demande de droits.
+        // Le controleur n'expose que `@PreAuthorize("isAuthenticated()")` ; sans
+        // cette verification cote service, n'importe quel utilisateur authentifie
+        // pourrait s'auto-attribuer les autorisations listees dans le payload
+        // ( linkedAuthorizationIds ) via la phase 4 ( grant effectif ).
+        // openAdomAdmin reste autorise par convention ( administration globale ).
+        final fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles currentUserRoles =
+                serviceContainer.authenticationService().getCurrentUserRoles();
+        final boolean isManager = currentUserRoles.applicationManagerOf(application)
+                || currentUserRoles.userManagerOf(application)
+                || currentUserRoles.isOpenAdomAdmin();
+        if (!isManager) {
+            throw new fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationUserManagerRightsException(
+                    application.getName());
+        }
+
         final RightsRequestRepository rightsRequestRepository = repository.getRepository(application).rightsRequestRepository();
 
         final RightsRequest rightsRequest = Optional.ofNullable(rightsRequestRepository.findById(requestId))

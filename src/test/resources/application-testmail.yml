@@ -84,6 +84,11 @@ spring:
 # Configuration de sécurité minimale pour les tests
 jwtSecret: test_secret_key_for_testing_purposes_only
 jwtExpiration: 3600
+# Cle JWT propagee a JWTExtractor ( @Value("${jwt.secret}") ) pour les tests.
+# Doit faire au moins 32 octets ( cf. JWTExtractor.MIN_JWT_SECRET_BYTES ).
+jwt:
+  secret: test_secret_key_for_testing_purposes_only_at_least_32_bytes
+  expiration: 3600
 
 # Configuration de logging pour les tests
 logging:

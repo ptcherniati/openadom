@@ -25,6 +25,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
@@ -56,9 +59,38 @@ public class AuthenticationService implements AuthenticationServiceImpl {
         this.serviceContainer = serviceContainer;
     }
 
+    /**
+     * Construit la cle de verification envoyee par mail ( activation compte,
+     * changement d'email, mot de passe oublie ).
+     *
+     * <p>Reste deterministe a partir des proprietes utilisateur ( id, email,
+     * hash bcrypt du mot de passe, date de creation ) pour permettre la
+     * verification cote serveur sans persistance dediee. La fonction est
+     * volontairement basee sur SHA-256 pour fermer la breche connue ou
+     * {@code String.hashCode()} sur 32 bits ne fournissait que ~10^9 cles
+     * possibles, sur lesquelles {@code Math.abs} introduisait en plus le
+     * cas pathologique {@code Integer.MIN_VALUE -> MIN_VALUE} ( cle au
+     * format negatif ).</p>
+     *
+     * <p>Sortie : 12 chiffres hexadecimaux ( 48 bits d'entropie cryptographique ),
+     * imprevisible sans connaitre le hash bcrypt opaque du mot de passe.
+     * Le format reste compatible avec le frontend qui n'attend qu'une chaine
+     * suffisamment courte pour etre saisie a la main.</p>
+     */
     private static String generateVerificationKey(final OreSiUser oreSiUser) {
-        final String s = oreSiUser.getEmail() + oreSiUser.getPassword() + oreSiUser.getCreationDate().toString();
-        return (Math.abs(s.hashCode() * 15621646) + "454996856456").substring(0, 10);
+        Objects.requireNonNull(oreSiUser, "oreSiUser");
+        final String input = String.join("|",
+                String.valueOf(oreSiUser.getId()),
+                Objects.toString(oreSiUser.getEmail(), ""),
+                Objects.toString(oreSiUser.getPassword(), ""),
+                Objects.toString(oreSiUser.getCreationDate(), ""));
+        try {
+            final MessageDigest sha = MessageDigest.getInstance("SHA-256");
+            final byte[] digest = sha.digest(input.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest).substring(0, 12).toUpperCase(Locale.ROOT);
+        } catch (final NoSuchAlgorithmException e) {
+            throw new OreSiTechnicalException("SHA-256 digest unavailable in JVM", e);
+        }
     }
 
     private static String getCollectAuthorizationForUser(final OreSiUser oreSiUser) {

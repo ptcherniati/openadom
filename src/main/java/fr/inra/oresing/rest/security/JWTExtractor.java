@@ -11,7 +11,6 @@ import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
@@ -20,6 +19,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 
@@ -33,17 +33,50 @@ public class JWTExtractor {
     private final JsonRowMapper<?> mapper;
     private final Function<UUID, OreSiUserRole> getUserRole;
 
+    /**
+     * Longueur minimale du secret JWT en octets ( HS256 -> 256 bits = 32 octets ).
+     * En dessous, la lib Jwts refuse la cle ; on impose ici un fail-fast explicite
+     * pour eviter le pattern padding-avec-zeros qui produisait une cle devinable.
+     */
+    static final int MIN_JWT_SECRET_BYTES = 32;
+
     public JWTExtractor(
             AuthenticationService authenticationService,
             JsonRowMapper<?> mapper,
             @Value("${jwt.expiration:3600}") int jwtExpiration,
-            @Value("${jwt.secret:1234567890AZERTYUIOP}") String jwtSecret) {
+            @Value("${jwt.secret:}") String jwtSecret) {
         this.getUserRole = authenticationService::getUserRole;
         this.mapper = mapper;
-        final String secureEnoughJwtSecret = StringUtils.rightPad(jwtSecret, 32, '0');
-        final byte[] keyBytes = secureEnoughJwtSecret.getBytes();
+        final byte[] keyBytes = validateAndDecodeSecret(jwtSecret);
         key = Keys.hmacShaKeyFor(keyBytes);
         JWTExtractor.jwtExpiration = jwtExpiration;
+    }
+
+    /**
+     * Valide le secret JWT injecte par configuration et le convertit en octets.
+     *
+     * <p>Refuse les valeurs absentes, vides ou plus courtes que {@link #MIN_JWT_SECRET_BYTES}
+     * apres encodage UTF-8. Ce contrat ferme la breche connue ou un fallback constant
+     * ( "1234567890AZERTYUIOP" ) plus un padding par des '0' produisaient une cle
+     * de signature triviale a forger.</p>
+     *
+     * @throws IllegalStateException si le secret est manquant ou trop faible ;
+     *                               le contexte Spring refuse de demarrer.
+     */
+    private static byte[] validateAndDecodeSecret(final String jwtSecret) {
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            throw new IllegalStateException(
+                    "Property 'jwt.secret' (env JWT_SECRET) is required. "
+                    + "Generate one via: openssl rand -base64 48");
+        }
+        final byte[] bytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+        if (bytes.length < MIN_JWT_SECRET_BYTES) {
+            throw new IllegalStateException(
+                    "Property 'jwt.secret' must be at least " + MIN_JWT_SECRET_BYTES
+                    + " bytes (got " + bytes.length + "). "
+                    + "Generate one via: openssl rand -base64 48");
+        }
+        return bytes;
     }
 
     public static void addJwtHeader(HttpServletResponse response, String jwt) {

@@ -65,7 +65,7 @@ public class AuthorizationResourcesTest extends AbstractIntegrationTest {
 
         final String authJwt = acbbFixture.addApplicationAcbb().jwt();
         String token = Jwts.parser()
-                .verifyWith(Keys.hmacShaKeyFor("1234567890AZERTYUIOP000000000000".getBytes()))
+                .verifyWith(Keys.hmacShaKeyFor("test_secret_key_for_testing_purposes_only_at_least_32_bytes".getBytes(java.nio.charset.StandardCharsets.UTF_8)))
                 .build()
                 .parseSignedClaims(authJwt)
                 .getPayload()

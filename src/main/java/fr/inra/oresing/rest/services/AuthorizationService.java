@@ -438,23 +438,34 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
     @Transactional
     public OreSiUserResult deleteSystemRoleUser(final OreSiRoleForUser roleForUser) {
         serviceContainer.authenticationService().setRoleAdmin();
-        if (OreSiRole.openAdomAdmin().getAsSqlRole().equals(roleForUser.role())) {
-            return deleteAdminRoleUser(roleForUser);
-        } else if (OreSiRole.applicationCreator().getAsSqlRole().equals(roleForUser.role())) {
-            return deleteApplicationCreatorRoleUser(roleForUser);
+        try {
+            if (OreSiRole.openAdomAdmin().getAsSqlRole().equals(roleForUser.role())) {
+                return deleteAdminRoleUser(roleForUser);
+            } else if (OreSiRole.applicationCreator().getAsSqlRole().equals(roleForUser.role())) {
+                return deleteApplicationCreatorRoleUser(roleForUser);
+            }
+            throw new BadRoleException("cantDeleteRole", roleForUser.role());
+        } finally {
+            // Restaure le role client sur la connexion Postgres meme en cas
+            // d'exception, sinon le pool Hikari recycle une connexion en
+            // openAdomAdmin pour la requete HTTP suivante ( bypass RLS ).
+            serviceContainer.authenticationService().setRoleForClient();
         }
-        throw new BadRoleException("cantDeleteRole", roleForUser.role());
     }
 
     @Transactional
     public OreSiUserResult deleteApplicationRoleUser(final OreSiRoleForUser roleForUser, Application application) {
         serviceContainer.authenticationService().setRoleAdmin();
-        if (OreSiRole.applicationManagerOf(application).getAsSqlRole().contains(roleForUser.role())) {
-            return deleteApplicationManagerRoleUser(roleForUser, application);
-        } else if (OreSiRole.userManagerOf(application).getAsSqlRole().contains(roleForUser.role())) {
-            return deleteUserManagerRoleUser(roleForUser, application);
+        try {
+            if (OreSiRole.applicationManagerOf(application).getAsSqlRole().contains(roleForUser.role())) {
+                return deleteApplicationManagerRoleUser(roleForUser, application);
+            } else if (OreSiRole.userManagerOf(application).getAsSqlRole().contains(roleForUser.role())) {
+                return deleteUserManagerRoleUser(roleForUser, application);
+            }
+            throw new BadApplicationRoleException("cantDeleteApplicationRole", roleForUser.role(), application);
+        } finally {
+            serviceContainer.authenticationService().setRoleForClient();
         }
-        throw new BadApplicationRoleException("cantDeleteApplicationRole", roleForUser.role(), application);
     }
 
     private OreSiUserResult deleteApplicationCreatorRoleUser(final OreSiRoleForUser oreSiUserRoleApplicationCreator) {
@@ -492,23 +503,34 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
     @Transactional
     public OreSiUserResult addSystemRoleUser(final OreSiRoleForUser roleForUser) {
         serviceContainer.authenticationService().setRoleAdmin();
-        if (OreSiRole.openAdomAdmin().getAsSqlRole().equals(roleForUser.role())) {
-            return addAdminRoleUser(roleForUser);
-        } else if (OreSiRole.applicationCreator().getAsSqlRole().equals(roleForUser.role())) {
-            return addApplicationCreatorRoleUser(roleForUser);
+        try {
+            if (OreSiRole.openAdomAdmin().getAsSqlRole().equals(roleForUser.role())) {
+                return addAdminRoleUser(roleForUser);
+            } else if (OreSiRole.applicationCreator().getAsSqlRole().equals(roleForUser.role())) {
+                return addApplicationCreatorRoleUser(roleForUser);
+            }
+            throw new BadRoleException("cantSetSystemRole", roleForUser.role());
+        } finally {
+            // Cf. deleteSystemRoleUser : finally obligatoire pour eviter de
+            // laisser la connexion Postgres en openAdomAdmin apres exception
+            // ( fuite de privilege via le pool Hikari ).
+            serviceContainer.authenticationService().setRoleForClient();
         }
-        throw new BadRoleException("cantSetSystemRole", roleForUser.role());
     }
 
     @Transactional
     public OreSiUserResult addApplicationRoleUser(final OreSiRoleForUser roleForUser, Application application) {
         serviceContainer.authenticationService().setRoleAdmin();
-        if (OreSiRole.applicationManagerOf(application).getAsSqlRole().contains(roleForUser.role())) {
-            return addApplicationManagerRoleUser(roleForUser, application);
-        } else if (OreSiRole.userManagerOf(application).getAsSqlRole().contains(roleForUser.role())) {
-            return addUserManagerRoleUser(roleForUser, application);
+        try {
+            if (OreSiRole.applicationManagerOf(application).getAsSqlRole().contains(roleForUser.role())) {
+                return addApplicationManagerRoleUser(roleForUser, application);
+            } else if (OreSiRole.userManagerOf(application).getAsSqlRole().contains(roleForUser.role())) {
+                return addUserManagerRoleUser(roleForUser, application);
+            }
+            throw new BadApplicationRoleException("cantSetApplicationRole", roleForUser.role(), application);
+        } finally {
+            serviceContainer.authenticationService().setRoleForClient();
         }
-        throw new BadApplicationRoleException("cantSetApplicationRole", roleForUser.role(), application);
     }
 
     private OreSiUserResult addApplicationCreatorRoleUser(final OreSiRoleForUser oreSiUserRoleApplicationCreator) {

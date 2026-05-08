@@ -11,7 +11,6 @@ import fr.inra.oresing.rest.services.AbstractIntegrationTest;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -31,15 +30,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Tag("core.auth")
 @Slf4j
 public class RightsTest extends AbstractIntegrationTest {
-    @Value("${jwt.secret:1234567890AZERTYUIOP}")
-    String jwtSecret = "1234567890AZERTYUIOP";
+    // Aligne sur la valeur >= 32 octets injectee a JWTExtractor en mode test
+    // ( cf. application-tests.properties / application-testmail.yml ).
+    // Le fallback ici sert uniquement de garde-fou si le contexte Spring
+    // ne renseigne pas la propriete ; aucune valeur faible n'est tolere.
+    @Value("${jwt.secret:test_secret_key_for_testing_purposes_only_at_least_32_bytes}")
+    String jwtSecret = "test_secret_key_for_testing_purposes_only_at_least_32_bytes";
     SecretKey key;
-    String secureEnoughJwtSecret = StringUtils.rightPad(jwtSecret, 32, '0');
 
 
     @BeforeEach
     public void init() throws Exception {
-        this.key = Keys.hmacShaKeyFor(secureEnoughJwtSecret.getBytes());
+        this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         fixtures = new Fixtures(
                 mockMvc,
                 userRepository,
