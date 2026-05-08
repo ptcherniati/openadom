@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * detection JWT_EXPIRED , listAll , eviction des sessions terminees ,
  * status / duration helpers .
  */
-@DisplayName("UserSessionRegistry")
 class UserSessionRegistryTest {
 
     private static SessionInfo session(UUID userId, String login, Instant loginTime, Duration ttl) {

@@ -9,6 +9,11 @@
 #   mr     [MR_IID] [base]       → analyse en mode Merge Request
 #                                  MR_IID = numéro de MR GitLab (défaut: 1)
 #                                  base   = branche cible       (défaut: develop)
+#   update-profile <tag>         → delta coverage : relance UNIQUEMENT le profil Maven
+#                                  correspondant au tag JUnit 5 (ex: domain.model),
+#                                  JaCoCo appende au jacoco.exec existant, le rapport XML
+#                                  est regénéré, puis Sonar est lancé sans relancer tous
+#                                  les tests. Requiert un jacoco.exec préexistant.
 #
 # Options (après le mode) :
 #   --skip-tests                 → n'exécute pas les tests (réutilise un rapport existant)
@@ -20,10 +25,11 @@
 #
 # Exemples :
 #   ./sonar-local.sh branch develop
-#   ./sonar-local.sh branch                        # branche courante
+#   ./sonar-local.sh branch                          # branche courante
 #   ./sonar-local.sh mr 42 develop
-#   ./sonar-local.sh branch --skip-tests           # réutilise le jacoco.xml existant
-#   ./sonar-local.sh branch --enforce-gate         # bloque si Quality Gate KO
+#   ./sonar-local.sh branch --skip-tests             # réutilise le jacoco.xml existant
+#   ./sonar-local.sh branch --enforce-gate           # bloque si Quality Gate KO
+#   ./sonar-local.sh update-profile domain.model     # delta : relance seulement ce profil
 # =============================================================================
 set -euo pipefail
 
@@ -39,6 +45,7 @@ shift || true
 BRANCH_NAME="${CURRENT_BRANCH}"
 MR_IID="1"
 TARGET_BRANCH="develop"
+UPDATE_PROFILE_TAG=""
 
 if [ "${MODE}" = "branch" ]; then
   # 1er arg optionnel = nom de branche (si ce n'est pas une option)
@@ -52,8 +59,18 @@ elif [ "${MODE}" = "mr" ]; then
   if [ -n "${1:-}" ] && [[ "${1}" != --* ]]; then
     TARGET_BRANCH="$1"; shift || true
   fi
+elif [ "${MODE}" = "update-profile" ]; then
+  # Argument obligatoire : tag JUnit 5 / nom du profil Maven (ex: domain.model)
+  if [ -z "${1:-}" ] || [[ "${1}" == --* ]]; then
+    echo "❌  Le mode 'update-profile' requiert un tag de profil Maven."
+    echo "    Exemple : ./sonar-local.sh update-profile domain.model"
+    echo "    Profils disponibles : domain.model, core.basic, core.config, core.auth,"
+    echo "      domain.checker, domain.i18n, integration.rest, use-cases, no-tags, ..."
+    exit 1
+  fi
+  UPDATE_PROFILE_TAG="$1"; shift || true
 else
-  echo "Usage: $0 [branch [nom_branche] | mr [MR_IID] [branche_cible]] [options]"
+  echo "Usage: $0 [branch [nom_branche] | mr [MR_IID] [branche_cible] | update-profile <tag>] [options]"
   echo "Options : --skip-tests  --enforce-gate  --with-docker-tests"
   exit 1
 fi
@@ -79,6 +96,79 @@ if [ -z "${SONAR_TOKEN:-}" ]; then
 fi
 
 JACOCO_XML="target/site/jacoco/jacoco.xml"
+JACOCO_EXEC="target/jacoco.exec"
+
+# ── Mode update-profile : delta coverage ────────────────────────────────────
+# Lance UNIQUEMENT le profil Maven demandé. JaCoCo opère en mode append=true
+# (défaut), ce qui fusionne la nouvelle couverture dans target/jacoco.exec
+# existant. Le rapport XML est regénéré, puis Sonar est lancé sans retourner
+# tous les tests.
+#
+# Prérequis : target/jacoco.exec doit exister (run initial complet préalable).
+# Si absent, le script propose de faire le run complet.
+if [ "${MODE}" = "update-profile" ]; then
+  if [ ! -f "${JACOCO_EXEC}" ]; then
+    echo "❌  ${JACOCO_EXEC} introuvable."
+    echo "    Lancez d'abord un run complet :"
+    echo "    ./sonar-local.sh branch"
+    echo "    Puis retentez : ./sonar-local.sh update-profile ${UPDATE_PROFILE_TAG}"
+    exit 1
+  fi
+
+  echo ""
+  echo "══════════════════════════════════════════════════════════════════════"
+  echo "  🔄 Mode delta — profil : ${UPDATE_PROFILE_TAG}"
+  echo "  📁 jacoco.exec existant : $(du -sh ${JACOCO_EXEC} | cut -f1)"
+  echo "  ⚙️  JaCoCo appende les nouvelles mesures (append=true par défaut)"
+  echo "══════════════════════════════════════════════════════════════════════"
+
+  # Étape 1 : relancer uniquement le profil — le rapport XML est regénéré
+  #           automatiquement en fin de phase test (execution id=report dans pom.xml)
+  set +e
+  mvn --batch-mode test \
+    -P"${UPDATE_PROFILE_TAG}" \
+    -Dsurefire.excludedGroups=docker-required
+  DELTA_EXIT=$?
+  set -e
+
+  if [ ${DELTA_EXIT} -ne 0 ]; then
+    echo ""
+    echo "⚠️  Des tests ont échoué (code ${DELTA_EXIT}) dans le profil ${UPDATE_PROFILE_TAG}."
+    echo "    L'analyse Sonar sera quand même lancée."
+  else
+    echo "✅  Profil ${UPDATE_PROFILE_TAG} : tous les tests passent."
+  fi
+
+  if [ ! -f "${JACOCO_XML}" ]; then
+    echo "❌  ${JACOCO_XML} toujours absent après le run delta."
+    exit 1
+  fi
+
+  echo "  📊 Rapport XML mis à jour : $(du -sh ${JACOCO_XML} | cut -f1)"
+
+  # Étape 2 : analyse Sonar (réutilise le jacoco.xml regénéré)
+  QUALITY_GATE_WAIT="false"
+  if [ "${ENFORCE_GATE}" = true ]; then QUALITY_GATE_WAIT="true"; fi
+
+  echo ""
+  echo "══════════════════════════════════════════════════════════════════════"
+  echo "  🔍 Analyse SonarQube — delta après profil ${UPDATE_PROFILE_TAG}"
+  echo "  📡 Serveur : ${SONAR_HOST_URL}"
+  echo "══════════════════════════════════════════════════════════════════════"
+
+  mvn --batch-mode sonar:sonar \
+    -DskipTests \
+    -Dsonar.host.url="${SONAR_HOST_URL}" \
+    -Dsonar.token="${SONAR_TOKEN}" \
+    -Dsonar.projectKey="${PROJECT_KEY}" \
+    -Dsonar.qualitygate.wait="${QUALITY_GATE_WAIT}" \
+    -Dsonar.scm.provider=git
+
+  echo ""
+  echo "✅  Analyse delta terminée."
+  echo "    📊 Tableau de bord : ${SONAR_HOST_URL}/dashboard?id=${PROJECT_KEY}"
+  exit 0
+fi
 
 # ── Phase 1 : Tests + génération du rapport Jacoco ──────────────────────────
 if [ "${SKIP_TESTS}" = true ]; then
