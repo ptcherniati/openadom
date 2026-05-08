@@ -40,6 +40,7 @@ import fr.inra.oresing.rest.services.ServiceContainer;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -77,7 +78,36 @@ public class DataService {
     private static final String REFERENCES_CSV_FILENAME_PATTERN = "references/%s.csv";
 
 
-    public static final int MAX_CONCURRENCY = 6; // Ou ta limite pour contrôler la charge
+    /**
+     * Nombre de datatypes / référentiels traités <b>en parallèle</b> lors de
+     * la construction d'un bundle via {@link #writeUploadBundle} ( endpoint
+     * {@code GET /applications/{nameOrId}/upload-bundle} ).
+     *
+     * <p>Le bundle produit un ZIP contenant un CSV par datatype, ensuite
+     * uploadé sur FileSender Renater pour générer un lien partagé envoyé
+     * par mail au demandeur. Chaque traitement de datatype consomme :
+     * 1 transaction DB ( pool main Hikari ), 1 thread du virtualScheduler,
+     * et la mémoire temporaire pour le streaming CSV. Sans borne, Reactor
+     * {@code Flux.flatMap} lancerait les N datatypes simultanément et
+     * saturerait le pool Hikari + heap.</p>
+     *
+     * <p>Configurable via {@code openadom.bundle.upload.parallelism}
+     * ( défaut : 6 ). À ajuster selon le sizing du pool main Hikari et
+     * la mémoire conteneur backend disponible.</p>
+     */
+    @Value("${openadom.bundle.upload.parallelism:6}")
+    private int bundleUploadParallelism;
+
+    /**
+     * Flag d'activation du cache des listes de filtres ( {@link #filterListCache} ).
+     * Configurable via {@code openadom.cache.filter-list.enabled} ; défaut {@code true}.
+     * Quand désactivé, chaque appel à {@code /filters} recalcule + sérialise sans
+     * passer par le cache et sans y stocker le résultat ( utile pour debug
+     * stale-data ou diagnostic comparatif des temps SQL ).
+     */
+    @Value("${openadom.cache.filter-list.enabled:true}")
+    private boolean filterListCacheEnabled;
+
     @Setter
     ServiceContainer serviceContainer;
     private final OreSiRepository repo;
@@ -836,7 +866,7 @@ private PlatformTransactionManager transactionManager;
                                             referentielsEnErreur.add(reference);
                                             return Mono.empty();
                                         }),
-                        MAX_CONCURRENCY)
+                        bundleUploadParallelism)
                 .collectList()
                 .block();
 
@@ -973,6 +1003,20 @@ private PlatformTransactionManager transactionManager;
      */
     public String filterListAsJson(final Application application, final String refType) {
         String cacheKey = application.getName() + "::" + refType;
+
+        // Cache désactivé via openadom.cache.filter-list.enabled : on bypass
+        // intégralement ( pas de lecture cache, pas d'écriture cache ). Utile
+        // pour debug stale-data ou benchmarking comparatif des temps SQL.
+        if (!filterListCacheEnabled) {
+            log.debug("filterList cache disabled, computing directly for {}", cacheKey);
+            List<FilterListEntry> entries = computeFilterListEntries(application, refType);
+            try {
+                return cacheObjectMapper.writeValueAsString(entries);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to serialize filterList JSON for " + cacheKey, e);
+            }
+        }
+
         FilterListCacheEntry cached = filterListCache.get(cacheKey);
 
         // Cache hit : retourner le JSON déjà sérialisé (0ms, pas de re-sérialisation Jackson)
