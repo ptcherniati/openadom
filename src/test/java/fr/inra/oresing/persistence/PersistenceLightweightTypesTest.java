@@ -228,4 +228,46 @@ class PersistenceLightweightTypesTest {
             assertThat(OreSiSqlSchema.MAIN.getSqlIdentifier()).isEqualTo("public");
         }
     }
+
+    // ---------------------------------------------------------
+    // Schemas (constantes)
+    // ---------------------------------------------------------
+
+    @Nested
+    @DisplayName("Schemas constants")
+    class SchemasConstantsTest {
+
+        @Test
+        @DisplayName("BUSINESS est 'public'")
+        void businessIsPublic() {
+            assertThat(Schemas.BUSINESS).isEqualTo("public");
+        }
+
+        @Test
+        @DisplayName("AUDIT est 'oa_audit'")
+        void auditIsOaAudit() {
+            assertThat(Schemas.AUDIT).isEqualTo("oa_audit");
+        }
+
+        @Test
+        @DisplayName("STAGING est 'oa_staging'")
+        void stagingIsOaStaging() {
+            assertThat(Schemas.STAGING).isEqualTo("oa_staging");
+        }
+    }
+
+    // ---------------------------------------------------------
+    // SqlSchema interface static factories
+    // ---------------------------------------------------------
+
+    @Nested
+    @DisplayName("SqlSchema static factories")
+    class SqlSchemaStaticFactoriesTest {
+
+        @Test
+        @DisplayName("mainSchema() retourne OreSiSqlSchema.MAIN")
+        void mainSchema() {
+            assertThat(SqlSchema.mainSchema()).isEqualTo(OreSiSqlSchema.MAIN);
+        }
+    }
 }
