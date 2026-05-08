@@ -25,6 +25,21 @@ class OreSiRequestClientTest {
         Assertions.assertThat(client.role()).isEqualTo(OreSiRole.anonymous());
     }
 
+    // ─── OreSiAnonymousRequestClient ─────────────────────────────────────────
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("OreSiAnonymousRequestClient.ANONYMOUS.role() retourne anonymous()")
+    void anonymousClientRole() {
+        Assertions.assertThat(OreSiAnonymousRequestClient.ANONYMOUS.role())
+                .isEqualTo(OreSiRole.anonymous());
+    }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("OreSiAnonymousRequestClient.toString() n'est pas null")
+    void anonymousClientToString() {
+        Assertions.assertThat(OreSiAnonymousRequestClient.ANONYMOUS.toString()).isNotBlank();
+    }
+
     static class OreSiRequestClientForTest implements OreSiRequestClient {
 
     }

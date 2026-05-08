@@ -76,4 +76,40 @@ class OreSiRoleTest {
     void publicRoleAsSqlRole() {
         assertThat(OreSiPublicRole.PUBLIC.getAsSqlRole()).isNotBlank();
     }
+
+    // ─── OreSiopenAdomAdminRole ──────────────────────────────────────────────
+
+    @Test
+    @DisplayName("OreSiopenAdomAdminRole.openAdomAdmin.getAsSqlRole() retourne 'openAdomAdmin'")
+    void openAdomAdminRole() {
+        assertThat(OreSiopenAdomAdminRole.openAdomAdmin.getAsSqlRole()).isEqualTo("openAdomAdmin");
+    }
+
+    @Test
+    @DisplayName("OreSiopenAdomAdminRole n'a qu'une seule valeur")
+    void openAdomAdminRoleCount() {
+        assertThat(OreSiopenAdomAdminRole.values()).hasSize(1);
+    }
+
+    // ─── OreSiApplicationCreatorRole ─────────────────────────────────────────
+
+    @Test
+    @DisplayName("OreSiApplicationCreatorRole.APPLICATION_CREATOR.getAsSqlRole() retourne 'applicationCreator'")
+    void applicationCreatorRole() {
+        assertThat(OreSiApplicationCreatorRole.APPLICATION_CREATOR.getAsSqlRole()).isEqualTo("applicationCreator");
+    }
+
+    // ─── OreSiAnonymousRole ───────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("OreSiAnonymousRole.ANONYMOUS.getAsSqlRole() retourne 'anonymous'")
+    void anonymousRole() {
+        assertThat(OreSiAnonymousRole.ANONYMOUS.getAsSqlRole()).isEqualTo("anonymous");
+    }
+
+    @Test
+    @DisplayName("OreSiAnonymousRole n'a qu'une seule valeur")
+    void anonymousRoleCount() {
+        assertThat(OreSiAnonymousRole.values()).hasSize(1);
+    }
 }

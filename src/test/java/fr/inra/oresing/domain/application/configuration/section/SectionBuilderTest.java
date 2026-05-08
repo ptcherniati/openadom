@@ -78,4 +78,29 @@ class SectionBuilderTest {
         Optional<ConfigurationSchemaNodeType> schema = builder.findSchema("unknown");
         Assertions.assertTrue(schema.isEmpty());
     }
+
+    // ─── SectionType ─────────────────────────────────────────────────────────
+
+    @org.junit.jupiter.api.Nested
+    @org.junit.jupiter.api.DisplayName("SectionType enum")
+    class SectionTypeTest {
+
+        @Test
+        @org.junit.jupiter.api.DisplayName("SectionType a 8 valeurs attendues")
+        void allValues() {
+            Assertions.assertEquals(8, SectionType.values().length);
+        }
+
+        @Test
+        @org.junit.jupiter.api.DisplayName("SectionType.OBJECT existe")
+        void objectExists() {
+            Assertions.assertNotNull(SectionType.OBJECT);
+        }
+
+        @Test
+        @org.junit.jupiter.api.DisplayName("SectionType.UNDEFINED existe")
+        void undefinedExists() {
+            Assertions.assertNotNull(SectionType.UNDEFINED);
+        }
+    }
 }
