@@ -37,3 +37,4 @@ src/main/resources/docker/prometheus/prometheus.yml
 .sonar.cobertura.txt
 .failedTest.txt
 
+cascade-stubs/
