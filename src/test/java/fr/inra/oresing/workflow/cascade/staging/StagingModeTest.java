@@ -81,4 +81,49 @@ class StagingModeTest {
         assertThat(StagingMode.perWorkflowTableName(u))
                 .isEqualTo("oa_staging.referencevalue_import_aaaaaaaa_bbbb_cccc_dddd_eeeeeeeeeeee");
     }
+
+    @Test
+    void perWorkflowTableName_null_throws() {
+        assertThatThrownBy(() -> StagingMode.perWorkflowTableName(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("correlationId is required");
+    }
+
+    @Test
+    void perConnectionTemp_strategy_and_cascadeSpec() {
+        StagingMode m = StagingMode.of(
+                ImportProperties.StagingStrategy.PER_CONNECTION_TEMP,
+                CID, SHARED_TABLE, 60);
+
+        assertThat(m.strategy()).isEqualTo(ImportProperties.StagingStrategy.PER_CONNECTION_TEMP);
+        assertThat(m.cascadeSpec()).isNotNull();
+    }
+
+    @Test
+    void sharedUnlogged_strategy_and_cascadeSpec() {
+        StagingMode m = StagingMode.of(
+                ImportProperties.StagingStrategy.SHARED_UNLOGGED,
+                CID, SHARED_TABLE, 60);
+
+        assertThat(m.strategy()).isEqualTo(ImportProperties.StagingStrategy.SHARED_UNLOGGED);
+        assertThat(m.cascadeSpec()).isNotNull();
+    }
+
+    @Test
+    void perWorkflowTable_strategy_and_cascadeSpec() {
+        StagingMode m = StagingMode.of(
+                ImportProperties.StagingStrategy.PER_WORKFLOW_TABLE,
+                CID, SHARED_TABLE, 60);
+
+        assertThat(m.strategy()).isEqualTo(ImportProperties.StagingStrategy.PER_WORKFLOW_TABLE);
+        assertThat(m.cascadeSpec()).isNotNull();
+    }
+
+    @Test
+    void sharedUnlogged_null_correlationId_filter_returns_null() {
+        StagingMode m = StagingMode.of(
+                ImportProperties.StagingStrategy.SHARED_UNLOGGED,
+                null, SHARED_TABLE, 60);
+        assertThat(m.correlationIdFilter(null)).isNull();
+    }
 }
