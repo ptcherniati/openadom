@@ -9,6 +9,7 @@ import fr.inra.oresing.rest.usecases.security.authorization.GetAllUsersUseCase;
 import fr.inra.oresing.rest.usecases.storage.binaryfile.GetFileUseCase;
 import fr.inra.oresing.rest.usecases.storage.binaryfile.GetFileWithDataUseCase;
 import fr.inra.oresing.rest.usecases.storage.binaryfile.GetReferencedBinaryFilesUseCase;
+import fr.inra.oresing.rest.usecases.storage.versioning.PublishToggleUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +19,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
@@ -42,16 +45,19 @@ public class FileResources {
     private final GetFileUseCase getFileUseCase;
     private final GetAllUsersUseCase getAllUsersUseCase;
     private final GetReferencedBinaryFilesUseCase getReferencedBinaryFilesUseCase;
+    private final PublishToggleUseCase publishToggleUseCase;
 
     public FileResources(
             GetFileWithDataUseCase getFileWithDataUseCase,
             GetFileUseCase getFileUseCase,
             GetAllUsersUseCase getAllUsersUseCase,
-            GetReferencedBinaryFilesUseCase getReferencedBinaryFilesUseCase) {
+            GetReferencedBinaryFilesUseCase getReferencedBinaryFilesUseCase,
+            PublishToggleUseCase publishToggleUseCase) {
         this.getFileWithDataUseCase = getFileWithDataUseCase;
         this.getFileUseCase = getFileUseCase;
         this.getAllUsersUseCase = getAllUsersUseCase;
         this.getReferencedBinaryFilesUseCase = getReferencedBinaryFilesUseCase;
+        this.publishToggleUseCase = publishToggleUseCase;
     }
 
     public static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
@@ -109,6 +115,26 @@ public class FileResources {
                     return ResponseEntity.ok(BinaryFileResult.of(binaryFile, createUser, publishedUser, referencedFiles));
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @Operation(summary = "Bascule le drapeau published d'un fichier binaire (action cascade 1-item)",
+            description = "Toggle dedie pour publier ou depublier un fichier deja stocke , execute"
+                    + " comme un workflow cascade Action Pattern ( Sources.single + Sinks.action ) ."
+                    + " Court-circuite le chemin lourd VersioningService.createData mais conserve"
+                    + " l'audit log workflow_log et la visibilite dashboard.")
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_WRITE')")
+    @PostMapping(value = "/applications/{name}/data/{dataName}/files/{fileId}/publish",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> togglePublished(
+            @PathVariable("name") final String name,
+            @PathVariable("dataName") final String dataName,
+            @PathVariable("fileId") final UUID fileId,
+            @RequestParam("published") final boolean published) {
+        UUID affected = publishToggleUseCase.execute(name, fileId, published);
+        return ResponseEntity.ok(Map.of(
+                "fileId",    affected.toString(),
+                "published", published,
+                "dataName",  dataName));
     }
 
     private List<ReferencedBinaryFiles> getReferencedFiles(BinaryFile binaryFile) {
