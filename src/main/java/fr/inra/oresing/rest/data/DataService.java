@@ -975,7 +975,7 @@ private PlatformTransactionManager transactionManager;
      * TTL en minutes du cache. Si {@code <= 0} : pas de TTL ( les entrées
      * ne sont rafraîchies que par les hooks d'invalidation explicite ).
      */
-    @org.springframework.beans.factory.annotation.Value("${openadom.cache.checked-format-components.ttl-minutes:0}")
+    @org.springframework.beans.factory.annotation.Value("${openadom.cache.checked-format-components.ttl-minutes:120}")
     private long checkedFormatComponentsCacheTtlMinutes;
 
     @org.springframework.beans.factory.annotation.Value("${openadom.cache.checked-format-components.max-entries:200}")
@@ -1372,6 +1372,19 @@ private PlatformTransactionManager transactionManager;
         // refresh manuel.
         serviceContainer.authorizationService().invalidateAuthorizationScopesForApplication(application.getName());
         invalidateCheckedFormatComponentsForApplication(application.getName());
+    }
+
+    /**
+     * Invalide les entrées de cache filterList pour une application donnée
+     * ( tous les datatypes de cette app ). Audit OA_FULL_REVIEW (8/5/26) :
+     * évite la purge globale via invalidateAllFilterListCaches quand seul
+     * un app a été modifié ( import / delete / refresh manuel ).
+     */
+    public void invalidateFilterListCacheForApplication(String appName) {
+        if (appName == null) return;
+        final String prefix = appName + "::";
+        filterListCache.keySet().removeIf(k -> k.startsWith(prefix));
+        log.info("filterList cache invalidated for app {}", appName);
     }
 
     /**

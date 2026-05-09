@@ -81,7 +81,8 @@ public class CacheAdminResources {
                     @ApiResponse(responseCode = "403", description = "L'utilisateur n'est pas applicationManager de cette app.")
             }
     )
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY') "
+            + "or hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_UPDATE')")
     @PostMapping(value = "/applications/{nameOrId}/admin/invalidate-caches", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> invalidateAppCaches(
             @Parameter(description = "Nom ou UUID de l'application", required = true)
@@ -90,15 +91,14 @@ public class CacheAdminResources {
         DataService dataService = serviceContainer.dataService();
         AuthorizationService authorizationService = serviceContainer.authorizationService();
 
-        // filterList : pas d'API "purger toute l'app" , on utilise la
-        // méthode existante invalidateAllFilterListCaches puis on log
-        // explicitement quels datatypes étaient présents pour rester
-        // observable. Alternative future : exposer une méthode
-        // invalidateFilterListCacheForApplication ciblée.
-        // En attendant , on se rabat sur invalidate global pour l'app
-        // via une boucle sur les datatypes connus de la config.
-        // Pragmatique : on purge tout le cache filterList global.
-        dataService.invalidateAllFilterListCaches();
+        // Purge ciblée par application :
+        //  - filterList : retire toutes les entrées dont la clé commence par
+        //    appName::*  ( cf. invalidateFilterListCacheForApplication ).
+        //  - authorizationScopes : pareil ( clé contient ::appName:: ) .
+        //  - checkedFormatComponents : pareil ( clé commence par appName:: ).
+        // Aucun effet sur les caches des autres apps : pas de privilege
+        // escalation possible.
+        dataService.invalidateFilterListCacheForApplication(application.getName());
         authorizationService.invalidateAuthorizationScopesForApplication(application.getName());
         dataService.invalidateCheckedFormatComponentsForApplication(application.getName());
 
@@ -106,7 +106,7 @@ public class CacheAdminResources {
         return ResponseEntity.ok(Map.of(
                 "applicationName", application.getName(),
                 "invalidatedCaches", java.util.List.of(
-                        "filterList ( global - cache partagé entre toutes les apps )",
+                        "filterList ( app uniquement )",
                         "authorizationScopes ( app uniquement )",
                         "checkedFormatComponents ( app uniquement )")
         ));
