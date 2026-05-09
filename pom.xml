@@ -1066,11 +1066,13 @@
              des fichiers cypress sont exécutés (CypressFixtureGeneratorTest,
              ApplicationConfigurationServiceTest, TestReferencesErrors,
              OreSiResourcesTest#addApplicationMonsoreWithRepositoryDynamic)
-          2. excludedGroups explicitement vide → lève l'exclusion par défaut
-             "docker-required" (définie dans <surefire.excludedGroups>). SANS
-             cette ligne, les tests d'intégration (qui héritent du tag
-             docker-required via AbstractIntegrationTest) seraient ignorés et
-             aucun fichier ne serait généré.
+          2. surefire.excludedGroups="" ET excludedGroups explicite → lève
+             l'exclusion par défaut "docker-required". SANS cela, les tests
+             héritant d'AbstractIntegrationTest (@Tag("docker-required")) seraient
+             ignorés et aucun fichier ne serait généré.
+             Note Maven : la propriété seule ne suffit pas car le merge de plugin
+             peut conserver docker-required ; l'élément <excludedGroups> dans la
+             configuration du profil est obligatoire pour forcer la valeur vide.
           3. cypress.fixtures.base.dir activé → les gardes écrivent les fichiers
 
           Usage : mvn test -P generate-fixtures
@@ -1079,6 +1081,8 @@
             <id>generate-fixtures</id>
             <properties>
                 <junit.jupiter.tags>GENERATE_CYPRESS_FIXTURES</junit.jupiter.tags>
+                <!-- Vide la propriété pour que ${surefire.excludedGroups} se résolve en "" -->
+                <surefire.excludedGroups></surefire.excludedGroups>
             </properties>
             <build>
                 <plugins>
@@ -1088,11 +1092,12 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
-                            <!-- OBLIGATOIRE : lève l'exclusion docker-required définie par défaut
-                                 dans ${surefire.excludedGroups}. Sans cette ligne, tous les tests
-                                 héritant d'AbstractIntegrationTest (@Tag("docker-required")) seraient
-                                 ignorés et aucune fixture ne serait générée. -->
-                            <excludedGroups/>
+                            <!-- Référence explicite à la propriété vidée ci-dessus.
+                                 Nécessaire car Maven peut conserver la valeur de la
+                                 configuration de base (docker-required) lors du merge
+                                 si on se contente de vider la propriété sans la référencer
+                                 explicitement ici. -->
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                             <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
                             <systemPropertyVariables>
                                 <cypress.fixtures.base.dir>${project.basedir}</cypress.fixtures.base.dir>
