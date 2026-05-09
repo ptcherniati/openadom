@@ -318,8 +318,10 @@ public class VersioningService {
             dataRepository(application).removeByFileId(f.getId());
             f.markAsPublished(false);
             binaryFileRepository(application).store(f);
-            serviceContainer.synthesisService().buildSynthesis(application.getName(), dataType, null);
         });
+        // Single post-loop recompute ( see AuthorizationPublicationService.unPublishVersions
+        // for rationale ) - buildSynthesis is idempotent , one call after all
+        // files are unpublished gives the same final state as one per file.
         if (dataType != null) {
             serviceContainer.synthesisService().buildSynthesis(application.getName(), dataType, null);
         }
