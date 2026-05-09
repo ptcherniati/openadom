@@ -289,6 +289,34 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
         return fileId;
     }
 
+    /**
+     * Toggles the {@code published} flag of a binary file in-place via a
+     * focused {@code UPDATE} on the {@code params} jsonb column .
+     *
+     * <p>Refreshes {@code publisheddate} and {@code publisheduser} (when
+     * publishing) using the same conventions as the upsert path . Does
+     * not touch any other field , and leaves {@code referencevalue} /
+     * {@code data} rows untouched - publish / unpublish is a metadata
+     * operation .
+     *
+     * @param fileId    binary file id ; must exist
+     * @param published target value of the published flag
+     * @return number of rows updated ( {@code 0} if id not found )
+     */
+    public int togglePublishedFlag(UUID fileId, boolean published) {
+        String query = """
+                UPDATE %s
+                SET params = jsonb_set(jsonb_set(jsonb_set(
+                            COALESCE(params, '{}'::jsonb),
+                            '{published}',     to_jsonb(?::boolean)),
+                            '{publisheddate}', to_jsonb(CURRENT_TIMESTAMP::text)),
+                            '{publisheduser}', to_jsonb(current_role::text)),
+                    updateDate = current_timestamp
+                WHERE id = ?::uuid
+                """.formatted(getTable().getSqlIdentifier());
+        return jdbcTemplate.update(query, published, fileId.toString());
+    }
+
     public void storeFileContent(UUID fileId, InputStream inputStream, long fileSize) {
         if (fileSize == 0L) {
             return;
