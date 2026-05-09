@@ -478,6 +478,10 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
                 .toList();
     }
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    @org.springframework.context.annotation.Lazy
+    private fr.inra.oresing.workflow.cascade.metrics.OpenadomCacheMetrics cacheMetrics;
+
     public Map<String, List<GetGrantableResult.ReferenceScope>> getAuthorizationScopes(final Application application, final MenuType menuType) {
         if (!authorizationScopesCacheEnabled) {
             return computeAuthorizationScopes(application, menuType);
@@ -489,10 +493,12 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         ScopesCacheEntry cached = scopesCache.get(cacheKey);
         if (cached != null && !isScopesEntryExpired(cached)) {
             log.debug("authorizationScopes cache hit for {}", cacheKey);
+            if (cacheMetrics != null) cacheMetrics.recordScopesHit();
             return cached.scopes();
         }
 
         log.info("authorizationScopes cache miss for {} , computing from SQL", cacheKey);
+        if (cacheMetrics != null) cacheMetrics.recordScopesMiss();
         Map<String, List<GetGrantableResult.ReferenceScope>> result = computeAuthorizationScopes(application, menuType);
 
         // Eviction LRU si on dépasse la borne ( évite le bloat sur instances
@@ -555,6 +561,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         final String marker = "::" + appName + "::";
         scopesCache.entrySet().removeIf(e -> e.getKey().contains(marker));
         log.info("authorizationScopes cache invalidated for app {}", appName);
+        if (cacheMetrics != null) cacheMetrics.recordScopesInvalidate();
     }
 
     /**

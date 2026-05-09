@@ -983,6 +983,10 @@ private PlatformTransactionManager transactionManager;
 
     private static final java.util.concurrent.ConcurrentHashMap<String, CheckedFormatComponentsCacheEntry> checkedFormatComponentsCache = new java.util.concurrent.ConcurrentHashMap<>();
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    @org.springframework.context.annotation.Lazy
+    private fr.inra.oresing.workflow.cascade.metrics.OpenadomCacheMetrics cacheMetrics;
+
     public Map<String, Map<String, LineCheckerResult>> getCheckedFormatComponents(final String nameOrId, final String dataName) {
         if (!checkedFormatComponentsCacheEnabled) {
             return computeCheckedFormatComponents(nameOrId, dataName);
@@ -992,10 +996,12 @@ private PlatformTransactionManager transactionManager;
         CheckedFormatComponentsCacheEntry cached = checkedFormatComponentsCache.get(cacheKey);
         if (cached != null && !isCheckedFormatComponentsEntryExpired(cached)) {
             log.debug("checkedFormatComponents cache hit for {}", cacheKey);
+            if (cacheMetrics != null) cacheMetrics.recordCheckedFormatHit();
             return cached.result();
         }
 
         log.info("checkedFormatComponents cache miss for {} , rebuilding via CheckerFactory", cacheKey);
+        if (cacheMetrics != null) cacheMetrics.recordCheckedFormatMiss();
         Map<String, Map<String, LineCheckerResult>> result = computeCheckedFormatComponents(nameOrId, dataName);
 
         if (checkedFormatComponentsCache.size() >= checkedFormatComponentsCacheMaxEntries) {
@@ -1046,11 +1052,13 @@ private PlatformTransactionManager transactionManager;
         final String prefix = appName + "::";
         checkedFormatComponentsCache.keySet().removeIf(k -> k.startsWith(prefix));
         log.info("checkedFormatComponents cache invalidated for app {}", appName);
+        if (cacheMetrics != null) cacheMetrics.recordCheckedFormatInvalidate();
     }
 
     public void invalidateAllCheckedFormatComponents() {
         checkedFormatComponentsCache.clear();
         log.info("All checkedFormatComponents caches invalidated");
+        if (cacheMetrics != null) cacheMetrics.recordCheckedFormatInvalidate();
     }
 
     /** Observabilité : taille courante du cache filterList. */
@@ -1209,11 +1217,13 @@ private PlatformTransactionManager transactionManager;
         // Cache hit : retourner le JSON déjà sérialisé + ETag stocké (0ms)
         if (cached != null) {
             log.debug("filterList cache hit for {}", cacheKey);
+            if (cacheMetrics != null) cacheMetrics.recordFilterListHit();
             return new FilterListResult(cached.json(), cached.etag());
         }
 
         // Cache miss : exécuter la requête SQL , sérialiser , stocker.
         log.info("filterList cache miss for {}, loading from database", cacheKey);
+        if (cacheMetrics != null) cacheMetrics.recordFilterListMiss();
         List<FilterListEntry> entries = computeFilterListEntries(application, refType);
         FilterListCacheEntry stored = serializeAndCache(cacheKey, entries);
         return new FilterListResult(stored.json(), stored.etag());
@@ -1385,6 +1395,7 @@ private PlatformTransactionManager transactionManager;
         final String prefix = appName + "::";
         filterListCache.keySet().removeIf(k -> k.startsWith(prefix));
         log.info("filterList cache invalidated for app {}", appName);
+        if (cacheMetrics != null) cacheMetrics.recordFilterListInvalidate();
     }
 
     /**
