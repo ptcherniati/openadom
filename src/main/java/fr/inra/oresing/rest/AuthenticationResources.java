@@ -68,6 +68,15 @@ public class AuthenticationResources {
     @Value("${openadom.referencevalue.count.use-stats-table:true}")
     private boolean referencevalueCountUseStatsTable;
 
+    // Audit OA_FULL_REVIEW (8/5/26) - bornes du cache ETag JS-side
+    // ( cf. EtagCache.ts ). Exposées au frontend via /session/config pour
+    // permettre un tuning prod sans rebuild du bundle.
+    @Value("${openadom.cache.front.etag.max-entries:50}")
+    private int frontEtagCacheMaxEntries;
+
+    @Value("${openadom.cache.front.etag.max-bytes-mb:20}")
+    private int frontEtagCacheMaxBytesMb;
+
     public AuthenticationResources(AuthenticationService authenticationService,
                                    JWTExtractor jwtExtractor,
                                    UserSessionRegistry sessionRegistry,
@@ -88,7 +97,9 @@ public class AuthenticationResources {
     public Map<String, Object> sessionConfig() {
         return Map.of(
                 "jwtExpirationSeconds", jwtExpirationSeconds,
-                "referencevalueCountUseStatsTable", referencevalueCountUseStatsTable
+                "referencevalueCountUseStatsTable", referencevalueCountUseStatsTable,
+                "frontEtagCacheMaxEntries", frontEtagCacheMaxEntries,
+                "frontEtagCacheMaxBytesMb", frontEtagCacheMaxBytesMb
         );
     }
 

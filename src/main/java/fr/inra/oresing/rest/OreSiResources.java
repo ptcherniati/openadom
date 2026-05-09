@@ -197,6 +197,15 @@ public class OreSiResources {
     private final GetSynthesisWithVariableUseCase getSynthesisWithVariableUseCase;
     private final BuildSynthesisUseCase buildSynthesisUseCase;
     private final GetAllUsersUseCase getAllUsersUseCase;
+    /**
+     * ObjectMapper dédié à la sérialisation manuelle de {@code GetDataResult}
+     * dans {@link #getAllDataJson} ( ETag content-aware ). Static + final
+     * pour le partage thread-safe entre requêtes ; configuré une fois avec
+     * {@link JavaTimeModule} pour gérer les dates ISO de manière cohérente
+     * avec le converter Spring par défaut.
+     */
+    private static final ObjectMapper jacksonObjectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+
     private final GetAuthorizationScopesUseCase getAuthorizationScopesUseCase;
     private final GetApplicationOrAccordingToRightsUseCase getApplicationOrAccordingToRightsUseCase;
     private final BuildOpenAdomUseCase buildOpenAdomUseCase;
@@ -1074,11 +1083,12 @@ public class OreSiResources {
     /**
      * export as JSON
      */
-        protected ResponseEntity<GetDataResult> getAllDataJson(
+        protected ResponseEntity<String> getAllDataJson(
             final String nameOrId,
             final String dataName,
             final DownloadDatasetQuery params,
-            boolean loadExample) {
+            boolean loadExample,
+            final String ifNoneMatch) {
 
         Application application = getApplicationUseCase.execute(nameOrId);
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery =
@@ -1127,13 +1137,61 @@ public class OreSiResources {
         // PERF #465 — filterLists est désormais une liste vide ici.
         // Les filtres sont chargés via l'endpoint séparé GET /filters (voir getDataFilters ci-dessous).
         // Cela permet d'afficher les données immédiatement sans attendre la requête lente des filtres (~54s).
-        return okResponse(new GetDataResult(
+        GetDataResult result = new GetDataResult(
                 downloadDatasetQuery.patternDefinitionCount(),
                 variables,
                 dataRowResults,
                 List.of(),
                 checkedFormatcomponents,
-                referenceScopes));
+                referenceScopes);
+
+        // PERF audit (8/5/26) - sérialisation manuelle pour pouvoir hasher
+        // le JSON et émettre un ETag stable. Le hash dépend uniquement du
+        // contenu sérialisé , donc tout changement ( import , delete ,
+        // grant ) qui modifie l'arbre / les rows / les checkers se traduit
+        // en mismatch d'ETag -&gt; 200 fresh ; cohérence garantie sans
+        // invalidation explicite côté browser.
+        final String json;
+        try {
+            json = jacksonObjectMapper.writeValueAsString(result);
+        } catch (JsonProcessingException e) {
+            throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
+        }
+        final String etag = computeWeakEtag(json);
+
+        org.springframework.http.CacheControl cacheControl =
+                org.springframework.http.CacheControl.noCache().mustRevalidate().cachePrivate();
+
+        if (etag.equals(ifNoneMatch)) {
+            return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
+                    .eTag(etag)
+                    .cacheControl(cacheControl)
+                    .build();
+        }
+        return ResponseEntity.ok()
+                .eTag(etag)
+                .cacheControl(cacheControl)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(json);
+    }
+
+    /**
+     * Calcule un ETag faible ( {@code W/"…"} ) à partir d'un JSON. SHA-256
+     * tronqué 64 bits suffit en pratique pour distinguer les variantes de
+     * payload sans collision.
+     */
+    private static String computeWeakEtag(final String json) {
+        try {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder(20).append("W/\"");
+            for (int i = 0; i < 8; i++) {
+                sb.append(String.format("%02x", hash[i]));
+            }
+            return sb.append('"').toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 indisponible", e);
+        }
     }
 
     /**

@@ -97,8 +97,25 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
             long timestamp
     ) {}
 
-    private static final long SCOPES_CACHE_TTL_MS = TimeUnit.MINUTES.toMillis(5);
-    private static final int SCOPES_CACHE_MAX_ENTRIES = 200;
+    /**
+     * TTL en minutes du cache. Si {@code <= 0} : pas de TTL ( les entrées
+     * ne sont rafraîchies que par les hooks d'invalidation explicite -
+     * import / delete / YAML edit ). Comportement attendu en prod si l'on
+     * fait confiance aux hooks ; le filet TTL sert surtout à se prémunir
+     * d'un hook oublié sur un nouveau path d'écriture.
+     */
+    @Value("${openadom.cache.authorization-scopes.ttl-minutes:5}")
+    private long scopesCacheTtlMinutes;
+
+    /**
+     * Capacité maximale du cache ( LRU eviction ). Dimensionner en prod
+     * en fonction du nombre d'utilisateurs actifs simultanément × apps
+     * × menuTypes. Worst case ~50-500 KB par entrée selon volume des
+     * référentiels ; 200 entrées ≈ 20-100 MB JVM.
+     */
+    @Value("${openadom.cache.authorization-scopes.max-entries:200}")
+    private int scopesCacheMaxEntries;
+
     private static final ConcurrentHashMap<String, ScopesCacheEntry> scopesCache = new ConcurrentHashMap<>();
 
     public AuthorizationService(
@@ -470,7 +487,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         final String cacheKey = userId + "::" + application.getName() + "::" + menuType.getType();
 
         ScopesCacheEntry cached = scopesCache.get(cacheKey);
-        if (cached != null && (System.currentTimeMillis() - cached.timestamp()) < SCOPES_CACHE_TTL_MS) {
+        if (cached != null && !isScopesEntryExpired(cached)) {
             log.debug("authorizationScopes cache hit for {}", cacheKey);
             return cached.scopes();
         }
@@ -480,13 +497,24 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
 
         // Eviction LRU si on dépasse la borne ( évite le bloat sur instances
         // multi-tenant avec beaucoup d'applications ).
-        if (scopesCache.size() >= SCOPES_CACHE_MAX_ENTRIES) {
+        if (scopesCache.size() >= scopesCacheMaxEntries) {
             scopesCache.entrySet().stream()
                     .min(Comparator.comparingLong(e -> e.getValue().timestamp()))
                     .ifPresent(oldest -> scopesCache.remove(oldest.getKey()));
         }
         scopesCache.put(cacheKey, new ScopesCacheEntry(result, System.currentTimeMillis()));
         return result;
+    }
+
+    /**
+     * Une entrée est expirée si {@code scopesCacheTtlMinutes > 0} et que
+     * l'âge dépasse le TTL. Si {@code scopesCacheTtlMinutes <= 0} , pas de
+     * TTL ( les entrées vivent jusqu'à invalidation explicite ).
+     */
+    private boolean isScopesEntryExpired(ScopesCacheEntry entry) {
+        if (scopesCacheTtlMinutes <= 0) return false;
+        long ageMs = System.currentTimeMillis() - entry.timestamp();
+        return ageMs >= TimeUnit.MINUTES.toMillis(scopesCacheTtlMinutes);
     }
 
     /**
@@ -536,6 +564,11 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
     public void invalidateAllAuthorizationScopes() {
         scopesCache.clear();
         log.info("All authorizationScopes caches invalidated");
+    }
+
+    /** Observabilité : taille courante du cache scopes. */
+    public int getAuthorizationScopesCacheSize() {
+        return scopesCache.size();
     }
 
     @Transactional

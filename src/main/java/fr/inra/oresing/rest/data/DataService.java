@@ -971,8 +971,16 @@ private PlatformTransactionManager transactionManager;
             long timestamp
     ) {}
 
-    private static final long CHECKED_FORMAT_COMPONENTS_CACHE_TTL_MS = java.util.concurrent.TimeUnit.MINUTES.toMillis(5);
-    private static final int CHECKED_FORMAT_COMPONENTS_CACHE_MAX_ENTRIES = 200;
+    /**
+     * TTL en minutes du cache. Si {@code <= 0} : pas de TTL ( les entrées
+     * ne sont rafraîchies que par les hooks d'invalidation explicite ).
+     */
+    @org.springframework.beans.factory.annotation.Value("${openadom.cache.checked-format-components.ttl-minutes:5}")
+    private long checkedFormatComponentsCacheTtlMinutes;
+
+    @org.springframework.beans.factory.annotation.Value("${openadom.cache.checked-format-components.max-entries:200}")
+    private int checkedFormatComponentsCacheMaxEntries;
+
     private static final java.util.concurrent.ConcurrentHashMap<String, CheckedFormatComponentsCacheEntry> checkedFormatComponentsCache = new java.util.concurrent.ConcurrentHashMap<>();
 
     public Map<String, Map<String, LineCheckerResult>> getCheckedFormatComponents(final String nameOrId, final String dataName) {
@@ -982,7 +990,7 @@ private PlatformTransactionManager transactionManager;
 
         final String cacheKey = nameOrId + "::" + dataName;
         CheckedFormatComponentsCacheEntry cached = checkedFormatComponentsCache.get(cacheKey);
-        if (cached != null && (System.currentTimeMillis() - cached.timestamp()) < CHECKED_FORMAT_COMPONENTS_CACHE_TTL_MS) {
+        if (cached != null && !isCheckedFormatComponentsEntryExpired(cached)) {
             log.debug("checkedFormatComponents cache hit for {}", cacheKey);
             return cached.result();
         }
@@ -990,13 +998,24 @@ private PlatformTransactionManager transactionManager;
         log.info("checkedFormatComponents cache miss for {} , rebuilding via CheckerFactory", cacheKey);
         Map<String, Map<String, LineCheckerResult>> result = computeCheckedFormatComponents(nameOrId, dataName);
 
-        if (checkedFormatComponentsCache.size() >= CHECKED_FORMAT_COMPONENTS_CACHE_MAX_ENTRIES) {
+        if (checkedFormatComponentsCache.size() >= checkedFormatComponentsCacheMaxEntries) {
             checkedFormatComponentsCache.entrySet().stream()
                     .min(Comparator.comparingLong(e -> e.getValue().timestamp()))
                     .ifPresent(oldest -> checkedFormatComponentsCache.remove(oldest.getKey()));
         }
         checkedFormatComponentsCache.put(cacheKey, new CheckedFormatComponentsCacheEntry(result, System.currentTimeMillis()));
         return result;
+    }
+
+    /**
+     * Une entrée est expirée si {@code checkedFormatComponentsCacheTtlMinutes > 0}
+     * et que l'âge dépasse le TTL. Si {@code <= 0} : pas de TTL ( les entrées
+     * vivent jusqu'à invalidation explicite ).
+     */
+    private boolean isCheckedFormatComponentsEntryExpired(CheckedFormatComponentsCacheEntry entry) {
+        if (checkedFormatComponentsCacheTtlMinutes <= 0) return false;
+        long ageMs = System.currentTimeMillis() - entry.timestamp();
+        return ageMs >= java.util.concurrent.TimeUnit.MINUTES.toMillis(checkedFormatComponentsCacheTtlMinutes);
     }
 
     /**
@@ -1032,6 +1051,16 @@ private PlatformTransactionManager transactionManager;
     public void invalidateAllCheckedFormatComponents() {
         checkedFormatComponentsCache.clear();
         log.info("All checkedFormatComponents caches invalidated");
+    }
+
+    /** Observabilité : taille courante du cache filterList. */
+    public int getFilterListCacheSize() {
+        return filterListCache.size();
+    }
+
+    /** Observabilité : taille courante du cache checkedFormatComponents. */
+    public int getCheckedFormatComponentsCacheSize() {
+        return checkedFormatComponentsCache.size();
     }
 
     @Transactional(readOnly = true)
@@ -1102,7 +1131,10 @@ private PlatformTransactionManager transactionManager;
     public record FilterListResult(String json, String etag) {}
 
     private static final java.util.concurrent.ConcurrentHashMap<String, FilterListCacheEntry> filterListCache = new java.util.concurrent.ConcurrentHashMap<>();
-    private static final int FILTER_LIST_CACHE_MAX_ENTRIES = 50;
+
+    @org.springframework.beans.factory.annotation.Value("${openadom.cache.filter-list.max-entries:50}")
+    private int filterListCacheMaxEntries;
+
     private static final ObjectMapper cacheObjectMapper = new ObjectMapper();
 
     /**
@@ -1243,7 +1275,7 @@ private PlatformTransactionManager transactionManager;
     private FilterListCacheEntry serializeAndCache(String cacheKey, List<FilterListEntry> list) {
         try {
             String json = cacheObjectMapper.writeValueAsString(list);
-            if (filterListCache.size() >= FILTER_LIST_CACHE_MAX_ENTRIES) {
+            if (filterListCache.size() >= filterListCacheMaxEntries) {
                 filterListCache.entrySet().stream()
                         .min(java.util.Comparator.comparingLong(e -> e.getValue().timestamp()))
                         .ifPresent(oldest -> filterListCache.remove(oldest.getKey()));
