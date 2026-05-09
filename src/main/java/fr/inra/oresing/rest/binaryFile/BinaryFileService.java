@@ -14,6 +14,7 @@ import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
+import fr.inra.oresing.cache.MemoryCache;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.BinaryFileInfos;
 import fr.inra.oresing.persistence.JsonRowMapper;
@@ -43,11 +44,42 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     private final AuthenticationService authenticationService;
     private final JsonRowMapper<?> jsonRowMapper;
 
+    /**
+     * Cache memoire des resultats de getReferencedBinaryFiles : la query
+     * sous-jacente est tres couteuse ( 3-5s sur si_acbb 9.9M rows car
+     * le JOIN reference_reference traverse des millions de tuples meme
+     * avec l'index composite V6 ) , et le resultat ne depend QUE des
+     * relations data ( referencevalue + reference_reference ). Toggle
+     * publish ne change pas ces relations donc le cache reste valide.
+     *
+     * Invalidation : sur toute mutation reelle ( import , delete ,
+     * unpublish-with-delete ) via clearCacheForApplication ; TTL
+     * defensif de 30 min pour borner la stale-tolerance .
+     *
+     * Cle : nameOrId + "::" + dataType + "::" + sortedIds .
+     * Valeur : List<ReferencedBinaryFiles> immutable .
+     */
+    private final MemoryCache<String, List<ReferencedBinaryFiles>> referencedFilesCache =
+            new MemoryCache<>("referencedFiles", 200, 30L);
+
     public BinaryFileService(OreSiRepository repository, ServiceContainer serviceContainer, AuthenticationService authenticationService, JsonRowMapper jsonRowMapper) {
         this.repository = repository;
         this.serviceContainer = serviceContainer;
         this.authenticationService = authenticationService;
         this.jsonRowMapper = jsonRowMapper;
+    }
+
+    /**
+     * Invalide les entrees cache referencedFiles pour une application
+     * donnee. A appeler depuis tout chemin qui mute referencevalue /
+     * reference_reference ( import , delete , unpublish-with-delete ) .
+     *
+     * @param applicationName  application qui a vu sa data muter
+     */
+    public void invalidateReferencedFilesCache(String applicationName) {
+        if (applicationName == null) return;
+        String prefix = applicationName + "::";
+        referencedFilesCache.invalidateMatching(k -> k.startsWith(prefix));
     }
 
     @Override
@@ -156,7 +188,24 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
 
     @Override
     public List<ReferencedBinaryFiles> getReferencedBinaryFiles(UUID applicationId, String datatype, Set<UUID> binaryFileIds) {
-        return getBinaryFileRepository(applicationId.toString())
+        if (binaryFileIds == null || binaryFileIds.isEmpty()) return List.of();
+        // Cle deterministe : tri des UUIDs pour ne pas multiplier les
+        // entrees cache pour la meme requete logique avec un ordre
+        // d'iteration different.
+        String sortedIds = binaryFileIds.stream()
+                .map(UUID::toString)
+                .sorted()
+                .collect(Collectors.joining(","));
+        String key = applicationId + "::" + datatype + "::" + sortedIds;
+        List<ReferencedBinaryFiles> cached = referencedFilesCache.get(key);
+        if (cached != null) {
+            log.debug("referencedFiles cache hit for {}", key);
+            return cached;
+        }
+        log.debug("referencedFiles cache miss for {} , querying", key);
+        List<ReferencedBinaryFiles> fresh = getBinaryFileRepository(applicationId.toString())
                 .getReferencedBinaryFiles(datatype, binaryFileIds);
+        referencedFilesCache.put(key, fresh);
+        return fresh;
     }
 }

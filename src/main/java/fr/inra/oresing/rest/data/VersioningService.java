@@ -163,6 +163,13 @@ public class VersioningService {
             safeSendUploadSuccessMail(application, dataName, fileName, uploadState, locale, dataVersioningResult);
         }
         if (compId != null) compensationLogService.confirm(compId);
+        // Invalidation cache referencedFiles : toute mutation reelle du
+        // binaryfile / des referencevalue rows associees rend le cache
+        // potentiellement obsolete. Le toggle publish ( PublishToggleUseCase )
+        // ne passe pas ici donc il ne deborde pas le cache pour rien.
+        if (serviceContainer.binaryFileService() instanceof fr.inra.oresing.rest.binaryFile.BinaryFileService bfs) {
+            bfs.invalidateReferencedFilesCache(application.getName());
+        }
         return dataVersioningResult;
 
         } catch (RuntimeException | IOException ex) {
