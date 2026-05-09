@@ -54,9 +54,6 @@ public class ServiceContainer {
         return (RightsRequestService) context.getBean("rightsRequestService");
     }
 
-    public RelationalService relationalService() {
-        return (RelationalService) context.getBean("relationalService");
-    }
 
     public Email emailService() {
         return (Email) context.getBean("emailService");

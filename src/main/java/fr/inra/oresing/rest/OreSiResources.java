@@ -64,7 +64,7 @@ import fr.inra.oresing.rest.model.rightsrequest.RightsRequestInfos;
 import fr.inra.oresing.rest.model.synthesis.SynthesisResult;
 import fr.inra.oresing.rest.reactive.*;
 import fr.inra.oresing.rest.services.AdditionalFileService;
-import fr.inra.oresing.rest.services.RelationalService;
+import fr.inra.oresing.domain.application.SqlIdentifierUtils;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.usecases.application.*;
 import fr.inra.oresing.rest.usecases.data.*;
@@ -646,7 +646,7 @@ public class OreSiResources {
         } catch (IOException e) {
             throw OreSiIOException.ORE_SI_IOEXCEPTION_CANT_LOAD_FILE();
         }
-        if (!RelationalService.IdentifierTest.identifierForApplicationName(name)) {
+        if (!SqlIdentifierUtils.IdentifierTest.identifierForApplicationName(name)) {
             //TODO test à faire
             throw new BadLabelNameException(BadLabelNameException.LabelType.APPLICATION, name);
         }

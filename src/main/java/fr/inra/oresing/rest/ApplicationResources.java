@@ -14,7 +14,7 @@ import fr.inra.oresing.rest.model.rightsrequest.RightsRequestResult;
 import fr.inra.oresing.rest.model.rightsrequest.TreatRightsRequestRequest;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
-import fr.inra.oresing.rest.services.RelationalService;
+import fr.inra.oresing.domain.application.SqlIdentifierUtils;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.usecases.application.*;
 import fr.inra.oresing.rest.usecases.metadata.rightsrequest.CreateOrUpdateRightsRequestUseCase;
@@ -133,7 +133,7 @@ public class ApplicationResources {
         } catch (IOException e) {
             throw OreSiIOException.ORE_SI_IOEXCEPTION_CANT_LOAD_FILE();
         }
-        if (!RelationalService.IdentifierTest.identifierForApplicationName(name)) {
+        if (!SqlIdentifierUtils.IdentifierTest.identifierForApplicationName(name)) {
             throw new BadLabelNameException(BadLabelNameException.LabelType.APPLICATION, name);
         }
         DataFile finalDataFile = dataFile;

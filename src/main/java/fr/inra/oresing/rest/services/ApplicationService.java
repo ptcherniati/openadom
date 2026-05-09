@@ -229,7 +229,6 @@ public class ApplicationService {
                 .canUpdateApplication();
         
         eventHelper.pushProgress(0D);
-        serviceContainer.relationalService().dropViews(nameOrId);
         serviceContainer.authenticationService().setRoleForClient();
         final Configuration oldConfiguration = application.getConfiguration();
         final UUID oldConfigFileId = application.getConfigFile();
