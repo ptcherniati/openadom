@@ -28,7 +28,8 @@ public record DashboardWorkflowDTO(
 
         @Schema(description = "Workflow type",
                 allowableValues = {"IMPORT", "EXTRACT_ZIP", "EXTRACT_CSV",
-                        "EXTRACT_ADDITIONAL_FILES", "EXTRACT_CHARTE"})
+                        "EXTRACT_ADDITIONAL_FILES", "EXTRACT_CHARTE",
+                        "PUBLISH_TOGGLE"})
         String workflowType,
 
         @Schema(description = "Owner of the workflow")
