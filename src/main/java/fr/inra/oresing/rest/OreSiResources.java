@@ -1080,37 +1080,16 @@ public class OreSiResources {
             final DownloadDatasetQuery params,
             boolean loadExample) {
 
-        // PERF audit (8/5/26) - instrumentation temporaire ( opt-in via header
-        // X-Perf-Trace ou flag global ) pour identifier le coupable des ~5 s
-        // mesurés côté frontend , alors que la SQL pure prend 31 ms ( cf.
-        // EXPLAIN ANALYZE ). Logge en INFO chaque étape pour qu'on puisse
-        // les distinguer dans les logs Docker. À retirer une fois le tuning
-        // validé , ou rétrograder en DEBUG.
-        final long tStart = System.currentTimeMillis();
-        long t = tStart;
-        long tNow;
-
         Application application = getApplicationUseCase.execute(nameOrId);
-        tNow = System.currentTimeMillis();
-        log.info("[json-perf] getApplication {} ms", tNow - t); t = tNow;
-
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery =
                 buildDownloadDatasetQuery(params, nameOrId, dataName, loadExample);
-        tNow = System.currentTimeMillis();
-        log.info("[json-perf] buildDownloadDatasetQuery {} ms", tNow - t); t = tNow;
 
         final Locale locale = Optional.of(downloadDatasetQuery)
                 .map(fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery::getLanguage)
                 .map(Locale::of)
                 .orElseGet(OreSiResources::getDefaultLocale);
         final Set<String> orderedVariables = buildOrderedVariables(nameOrId, dataName);
-        tNow = System.currentTimeMillis();
-        log.info("[json-perf] buildOrderedVariables {} ms", tNow - t); t = tNow;
-
         final List<DataRow> data = findDataUseCase.execute(downloadDatasetQuery);
-        tNow = System.currentTimeMillis();
-        log.info("[json-perf] findData ( SQL + Reactor ) {} ms , rows={}", tNow - t, data.size()); t = tNow;
-
         // PERF #465 — filterLists chargés via l'endpoint séparé GET /filters (asynchrone)
         Predicate<ComponentDescription> isHidden = componentDescription -> componentDescription.isHiddenOrHasLangRestriction(downloadDatasetQuery.getLanguage());
         Predicate<String> isHiddenComponent = componentName -> application.findComponentOfData(dataName, componentName).stream()
@@ -1135,13 +1114,7 @@ public class OreSiResources {
                             .equals(a) ? -1 : 1;
                 })
                 .collect(ImmutableSet.toImmutableSet());
-        tNow = System.currentTimeMillis();
-        log.info("[json-perf] buildVariables {} ms , size={}", tNow - t, variables.size()); t = tNow;
-
         final Map<String, Map<String, LineCheckerResult>> checkedFormatcomponents = getCheckedFormatComponentsUseCase.execute(nameOrId, dataName);
-        tNow = System.currentTimeMillis();
-        log.info("[json-perf] getCheckedFormatComponents {} ms", tNow - t); t = tNow;
-
         final List<DataRowResult> dataRowResults = data.stream()
                 .map(dataRow -> DataRowResult.of(
                         dataRow,
@@ -1149,25 +1122,18 @@ public class OreSiResources {
                         locale.getLanguage()
                 ))
                 .toList();
-        tNow = System.currentTimeMillis();
-        log.info("[json-perf] DataRowResult.of x{} {} ms", dataRowResults.size(), tNow - t); t = tNow;
-
         Map<String, List<GetGrantableResult.ReferenceScope>> referenceScopes = getAuthorizationScopesUseCase.execute(application, MenuType.submission);
-        tNow = System.currentTimeMillis();
-        log.info("[json-perf] getAuthorizationScopes {} ms", tNow - t); t = tNow;
 
         // PERF #465 — filterLists est désormais une liste vide ici.
         // Les filtres sont chargés via l'endpoint séparé GET /filters (voir getDataFilters ci-dessous).
         // Cela permet d'afficher les données immédiatement sans attendre la requête lente des filtres (~54s).
-        ResponseEntity<GetDataResult> response = okResponse(new GetDataResult(
+        return okResponse(new GetDataResult(
                 downloadDatasetQuery.patternDefinitionCount(),
                 variables,
                 dataRowResults,
                 List.of(),
                 checkedFormatcomponents,
                 referenceScopes));
-        log.info("[json-perf] TOTAL controller {} ms ( before Jackson serialize + HTTP write )", System.currentTimeMillis() - tStart);
-        return response;
     }
 
     /**

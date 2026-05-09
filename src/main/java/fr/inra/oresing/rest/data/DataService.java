@@ -1198,6 +1198,12 @@ private PlatformTransactionManager transactionManager;
                         "Failed to refresh filterList cache for {}::{}",
                         application.getName(), refType, error))
                 .subscribe();
+        // Audit OA_FULL_REVIEW (8/5/26) - les scopes d'autorisation ( cf.
+        // AuthorizationService.getAuthorizationScopes ) sont invalidés aux
+        // mêmes événements puisqu'un import / delete change le contenu de
+        // referencevalue dont dépend la fonction SQL getnodes(). Sans ça ,
+        // un user pourrait voir un site périmé pendant 5 min ( fenêtre TTL ).
+        serviceContainer.authorizationService().invalidateAuthorizationScopesForApplication(application.getName());
     }
 
     /**
@@ -1208,6 +1214,9 @@ private PlatformTransactionManager transactionManager;
         String cacheKey = application.getName() + "::" + refType;
         filterListCache.remove(cacheKey);
         log.info("filterList cache invalidated for {}", cacheKey);
+        // Idem que refreshFilterListCache : on aligne les deux invalidations
+        // pour ne jamais servir un arbre stale après refresh manuel.
+        serviceContainer.authorizationService().invalidateAuthorizationScopesForApplication(application.getName());
     }
 
     /**
