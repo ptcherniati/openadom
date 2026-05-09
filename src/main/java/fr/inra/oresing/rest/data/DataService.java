@@ -1063,6 +1063,41 @@ private PlatformTransactionManager transactionManager;
         return checkedFormatComponentsCache.size();
     }
 
+    /** Observabilité : flag + caps des caches ( endpoint admin ). */
+    public boolean isFilterListCacheEnabled() {
+        return filterListCacheEnabled;
+    }
+
+    public int getFilterListCacheMaxEntries() {
+        return filterListCacheMaxEntries;
+    }
+
+    public boolean isCheckedFormatComponentsCacheEnabled() {
+        return checkedFormatComponentsCacheEnabled;
+    }
+
+    public int getCheckedFormatComponentsCacheMaxEntries() {
+        return checkedFormatComponentsCacheMaxEntries;
+    }
+
+    public long getCheckedFormatComponentsCacheTtlMinutes() {
+        return checkedFormatComponentsCacheTtlMinutes;
+    }
+
+    @org.springframework.beans.factory.annotation.Value("${openadom.cache.front.etag.max-entries:50}")
+    private int frontEtagCacheMaxEntries;
+
+    @org.springframework.beans.factory.annotation.Value("${openadom.cache.front.etag.max-bytes-mb:20}")
+    private int frontEtagCacheMaxBytesMb;
+
+    public int getFrontEtagCacheMaxEntries() {
+        return frontEtagCacheMaxEntries;
+    }
+
+    public int getFrontEtagCacheMaxBytesMb() {
+        return frontEtagCacheMaxBytesMb;
+    }
+
     @Transactional(readOnly = true)
     public Map<String, Map<String, LineChecker>> getFormatChecked(final String nameOrId, final String references) {
         final DataRepository dataRepository = repository.getRepository(serviceContainer.applicationService().getApplication(nameOrId)).data();

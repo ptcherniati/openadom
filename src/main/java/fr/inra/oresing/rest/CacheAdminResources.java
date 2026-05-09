@@ -151,12 +151,31 @@ public class CacheAdminResources {
     }
 
     @Operation(
-            summary = "Statistiques des caches mémoire backend",
-            description = "Renvoie le nombre d'entrées de chaque cache mémoire backend. "
-                    + "Sans donnée granulaire ( pas d'introspection user-par-user ) , juste "
-                    + "des compteurs pour observabilité opérationnelle. Réservé à "
-                    + "openAdomAdmin.",
-            tags = {"Admin / Caches"}
+            summary = "Statistiques + configuration des caches mémoire backend",
+            description = "Renvoie pour chaque cache mémoire backend : "
+                    + "( a ) son flag d'activation , ( b ) sa capacité max ( max-entries ) , "
+                    + "( c ) son TTL en minutes ( 0 = pas d'expiration auto , invalidation "
+                    + "explicite uniquement ) , ( d ) le nombre d'entrées actuellement "
+                    + "stockées. Réservé à openAdomAdmin. Utile pour vérifier qu'un tuning "
+                    + "via env vars est bien appliqué et observer l'occupation runtime des "
+                    + "caches sans devoir attacher de profiler à la JVM.",
+            tags = {"Admin / Caches"},
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Stats + config par cache.",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(value = "{\n"
+                                            + "  \"filterList\": {\"enabled\":true,\"maxEntries\":50,\"ttlMinutes\":0,\"entries\":12},\n"
+                                            + "  \"authorizationScopes\": {\"enabled\":true,\"maxEntries\":200,\"ttlMinutes\":5,\"entries\":47},\n"
+                                            + "  \"checkedFormatComponents\": {\"enabled\":true,\"maxEntries\":200,\"ttlMinutes\":5,\"entries\":8},\n"
+                                            + "  \"frontEtagDefaults\": {\"maxEntries\":50,\"maxBytesMb\":20}\n"
+                                            + "}")
+                            )
+                    ),
+                    @ApiResponse(responseCode = "403", description = "L'utilisateur n'est pas openAdomAdmin.")
+            }
     )
     @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
     @GetMapping(value = "/admin/caches/stats", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -164,9 +183,28 @@ public class CacheAdminResources {
         DataService dataService = serviceContainer.dataService();
         AuthorizationService authorizationService = serviceContainer.authorizationService();
         return ResponseEntity.ok(Map.of(
-                "filterListEntries", dataService.getFilterListCacheSize(),
-                "authorizationScopesEntries", authorizationService.getAuthorizationScopesCacheSize(),
-                "checkedFormatComponentsEntries", dataService.getCheckedFormatComponentsCacheSize()
+                "filterList", Map.of(
+                        "enabled", dataService.isFilterListCacheEnabled(),
+                        "maxEntries", dataService.getFilterListCacheMaxEntries(),
+                        "ttlMinutes", 0,
+                        "entries", dataService.getFilterListCacheSize()
+                ),
+                "authorizationScopes", Map.of(
+                        "enabled", authorizationService.isAuthorizationScopesCacheEnabled(),
+                        "maxEntries", authorizationService.getAuthorizationScopesCacheMaxEntries(),
+                        "ttlMinutes", authorizationService.getAuthorizationScopesCacheTtlMinutes(),
+                        "entries", authorizationService.getAuthorizationScopesCacheSize()
+                ),
+                "checkedFormatComponents", Map.of(
+                        "enabled", dataService.isCheckedFormatComponentsCacheEnabled(),
+                        "maxEntries", dataService.getCheckedFormatComponentsCacheMaxEntries(),
+                        "ttlMinutes", dataService.getCheckedFormatComponentsCacheTtlMinutes(),
+                        "entries", dataService.getCheckedFormatComponentsCacheSize()
+                ),
+                "frontEtagDefaults", Map.of(
+                        "maxEntries", dataService.getFrontEtagCacheMaxEntries(),
+                        "maxBytesMb", dataService.getFrontEtagCacheMaxBytesMb()
+                )
         ));
     }
 }

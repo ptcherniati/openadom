@@ -571,6 +571,18 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         return scopesCache.size();
     }
 
+    public boolean isAuthorizationScopesCacheEnabled() {
+        return authorizationScopesCacheEnabled;
+    }
+
+    public int getAuthorizationScopesCacheMaxEntries() {
+        return scopesCacheMaxEntries;
+    }
+
+    public long getAuthorizationScopesCacheTtlMinutes() {
+        return scopesCacheTtlMinutes;
+    }
+
     @Transactional
     public OreSiUserResult deleteSystemRoleUser(final OreSiRoleForUser roleForUser) {
         serviceContainer.authenticationService().setRoleAdmin();
