@@ -936,7 +936,73 @@ private PlatformTransactionManager transactionManager;
         return repository.getRepository(application).data().getReferenceDisplaysById(listOfDataIds);
     }
 
+    /**
+     * Flag d'activation du cache des CheckedFormatComponents ( cf.
+     * {@link #checkedFormatComponentsCache} ). Quand désactivé , chaque
+     * appel reconstruit l'arbre des checkers via {@code CheckerFactory}
+     * ( ~600 ms par datatype riche en colonnes ). Mode dégradé conservé
+     * pour debug / benchmarking.
+     */
+    @org.springframework.beans.factory.annotation.Value("${openadom.cache.checked-format-components.enabled:true}")
+    private boolean checkedFormatComponentsCacheEnabled;
+
+    // ─── Cache mémoire des CheckedFormatComponents ────────────────────────────
+    //
+    // Audit OA_FULL_REVIEW (8/5/26) : sur si_acbb , l'appel à
+    // CheckerFactory.getCheckers + filtre + groupingBy coûte ~600 ms par
+    // /data/json. Le résultat ne dépend QUE de ( application , dataName ) -
+    // pas de l'utilisateur ni des paramètres de la requête. Stable jusqu'à
+    // un import / delete ( change le contenu des référentiels que les
+    // ReferenceChecker préchargent ) ou un YAML edit ( change la déclaration
+    // des checkers ).
+    //
+    // Politique d'invalidation :
+    //  - explicite via invalidateCheckedFormatComponentsForApplication ,
+    //    appelée aux mêmes points que le cache filterList ( import , delete ,
+    //    refresh manuel ) ;
+    //  - filet TTL 5 min ;
+    //  - LRU 200 entrées.
+    //
+    // Pas d'userId dans la clé : le résultat est purement déclaratif , les
+    // permissions RLS s'appliquent au niveau des SELECT exécutés par les
+    // checkers ( pas au niveau de la structure des checkers ).
+    private record CheckedFormatComponentsCacheEntry(
+            Map<String, Map<String, LineCheckerResult>> result,
+            long timestamp
+    ) {}
+
+    private static final long CHECKED_FORMAT_COMPONENTS_CACHE_TTL_MS = java.util.concurrent.TimeUnit.MINUTES.toMillis(5);
+    private static final int CHECKED_FORMAT_COMPONENTS_CACHE_MAX_ENTRIES = 200;
+    private static final java.util.concurrent.ConcurrentHashMap<String, CheckedFormatComponentsCacheEntry> checkedFormatComponentsCache = new java.util.concurrent.ConcurrentHashMap<>();
+
     public Map<String, Map<String, LineCheckerResult>> getCheckedFormatComponents(final String nameOrId, final String dataName) {
+        if (!checkedFormatComponentsCacheEnabled) {
+            return computeCheckedFormatComponents(nameOrId, dataName);
+        }
+
+        final String cacheKey = nameOrId + "::" + dataName;
+        CheckedFormatComponentsCacheEntry cached = checkedFormatComponentsCache.get(cacheKey);
+        if (cached != null && (System.currentTimeMillis() - cached.timestamp()) < CHECKED_FORMAT_COMPONENTS_CACHE_TTL_MS) {
+            log.debug("checkedFormatComponents cache hit for {}", cacheKey);
+            return cached.result();
+        }
+
+        log.info("checkedFormatComponents cache miss for {} , rebuilding via CheckerFactory", cacheKey);
+        Map<String, Map<String, LineCheckerResult>> result = computeCheckedFormatComponents(nameOrId, dataName);
+
+        if (checkedFormatComponentsCache.size() >= CHECKED_FORMAT_COMPONENTS_CACHE_MAX_ENTRIES) {
+            checkedFormatComponentsCache.entrySet().stream()
+                    .min(Comparator.comparingLong(e -> e.getValue().timestamp()))
+                    .ifPresent(oldest -> checkedFormatComponentsCache.remove(oldest.getKey()));
+        }
+        checkedFormatComponentsCache.put(cacheKey, new CheckedFormatComponentsCacheEntry(result, System.currentTimeMillis()));
+        return result;
+    }
+
+    /**
+     * Calcul effectif via {@code CheckerFactory.getCheckers} ( bypass de cache ).
+     */
+    private Map<String, Map<String, LineCheckerResult>> computeCheckedFormatComponents(final String nameOrId, final String dataName) {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
         return new CheckerFactory(repository.getRepository(application).data()).getCheckers(application, dataName, new PublishContext.PublishContextBuilder(application, dataName, null, r -> List.of())).stream()
                 .filter(c -> (c.underlyingType() instanceof DateType) || (c.underlyingType() instanceof IntegerType) || (c.underlyingType() instanceof FloatType) || (c.underlyingType() instanceof ReferenceType)).collect(Collectors
@@ -949,6 +1015,23 @@ private PlatformTransactionManager transactionManager;
                                         DefaultLineCheckerResult::fromLineChecker)
                         )
                 );
+    }
+
+    /**
+     * Invalide les entrées de cache pour une application. À appeler après
+     * tout événement modifiant le résultat ( import / delete data , YAML
+     * config update ).
+     */
+    public void invalidateCheckedFormatComponentsForApplication(String appName) {
+        if (appName == null) return;
+        final String prefix = appName + "::";
+        checkedFormatComponentsCache.keySet().removeIf(k -> k.startsWith(prefix));
+        log.info("checkedFormatComponents cache invalidated for app {}", appName);
+    }
+
+    public void invalidateAllCheckedFormatComponents() {
+        checkedFormatComponentsCache.clear();
+        log.info("All checkedFormatComponents caches invalidated");
     }
 
     @Transactional(readOnly = true)
@@ -1199,11 +1282,14 @@ private PlatformTransactionManager transactionManager;
                         application.getName(), refType, error))
                 .subscribe();
         // Audit OA_FULL_REVIEW (8/5/26) - les scopes d'autorisation ( cf.
-        // AuthorizationService.getAuthorizationScopes ) sont invalidés aux
-        // mêmes événements puisqu'un import / delete change le contenu de
-        // referencevalue dont dépend la fonction SQL getnodes(). Sans ça ,
-        // un user pourrait voir un site périmé pendant 5 min ( fenêtre TTL ).
+        // AuthorizationService.getAuthorizationScopes ) ET les
+        // checkedFormatComponents sont invalidés aux mêmes événements
+        // puisqu'un import / delete change le contenu de referencevalue dont
+        // dépendent la fonction SQL getnodes() ET les ReferenceChecker
+        // préchargés par CheckerFactory. Sans ça , un user pourrait voir un
+        // site périmé pendant 5 min ( fenêtre TTL ).
         serviceContainer.authorizationService().invalidateAuthorizationScopesForApplication(application.getName());
+        invalidateCheckedFormatComponentsForApplication(application.getName());
     }
 
     /**
@@ -1214,9 +1300,11 @@ private PlatformTransactionManager transactionManager;
         String cacheKey = application.getName() + "::" + refType;
         filterListCache.remove(cacheKey);
         log.info("filterList cache invalidated for {}", cacheKey);
-        // Idem que refreshFilterListCache : on aligne les deux invalidations
-        // pour ne jamais servir un arbre stale après refresh manuel.
+        // Idem que refreshFilterListCache : on aligne les invalidations
+        // pour ne jamais servir un arbre / un set de checkers stale après
+        // refresh manuel.
         serviceContainer.authorizationService().invalidateAuthorizationScopesForApplication(application.getName());
+        invalidateCheckedFormatComponentsForApplication(application.getName());
     }
 
     /**
