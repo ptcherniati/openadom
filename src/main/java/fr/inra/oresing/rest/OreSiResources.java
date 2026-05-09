@@ -519,9 +519,10 @@ public class OreSiResources {
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/filesOnRepository/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<BinaryFileResult>> getFilesOnRepository(@PathVariable("nameOrId") final String nameOrId,
-                                                                       @PathVariable("dataType") final String dataType,
-                                                                       @JsonParam("repositoryId") final BinaryFileDataset binaryFileDataset) {
+    public ResponseEntity<String> getFilesOnRepository(@PathVariable("nameOrId") final String nameOrId,
+                                                        @PathVariable("dataType") final String dataType,
+                                                        @JsonParam("repositoryId") final BinaryFileDataset binaryFileDataset,
+                                                        @RequestHeader(value = HttpHeaders.IF_NONE_MATCH, required = false) final String ifNoneMatch) {
         Optional.ofNullable(binaryFileDataset)
                 .ifPresent(binaryFileDataset1 -> binaryFileDataset1.setIfNotPresentDatatype(dataType));
         Map<UUID, UserDescriptionResult> users = getAllUsersUseCase.execute()
@@ -549,39 +550,76 @@ public class OreSiResources {
                 .map(LocalDateTimeRange.DATE_TIME_FORMATTER::format)
                 .orElse(binaryFileDataset.getTo());
         binaryFileDataset.setTo(to);
-        final List<BinaryFileResult> files =
-                getFilesOnRepositoryUseCase.execute(nameOrId, dataType, binaryFileDataset, false).stream()
-                        .map(binaryFile -> BinaryFileResult.of(
-                                binaryFile,
-                                Optional.ofNullable(binaryFile)
-                                        .map(BinaryFile::getParams)
-                                        .map(BinaryFileInfos::createuser)
-                                        .map(users::get)
-                                        .orElse(null),
-                                Optional.ofNullable(binaryFile)
-                                        .map(BinaryFile::getParams)
-                                        .map(BinaryFileInfos::publisheduser)
-                                        .map(users::get)
-                                        .orElse(null),
-                                getReferencedFiles(binaryFile)
-                        ))
-                        .toList();
-        return okResponse(files);
-    }
 
-    private List<ReferencedBinaryFiles> getReferencedFiles(BinaryFile binaryFile) {
-        if (Optional.ofNullable(binaryFile)
-                .map(BinaryFile::getParams)
-                .stream().noneMatch(BinaryFileInfos::published)) {
-            return null;
+        final List<BinaryFile> rawFiles = getFilesOnRepositoryUseCase.execute(nameOrId, dataType, binaryFileDataset, false);
+
+        // Audit OA_FULL_REVIEW (8/5/26) - fix N+1 : avant , chaque BinaryFile
+        // déclenchait sa propre requête getReferencedBinaryFiles ( SQL par
+        // fichier ). Sur 50 fichiers = 50 SQL en plus du listing principal.
+        // Désormais : 1 seule SQL avec WHERE binaryfile IN ( ids... ) , puis
+        // lookup en mémoire par fichier. Le SQL `getReferencedBinaryFiles`
+        // accepte déjà un Set<UUID> ( cf. BinaryFileRepository:50 ) , il
+        // suffisait d'arrêter de l'appeler 1-par-1.
+        Set<UUID> publishedIds = rawFiles.stream()
+                .filter(bf -> bf.getParams() != null && bf.getParams().published())
+                .map(BinaryFile::getId)
+                .collect(Collectors.toSet());
+        final Map<UUID, List<ReferencedBinaryFiles>> refsByFileId;
+        if (publishedIds.isEmpty() || rawFiles.isEmpty()) {
+            refsByFileId = Map.of();
+        } else {
+            UUID applicationId = rawFiles.getFirst().getApplication();
+            refsByFileId = getReferencedBinaryFilesUseCase
+                    .execute(applicationId, dataType, publishedIds)
+                    .stream()
+                    .collect(Collectors.groupingBy(ReferencedBinaryFiles::binaryFileId));
         }
-        return Optional.ofNullable(binaryFile)
-                .map(bf -> getReferencedBinaryFilesUseCase.execute(
-                                bf.getApplication(),
-                                bf.getParams().binaryFiledataset().getDatatype(),
-                                Set.of(bf.getId()))
-                )
-                .orElseGet(List::of);
+
+        final List<BinaryFileResult> files = rawFiles.stream()
+                .map(binaryFile -> BinaryFileResult.of(
+                        binaryFile,
+                        Optional.ofNullable(binaryFile)
+                                .map(BinaryFile::getParams)
+                                .map(BinaryFileInfos::createuser)
+                                .map(users::get)
+                                .orElse(null),
+                        Optional.ofNullable(binaryFile)
+                                .map(BinaryFile::getParams)
+                                .map(BinaryFileInfos::publisheduser)
+                                .map(users::get)
+                                .orElse(null),
+                        binaryFile.getParams() != null && binaryFile.getParams().published()
+                                ? refsByFileId.getOrDefault(binaryFile.getId(), List.of())
+                                : null
+                ))
+                .toList();
+
+        // Audit OA_FULL_REVIEW (8/5/26) - ETag content-based pour permettre au
+        // browser de se contenter d'un 304 quand le payload n'a pas changé
+        // ( navigation rapide site -> site -> site sur même datatype ).
+        // Le SQL est déjà rapide ( <1ms , GIN index ) donc on n'ajoute pas
+        // de cache mémoire backend ; juste un hash sur la sérialisation pour
+        // skipper le retransfert + parse JSON côté frontend si possible.
+        final String json;
+        try {
+            json = jacksonObjectMapper.writeValueAsString(files);
+        } catch (JsonProcessingException e) {
+            throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
+        }
+        final String etag = computeWeakEtag(json);
+        org.springframework.http.CacheControl cacheControl =
+                org.springframework.http.CacheControl.noCache().mustRevalidate().cachePrivate();
+        if (etag.equals(ifNoneMatch)) {
+            return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
+                    .eTag(etag)
+                    .cacheControl(cacheControl)
+                    .build();
+        }
+        return ResponseEntity.ok()
+                .eTag(etag)
+                .cacheControl(cacheControl)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(json);
     }
 
     private ResponseEntity<StreamingResponseBody> getFile(
