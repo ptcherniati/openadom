@@ -189,23 +189,40 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     @Override
     public List<ReferencedBinaryFiles> getReferencedBinaryFiles(UUID applicationId, String datatype, Set<UUID> binaryFileIds) {
         if (binaryFileIds == null || binaryFileIds.isEmpty()) return List.of();
-        // Cle deterministe : tri des UUIDs pour ne pas multiplier les
-        // entrees cache pour la meme requete logique avec un ordre
-        // d'iteration different.
-        String sortedIds = binaryFileIds.stream()
-                .map(UUID::toString)
-                .sorted()
-                .collect(Collectors.joining(","));
-        String key = applicationId + "::" + datatype + "::" + sortedIds;
-        List<ReferencedBinaryFiles> cached = referencedFilesCache.get(key);
-        if (cached != null) {
-            log.debug("referencedFiles cache hit for {}", key);
-            return cached;
+
+        // Cache PER binaryFileId ( pas sur le set complet ) : sinon la
+        // cle change a chaque toggle publish/depublie ( liste publishedIds
+        // mute ) et le cache est systematiquement miss . Ici chaque file id
+        // a sa propre cle ; un toggle qui ajoute / retire un id N+1 garde
+        // les N hits valides .
+        Set<UUID> toQuery = new HashSet<>();
+        List<ReferencedBinaryFiles> result = new ArrayList<>(binaryFileIds.size());
+        for (UUID id : binaryFileIds) {
+            String key = applicationId + "::" + datatype + "::" + id;
+            List<ReferencedBinaryFiles> cached = referencedFilesCache.get(key);
+            if (cached != null) {
+                log.debug("referencedFiles cache hit  for {}", key);
+                result.addAll(cached);
+            } else {
+                toQuery.add(id);
+            }
         }
-        log.debug("referencedFiles cache miss for {} , querying", key);
-        List<ReferencedBinaryFiles> fresh = getBinaryFileRepository(applicationId.toString())
-                .getReferencedBinaryFiles(datatype, binaryFileIds);
-        referencedFilesCache.put(key, fresh);
-        return fresh;
+        if (!toQuery.isEmpty()) {
+            log.debug("referencedFiles cache miss for {} ids , querying", toQuery.size());
+            List<ReferencedBinaryFiles> fresh = getBinaryFileRepository(applicationId.toString())
+                    .getReferencedBinaryFiles(datatype, toQuery);
+            // Regrouper le resultat par binaryFileId pour pouvoir cacher
+            // par ID . Tout id absent du resultat ( aucune reference )
+            // recoit une liste vide cachee pour eviter les futures
+            // queries inutiles .
+            Map<UUID, List<ReferencedBinaryFiles>> grouped = fresh.stream()
+                    .collect(Collectors.groupingBy(ReferencedBinaryFiles::binaryFileId));
+            for (UUID id : toQuery) {
+                List<ReferencedBinaryFiles> sub = grouped.getOrDefault(id, List.of());
+                referencedFilesCache.put(applicationId + "::" + datatype + "::" + id, sub);
+                result.addAll(sub);
+            }
+        }
+        return result;
     }
 }
