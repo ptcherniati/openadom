@@ -109,7 +109,7 @@ public class PublishToggleUseCase {
                 .forUser(userId.toString())
                 .from(Sources.single(payload))
                 .to(Sinks.action((PublishTogglePayload p) -> {
-                    int rows = binaryFileRepository.togglePublishedFlag(p.fileId(), p.published());
+                    int rows = binaryFileRepository.togglePublishedFlag(p.fileId(), p.published(), p.userId());
                     if (rows != 1) {
                         throw new IllegalStateException(
                                 "togglePublishedFlag affected %d rows ( expected 1 ) for fileId=%s"

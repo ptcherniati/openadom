@@ -293,28 +293,30 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
      * Toggles the {@code published} flag of a binary file in-place via a
      * focused {@code UPDATE} on the {@code params} jsonb column .
      *
-     * <p>Refreshes {@code publisheddate} and {@code publisheduser} (when
-     * publishing) using the same conventions as the upsert path . Does
-     * not touch any other field , and leaves {@code referencevalue} /
-     * {@code data} rows untouched - publish / unpublish is a metadata
-     * operation .
+     * <p>Refreshes {@code publisheddate} and {@code publisheduser} . The
+     * caller passes the acting {@link UUID} explicitly because cascade
+     * sink threads do not inherit the HTTP request's PostgreSQL role
+     * ( {@code current_role} returns the technical DB user , which would
+     * fail to deserialize back into the {@code UUID} field of
+     * {@code BinaryFileInfos.publisheduser} ) .
      *
      * @param fileId    binary file id ; must exist
      * @param published target value of the published flag
+     * @param userId    acting user id stored in {@code params.publisheduser}
      * @return number of rows updated ( {@code 0} if id not found )
      */
-    public int togglePublishedFlag(UUID fileId, boolean published) {
+    public int togglePublishedFlag(UUID fileId, boolean published, UUID userId) {
         String query = """
                 UPDATE %s
                 SET params = jsonb_set(jsonb_set(jsonb_set(
                             COALESCE(params, '{}'::jsonb),
                             '{published}',     to_jsonb(?::boolean)),
                             '{publisheddate}', to_jsonb(CURRENT_TIMESTAMP::text)),
-                            '{publisheduser}', to_jsonb(current_role::text)),
+                            '{publisheduser}', to_jsonb(?::text)),
                     updateDate = current_timestamp
                 WHERE id = ?::uuid
                 """.formatted(getTable().getSqlIdentifier());
-        return jdbcTemplate.update(query, published, fileId.toString());
+        return jdbcTemplate.update(query, published, userId.toString(), fileId.toString());
     }
 
     public void storeFileContent(UUID fileId, InputStream inputStream, long fileSize) {
