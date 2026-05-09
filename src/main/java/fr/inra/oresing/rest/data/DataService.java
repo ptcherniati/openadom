@@ -1050,7 +1050,7 @@ private PlatformTransactionManager transactionManager;
 
     /** Observabilité : taille courante du cache filterList. */
     public int getFilterListCacheSize() {
-        return filterListCache.size();
+        return filterListCache == null ? 0 : filterListCache.size();
     }
 
     /** Observabilité : taille courante du cache checkedFormatComponents. */
@@ -1064,7 +1064,7 @@ private PlatformTransactionManager transactionManager;
     }
 
     public int getFilterListCacheMaxEntries() {
-        return filterListCacheMaxEntries;
+        return filterListCache == null ? filterListCacheMaxEntries : filterListCache.maxEntries();
     }
 
     public boolean isCheckedFormatComponentsCacheEnabled() {
@@ -1149,7 +1149,13 @@ private PlatformTransactionManager transactionManager;
     // Mémoire utilisée :
     //   - Pour un jeu de 105K lignes : le résultat fait ~1.7 MB de JSON
     //   - 50 entrées max = ~85 MB worst case ( en pratique beaucoup moins )
-    private record FilterListCacheEntry(String json, String etag, long timestamp) {}
+    /**
+     * Valeur stockée dans le cache filterList : JSON sérialisé + ETag.
+     * Le timestamp ( pour LRU eviction ) est désormais porté par le
+     * wrapper {@link fr.inra.oresing.cache.MemoryCache.Entry} , ce
+     * record ne porte que la donnée métier.
+     */
+    private record FilterListValue(String json, String etag) {}
 
     /**
      * Résultat public exposé par {@link #getFilterListResult} : JSON sérialisé
@@ -1160,10 +1166,24 @@ private PlatformTransactionManager transactionManager;
      */
     public record FilterListResult(String json, String etag) {}
 
-    private static final java.util.concurrent.ConcurrentHashMap<String, FilterListCacheEntry> filterListCache = new java.util.concurrent.ConcurrentHashMap<>();
-
     @org.springframework.beans.factory.annotation.Value("${openadom.cache.filter-list.max-entries:50}")
     private int filterListCacheMaxEntries;
+
+    /**
+     * Cache mémoire des FilterList. Audit OA_FULL_REVIEW (8/5/26) -
+     * historiquement {@link java.util.concurrent.ConcurrentHashMap} avec
+     * record {@code (json , etag , timestamp)} et LRU eviction manuelle ;
+     * refactoré sur {@link fr.inra.oresing.cache.MemoryCache} pour mutualiser
+     * le pattern avec scopesCache et checkedFormatComponentsCache. Pas de
+     * TTL ( historique ; le hook d'invalidation explicite suffit ).
+     */
+    private fr.inra.oresing.cache.MemoryCache<String, FilterListValue> filterListCache;
+
+    @jakarta.annotation.PostConstruct
+    void initFilterListCache() {
+        this.filterListCache = new fr.inra.oresing.cache.MemoryCache<>(
+                "filterList", filterListCacheMaxEntries, 0);
+    }
 
     private static final ObjectMapper cacheObjectMapper = new ObjectMapper();
 
@@ -1199,7 +1219,7 @@ private PlatformTransactionManager transactionManager;
             }
         }
 
-        FilterListCacheEntry cached = filterListCache.get(cacheKey);
+        FilterListValue cached = filterListCache.get(cacheKey);
 
         // Cache hit : retourner le JSON déjà sérialisé + ETag stocké (0ms)
         if (cached != null) {
@@ -1212,7 +1232,7 @@ private PlatformTransactionManager transactionManager;
         log.info("filterList cache miss for {}, loading from database", cacheKey);
         if (cacheMetrics != null) cacheMetrics.recordFilterListMiss();
         List<FilterListEntry> entries = computeFilterListEntries(application, refType);
-        FilterListCacheEntry stored = serializeAndCache(cacheKey, entries);
+        FilterListValue stored = serializeAndCache(cacheKey, entries);
         return new FilterListResult(stored.json(), stored.etag());
     }
 
@@ -1304,20 +1324,18 @@ private PlatformTransactionManager transactionManager;
      * miss ou refresh asynchrone ) puissent renvoyer JSON + ETag sans aller
      * relire le cache.
      */
-    private FilterListCacheEntry serializeAndCache(String cacheKey, List<FilterListEntry> list) {
+    private FilterListValue serializeAndCache(String cacheKey, List<FilterListEntry> list) {
         try {
             String json = cacheObjectMapper.writeValueAsString(list);
-            if (filterListCache.size() >= filterListCacheMaxEntries) {
-                filterListCache.entrySet().stream()
-                        .min(java.util.Comparator.comparingLong(e -> e.getValue().timestamp()))
-                        .ifPresent(oldest -> filterListCache.remove(oldest.getKey()));
-            }
-            FilterListCacheEntry entry = new FilterListCacheEntry(json, computeEtag(json), System.currentTimeMillis());
-            filterListCache.put(cacheKey, entry);
-            return entry;
+            FilterListValue value = new FilterListValue(json, computeEtag(json));
+            // LRU eviction + put gérés par MemoryCache.put en interne.
+            filterListCache.put(cacheKey, value);
+            return value;
         } catch (Exception e) {
             log.error("Failed to serialize filterList for {}", cacheKey, e);
-            return new FilterListCacheEntry("[]", computeEtag("[]"), System.currentTimeMillis());
+            // Fallback : retourner un payload vide non-cached pour ne pas
+            // polluer le cache d'une entrée bidon.
+            return new FilterListValue("[]", computeEtag("[]"));
         }
     }
 
@@ -1362,7 +1380,7 @@ private PlatformTransactionManager transactionManager;
      */
     public void invalidateFilterListCache(final Application application, final String refType) {
         String cacheKey = application.getName() + "::" + refType;
-        filterListCache.remove(cacheKey);
+        if (filterListCache != null) filterListCache.invalidate(cacheKey);
         log.info("filterList cache invalidated for {}", cacheKey);
         // Idem que refreshFilterListCache : on aligne les invalidations
         // pour ne jamais servir un arbre / un set de checkers stale après
@@ -1378,10 +1396,10 @@ private PlatformTransactionManager transactionManager;
      * un app a été modifié ( import / delete / refresh manuel ).
      */
     public void invalidateFilterListCacheForApplication(String appName) {
-        if (appName == null) return;
+        if (appName == null || filterListCache == null) return;
         final String prefix = appName + "::";
-        filterListCache.keySet().removeIf(k -> k.startsWith(prefix));
-        log.info("filterList cache invalidated for app {}", appName);
+        int removed = filterListCache.invalidateMatching(k -> k.startsWith(prefix));
+        log.info("filterList cache invalidated for app {} ( {} entries )", appName, removed);
         if (cacheMetrics != null) cacheMetrics.recordFilterListInvalidate();
     }
 
@@ -1389,7 +1407,7 @@ private PlatformTransactionManager transactionManager;
      * Invalide tout le cache filterList (toutes les applications, tous les dataTypes).
      */
     public void invalidateAllFilterListCaches() {
-        filterListCache.clear();
+        if (filterListCache != null) filterListCache.invalidateAll();
         log.info("All filterList caches invalidated");
     }
 
