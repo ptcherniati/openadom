@@ -104,7 +104,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
      * fait confiance aux hooks ; le filet TTL sert surtout à se prémunir
      * d'un hook oublié sur un nouveau path d'écriture.
      */
-    @Value("${openadom.cache.authorization-scopes.ttl-minutes:5}")
+    @Value("${openadom.cache.authorization-scopes.ttl-minutes:0}")
     private long scopesCacheTtlMinutes;
 
     /**

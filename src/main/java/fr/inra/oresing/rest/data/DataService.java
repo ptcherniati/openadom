@@ -975,7 +975,7 @@ private PlatformTransactionManager transactionManager;
      * TTL en minutes du cache. Si {@code <= 0} : pas de TTL ( les entrées
      * ne sont rafraîchies que par les hooks d'invalidation explicite ).
      */
-    @org.springframework.beans.factory.annotation.Value("${openadom.cache.checked-format-components.ttl-minutes:5}")
+    @org.springframework.beans.factory.annotation.Value("${openadom.cache.checked-format-components.ttl-minutes:0}")
     private long checkedFormatComponentsCacheTtlMinutes;
 
     @org.springframework.beans.factory.annotation.Value("${openadom.cache.checked-format-components.max-entries:200}")
