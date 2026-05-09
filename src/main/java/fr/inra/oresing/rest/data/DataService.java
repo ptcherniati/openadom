@@ -966,22 +966,26 @@ private PlatformTransactionManager transactionManager;
     // Pas d'userId dans la clé : le résultat est purement déclaratif , les
     // permissions RLS s'appliquent au niveau des SELECT exécutés par les
     // checkers ( pas au niveau de la structure des checkers ).
-    private record CheckedFormatComponentsCacheEntry(
-            Map<String, Map<String, LineCheckerResult>> result,
-            long timestamp
-    ) {}
-
-    /**
-     * TTL en minutes du cache. Si {@code <= 0} : pas de TTL ( les entrées
-     * ne sont rafraîchies que par les hooks d'invalidation explicite ).
-     */
     @org.springframework.beans.factory.annotation.Value("${openadom.cache.checked-format-components.ttl-minutes:120}")
     private long checkedFormatComponentsCacheTtlMinutes;
 
     @org.springframework.beans.factory.annotation.Value("${openadom.cache.checked-format-components.max-entries:200}")
     private int checkedFormatComponentsCacheMaxEntries;
 
-    private static final java.util.concurrent.ConcurrentHashMap<String, CheckedFormatComponentsCacheEntry> checkedFormatComponentsCache = new java.util.concurrent.ConcurrentHashMap<>();
+    /**
+     * Cache mémoire des CheckedFormatComponents ; clé {@code appName::dataName}.
+     * Initialisé via {@link #initCheckedFormatComponentsCache} après injection
+     * des @Value. Type stocké : Map<String, Map<String, LineCheckerResult>>.
+     */
+    private fr.inra.oresing.cache.MemoryCache<String, Map<String, Map<String, LineCheckerResult>>> checkedFormatComponentsCache;
+
+    @jakarta.annotation.PostConstruct
+    void initCheckedFormatComponentsCache() {
+        this.checkedFormatComponentsCache = new fr.inra.oresing.cache.MemoryCache<>(
+                "checkedFormatComponents",
+                checkedFormatComponentsCacheMaxEntries,
+                checkedFormatComponentsCacheTtlMinutes);
+    }
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     @org.springframework.context.annotation.Lazy
@@ -993,35 +997,18 @@ private PlatformTransactionManager transactionManager;
         }
 
         final String cacheKey = nameOrId + "::" + dataName;
-        CheckedFormatComponentsCacheEntry cached = checkedFormatComponentsCache.get(cacheKey);
-        if (cached != null && !isCheckedFormatComponentsEntryExpired(cached)) {
+        Map<String, Map<String, LineCheckerResult>> cached = checkedFormatComponentsCache.get(cacheKey);
+        if (cached != null) {
             log.debug("checkedFormatComponents cache hit for {}", cacheKey);
             if (cacheMetrics != null) cacheMetrics.recordCheckedFormatHit();
-            return cached.result();
+            return cached;
         }
 
         log.info("checkedFormatComponents cache miss for {} , rebuilding via CheckerFactory", cacheKey);
         if (cacheMetrics != null) cacheMetrics.recordCheckedFormatMiss();
         Map<String, Map<String, LineCheckerResult>> result = computeCheckedFormatComponents(nameOrId, dataName);
-
-        if (checkedFormatComponentsCache.size() >= checkedFormatComponentsCacheMaxEntries) {
-            checkedFormatComponentsCache.entrySet().stream()
-                    .min(Comparator.comparingLong(e -> e.getValue().timestamp()))
-                    .ifPresent(oldest -> checkedFormatComponentsCache.remove(oldest.getKey()));
-        }
-        checkedFormatComponentsCache.put(cacheKey, new CheckedFormatComponentsCacheEntry(result, System.currentTimeMillis()));
+        checkedFormatComponentsCache.put(cacheKey, result);
         return result;
-    }
-
-    /**
-     * Une entrée est expirée si {@code checkedFormatComponentsCacheTtlMinutes > 0}
-     * et que l'âge dépasse le TTL. Si {@code <= 0} : pas de TTL ( les entrées
-     * vivent jusqu'à invalidation explicite ).
-     */
-    private boolean isCheckedFormatComponentsEntryExpired(CheckedFormatComponentsCacheEntry entry) {
-        if (checkedFormatComponentsCacheTtlMinutes <= 0) return false;
-        long ageMs = System.currentTimeMillis() - entry.timestamp();
-        return ageMs >= java.util.concurrent.TimeUnit.MINUTES.toMillis(checkedFormatComponentsCacheTtlMinutes);
     }
 
     /**
@@ -1048,15 +1035,15 @@ private PlatformTransactionManager transactionManager;
      * config update ).
      */
     public void invalidateCheckedFormatComponentsForApplication(String appName) {
-        if (appName == null) return;
+        if (appName == null || checkedFormatComponentsCache == null) return;
         final String prefix = appName + "::";
-        checkedFormatComponentsCache.keySet().removeIf(k -> k.startsWith(prefix));
-        log.info("checkedFormatComponents cache invalidated for app {}", appName);
+        int removed = checkedFormatComponentsCache.invalidateMatching(k -> k.startsWith(prefix));
+        log.info("checkedFormatComponents cache invalidated for app {} ( {} entries )", appName, removed);
         if (cacheMetrics != null) cacheMetrics.recordCheckedFormatInvalidate();
     }
 
     public void invalidateAllCheckedFormatComponents() {
-        checkedFormatComponentsCache.clear();
+        if (checkedFormatComponentsCache != null) checkedFormatComponentsCache.invalidateAll();
         log.info("All checkedFormatComponents caches invalidated");
         if (cacheMetrics != null) cacheMetrics.recordCheckedFormatInvalidate();
     }
@@ -1068,7 +1055,7 @@ private PlatformTransactionManager transactionManager;
 
     /** Observabilité : taille courante du cache checkedFormatComponents. */
     public int getCheckedFormatComponentsCacheSize() {
-        return checkedFormatComponentsCache.size();
+        return checkedFormatComponentsCache == null ? 0 : checkedFormatComponentsCache.size();
     }
 
     /** Observabilité : flag + caps des caches ( endpoint admin ). */
@@ -1085,11 +1072,11 @@ private PlatformTransactionManager transactionManager;
     }
 
     public int getCheckedFormatComponentsCacheMaxEntries() {
-        return checkedFormatComponentsCacheMaxEntries;
+        return checkedFormatComponentsCache == null ? checkedFormatComponentsCacheMaxEntries : checkedFormatComponentsCache.maxEntries();
     }
 
     public long getCheckedFormatComponentsCacheTtlMinutes() {
-        return checkedFormatComponentsCacheTtlMinutes;
+        return checkedFormatComponentsCache == null ? checkedFormatComponentsCacheTtlMinutes : checkedFormatComponentsCache.ttlMinutes();
     }
 
     @org.springframework.beans.factory.annotation.Value("${openadom.cache.front.etag.max-entries:50}")

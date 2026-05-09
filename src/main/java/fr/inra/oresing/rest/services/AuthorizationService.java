@@ -28,6 +28,7 @@ import fr.inra.oresing.domain.exceptions.role.role.BadRoleException;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
+import fr.inra.oresing.cache.MemoryCache;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.UpdateRolesOnAdditionalFilesManagement;
@@ -92,31 +93,30 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
     // Clé : userId::appName::menuType. Inclure l'userId est obligatoire car la
     // requête SQL est filtrée par RLS sur le rôle Postgres courant ( deux users
     // différents peuvent voir des arbres différents pour le même app/menu ).
-    private record ScopesCacheEntry(
-            Map<String, List<GetGrantableResult.ReferenceScope>> scopes,
-            long timestamp
-    ) {}
-
     /**
-     * TTL en minutes du cache. Si {@code <= 0} : pas de TTL ( les entrées
-     * ne sont rafraîchies que par les hooks d'invalidation explicite -
-     * import / delete / YAML edit ). Comportement attendu en prod si l'on
-     * fait confiance aux hooks ; le filet TTL sert surtout à se prémunir
-     * d'un hook oublié sur un nouveau path d'écriture.
+     * Type stocké dans le cache : map de scopes par datatype. Pas de
+     * gestion de timestamp ici - {@link MemoryCache} la porte en interne.
      */
+    private record ScopesValue(Map<String, List<GetGrantableResult.ReferenceScope>> scopes) {}
+
     @Value("${openadom.cache.authorization-scopes.ttl-minutes:120}")
     private long scopesCacheTtlMinutes;
 
-    /**
-     * Capacité maximale du cache ( LRU eviction ). Dimensionner en prod
-     * en fonction du nombre d'utilisateurs actifs simultanément × apps
-     * × menuTypes. Worst case ~50-500 KB par entrée selon volume des
-     * référentiels ; 200 entrées ≈ 20-100 MB JVM.
-     */
     @Value("${openadom.cache.authorization-scopes.max-entries:200}")
     private int scopesCacheMaxEntries;
 
-    private static final ConcurrentHashMap<String, ScopesCacheEntry> scopesCache = new ConcurrentHashMap<>();
+    /**
+     * Cache mémoire des scopes utilisateurs ; clé
+     * {@code userId::appName::menuType}. Initialisé après construction
+     * via {@link #initScopesCache} ( les @Value ne sont injectés
+     * qu'après la construction de l'instance ).
+     */
+    private MemoryCache<String, ScopesValue> scopesCache;
+
+    @jakarta.annotation.PostConstruct
+    void initScopesCache() {
+        this.scopesCache = new MemoryCache<>("authorizationScopes", scopesCacheMaxEntries, scopesCacheTtlMinutes);
+    }
 
     public AuthorizationService(
             SqlService db,
@@ -490,8 +490,8 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         final String userId = serviceContainer.authenticationService().getCurrentUser().getId().toString();
         final String cacheKey = userId + "::" + application.getName() + "::" + menuType.getType();
 
-        ScopesCacheEntry cached = scopesCache.get(cacheKey);
-        if (cached != null && !isScopesEntryExpired(cached)) {
+        ScopesValue cached = scopesCache.get(cacheKey);
+        if (cached != null) {
             log.debug("authorizationScopes cache hit for {}", cacheKey);
             if (cacheMetrics != null) cacheMetrics.recordScopesHit();
             return cached.scopes();
@@ -500,27 +500,8 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         log.info("authorizationScopes cache miss for {} , computing from SQL", cacheKey);
         if (cacheMetrics != null) cacheMetrics.recordScopesMiss();
         Map<String, List<GetGrantableResult.ReferenceScope>> result = computeAuthorizationScopes(application, menuType);
-
-        // Eviction LRU si on dépasse la borne ( évite le bloat sur instances
-        // multi-tenant avec beaucoup d'applications ).
-        if (scopesCache.size() >= scopesCacheMaxEntries) {
-            scopesCache.entrySet().stream()
-                    .min(Comparator.comparingLong(e -> e.getValue().timestamp()))
-                    .ifPresent(oldest -> scopesCache.remove(oldest.getKey()));
-        }
-        scopesCache.put(cacheKey, new ScopesCacheEntry(result, System.currentTimeMillis()));
+        scopesCache.put(cacheKey, new ScopesValue(result));
         return result;
-    }
-
-    /**
-     * Une entrée est expirée si {@code scopesCacheTtlMinutes > 0} et que
-     * l'âge dépasse le TTL. Si {@code scopesCacheTtlMinutes <= 0} , pas de
-     * TTL ( les entrées vivent jusqu'à invalidation explicite ).
-     */
-    private boolean isScopesEntryExpired(ScopesCacheEntry entry) {
-        if (scopesCacheTtlMinutes <= 0) return false;
-        long ageMs = System.currentTimeMillis() - entry.timestamp();
-        return ageMs >= TimeUnit.MINUTES.toMillis(scopesCacheTtlMinutes);
     }
 
     /**
@@ -557,10 +538,10 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
      * sont retirées.
      */
     public void invalidateAuthorizationScopesForApplication(String appName) {
-        if (appName == null) return;
+        if (appName == null || scopesCache == null) return;
         final String marker = "::" + appName + "::";
-        scopesCache.entrySet().removeIf(e -> e.getKey().contains(marker));
-        log.info("authorizationScopes cache invalidated for app {}", appName);
+        int removed = scopesCache.invalidateMatching(k -> k.contains(marker));
+        log.info("authorizationScopes cache invalidated for app {} ( {} entries )", appName, removed);
         if (cacheMetrics != null) cacheMetrics.recordScopesInvalidate();
     }
 
@@ -569,13 +550,13 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
      * Réservé aux cas extrêmes ( purge debug , redéploiement à chaud ).
      */
     public void invalidateAllAuthorizationScopes() {
-        scopesCache.clear();
+        if (scopesCache != null) scopesCache.invalidateAll();
         log.info("All authorizationScopes caches invalidated");
     }
 
     /** Observabilité : taille courante du cache scopes. */
     public int getAuthorizationScopesCacheSize() {
-        return scopesCache.size();
+        return scopesCache == null ? 0 : scopesCache.size();
     }
 
     public boolean isAuthorizationScopesCacheEnabled() {
@@ -583,11 +564,11 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
     }
 
     public int getAuthorizationScopesCacheMaxEntries() {
-        return scopesCacheMaxEntries;
+        return scopesCache == null ? scopesCacheMaxEntries : scopesCache.maxEntries();
     }
 
     public long getAuthorizationScopesCacheTtlMinutes() {
-        return scopesCacheTtlMinutes;
+        return scopesCache == null ? scopesCacheTtlMinutes : scopesCache.ttlMinutes();
     }
 
     @Transactional
