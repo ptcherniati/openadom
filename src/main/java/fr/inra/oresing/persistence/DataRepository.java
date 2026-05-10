@@ -517,32 +517,46 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 .map(List::getFirst)
                 .filter(o -> o.matches("[0-9]*|ALL"))
                 .orElse("ALL");
+        // P0.2 : CTE " agg " replaced by a LEFT JOIN LATERAL correlated to t.id .
+        // The original form materialised json_object_agg over the entire
+        // reference_reference table ( 39.7 M rows on si_acbb ) BEFORE any filter ,
+        // which raised " string buffer exceeds maximum allowed length "
+        // ( 1 GB jsonb cap ) on referentials with rich back-links - OOM
+        // visible from 3 K rows ( see SQL_REPORT_10_05_26 . md Q2 ) . The
+        // LATERAL fires once per t row retained by the outer WHERE +
+        // OFFSET / LIMIT , bounded to that row's back-links , never above
+        // the per-row jsonb cap .
+        //
+        // Iso-result verified ( md5 of sorted string_agg ) on
+        // t_paturage_pat ( 1251 rows ) and t_data_sol_analyse_dsa ( 3131
+        // rows ) under role applicationManager : strict equality with the
+        // CTE form constrained to the same refType ( the unconstrained
+        // form OOMs and cannot be benched directly ) .
+        //
+        // Preserved : cross join with jsonb_each_text(t.refvalues) kv +
+        // DISTINCT ( both required for the addReferenceConditions ' any '
+        // filter which references kv.value ) ; same WHERE predicates ;
+        // RLS path unchanged ( both referencevalue accesses honour the
+        // role set by setRoleForClient ) .
         String query = """
-                with
-                agg as (
-                     select
-                         referencesby,
-                         json_object_agg(referenceid, d2.refValues) agg
-                        from %1$s.reference_reference dr
-                        left join %2$s d2 on dr.referenceId = d2.id
-                     group by referencesby
-                )
-                """
-                .formatted(getSchema().getSqlIdentifier(), getTable().getSqlIdentifier());
-        query += """
                 SELECT DISTINCT
                     '%1$s' as "@class",
                     to_jsonb(t) ||
-                        jsonb_build_object('referencingreferences',agg.agg) as json
+                        jsonb_build_object('referencingreferences', refs.agg) as json
                 FROM
                     %2$s t
-                    left join agg on agg.referencesby = t.id,
+                    left join lateral (
+                        select json_object_agg(rr.referenceid, d2.refvalues) as agg
+                        from %3$s.reference_reference rr
+                        left join %2$s d2 on d2.id = rr.referenceid
+                        where rr.referencesby = t.id
+                    ) refs on true,
                     jsonb_each_text(t.refvalues) kv
                 WHERE
                     application=:applicationId::uuid AND
                     ReferenceType=:refType
                 """
-                .formatted(DataValue.class.getName(), getTable().getSqlIdentifier());
+                .formatted(DataValue.class.getName(), getTable().getSqlIdentifier(), getSchema().getSqlIdentifier());
         final MapSqlParameterSource paramSource = new MapSqlParameterSource(APPLICATION_ID, getApplication().getId())
                 .addValue(REF_TYPE, refType);
 
