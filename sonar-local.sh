@@ -196,14 +196,48 @@ else
   fi
   echo "══════════════════════════════════════════════════════════════════════"
 
-  # Passer la propriété Maven pour que tous les profils respectent l'exclusion.
-  # Avec -Dsurefire.excludedGroups="" les tests Docker sont inclus dans Jacoco.
-  SUREFIRE_OPTS=("-Dsurefire.excludedGroups=${EXCLUDED_GROUPS}")
+  # Liste de tous les profils à lancer séquentiellement.
+  # JaCoCo opère en append=true (défaut) pour fusionner la couverture de tous les runs.
+  # Chaque profil filtre un sous-ensemble de tests par @Tag → couverture maximale.
+  ALL_PROFILES=(
+    core.basic
+    core.config
+    core.auth
+    domain.model
+    domain.checker
+    domain.i18n
+    integration.bundle
+    integration.rest
+    integration.persistence
+    integration.migration
+    use-cases
+    app.haute_frequence
+    app.acbb
+    app.olac
+    app.foret
+    app.pattern
+    app.recursivity
+    app.teledetection
+    app.monsoere
+    no-tags
+  )
 
-  # On capture le code de retour sans quitter (pour lancer Sonar quand même)
+  SUREFIRE_EXCL=("-Dsurefire.excludedGroups=${EXCLUDED_GROUPS}")
+  TEST_EXIT_CODE=0
+
   set +e
-  mvn --batch-mode test "${SUREFIRE_OPTS[@]}"
-  TEST_EXIT_CODE=$?
+
+  for PROFILE in "${ALL_PROFILES[@]}"; do
+    echo ""
+    echo "  ▶ Profil : ${PROFILE}"
+    mvn --batch-mode test -P"${PROFILE}" "${SUREFIRE_EXCL[@]}"
+    EXIT=$?
+    if [ ${EXIT} -ne 0 ]; then
+      echo "  ⚠️  Échec dans le profil ${PROFILE} (code ${EXIT})"
+      TEST_EXIT_CODE=${EXIT}
+    fi
+  done
+
   set -e
 
   if [ ${TEST_EXIT_CODE} -ne 0 ]; then

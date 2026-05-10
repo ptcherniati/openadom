@@ -1003,6 +1003,28 @@
         </profile>
 
 
+        <!-- Profil pour les tests tagués "integration.migration" (ex: ComparingConfiguration) -->
+        <profile>
+            <id>integration.migration</id>
+            <properties>
+                <junit.jupiter.tags>integration.migration</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${maven-surefire-plugin.version}</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
         <!-- Profil pour les tests use-cases -->
         <profile>
             <id>use-cases</id>
@@ -1043,7 +1065,7 @@
                             <excludedGroups>
                                 SUITE,OTHERS_TEST,core.basic,core.config,core.auth,
                                 domain.model,domain.checker,domain.i18n,
-                                integration.rest,integration.persistence,integration.bundle,
+                                integration.rest,integration.persistence,integration.migration,integration.bundle,
                                 app.monsoere,app.haute_frequence,app.acbb,
                                 app.olac,app.foret,app.pattern,app.recursivity,app.teledetection,
                                 use-cases,
