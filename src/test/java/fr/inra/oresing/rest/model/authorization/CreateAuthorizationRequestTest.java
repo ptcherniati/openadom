@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.OreSiAuthorization;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
+import fr.inra.oresing.domain.authorization.request.AuthorizationInput;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.authorization.request.AuthorizationWithRestriction;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;

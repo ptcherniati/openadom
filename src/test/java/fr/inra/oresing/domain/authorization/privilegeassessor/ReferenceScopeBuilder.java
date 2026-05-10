@@ -2,7 +2,7 @@ package fr.inra.oresing.domain.authorization.privilegeassessor;
 
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
-import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
+import fr.inra.oresing.domain.authorization.GetGrantableResult;
 
 import java.util.LinkedList;
 import java.util.List;

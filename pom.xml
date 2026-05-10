@@ -584,6 +584,10 @@
                             </optionalAnnotations>
                             <excludeClasses>
                                 <class>com.google.common.base.Predicate</class>
+                                <!-- Alias dépréciés REST → les versions domaine sont utilisées -->
+                                <class>fr.inra.oresing.rest.model.authorization.AuthorizationParsed</class>
+                                <class>fr.inra.oresing.rest.model.authorization.AuthorizationsResult</class>
+                                <class>fr.inra.oresing.rest.model.authorization.GetGrantableResult</class>
                             </excludeClasses>
                             <outputFile>${project.basedir}/../frontend/src/types/generated/generated-backend-types-module.ts
                             </outputFile>

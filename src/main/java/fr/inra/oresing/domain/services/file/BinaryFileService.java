@@ -8,7 +8,7 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.data.DataFile;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.file.FileOrUUID;
-import fr.inra.oresing.rest.model.additionalfiles.AdditionalBinaryFileResult;
+import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFileResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;

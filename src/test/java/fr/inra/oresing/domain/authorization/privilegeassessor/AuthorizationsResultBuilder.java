@@ -1,7 +1,7 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor;
 
-import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
-import fr.inra.oresing.rest.model.authorization.AuthorizationsResult;
+import fr.inra.oresing.domain.authorization.AuthorizationParsed;
+import fr.inra.oresing.domain.authorization.AuthorizationsResult;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.ArrayList;

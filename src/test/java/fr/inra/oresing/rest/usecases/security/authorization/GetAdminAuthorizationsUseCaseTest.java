@@ -1,8 +1,8 @@
 package fr.inra.oresing.rest.usecases.security.authorization;
 
 import fr.inra.oresing.persistence.AuthenticationService;
-import fr.inra.oresing.rest.model.authorization.CurrentUserRolesResult;
-import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
+import fr.inra.oresing.domain.authorization.CurrentUserRolesResult;
+import fr.inra.oresing.domain.authorization.LoginAdminResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

@@ -1,8 +1,8 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor.role;
 
-
-import fr.inra.oresing.rest.security.AuthorizationFilter;
+import fr.inra.oresing.domain.authorization.SecurityRole;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Collection;
 import java.util.List;
@@ -11,7 +11,7 @@ public record NotConnectedUnauthentifiedUserForCreate() implements NotConnectedU
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // Autorisation spécifique pour la création de compte
-        return List.of(AuthorizationFilter.ROLE_UNAUTHENTIFIED_UPDATE_USER);
+        return List.of(new SimpleGrantedAuthority(SecurityRole.ROLE_UNAUTHENTIFIED_UPDATE_USER_VALUE));
     }
 
     @Override

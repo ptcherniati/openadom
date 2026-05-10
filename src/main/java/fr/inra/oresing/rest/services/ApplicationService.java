@@ -28,7 +28,7 @@ import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.model.application.ApplicationLightResult;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
-import fr.inra.oresing.rest.model.authorization.AuthorizationsForUserResult;
+import fr.inra.oresing.domain.authorization.AuthorizationsForUserResult;
 import fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult;
 import fr.inra.oresing.rest.reactive.ReactiveEventHelper;
 import fr.inra.oresing.rest.reactive.ReactiveResult;

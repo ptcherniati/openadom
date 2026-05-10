@@ -1,8 +1,8 @@
 package fr.inra.oresing.rest.model.rightsrequest;
 
 import fr.inra.oresing.domain.application.configuration.AdditionalFileDescription;
-import fr.inra.oresing.rest.model.additionalfiles.AdditionalBinaryFileResult;
-import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
+import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFileResult;
+import fr.inra.oresing.domain.authorization.GetGrantableResult;
 
 import java.util.List;
 import java.util.SortedSet;

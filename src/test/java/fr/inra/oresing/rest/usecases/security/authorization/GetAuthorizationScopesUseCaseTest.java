@@ -2,7 +2,7 @@ package fr.inra.oresing.rest.usecases.security.authorization;
 
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.data.menu.MenuType;
-import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
+import fr.inra.oresing.domain.authorization.GetGrantableResult;
 import fr.inra.oresing.rest.services.AuthorizationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;

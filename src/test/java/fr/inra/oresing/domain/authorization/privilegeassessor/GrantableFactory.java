@@ -2,9 +2,9 @@ package fr.inra.oresing.domain.authorization.privilegeassessor;
 
 import com.google.common.collect.ImmutableSortedSet;
 import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
-import fr.inra.oresing.rest.model.authorization.ApplicationUserResult;
-import fr.inra.oresing.rest.model.authorization.AuthorizationsResult;
-import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
+import fr.inra.oresing.domain.authorization.ApplicationUserResult;
+import fr.inra.oresing.domain.authorization.AuthorizationsResult;
+import fr.inra.oresing.domain.authorization.GetGrantableResult;
 
 import java.util.*;
 

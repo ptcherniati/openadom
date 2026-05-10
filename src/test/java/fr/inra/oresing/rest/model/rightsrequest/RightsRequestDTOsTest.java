@@ -2,7 +2,7 @@ package fr.inra.oresing.rest.model.rightsrequest;
 
 import fr.inra.oresing.domain.application.configuration.RightRequestDescription;
 import fr.inra.oresing.domain.rightsrequest.RightsRequest;
-import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
+import fr.inra.oresing.domain.authorization.GetGrantableResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
@@ -126,7 +126,7 @@ class RightsRequestDTOsTest {
         @DisplayName("constructeur depuis RightsRequest mappe correctement les champs")
         void constructorMapsFields() {
             RightsRequest rr = buildRightsRequest();
-            Map<String, List<fr.inra.oresing.rest.model.authorization.AuthorizationParsed>> parsedAuth =
+            Map<String, List<fr.inra.oresing.domain.authorization.AuthorizationParsed>> parsedAuth =
                     new java.util.HashMap<>();
             RightsRequestResult result = new RightsRequestResult(rr, parsedAuth, "admin", "admin@example.com");
 
@@ -197,7 +197,7 @@ class RightsRequestDTOsTest {
         @DisplayName("le rightsRequest (authorizations parsées) est correctement stocké")
         void parsedAuthorizationStored() {
             RightsRequest rr = buildRightsRequest();
-            Map<String, List<fr.inra.oresing.rest.model.authorization.AuthorizationParsed>> auth =
+            Map<String, List<fr.inra.oresing.domain.authorization.AuthorizationParsed>> auth =
                     new java.util.HashMap<>();
             auth.put("scope", List.of());
             RightsRequestResult result = new RightsRequestResult(rr, auth, null, null);

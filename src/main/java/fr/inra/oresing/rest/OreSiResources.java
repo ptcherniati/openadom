@@ -54,7 +54,7 @@ import fr.inra.oresing.rest.exceptions.OreSiIOException;
 import fr.inra.oresing.rest.model.additionalfiles.CreateAdditionalFileRequest;
 import fr.inra.oresing.rest.model.additionalfiles.exceptions.BadAdditionalFileParamsSearchException;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
-import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
+import fr.inra.oresing.domain.authorization.GetGrantableResult;
 import fr.inra.oresing.rest.model.data.*;
 import fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery;
 import fr.inra.oresing.rest.model.reference.GetReferenceResult;

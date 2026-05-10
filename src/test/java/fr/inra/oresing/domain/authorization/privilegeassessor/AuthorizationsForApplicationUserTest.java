@@ -1,7 +1,7 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor;
 
 import fr.inra.oresing.domain.repository.authorization.OperationType;
-import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
+import fr.inra.oresing.domain.authorization.AuthorizationParsed;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;

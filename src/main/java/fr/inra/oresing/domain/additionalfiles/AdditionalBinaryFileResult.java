@@ -1,4 +1,4 @@
-package fr.inra.oresing.rest.model.additionalfiles;
+package fr.inra.oresing.domain.additionalfiles;
 
 import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
 import fr.inra.oresing.domain.authorization.AuthorizationParsed;

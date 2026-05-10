@@ -6,9 +6,9 @@ import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.authorization.AuthenticationServiceImpl;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.repository.user.file.UserRepository;
-import fr.inra.oresing.persistence.AuthenticationFailure;
-import fr.inra.oresing.rest.CreateUserRequest;
-import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
+import fr.inra.oresing.domain.exceptions.AuthenticationFailure;
+import fr.inra.oresing.domain.user.CreateUserRequest;
+import fr.inra.oresing.domain.authorization.LoginAdminResult;
 
 import java.util.Map;
 import java.util.Optional;

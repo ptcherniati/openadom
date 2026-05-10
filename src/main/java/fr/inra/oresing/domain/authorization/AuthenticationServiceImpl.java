@@ -1,7 +1,7 @@
 package fr.inra.oresing.domain.authorization;
 
-import fr.inra.oresing.persistence.AuthenticationFailure;
-import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
+import fr.inra.oresing.domain.exceptions.AuthenticationFailure;
+import fr.inra.oresing.domain.authorization.LoginAdminResult;
 
 public interface AuthenticationServiceImpl {
     LoginAdminResult login(final String login, final String password) throws AuthenticationFailure;
