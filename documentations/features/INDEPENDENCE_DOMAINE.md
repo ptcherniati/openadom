@@ -1,7 +1,27 @@
 # Indépendance de la couche `domain` — Stratégie Ports & Adapters
 
-> **Statut** : proposition — 2026-05-09  
+> **Statut** : ✅ **OBJECTIF ATTEINT** — 2026-05-10  
 > **Auteur** : Philippe Tcherniatinsky
+
+---
+
+## ✅ Résultat obtenu (2026-05-10)
+
+| Critère | Résultat |
+|---------|----------|
+| `import org.springframework.*` dans domain | **0** |
+| `import reactor.*` dans domain | **0** |
+| `import fr.inra.oresing.persistence.*` dans domain | **0** |
+| `import fr.inra.oresing.rest.*` dans domain | **0** |
+| Fichiers alias `@Deprecated(forRemoval=true)` | **0** (tous supprimés) |
+| Tests `@Tag("domain.model")` sans Spring/Docker | **1 350+ ✅** |
+
+**Validation** :
+```bash
+grep -r "import fr.inra.oresing.rest\|import fr.inra.oresing.persistence\|import org.springframework\|import reactor" \
+  src/main/java/fr/inra/oresing/domain --include="*.java" | wc -l
+# → 0
+```
 
 ---
 

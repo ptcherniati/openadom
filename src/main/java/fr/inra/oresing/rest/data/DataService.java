@@ -1,7 +1,6 @@
 package fr.inra.oresing.rest.data;
 
 import fr.inra.oresing.domain.data.DataRows;
-import fr.inra.oresing.domain.data.DataRows;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
@@ -71,6 +70,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -213,19 +213,21 @@ public class DataService {
                     String reference = compositeReferenceComponentDescription.nodeName();
                     Optional<DataColumn> parentKeyColumn = Optional.ofNullable(compositeReferenceComponentDescription.componentKey())
                             .map(DataColumn::new);
-                    getReferenceValueRepository(application).findAllByReferenceTypeStream(reference).forEach(referenceValue -> {
-                        indexedByHierarchicalKeyReferenceValues.put(referenceValue.getNaturalKey(), referenceValue);
-                        parentKeyColumn.ifPresent(presentParentKeyColumn -> {
-                            DataDatum referenceDatum = referenceValue.getRefValues();
-                            DataColumnValue referenceColumnValue = referenceDatum.get(presentParentKeyColumn);
-                            Preconditions.checkState(referenceColumnValue instanceof DataColumnSingleValue);
-                            String parentHierarchicalKeyAsString = ((DataColumnSingleValue) referenceColumnValue).getValue().toString();
-                            if (!parentHierarchicalKeyAsString.isEmpty()) {
-                                Ltree parentHierarchicalKey = Ltree.fromSql(parentHierarchicalKeyAsString);
-                                parentHierarchicalKeys.put(referenceValue, parentHierarchicalKey);
-                            }
+                    try (Stream<DataValue> referenceStream = getReferenceValueRepository(application).findAllByReferenceTypeStream(reference)) {
+                        referenceStream.forEach(referenceValue -> {
+                            indexedByHierarchicalKeyReferenceValues.put(referenceValue.getNaturalKey(), referenceValue);
+                            parentKeyColumn.ifPresent(presentParentKeyColumn -> {
+                                DataDatum referenceDatum = referenceValue.getRefValues();
+                                DataColumnValue referenceColumnValue = referenceDatum.get(presentParentKeyColumn);
+                                Preconditions.checkState(referenceColumnValue instanceof DataColumnSingleValue);
+                                String parentHierarchicalKeyAsString = ((DataColumnSingleValue) referenceColumnValue).getValue().toString();
+                                if (!parentHierarchicalKeyAsString.isEmpty()) {
+                                    Ltree parentHierarchicalKey = Ltree.fromSql(parentHierarchicalKeyAsString);
+                                    parentHierarchicalKeys.put(referenceValue, parentHierarchicalKey);
+                                }
+                            });
                         });
-                    });
+                    }
                 });
         Map<DataValue, DataValue> childToParents = Maps.transformValues(parentHierarchicalKeys, indexedByHierarchicalKeyReferenceValues::get);
         SetMultimap<DataValue, DataValue> tree = HashMultimap.create();
@@ -294,13 +296,15 @@ public class DataService {
         }
         final Set<String> hiddenComponents = application.getConfiguration().getHiddenComponentsForData(refType);
         serviceContainer.authenticationService().setRoleForClient();
-        return getReferenceValueRepository(application)
-                .findAllByReferenceTypeWithReferencingReferencesStream(refType, params)
-                .map(referenceValue -> {
-                    referenceValue.setRefValues(referenceValue.getRefValues().filterHidden(hiddenComponents));
-                    return referenceValue;
-                })
-                .toList();
+        try (Stream<DataValue> referenceStream = getReferenceValueRepository(application)
+                .findAllByReferenceTypeWithReferencingReferencesStream(refType, params)) {
+            return referenceStream
+                    .map(referenceValue -> {
+                        referenceValue.setRefValues(referenceValue.getRefValues().filterHidden(hiddenComponents));
+                        return referenceValue;
+                    })
+                    .toList();
+        }
     }
 
     private DataRepository getReferenceValueRepository(Application application) {

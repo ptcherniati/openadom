@@ -3,6 +3,7 @@ package fr.inra.oresing.rest.data.extraction;
 import com.opencsv.CSVWriter;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.data.DataColumn;
+import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.data.read.query.*;
 import fr.inra.oresing.domain.repository.data.DataRepository;
@@ -189,22 +190,24 @@ public record DataCsvHeaderWriter(
         String referenceName = dynamicComponent.reference();
         String referenceColumnToLookForHeader = dynamicComponent.referenceColumnToLookForHeader();
         ComponentType typeForComponentKey = dataDescription().getTypeForComponentKey(componentKey);
-        Map<String, ComponentOrderBy> dynamicColumns = dataRepository()
-                .findAllByReferenceTypeStream(referenceName)
-                .sorted(Comparator.comparing(dataValue -> dataValue.getNaturalKey().getSql()))
-                .collect(Collectors.toMap(
-                        dataValue -> dataValue.getNaturalKey().getSql(),
-                        dataValue -> new ComponentOrderBy(
-                                dataValue
-                                        .getRefValues()
-                                        .get(new DataColumn(referenceColumnToLookForHeader))
-                                        .getValuesToCheck().toString(),
-                                fr.inra.oresing.domain.repository.data.DataRepository.Order.ASC,
-                                typeForComponentKey
-                        ),
-                        (v1, v2) -> v1,
-                        LinkedHashMap::new
-                ));
+        final Map<String, ComponentOrderBy> dynamicColumns;
+        try (Stream<DataValue> referenceStream = dataRepository().findAllByReferenceTypeStream(referenceName)) {
+            dynamicColumns = referenceStream
+                    .sorted(Comparator.comparing(dataValue -> dataValue.getNaturalKey().getSql()))
+                    .collect(Collectors.toMap(
+                            dataValue -> dataValue.getNaturalKey().getSql(),
+                            dataValue -> new ComponentOrderBy(
+                                    dataValue
+                                            .getRefValues()
+                                            .get(new DataColumn(referenceColumnToLookForHeader))
+                                            .getValuesToCheck().toString(),
+                                    fr.inra.oresing.domain.repository.data.DataRepository.Order.ASC,
+                                    typeForComponentKey
+                            ),
+                            (v1, v2) -> v1,
+                            LinkedHashMap::new
+                    ));
+        }
         return Stream.of(new DynamicComponentOrderBy(
                 componentKey,
                 dynamicColumns

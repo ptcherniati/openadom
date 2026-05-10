@@ -1,7 +1,6 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.domain.data.DataRows;
-import fr.inra.oresing.domain.data.DataRows;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
@@ -623,7 +622,8 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     @Override
     public ImmutableMap<DataValue.LineIdentityColumnName, UUID> getDataIdPerKeys(final String ReferenceType) {
         Map<DataValue.LineIdentityColumnName, UUID> dataIdPerKeys = new HashMap<>();
-        findAllByReferenceTypeStream(ReferenceType)
+        // Utilisation de la version non-streaming pour éviter de maintenir une connexion JDBC ouverte
+        findAllByReferenceType(ReferenceType)
                 .forEach(dataValue -> {
                     DataValue.LineIdentityColumnName naturalKey = dataValue.buildLineIdentityColumnName();
                     dataIdPerKeys.put(naturalKey, dataValue.getId());
@@ -1165,6 +1165,10 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         );
     }
 
+    @Deprecated(forRemoval = true) // migré vers domain.repository.data.DataRepository.Order
+    public enum Order {
+        ASC, DESC
+    }
 
     public record DataValuesByDataType(String dataType, Set<DataRowIds> ids) {
     }
