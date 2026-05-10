@@ -1116,14 +1116,22 @@ private PlatformTransactionManager transactionManager;
     }
 
     public List<List<String>> getDataColumn(final Application application, final String refType, final String column) {
-        List<List<String>> list = List.of();
         if (application.findData(refType)
                 .map(StandardDataDescription::tags)
                 .filter(Tag.HiddenTag.HAS_HIDDEN_TAG_PREDICATE)
-                .isPresent()) {
-            list = repository.getRepository(application).data().findDataColumn(refType, column);
+                .isEmpty()) {
+            return List.of();
         }
-        return list;
+        // Cache materialise V8 ( table <app>.data_versioning_scope_cache ) :
+        // lookup par ( application , refType , column , userId ) , miss = compute
+        // SQL findDataColumn + INSERT lazy . Bypass complet si flag desactive .
+        // L'invalidation est assuree par les triggers SQL statement-level sur
+        // referencevalue ( import / delete data ) + hooks Java grant-revoke
+        // + YAML edit ( cf. DataVersioningScopeCacheService ).
+        java.util.UUID userId = fr.inra.oresing.rest.OreSiApiRequestContext.getRequestUserId();
+        return serviceContainer.dataVersioningScopeCacheService().getOrCompute(
+                application, refType, column, userId,
+                () -> repository.getRepository(application).data().findDataColumn(refType, column));
     }
 
     // PERF #465 - Cache en mémoire pour les résultats de la requête filterList.

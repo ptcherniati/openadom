@@ -53,6 +53,7 @@ Si les deux critères s'appliquent : **précompute table** wins .
 |--------------------------------------|---------------------------------------|------------------------------------------------------------------------------------------------------------|
 | `<app>.oresisynthesis`               | `buildSynthesis` post-mutation        | compute lourd ( CTE multi-niveau sur 9.9 M rows ) , partagé , doit survivre restart                        |
 | `<app>.referencevalue_count_stats`   | trigger `AFTER INSERT / DELETE`       | compteur agrégé , exact via trigger , évite seq scan COUNT(*) à chaque page-load                           |
+| `<app>.data_versioning_scope_cache`  | trigger `AFTER INSERT / DELETE` statement-level + hooks Java grant/revoke + YAML edit | dropdowns de scope ( ecran DataVersioningView ) , clé ( app , ref_type , column , user_id ) ; configurable enabled/max-entries-per-app |
 
 ## Anti-patterns à éviter
 

@@ -543,6 +543,20 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         int removed = scopesCache.invalidateMatching(k -> k.contains(marker));
         log.info("authorizationScopes cache invalidated for app {} ( {} entries )", appName, removed);
         if (cacheMetrics != null) cacheMetrics.recordScopesInvalidate();
+
+        // Cache materialise V8 ( table per-app data_versioning_scope_cache ) :
+        // les scopes user changent => les valeurs visibles par user changent
+        // => DELETE cache pour cette app . Approche simple ( DELETE all rows
+        // de cette app ) plutot que par userId pour rester aligne sur la
+        // granularite des scopes globaux par-app .
+        try {
+            fr.inra.oresing.domain.application.Application application =
+                    serviceContainer.applicationService().getApplication(appName);
+            serviceContainer.dataVersioningScopeCacheService().invalidateAllForApp(application);
+        } catch (RuntimeException e) {
+            log.warn("dataVersioningScopeCache.invalidateAllForApp failed for {} : {}",
+                    appName, e.getMessage());
+        }
     }
 
     /**

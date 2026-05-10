@@ -101,6 +101,10 @@ public class CacheAdminResources {
         dataService.invalidateFilterListCacheForApplication(application.getName());
         authorizationService.invalidateAuthorizationScopesForApplication(application.getName());
         dataService.invalidateCheckedFormatComponentsForApplication(application.getName());
+        // Cache materialise V8 ( table dediee per-app ) : DELETE rows pour
+        // cette application . Les triggers SQL et hooks Java continuent de
+        // fonctionner ; cet appel est l'equivalent admin manuel .
+        serviceContainer.dataVersioningScopeCacheService().invalidateAllForApp(application);
 
         log.info("Admin invalidate-caches for app {} requested", application.getName());
         return ResponseEntity.ok(Map.of(
@@ -108,7 +112,8 @@ public class CacheAdminResources {
                 "invalidatedCaches", java.util.List.of(
                         "filterList ( app uniquement )",
                         "authorizationScopes ( app uniquement )",
-                        "checkedFormatComponents ( app uniquement )")
+                        "checkedFormatComponents ( app uniquement )",
+                        "dataVersioningScope ( app uniquement )")
         ));
     }
 
