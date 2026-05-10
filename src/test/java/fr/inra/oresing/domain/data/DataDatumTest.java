@@ -380,7 +380,7 @@ class UUIDsfromDataTest {
     void addRefsLinkedTo() {
         UUIDsfromData u = new UUIDsfromData();
         java.util.UUID id = java.util.UUID.randomUUID();
-        fr.inra.oresing.persistence.RefsLinked refsLinked = new fr.inra.oresing.persistence.RefsLinked(
+        fr.inra.oresing.domain.data.RefsLinked refsLinked = new fr.inra.oresing.domain.data.RefsLinked(
                 id, null, null, null, null, null, null, null, null, null);
         u.addRefsLinkedTo(refsLinked);
         assertThat(u.uuidsfromData()).containsExactly(id);

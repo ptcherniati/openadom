@@ -2,6 +2,7 @@ package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.checker.type.FieldType;
+import fr.inra.oresing.domain.data.RefsLinked;
 import fr.inra.oresing.domain.data.RefsLinkedToValue;
 import lombok.Value;
 

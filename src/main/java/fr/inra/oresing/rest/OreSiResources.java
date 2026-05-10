@@ -48,7 +48,7 @@ import fr.inra.oresing.rest.data.DataService;
 import fr.inra.oresing.rest.data.publication.DataVersioningResult;
 import fr.inra.oresing.rest.data.publication.State;
 import fr.inra.oresing.rest.data.publication.StoreFile;
-import fr.inra.oresing.rest.exceptions.ExceptionMessage;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.exceptions.OreSiIOException;
 import fr.inra.oresing.rest.model.additionalfiles.CreateAdditionalFileRequest;
 import fr.inra.oresing.rest.model.additionalfiles.exceptions.BadAdditionalFileParamsSearchException;

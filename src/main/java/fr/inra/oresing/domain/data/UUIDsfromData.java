@@ -1,6 +1,6 @@
 package fr.inra.oresing.domain.data;
 
-import fr.inra.oresing.persistence.RefsLinked;
+import fr.inra.oresing.domain.data.RefsLinked;
 
 import java.util.HashSet;
 import java.util.Set;

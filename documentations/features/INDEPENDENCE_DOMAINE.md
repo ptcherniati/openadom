@@ -157,25 +157,49 @@ public interface DataQueryPort {
 `persistence.DataRepository` implémente ces interfaces.
 Les classes domaine reçoivent les ports par constructeur.
 
-#### B3 — `JsonRowMapper` (persistence) utilisé dans le domaine
+#### B3 — `JsonRowMapper` : un adaptateur DTO ↔ métier à responsabilités multiples
 
-`BundleReport`, `DataImporter`, `AsynchroneFileImporterContext` utilisent
-`persistence.JsonRowMapper` (mapper JDBC technique).
+`JsonRowMapper` n'est **pas** un objet domaine, mais il n'est pas non plus
+purement une classe de persistence. Il remplit trois rôles distincts :
 
-**Action** : ces classes contiennent un mélange de logique métier et technique.
+| Rôle | Responsabilité | Couche |
+|------|---------------|--------|
+| 1 — lecteur JDBC | `implements RowMapper<T>` — lit le JSONB de PostgreSQL | **persistence** |
+| 2 — adaptateur DTO ↔ métier | Sérialiseurs/désérialiseurs Jackson pour `Ltree`, `DataDatum`, `Tag`, `FieldType`, `AuthorizationForScope`… | **application** (anti-corruption layer) |
+| 3 — logique applicative | `getBinaryFileDatasetJsonSerializer` accède à `OreSiApiRequestContext` et `ServiceContainer` pour convertir les dates selon la configuration de l'application | **service** dans le mauvais endroit |
 
-- Extraire la logique métier pure dans le domaine
-- Créer un port `domain.port.RowMapperPort<T>` si le mapping est nécessaire
-  au domaine
-- Déplacer le reste vers `persistence` ou `rest.services`
+Ce mélange explique pourquoi il est utilisé aussi bien dans `persistence` que
+dans `services` — il sert de **pont JSON entre toutes les couches**.
+
+**L'interface `domain.Mapper` est la bonne abstraction** : elle existe déjà
+dans le domaine, et `JsonRowMapper` l'implémente déjà. Le domaine doit
+référencer `Mapper`, jamais l'implémentation concrète.
 
 ```java
-// domain/port/RowMapperPort.java
-@FunctionalInterface
-public interface RowMapperPort<T> {
-    T map(Map<String, Object> rawRow);
+// Avant (violation — le domaine connaît l'implémentation concrète)
+import fr.inra.oresing.persistence.JsonRowMapper;
+public class AsynchroneFileImporterContext {
+    private final JsonRowMapper<?> mapper;
+}
+
+// Après — le domaine déclare le port qu'il exige
+import fr.inra.oresing.domain.Mapper;
+public class AsynchroneFileImporterContext {
+    private final Mapper mapper;  // injecté par constructeur (JsonRowMapper côté services)
 }
 ```
+
+**Refactoring à terme de `JsonRowMapper` lui-même** : ses trois rôles méritent
+d'être séparés en deux ou trois classes distinctes —
+
+- `persistence.JsonRowMapper` réduit au seul rôle JDBC (`RowMapper<T>`)
+- `rest.services.DomainObjectMapper` (ou `application.JsonDomainAdapter`) pour
+  la conversion DTO ↔ métier, implémentant `domain.Mapper`
+- La logique de `getBinaryFileDatasetJsonSerializer` (dates contextuelles)
+  déplacée dans le service applicatif concerné
+
+Ce découpage est **hors scope de la phase 5** — à planifier séparément car
+l'impact est transverse à toutes les couches.
 
 ---
 
@@ -307,7 +331,8 @@ au plus structurant.
 | **2** | C | Déplacer `MigrationExecutor`, `MigrationProperties` hors du domaine · supprimer `ServiceContainer` dans `MigrationContext` par injection de ports | moyen | moyen |
 | **3** | D2 + D5 | Déplacer `BuildColumns` → `domain` · nettoyer `DownloadDatasetQuery` · déplacer `BuildBundleReport` → `domain.filesenderclient` | faible | faible |
 | **4** | D1 | Interface `domain.event.ImportProgressEvent` · faire implémenter par `ReactiveResult` | moyen | faible |
-| **5** | B2 + B3 + F | Créer les ports `domain.port.*` · faire implémenter par `DataRepository` · déplacer `domain.repository.*` → `persistence` | fort | moyen |
+| **5** | B2 + B3 + F | Créer les ports `domain.port.*` · faire implémenter par `DataRepository` · **remplacer `JsonRowMapper` par `domain.Mapper`** dans les classes domaine (quick win — `domain.Mapper` existe déjà) · déplacer `domain.repository.*` → `persistence` | fort | moyen |
+| **5b** | B3 avancé | Séparer `JsonRowMapper` en trois classes : lecteur JDBC, adaptateur DTO↔métier, logique service | fort | fort |
 | **6** | D3 + D4 | Clarifier `AuthorizationsResult` et `NodeSchemaValidator` | moyen | moyen |
 | **7** | E | Interfaces `AuthenticatedUser` · adaptateurs Spring Security dans `rest.security` | fort | moyen |
 

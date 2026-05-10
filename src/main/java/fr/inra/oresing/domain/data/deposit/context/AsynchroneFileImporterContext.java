@@ -27,7 +27,7 @@ import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.rest.data.BuildColumns;
-import fr.inra.oresing.rest.exceptions.ExceptionMessage;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;

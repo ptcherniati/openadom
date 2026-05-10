@@ -4,7 +4,7 @@ import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
 import fr.inra.oresing.persistence.DataRepository;
-import fr.inra.oresing.persistence.RefsLinked;
+import fr.inra.oresing.domain.data.RefsLinked;
 
 import java.util.List;
 import java.util.Map;

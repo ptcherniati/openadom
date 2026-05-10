@@ -10,7 +10,7 @@ import fr.inra.oresing.domain.authorization.request.AuthorizationWithRestriction
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.persistence.JsonRowMapper;
-import fr.inra.oresing.rest.exceptions.ExceptionMessage;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.authorization.request.AuthorizationRequestBuilder;
 import fr.inra.oresing.rest.services.AbstractIntegrationTest;
