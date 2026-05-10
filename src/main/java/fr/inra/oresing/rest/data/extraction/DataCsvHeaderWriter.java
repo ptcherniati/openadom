@@ -117,7 +117,7 @@ public record DataCsvHeaderWriter(
     private Stream<ComponentOrderBy> columnsForDefaultComponent(Configuration.InternationalizedSortedColumn internationalizedSortedColumn) {
         return Stream.of(new ComponentOrderBy(
                         internationalizedSortedColumn.componentDescription().componentKey(),
-                        fr.inra.oresing.persistence.DataRepository.Order.ASC,
+                        fr.inra.oresing.domain.repository.data.DataRepository.Order.ASC,
                         dataDescription().getTypeForComponentKey(internationalizedSortedColumn.componentDescription().componentKey())
                 )
         );
@@ -135,14 +135,14 @@ public record DataCsvHeaderWriter(
                         patternComponent.patternComponentAdjacents().forEach((key, value) -> qualifierColumns.add(
                                 new ComponentOrderBy(
                                         value.exportHeaderName(),
-                                        fr.inra.oresing.persistence.DataRepository.Order.ASC,
+                                        fr.inra.oresing.domain.repository.data.DataRepository.Order.ASC,
                                         dataDescription().getTypeForPatternComponentKeyAndComponentKey(patternComponent.componentKey(), value.componentKey())
                                 )
                         ));
                         return new ComponentPatternOrderBy(
                                 patternComponent.componentKey(),
                                 columnName,
-                                fr.inra.oresing.persistence.DataRepository.Order.ASC,
+                                fr.inra.oresing.domain.repository.data.DataRepository.Order.ASC,
                                 dataDescription().getTypeForComponentKey(internationalizedSortedColumn.componentDescription().componentKey()),
                                 qualifierColumns.stream().sorted(comparator()).toList()
                         );
@@ -154,7 +154,7 @@ public record DataCsvHeaderWriter(
                     .forEach((key, value) -> qualifierColumns.add(
                             new ComponentOrderBy(
                                     value.exportHeaderName(),
-                                    fr.inra.oresing.persistence.DataRepository.Order.ASC,
+                                    fr.inra.oresing.domain.repository.data.DataRepository.Order.ASC,
                                     dataDescription().getTypeForPatternComponentKeyAndComponentKey(patternComponent.componentKey(), value.componentKey())
                             )
                     ));
@@ -162,7 +162,7 @@ public record DataCsvHeaderWriter(
                     .forEach((key, value) -> adjacentColumns.add(
                             new ComponentOrderBy(
                                     value.exportHeaderName(),
-                                    fr.inra.oresing.persistence.DataRepository.Order.ASC,
+                                    fr.inra.oresing.domain.repository.data.DataRepository.Order.ASC,
                                     dataDescription().getTypeForPatternComponentKeyAndComponentKey(patternComponent.componentKey(), value.componentKey())
                             )
                     ));
@@ -175,7 +175,7 @@ public record DataCsvHeaderWriter(
                         return new ComponentPatternValueOrderBy(
                                 patternComponent.componentKey(),
                                 Column.__VALUE__,
-                                fr.inra.oresing.persistence.DataRepository.Order.ASC,
+                                fr.inra.oresing.domain.repository.data.DataRepository.Order.ASC,
                                 dataDescription().getTypeForComponentKey(componentKey),
                                 qualifierColumns,
                                 adjacentColumns
@@ -199,7 +199,7 @@ public record DataCsvHeaderWriter(
                                         .getRefValues()
                                         .get(new DataColumn(referenceColumnToLookForHeader))
                                         .getValuesToCheck().toString(),
-                                fr.inra.oresing.persistence.DataRepository.Order.ASC,
+                                fr.inra.oresing.domain.repository.data.DataRepository.Order.ASC,
                                 typeForComponentKey
                         ),
                         (v1, v2) -> v1,

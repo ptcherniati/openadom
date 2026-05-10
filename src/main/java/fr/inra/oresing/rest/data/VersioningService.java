@@ -10,7 +10,7 @@ import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
 import fr.inra.oresing.mail.EmailService;
-import fr.inra.oresing.persistence.BinaryFileInfos;
+import fr.inra.oresing.domain.BinaryFileInfos;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.UserRepository;

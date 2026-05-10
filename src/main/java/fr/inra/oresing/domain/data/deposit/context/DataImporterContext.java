@@ -21,7 +21,7 @@ import fr.inra.oresing.domain.data.deposit.context.hierarchicalkey.HierarchicalK
 import fr.inra.oresing.domain.data.deposit.validation.transformer.data.RowWithReferenceDatum;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
 import fr.inra.oresing.domain.data.read.query.ComponentOrderBy;
-import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import lombok.Getter;
 import lombok.Setter;

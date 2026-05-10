@@ -99,4 +99,11 @@ public interface DataRepository {
     void flush();
 
     Map<String, Map<String, String>> findDisplayByNaturalKey(String replace);
+
+    /**
+     * Ordre de tri pour les requêtes de données.
+     */
+    enum Order {
+        ASC, DESC
+    }
 }

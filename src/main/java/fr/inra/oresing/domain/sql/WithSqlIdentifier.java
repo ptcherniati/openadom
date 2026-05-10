@@ -1,8 +1,7 @@
-package fr.inra.oresing.persistence;
+package fr.inra.oresing.domain.sql;
 
 import org.apache.commons.lang3.StringUtils;
 
-@Deprecated(forRemoval = true) // migré vers fr.inra.oresing.domain.sql.WithSqlIdentifier
 public interface WithSqlIdentifier {
 
     static String escapeSqlIdentifier(final String sqlIdentifier) {

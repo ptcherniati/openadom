@@ -10,7 +10,7 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSyst
 import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.persistence.AuthenticationFailure;
-import fr.inra.oresing.persistence.BinaryFileInfos;
+import fr.inra.oresing.domain.BinaryFileInfos;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.rest.CreateUserRequest;
 import fr.inra.oresing.rest.OreSiApiRequestContext;

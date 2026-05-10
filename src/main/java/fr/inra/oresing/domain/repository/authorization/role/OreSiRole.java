@@ -1,7 +1,7 @@
 package fr.inra.oresing.domain.repository.authorization.role;
 
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.persistence.WithSqlIdentifier;
+import fr.inra.oresing.domain.sql.WithSqlIdentifier;
 
 @FunctionalInterface
 public interface

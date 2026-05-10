@@ -1162,6 +1162,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         );
     }
 
+    @Deprecated(forRemoval = true) // migré vers domain.repository.data.DataRepository.Order
     public enum Order {
         ASC, DESC
     }

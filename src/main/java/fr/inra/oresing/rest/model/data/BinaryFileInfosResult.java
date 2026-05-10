@@ -1,6 +1,6 @@
 package fr.inra.oresing.rest.model.data;
 
-import fr.inra.oresing.persistence.BinaryFileInfos;
+import fr.inra.oresing.domain.BinaryFileInfos;
 
 public record BinaryFileInfosResult(
         BinaryFileDatasetResult binaryFileDataset,

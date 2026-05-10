@@ -43,6 +43,7 @@ import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurati
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.domain.BinaryFileInfos;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.data.DataService;
 import fr.inra.oresing.rest.data.publication.DataVersioningResult;

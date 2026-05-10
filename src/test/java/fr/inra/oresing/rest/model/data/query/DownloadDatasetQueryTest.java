@@ -9,7 +9,7 @@ import fr.inra.oresing.domain.application.configuration.checker.DateChecker;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.data.read.query.*;
-import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.domain.repository.data.DataRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;

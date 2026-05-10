@@ -1,4 +1,4 @@
-package fr.inra.oresing.persistence;
+package fr.inra.oresing.domain;
 
 
 import fr.inra.oresing.domain.BinaryFileDataset;
@@ -6,7 +6,6 @@ import fr.inra.oresing.domain.BinaryFileDataset;
 import java.util.Optional;
 import java.util.UUID;
 
-@Deprecated(forRemoval = true) // migré vers fr.inra.oresing.domain.BinaryFileInfos
 public record BinaryFileInfos(
         boolean published,
         UUID publisheduser,

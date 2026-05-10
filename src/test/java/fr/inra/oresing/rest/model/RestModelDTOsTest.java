@@ -2,7 +2,7 @@ package fr.inra.oresing.rest.model;
 
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.OreSiUser;
-import fr.inra.oresing.persistence.BinaryFileInfos;
+import fr.inra.oresing.domain.BinaryFileInfos;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.model.data.BinaryFileDatasetResult;
 import fr.inra.oresing.rest.model.data.BinaryFileInfosResult;
