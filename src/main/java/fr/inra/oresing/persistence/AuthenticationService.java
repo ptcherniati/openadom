@@ -10,6 +10,7 @@ import fr.inra.oresing.domain.authorization.AuthenticationServiceImpl;
 import fr.inra.oresing.domain.port.AuthenticationPort;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
+import fr.inra.oresing.domain.exceptions.AuthenticationFailure;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.repository.authorization.role.*;
 import fr.inra.oresing.mail.EmailService;

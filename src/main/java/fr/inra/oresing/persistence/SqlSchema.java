@@ -2,6 +2,7 @@ package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
+import fr.inra.oresing.domain.sql.WithSqlIdentifier;
 import fr.inra.oresing.rest.ViewStrategy;
 
 public interface SqlSchema extends WithSqlIdentifier {

@@ -1,6 +1,7 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
+import fr.inra.oresing.domain.sql.WithSqlIdentifier;
 
 
 public record SqlTable(SqlSchema schema, String name) {
