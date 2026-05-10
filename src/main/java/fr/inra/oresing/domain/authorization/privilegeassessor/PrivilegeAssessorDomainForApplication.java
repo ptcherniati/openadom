@@ -6,9 +6,9 @@ import fr.inra.oresing.domain.application.configuration.SubmissionType;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.*;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
-import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
-import fr.inra.oresing.rest.model.authorization.AuthorizationsForUserResult;
-import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
+import fr.inra.oresing.domain.authorization.AuthorizationParsed;
+import fr.inra.oresing.domain.authorization.AuthorizationsForUserResult;
+import fr.inra.oresing.domain.authorization.GetGrantableResult;
 
 import java.util.*;
 import java.util.stream.Collectors;

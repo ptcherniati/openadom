@@ -10,6 +10,15 @@ import java.util.List;
 class SubmissionTest {
 
     @Test
+    void submissionTypeValuesAndOaInsertion() {
+        Assertions.assertNotNull(SubmissionType.OA_INSERTION);
+        Assertions.assertNotNull(SubmissionType.OA_VERSIONING);
+        Assertions.assertTrue(SubmissionType.VALUES.contains("OA_INSERTION"));
+        Assertions.assertTrue(SubmissionType.VALUES.contains("OA_VERSIONING"));
+        Assertions.assertEquals(2, SubmissionType.VALUES.size());
+    }
+
+    @Test
     void testSubmissionReferenceScopeBuilder() {
         Submission.SubmissionScope.SubmissionReferenceScope scope = SubmissionBuilder.submissionReferenceScope()
                 .reference("ref")

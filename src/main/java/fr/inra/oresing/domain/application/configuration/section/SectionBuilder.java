@@ -7,7 +7,6 @@ import fr.inra.oresing.domain.application.configuration.type.LabelDescription;
 import fr.inra.oresing.domain.application.configuration.type.StaticMapType;
 import fr.inra.oresing.domain.exceptions.application.SiOreConfigurationFormatException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
-import fr.inra.oresing.rest.model.configuration.builder.NodeSchemaValidator;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.SetUtils;
@@ -153,7 +152,7 @@ public class SectionBuilder {
 
     public Optional<ConfigurationSchemaNodeType> findSchema(final String childLabel) {
         return switch (childLabel) {
-            case NodeSchemaValidator.REFERENCE_SCOPES_FOR_FILE ->
+            case "referenceScopesForFile" ->
                     Optional.of(StaticMapType.REFERENCE_SCOPES_FOR_FILE().type());
             case ConfigurationSchemaNode.OA_ADDITIONAL_FILES -> Optional.of(StaticMapType.ADDITIONAL_FILES().type());
             case ConfigurationSchemaNode.OA_DATA -> Optional.of(StaticMapType.DATA().type());

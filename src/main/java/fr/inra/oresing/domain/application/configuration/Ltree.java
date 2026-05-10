@@ -3,7 +3,7 @@ package fr.inra.oresing.domain.application.configuration;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import fr.inra.oresing.rest.exceptions.ExceptionMessage;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import lombok.Value;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.CharUtils;

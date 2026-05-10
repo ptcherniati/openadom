@@ -3,7 +3,7 @@ package fr.inra.oresing.rest.model.data;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.ReferencedBinaryFiles;
-import fr.inra.oresing.persistence.BinaryFileInfos;
+import fr.inra.oresing.domain.BinaryFileInfos;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Tag;
 

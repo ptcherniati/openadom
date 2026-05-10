@@ -1,7 +1,7 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor;
 
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
+import fr.inra.oresing.domain.authorization.AuthorizationParsed;
 
 import java.util.HashMap;
 import java.util.List;

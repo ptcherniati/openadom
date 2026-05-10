@@ -1,7 +1,6 @@
 package fr.inra.oresing.domain.repository.authorization.role;
 
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.persistence.SqlSchemaForApplication;
 
 import java.util.UUID;
 
@@ -34,7 +33,7 @@ public record OreSiRightOnApplicationRole(
     }
 
     public static OreSiRightOnApplicationRole PUBLIC() {
-        return new OreSiRightOnApplicationRole(null, PUBLIC, PUBLIC__, SqlSchemaForApplication.PUBLIC_UUID);
+        return new OreSiRightOnApplicationRole(null, PUBLIC, PUBLIC__, UUID.fromString(OreSiPublicRole.PUBLIC_ROLE_ID));
     }
 
     public static OreSiRightOnApplicationRole readerOn(final Application application) {

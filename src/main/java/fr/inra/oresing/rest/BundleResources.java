@@ -10,10 +10,12 @@ import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.data.DataFile;
 import fr.inra.oresing.domain.data.deposit.bundle.RegisterReactiveResult;
 import fr.inra.oresing.domain.data.rapport.BundleReport;
+import fr.inra.oresing.domain.event.DomainProgressEvent;
+import fr.inra.oresing.domain.event.ImportProgressEvent;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.rest.data.DataService;
-import fr.inra.oresing.rest.exceptions.ExceptionMessage;
-import fr.inra.oresing.rest.filesenderclient.BuildBundleReport;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
+import fr.inra.oresing.domain.filesenderclient.BuildBundleReport;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
 import fr.inra.oresing.rest.reactive.ReactiveTypeError;
 import fr.inra.oresing.rest.reactive.ReactiveTypeInfo;
@@ -51,6 +53,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -92,6 +95,7 @@ public class BundleResources {
     // ── services ──────────────────────────────────────────────────────────────
     private final DataService              dataService;
     private final LocaleResolver           localeResolver;
+    private final fr.inra.oresing.domain.Mapper mapper;
 
     // ── executors ─────────────────────────────────────────────────────────────
     private final ExecutorService normalExecutorService;
@@ -106,6 +110,7 @@ public class BundleResources {
             CreateDataUseCase createDataUseCase,
             DataService dataService,
             LocaleResolver localeResolver,
+            fr.inra.oresing.persistence.JsonRowMapper<?> jsonRowMapper,
             @Qualifier("normalExecutorService") ExecutorService normalExecutorService,
             @Qualifier("heavyExecutorService")  ExecutorService heavyExecutorService) {
         this.getApplicationUseCase    = getApplicationUseCase;
@@ -116,6 +121,7 @@ public class BundleResources {
         this.createDataUseCase        = createDataUseCase;
         this.dataService              = dataService;
         this.localeResolver           = localeResolver;
+        this.mapper                   = jsonRowMapper;
         this.normalExecutorService    = normalExecutorService;
         this.heavyExecutorService     = heavyExecutorService;
     }
@@ -218,7 +224,7 @@ public class BundleResources {
             }
             sink.next(new ReactiveTypeProgress(0L));
             final Application application = getApplicationUseCase.execute(nameOrId);
-            BundleReport rapport = new BundleReport(locale, origin, application);
+            BundleReport rapport = new BundleReport(locale, origin, application, mapper);
 
             boolean completedSuccessfully = false;
             try {
@@ -249,8 +255,17 @@ public class BundleResources {
                         });
 
                 @SuppressWarnings("unchecked")
+                // Adaptateur REST → domaine : FluxSink<ReactiveResult> wrappé en Consumer<ImportProgressEvent>
+                // ReactiveResult implémente ImportProgressEvent, le cast est sûr
+                final Consumer<ImportProgressEvent> eventConsumer = event -> {
+                    if (event instanceof ReactiveResult<?> reactiveResult) {
+                        sink.next(reactiveResult);
+                    } else if (event instanceof DomainProgressEvent dp) {
+                        sink.next(new ReactiveTypeProgress<>(dp.progress()));
+                    }
+                };
                 final RegisterReactiveResult registerReactiveResult =
-                        new RegisterReactiveResult((FluxSink<ReactiveResult<?>>) (Object) sink, countFiles, rapport);
+                        new RegisterReactiveResult(eventConsumer, countFiles, rapport);
                 final ReactiveTypeInfo reactiveTypeInfo = new ReactiveTypeInfo("MANIFEST", Map.of("manifest", manifest.get()));
                 registerReactiveResult.add(reactiveTypeInfo, false);
                 rapport.add(reactiveTypeInfo);

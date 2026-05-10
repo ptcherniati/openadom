@@ -6,7 +6,7 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenA
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomainEnum;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomainEnum;
 import fr.inra.oresing.domain.repository.user.file.UserRepository;
-import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
+import fr.inra.oresing.domain.authorization.GetGrantableResult;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.Set;

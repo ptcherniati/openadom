@@ -10,7 +10,7 @@ import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.UserRepository;
-import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
+import fr.inra.oresing.domain.authorization.GetGrantableResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

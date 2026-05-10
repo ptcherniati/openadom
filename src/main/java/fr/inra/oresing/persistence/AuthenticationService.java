@@ -7,17 +7,19 @@ import fr.inra.oresing.domain.OreSiEntity;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.AuthenticationServiceImpl;
+import fr.inra.oresing.domain.port.AuthenticationPort;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
+import fr.inra.oresing.domain.exceptions.AuthenticationFailure;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.repository.authorization.role.*;
 import fr.inra.oresing.mail.EmailService;
-import fr.inra.oresing.rest.CreateUserRequest;
+import fr.inra.oresing.domain.user.CreateUserRequest;
 import fr.inra.oresing.rest.CreateUserResult;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
-import fr.inra.oresing.rest.exceptions.ExceptionMessage;
-import fr.inra.oresing.rest.model.authorization.CurrentUserRolesResult;
-import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
+import fr.inra.oresing.domain.authorization.CurrentUserRolesResult;
+import fr.inra.oresing.domain.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.model.authorization.UserAuthorizationForApplication;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import lombok.Setter;
@@ -39,7 +41,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Transactional(readOnly = true)
-public class AuthenticationService implements AuthenticationServiceImpl {
+public class AuthenticationService implements AuthenticationServiceImpl, AuthenticationPort {
     @Setter
     private ServiceContainer serviceContainer;
 
@@ -128,6 +130,12 @@ public class AuthenticationService implements AuthenticationServiceImpl {
     public OreSiopenAdomAdminRole setRoleAdmin() {
         setRole(OreSiRole.openAdomAdmin());
         return OreSiRole.openAdomAdmin();
+    }
+
+    /** Implémentation du port domaine {@link fr.inra.oresing.domain.port.AuthenticationPort#activateAdminRole()}. */
+    @Override
+    public void activateAdminRole() {
+        setRoleAdmin();
     }
 
     /**

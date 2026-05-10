@@ -2,7 +2,7 @@ package fr.inra.oresing.domain.authorization.privilegeassessor;
 
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
-import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
+import fr.inra.oresing.domain.authorization.AuthorizationParsed;
 
 import java.util.*;
 import java.util.stream.Collectors;

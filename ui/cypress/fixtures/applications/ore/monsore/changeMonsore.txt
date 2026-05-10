@@ -1,15 +1,1 @@
-{"result":0.0,"time":"2026-05-06T10:53:00.803858751","type":"REACTIVE_PROGRESS"}
-{"result":"application.ChangeConfiguration.configuration.rights.checking","params":{"applicationName":"monsore"},"time":"2026-05-06T10:53:00.805194989","type":"REACTIVE_INFO"}
-{"result":0.02,"time":"2026-05-06T10:53:00.805274909","type":"REACTIVE_PROGRESS"}
-{"result":"application.ChangeConfiguration.configuration.parsingConfiguration.forSingle","params":{"applicationName":"monsore"},"time":"2026-05-06T10:53:00.805316681","type":"REACTIVE_INFO"}
-{"result":"application.ChangeConfiguration.configuration.testYamlIsvalid","params":null,"time":"2026-05-06T10:53:00.805384251","type":"REACTIVE_INFO"}
-{"result":"application.ChangeConfiguration.configuration.yamlIsvalid","params":null,"time":"2026-05-06T10:53:00.805391869","type":"REACTIVE_INFO"}
-{"result":"application.ChangeConfiguration.configuration.versionIsValid","params":null,"time":"2026-05-06T10:53:00.805396283","type":"REACTIVE_INFO"}
-{"result":0.03,"time":"2026-05-06T10:53:00.805401564","type":"REACTIVE_PROGRESS"}
-{"result":"application.ChangeConfiguration.configuration.Starting parsing of configuration","params":{},"time":"2026-05-06T10:53:00.947374457","type":"REACTIVE_INFO"}
-{"result":0.0,"time":"2026-05-06T10:53:00.947446502","type":"REACTIVE_PROGRESS"}
-{"result":"application.ChangeConfiguration.configuration.CheckSyntax.startValidation.start","params":{"applicationName":"monsore"},"time":"2026-05-06T10:53:00.964595368","type":"REACTIVE_INFO"}
-{"result":"application.ChangeConfiguration.application.configuration.create.register.start","params":{"applicationName":"monsore"},"time":"2026-05-06T10:53:00.964665832","type":"REACTIVE_INFO"}
-{"result":"application.ChangeConfiguration.configuration.parsingConfiguration.endparsing","params":{"applicationName":"monsore"},"time":"2026-05-06T10:53:00.965095251","type":"REACTIVE_INFO"}
-{"result":"application.ChangeConfiguration.configuration.register","params":{"applicationName":"monsore"},"time":"2026-05-06T10:53:01.114247022","type":"REACTIVE_INFO"}
-{"result":"440a6ffb-9a74-4ec9-ad6f-494b2870d94c","time":"2026-05-06T10:53:01.12851533","type":"REACTIVE_RESULT"}
+{"result":0.0,"time":"1970-01-01T00:00:00.000000","type":"REACTIVE_PROGRESS"}

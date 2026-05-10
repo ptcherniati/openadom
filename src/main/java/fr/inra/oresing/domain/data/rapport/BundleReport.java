@@ -1,9 +1,9 @@
 package fr.inra.oresing.domain.data.rapport;
 
+import fr.inra.oresing.domain.Mapper;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.persistence.JsonRowMapper;
-import fr.inra.oresing.rest.filesenderclient.MessageInformations;
-import fr.inra.oresing.rest.reactive.ReactiveResult;
+import fr.inra.oresing.domain.event.ImportProgressEvent;
+import fr.inra.oresing.domain.filesenderclient.MessageInformations;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,8 +15,15 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public record BundleReport(List<ReactiveResult> results, Locale locale, String origin, Application application) implements MessageInformations {
-    record Results(Application application, List<ReactiveResult> results) {}
+/**
+ * Rapport d'un import bundle — enregistre les événements d'avancement.
+ *
+ * <p>Le {@link Mapper} est injecté par le constructeur (Ports & Adapters) :
+ * la couche REST passe un {@code JsonRowMapper} qui implémente {@code Mapper}.
+ * Le domaine ne connaît jamais l'implémentation concrète.
+ */
+public record BundleReport(List<ImportProgressEvent> results, Locale locale, String origin, Application application, Mapper mapper) implements MessageInformations {
+    record Results(Application application, List<ImportProgressEvent> results) {}
     private static final Map<Locale, String> TITLE_MESSAGES = Map.of(
             Locale.ENGLISH, "Restoration report of %s",
             Locale.FRENCH, "Rapport de restauration de %s"
@@ -32,7 +39,7 @@ public record BundleReport(List<ReactiveResult> results, Locale locale, String o
         try (InputStream inputStream = getClass().getResourceAsStream("report.html")) {
             htmlTemplate = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
         }
-        final String json = new JsonRowMapper<BundleReport>().toJson(this);
+        final String json = mapper().toJson(this);
         String html = htmlTemplate.formatted(json, application().getName(), origin(), "bundleReport");
 
         // Utilisation de Files.createTempFile pour éviter les collisions de noms (S5443)
@@ -47,19 +54,20 @@ public record BundleReport(List<ReactiveResult> results, Locale locale, String o
     }
 
 
-    public BundleReport(List<ReactiveResult> results, Locale locale, String origin, Application application) {
+    public BundleReport(List<ImportProgressEvent> results, Locale locale, String origin, Application application, Mapper mapper) {
         this.results = results;
         this.application = application;
         this.locale = locale;
         this.origin = origin;
+        this.mapper = mapper;
     }
 
-    public BundleReport(Locale locale, String origin, Application application) {
-        this(new LinkedList<>(), locale, origin, application);
+    public BundleReport(Locale locale, String origin, Application application, Mapper mapper) {
+        this(new LinkedList<>(), locale, origin, application, mapper);
     }
 
-    public void add(ReactiveResult reactiveResult) {
-        results().add(reactiveResult);
+    public void add(ImportProgressEvent event) {
+        results().add(event);
     }
 
     public String title() {

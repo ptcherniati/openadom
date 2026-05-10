@@ -7,7 +7,7 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
-import fr.inra.oresing.persistence.SqlPrimitiveType;
+import fr.inra.oresing.domain.checker.type.SqlPrimitiveType;
 import org.junit.jupiter.api.*;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;

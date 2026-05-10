@@ -29,10 +29,8 @@ public record AddAuthorizationScopeAttributeAction(String id, String dataName) i
     @Override
     public void execute(MigrationContext context) {
         try {
-            context.serviceContainer().authenticationService().resetRole();
-            boolean added = context.migrationRepositories()
-                    .repository()
-                    .application()
+            context.authenticationPort().resetRole();
+            boolean added = context.migrationApplicationPort()
                     .addReferenceToAuthorizationScope(context.applicationName(), Set.of(dataName()));
             log.info("""
                     %4$s : 
@@ -48,7 +46,7 @@ public record AddAuthorizationScopeAttributeAction(String id, String dataName) i
                             "message", e.getMessage())
             );
         } finally {
-            context.serviceContainer().authenticationService().setRoleForClient();
+            context.authenticationPort().setRoleForClient();
         }
     }
 }

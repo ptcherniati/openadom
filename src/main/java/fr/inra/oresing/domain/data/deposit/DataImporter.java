@@ -22,7 +22,6 @@ import fr.inra.oresing.domain.data.deposit.validation.transformer.data.RowWithRe
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.ReferenceValidationCheckResult;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.file.FileBomResolver;
-import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.workflow.cascade.progress.ImportProgressReporter;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -51,16 +50,6 @@ public class DataImporter {
 
     public static final String HIERARCHICALKEY_SEPARATOR = "K";
 
-    /**
-     * shared JsonRowMapper instance reused for the entire JVM lifetime.
-     * The previous code did {@code new JsonRowMapper<>().toJson(...)} once
-     * per CSV line ; on a 274 706-line import that allocated 274 k Jackson
-     * ObjectMappers + 274 k JavaTimeModule + 274 k AfterburnerModule
-     * registrations - the single biggest GC pressure observed in the audit.
-     * JsonRowMapper is stateless and thread-safe ( wraps a configured
-     * ObjectMapper that itself is thread-safe once configured ).
-     */
-    private static final JsonRowMapper<Object> SHARED_JSON_ROW_MAPPER = new JsonRowMapper<>();
 
     /** R-P2-3 : seuil min d'occurrences pour pré-calculer une valeur de référence. */
     private static final int PRECOMPUTE_CACHE_THRESHOLD = 2;
@@ -338,8 +327,8 @@ public class DataImporter {
     }
 
     private String convertToCSVLine(DataValue dataValue) {
-        // reuse the shared JsonRowMapper instead of allocating one per row.
-        String json = SHARED_JSON_ROW_MAPPER.toJson(dataValue);
+        // Utiliser le Mapper injecté dans le contexte (thread-safe, partagé).
+        String json = getDataImporterContext().jsonRowMapper().toJson(dataValue);
         return fixTimescopeFormat(json);
     }
 

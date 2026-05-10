@@ -360,4 +360,28 @@ class MigrationModuleTest {
     }
 
     // pas de stub interne — Mockito utilisé directement dans MigrationPlanTest
+
+    // ─── FactKeys ─────────────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("FactKeys constants")
+    class FactKeysTest {
+
+        @Test
+        @DisplayName("Constantes CHANGE, MIGRATION_PLAN, CONTEXT ne sont pas null")
+        void constantsAreDefined() {
+            assertThat(fr.inra.oresing.domain.application.configuration.migration.context.FactKeys.CHANGE).isNotBlank();
+            assertThat(fr.inra.oresing.domain.application.configuration.migration.context.FactKeys.MIGRATION_PLAN).isNotBlank();
+            assertThat(fr.inra.oresing.domain.application.configuration.migration.context.FactKeys.CONTEXT).isNotBlank();
+        }
+
+        @Test
+        @DisplayName("Les 3 constantes sont distinctes")
+        void constantsAreDistinct() {
+            assertThat(fr.inra.oresing.domain.application.configuration.migration.context.FactKeys.CHANGE)
+                    .isNotEqualTo(fr.inra.oresing.domain.application.configuration.migration.context.FactKeys.MIGRATION_PLAN);
+            assertThat(fr.inra.oresing.domain.application.configuration.migration.context.FactKeys.MIGRATION_PLAN)
+                    .isNotEqualTo(fr.inra.oresing.domain.application.configuration.migration.context.FactKeys.CONTEXT);
+        }
+    }
 }

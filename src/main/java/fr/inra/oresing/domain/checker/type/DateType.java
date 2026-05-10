@@ -12,7 +12,7 @@ import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DateValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DefaultCheckerValidationCheckResult;
-import fr.inra.oresing.persistence.SqlPrimitiveType;
+
 
 import java.io.IOException;
 import java.time.LocalDate;

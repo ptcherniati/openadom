@@ -38,6 +38,7 @@ public class DuplicationLineValidationCheckResult implements ValidationCheckResu
                 "otherLines", otherLines,
                 "duplicateKey", hierarchicalKey.getSql()
         );
+        this.target = target;
     }
 
     @Override

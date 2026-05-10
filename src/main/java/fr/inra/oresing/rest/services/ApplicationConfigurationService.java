@@ -9,7 +9,7 @@ import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.domain.file.FileBomResolver;
 import fr.inra.oresing.rest.MultiYaml;
-import fr.inra.oresing.rest.exceptions.ExceptionMessage;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.configuration.builder.ConfigurationBuilder;
 import fr.inra.oresing.rest.reactive.ReactiveEventHelper;
 import lombok.extern.slf4j.Slf4j;

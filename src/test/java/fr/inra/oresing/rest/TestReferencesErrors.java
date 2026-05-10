@@ -32,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Slf4j
 @Tag("domain.model")
 @Tag("docker-required")
+@Tag("GENERATE_CYPRESS_FIXTURES")
 public class TestReferencesErrors extends AbstractIntegrationTest {
 
     public static final Map<String, String> responses = new HashMap<>();

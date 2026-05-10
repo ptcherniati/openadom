@@ -7,7 +7,7 @@ import fr.inra.oresing.domain.exceptions.application.SiOreConfigurationFormatExc
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
-import org.springframework.lang.Nullable;
+import jakarta.annotation.Nullable;
 
 import java.util.*;
 import java.util.function.Function;

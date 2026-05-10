@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest.data;
 
+import fr.inra.oresing.domain.data.DataRows;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
@@ -27,12 +28,18 @@ import fr.inra.oresing.workflow.cascade.CascadeImportPipeline;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisation;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForBuildBundleReport;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForDownloadDatasetQuery;
+import fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent;
 import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent;
 import fr.inra.oresing.persistence.data.read.bundle.FileContent;
 import fr.inra.oresing.rest.HierarchicalReferenceAsTree;
 import fr.inra.oresing.rest.data.extraction.DataCsvBuilder;
-import fr.inra.oresing.rest.exceptions.ExceptionMessage;
-import fr.inra.oresing.rest.filesenderclient.*;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
+import fr.inra.oresing.domain.filesenderclient.BuildBundleReport;
+import fr.inra.oresing.domain.filesenderclient.MessageInformations;
+import fr.inra.oresing.rest.filesenderclient.FileInfos;
+import fr.inra.oresing.rest.filesenderclient.FileRepository;
+import fr.inra.oresing.rest.filesenderclient.FileSenderRepository;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.model.data.DefaultLineCheckerResult;
 import fr.inra.oresing.rest.model.data.LineCheckerResult;
@@ -64,8 +71,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 @Slf4j
 @Component
@@ -234,19 +243,21 @@ public class DataService {
                     String reference = compositeReferenceComponentDescription.nodeName();
                     Optional<DataColumn> parentKeyColumn = Optional.ofNullable(compositeReferenceComponentDescription.componentKey())
                             .map(DataColumn::new);
-                    getReferenceValueRepository(application).findAllByReferenceTypeStream(reference).forEach(referenceValue -> {
-                        indexedByHierarchicalKeyReferenceValues.put(referenceValue.getNaturalKey(), referenceValue);
-                        parentKeyColumn.ifPresent(presentParentKeyColumn -> {
-                            DataDatum referenceDatum = referenceValue.getRefValues();
-                            DataColumnValue referenceColumnValue = referenceDatum.get(presentParentKeyColumn);
-                            Preconditions.checkState(referenceColumnValue instanceof DataColumnSingleValue);
-                            String parentHierarchicalKeyAsString = ((DataColumnSingleValue) referenceColumnValue).getValue().toString();
-                            if (!parentHierarchicalKeyAsString.isEmpty()) {
-                                Ltree parentHierarchicalKey = Ltree.fromSql(parentHierarchicalKeyAsString);
-                                parentHierarchicalKeys.put(referenceValue, parentHierarchicalKey);
-                            }
+                    try (Stream<DataValue> referenceStream = getReferenceValueRepository(application).findAllByReferenceTypeStream(reference)) {
+                        referenceStream.forEach(referenceValue -> {
+                            indexedByHierarchicalKeyReferenceValues.put(referenceValue.getNaturalKey(), referenceValue);
+                            parentKeyColumn.ifPresent(presentParentKeyColumn -> {
+                                DataDatum referenceDatum = referenceValue.getRefValues();
+                                DataColumnValue referenceColumnValue = referenceDatum.get(presentParentKeyColumn);
+                                Preconditions.checkState(referenceColumnValue instanceof DataColumnSingleValue);
+                                String parentHierarchicalKeyAsString = ((DataColumnSingleValue) referenceColumnValue).getValue().toString();
+                                if (!parentHierarchicalKeyAsString.isEmpty()) {
+                                    Ltree parentHierarchicalKey = Ltree.fromSql(parentHierarchicalKeyAsString);
+                                    parentHierarchicalKeys.put(referenceValue, parentHierarchicalKey);
+                                }
+                            });
                         });
-                    });
+                    }
                 });
         Map<DataValue, DataValue> childToParents = Maps.transformValues(parentHierarchicalKeys, indexedByHierarchicalKeyReferenceValues::get);
         SetMultimap<DataValue, DataValue> tree = HashMultimap.create();
@@ -315,13 +326,15 @@ public class DataService {
         }
         final Set<String> hiddenComponents = application.getConfiguration().getHiddenComponentsForData(refType);
         serviceContainer.authenticationService().setRoleForClient();
-        return getReferenceValueRepository(application)
-                .findAllByReferenceTypeWithReferencingReferencesStream(refType, params)
-                .map(referenceValue -> {
-                    referenceValue.setRefValues(referenceValue.getRefValues().filterHidden(hiddenComponents));
-                    return referenceValue;
-                })
-                .toList();
+        try (Stream<DataValue> referenceStream = getReferenceValueRepository(application)
+                .findAllByReferenceTypeWithReferencingReferencesStream(refType, params)) {
+            return referenceStream
+                    .map(referenceValue -> {
+                        referenceValue.setRefValues(referenceValue.getRefValues().filterHidden(hiddenComponents));
+                        return referenceValue;
+                    })
+                    .toList();
+        }
     }
 
     private DataRepository getReferenceValueRepository(Application application) {
@@ -449,7 +462,7 @@ public class DataService {
         log.info("getDataFromStoredCsvStream {}", reference);
 
         DataRepository dataRepository = repo.getRepository(application).data();
-        Flux<FileContent> storedData = dataRepository.getStoredData(application, reference);
+        Flux<BundleFileContent> storedData = Flux.fromStream(dataRepository.getStoredData(application, reference));
 
         try {
             Boolean result = storedData
@@ -904,7 +917,7 @@ private PlatformTransactionManager transactionManager;
                                 Function.identity(),
                                 referenceName -> manifest.referenceTypeFiles()
                                         .get(referenceName).stream()
-                                        .map(FileContent::fileName)
+                                        .map(BundleFileContent::fileName)
                                         .toList(),
                                 (v1, v2) -> v1,
                                 LinkedHashMap::new

@@ -5,7 +5,7 @@ import fr.inra.oresing.domain.application.configuration.Node;
 import fr.inra.oresing.domain.application.configuration.RightRequestDescription;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
-import fr.inra.oresing.rest.model.authorization.AuthorizationsForUserResult;
+import fr.inra.oresing.domain.authorization.AuthorizationsForUserResult;
 import fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult;
 import lombok.Getter;
 import lombok.Setter;

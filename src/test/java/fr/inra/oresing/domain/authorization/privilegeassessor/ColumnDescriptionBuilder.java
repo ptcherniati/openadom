@@ -1,7 +1,7 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor;
 
 import fr.inra.oresing.domain.internationalization.Internationalization;
-import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
+import fr.inra.oresing.domain.authorization.GetGrantableResult;
 
 import java.util.Locale;
 

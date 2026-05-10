@@ -2,6 +2,7 @@ package fr.inra.oresing.persistence;
 
 import com.google.common.base.Strings;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
+import fr.inra.oresing.domain.sql.WithSqlIdentifier;
 
 import java.util.List;
 import java.util.stream.Collectors;

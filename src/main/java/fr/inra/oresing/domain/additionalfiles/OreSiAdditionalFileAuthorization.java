@@ -1,7 +1,7 @@
 package fr.inra.oresing.domain.additionalfiles;
 
 import fr.inra.oresing.domain.OreSiEntity;
-import fr.inra.oresing.persistence.OperationAdditionalFileType;
+import fr.inra.oresing.domain.additionalfiles.OperationAdditionalFileType;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;

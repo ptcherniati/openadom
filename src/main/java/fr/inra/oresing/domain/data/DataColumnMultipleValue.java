@@ -7,7 +7,7 @@ import fr.inra.oresing.domain.checker.type.ListType;
 import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
 import fr.inra.oresing.domain.data.deposit.context.column.ManyValuesStaticColumn;
-import fr.inra.oresing.rest.exceptions.ExceptionMessage;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import lombok.Value;
 
 import java.util.List;

@@ -1,7 +1,7 @@
 package fr.inra.oresing.rest.model.additionalfiles;
 
 import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
-import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
+import fr.inra.oresing.domain.authorization.AuthorizationParsed;
 import lombok.Value;
 
 import java.time.LocalDateTime;

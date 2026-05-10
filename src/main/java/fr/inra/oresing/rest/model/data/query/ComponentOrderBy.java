@@ -2,7 +2,7 @@ package fr.inra.oresing.rest.model.data.query;
 
 import fr.inra.oresing.domain.application.configuration.ComponentDescription;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
-import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.domain.repository.data.DataRepository;
 import lombok.Getter;
 
 public class ComponentOrderBy {

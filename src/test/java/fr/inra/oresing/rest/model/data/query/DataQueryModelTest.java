@@ -101,9 +101,9 @@ class DataQueryModelTest {
         @Test
         void twoArgConstructor() {
             ComponentOrderBy ob = new ComponentOrderBy(
-                    "myKey", fr.inra.oresing.persistence.DataRepository.Order.ASC);
+                    "myKey", fr.inra.oresing.domain.repository.data.DataRepository.Order.ASC);
             assertThat(ob.getComponentKey()).isEqualTo("myKey");
-            assertThat(ob.order).isEqualTo(fr.inra.oresing.persistence.DataRepository.Order.ASC);
+            assertThat(ob.order).isEqualTo(fr.inra.oresing.domain.repository.data.DataRepository.Order.ASC);
         }
     }
 

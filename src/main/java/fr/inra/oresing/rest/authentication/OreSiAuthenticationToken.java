@@ -6,7 +6,7 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.rest.data.publication.StoreFile;
-import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
+import fr.inra.oresing.domain.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.security.AuthorizationFilter;
 import lombok.Getter;
 import lombok.Setter;

@@ -9,7 +9,7 @@ import fr.inra.oresing.domain.data.SomethingToBeSentToFrontend;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DefaultManyValidationCheckResult;
-import fr.inra.oresing.persistence.SqlPrimitiveType;
+
 import lombok.Getter;
 
 import java.io.IOException;

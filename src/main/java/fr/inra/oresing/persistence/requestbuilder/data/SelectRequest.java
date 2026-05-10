@@ -1,5 +1,6 @@
 package fr.inra.oresing.persistence.requestbuilder.data;
 
+import fr.inra.oresing.domain.data.DataRows;
 import fr.inra.oresing.domain.data.read.query.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -51,7 +52,7 @@ record SelectRequest(
                     %%3$s --limit
                 )
                 SELECT
-                    'fr.inra.oresing.persistence.DataRows' AS "@class",
+                    'fr.inra.oresing.domain.data.DataRows' AS "@class",
                     jsonb_build_object(
                       'rowId', array_agg(rv.id),
                       'refslinked', array_agg(
@@ -94,7 +95,7 @@ record SelectRequest(
 
         static final String TEMPLATE_WITH_NO_PATTERNS_DEFINITION = """
                 SELECT
-                    'fr.inra.oresing.persistence.DataRows' AS "@class",
+                    'fr.inra.oresing.domain.data.DataRows' AS "@class",
                     jsonb_build_object(
                       --'rowNumber', row_number() over (),
                       --'totalRows', count(*) over (),

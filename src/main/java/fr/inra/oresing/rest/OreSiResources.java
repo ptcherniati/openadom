@@ -43,17 +43,18 @@ import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurati
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.domain.BinaryFileInfos;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.data.DataService;
 import fr.inra.oresing.rest.data.publication.DataVersioningResult;
 import fr.inra.oresing.rest.data.publication.State;
 import fr.inra.oresing.rest.data.publication.StoreFile;
-import fr.inra.oresing.rest.exceptions.ExceptionMessage;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.exceptions.OreSiIOException;
 import fr.inra.oresing.rest.model.additionalfiles.CreateAdditionalFileRequest;
 import fr.inra.oresing.rest.model.additionalfiles.exceptions.BadAdditionalFileParamsSearchException;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
-import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
+import fr.inra.oresing.domain.authorization.GetGrantableResult;
 import fr.inra.oresing.rest.model.data.*;
 import fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery;
 import fr.inra.oresing.rest.model.reference.GetReferenceResult;
@@ -64,7 +65,7 @@ import fr.inra.oresing.rest.model.rightsrequest.RightsRequestInfos;
 import fr.inra.oresing.rest.model.synthesis.SynthesisResult;
 import fr.inra.oresing.rest.reactive.*;
 import fr.inra.oresing.rest.services.AdditionalFileService;
-import fr.inra.oresing.rest.services.RelationalService;
+import fr.inra.oresing.domain.application.SqlIdentifierUtils;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.usecases.application.*;
 import fr.inra.oresing.rest.usecases.data.*;
@@ -697,7 +698,7 @@ public class OreSiResources {
         } catch (IOException e) {
             throw OreSiIOException.ORE_SI_IOEXCEPTION_CANT_LOAD_FILE();
         }
-        if (!RelationalService.IdentifierTest.identifierForApplicationName(name)) {
+        if (!SqlIdentifierUtils.IdentifierTest.identifierForApplicationName(name)) {
             //TODO test à faire
             throw new BadLabelNameException(BadLabelNameException.LabelType.APPLICATION, name);
         }

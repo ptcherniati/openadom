@@ -12,7 +12,7 @@ import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurati
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.domain.exceptions.data.data.BadBinaryFileDatasetQuery;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
-import fr.inra.oresing.persistence.AuthenticationFailure;
+import fr.inra.oresing.domain.exceptions.AuthenticationFailure;
 import fr.inra.oresing.rest.model.configuration.ValidationError;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.extern.slf4j.Slf4j;

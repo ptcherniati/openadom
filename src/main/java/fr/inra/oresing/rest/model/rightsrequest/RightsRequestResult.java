@@ -1,7 +1,7 @@
 package fr.inra.oresing.rest.model.rightsrequest;
 
 import fr.inra.oresing.domain.rightsrequest.RightsRequest;
-import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
+import fr.inra.oresing.domain.authorization.AuthorizationParsed;
 import lombok.Value;
 
 import java.sql.Timestamp;

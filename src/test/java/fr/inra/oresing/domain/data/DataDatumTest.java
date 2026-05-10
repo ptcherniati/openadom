@@ -298,3 +298,91 @@ class DataDatumTest {
         assertThat(datum.getValuesToCheck(col("t"))).isNotNull();
     }
 }
+
+// =========================================================================
+//  Companion classes
+// =========================================================================
+
+class ComputedValueUsageTest {
+
+    @org.junit.jupiter.api.Tag("domain.model")
+    @Test
+    @DisplayName("3 valeurs attendues dans l'enum")
+    void allValues() {
+        assertThat(ComputedValueUsage.values()).hasSize(3);
+        assertThat(ComputedValueUsage.values())
+                .containsExactlyInAnyOrder(
+                        ComputedValueUsage.NOT_COMPUTED,
+                        ComputedValueUsage.USE_COMPUTED_AS_DEFAULT_VALUE,
+                        ComputedValueUsage.USE_COMPUTED_VALUE);
+    }
+
+    @org.junit.jupiter.api.Tag("domain.model")
+    @Test
+    @DisplayName("getError() retourne une SiOreIllegalArgumentException")
+    void getErrorReturnsException() {
+        fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException ex =
+                ComputedValueUsage.getError(ComputedValueUsage.NOT_COMPUTED);
+        assertThat(ex).isNotNull();
+        assertThat(ex.getMessage()).isNotBlank();
+    }
+}
+
+class DataColumnPatternQualifierValueTest {
+
+    @org.junit.jupiter.api.Tag("domain.model")
+    @Test
+    @DisplayName("toJsonForDatabase() retourne column")
+    void toJsonForDatabaseReturnsColumn() {
+        DataColumnPatternQualifierValue v = new DataColumnPatternQualifierValue("comp", "colA");
+        assertThat(v.toJsonForDatabase()).isEqualTo("colA");
+    }
+
+    @org.junit.jupiter.api.Tag("domain.model")
+    @Test
+    @DisplayName("toHumanReadableString() retourne column")
+    void toHumanReadableStringReturnsColumn() {
+        DataColumnPatternQualifierValue v = new DataColumnPatternQualifierValue("comp", "colB");
+        assertThat(v.toHumanReadableString()).isEqualTo("colB");
+    }
+
+    @org.junit.jupiter.api.Tag("domain.model")
+    @Test
+    @DisplayName("getInternationalizedKey() suffixe avec WithComponent")
+    void getInternationalizedKeySuffixes() {
+        DataColumnPatternQualifierValue v = new DataColumnPatternQualifierValue("comp", "col");
+        assertThat(v.getInternationalizedKey("myKey")).isEqualTo("myKeyWithComponent");
+    }
+
+    @org.junit.jupiter.api.Tag("domain.model")
+    @Test
+    @DisplayName("record equality")
+    void equality() {
+        DataColumnPatternQualifierValue a = new DataColumnPatternQualifierValue("c", "col");
+        DataColumnPatternQualifierValue b = new DataColumnPatternQualifierValue("c", "col");
+        assertThat(a).isEqualTo(b);
+    }
+}
+
+class UUIDsfromDataTest {
+
+    @org.junit.jupiter.api.Tag("domain.model")
+    @Test
+    @DisplayName("constructeur sans args crée un Set vide")
+    void emptyConstructor() {
+        UUIDsfromData u = new UUIDsfromData();
+        assertThat(u.uuidsfromData()).isEmpty();
+    }
+
+    @org.junit.jupiter.api.Tag("domain.model")
+    @Test
+    @DisplayName("addRefsLinkedTo() ajoute l'UUID")
+    void addRefsLinkedTo() {
+        UUIDsfromData u = new UUIDsfromData();
+        java.util.UUID id = java.util.UUID.randomUUID();
+        fr.inra.oresing.domain.data.RefsLinked refsLinked = new fr.inra.oresing.domain.data.RefsLinked(
+                id, null, null, null, null, null, null, null, null, null);
+        u.addRefsLinkedTo(refsLinked);
+        assertThat(u.uuidsfromData()).containsExactly(id);
+    }
+}

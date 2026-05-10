@@ -14,6 +14,6 @@ public record ValidationCheckResultRest(
     }
 
     public ValidationCheckResultRest withLineNumber(long lineNumber) {
-        return new ValidationCheckResultRest(type(), message(), params(), lineNumber());
+        return new ValidationCheckResultRest(type(), message(), params(), lineNumber);
     }
 }

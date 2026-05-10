@@ -12,7 +12,7 @@ import fr.inra.oresing.domain.data.SomethingToBeSentToFrontend;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.PatternValidationCheckResult;
-import fr.inra.oresing.persistence.SqlPrimitiveType;
+
 
 import java.io.IOException;
 import java.util.HashMap;

@@ -2,7 +2,7 @@ package fr.inra.oresing.rest.usecases.data;
 
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.rest.data.DataService;
-import fr.inra.oresing.rest.filesenderclient.MessageInformations;
+import fr.inra.oresing.domain.filesenderclient.MessageInformations;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

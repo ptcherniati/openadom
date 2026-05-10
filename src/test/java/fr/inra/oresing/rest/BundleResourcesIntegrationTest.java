@@ -1,7 +1,7 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
-import fr.inra.oresing.rest.filesenderclient.BuildBundleReport;
+import fr.inra.oresing.domain.filesenderclient.BuildBundleReport;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
 import fr.inra.oresing.rest.reactive.ReactiveType;
 import fr.inra.oresing.rest.reactive.ReactiveTypeError;

@@ -13,7 +13,7 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.ReferenceValidationCheckResult;
-import fr.inra.oresing.persistence.SqlPrimitiveType;
+
 import lombok.Getter;
 import org.apache.commons.collections4.MapUtils;
 

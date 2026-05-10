@@ -9,7 +9,7 @@ import fr.inra.oresing.domain.application.ApplicationInformation;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.application.configuration.migration.plan.MigrationMode;
-import fr.inra.oresing.domain.application.configuration.migration.MigrationProperties;
+import fr.inra.oresing.rest.config.MigrationProperties;
 import fr.inra.oresing.domain.application.configuration.migration.report.MigrationResult;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationCreator;
@@ -28,7 +28,7 @@ import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.model.application.ApplicationLightResult;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
-import fr.inra.oresing.rest.model.authorization.AuthorizationsForUserResult;
+import fr.inra.oresing.domain.authorization.AuthorizationsForUserResult;
 import fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult;
 import fr.inra.oresing.rest.reactive.ReactiveEventHelper;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
@@ -229,7 +229,6 @@ public class ApplicationService {
                 .canUpdateApplication();
         
         eventHelper.pushProgress(0D);
-        serviceContainer.relationalService().dropViews(nameOrId);
         serviceContainer.authenticationService().setRoleForClient();
         final Configuration oldConfiguration = application.getConfiguration();
         final UUID oldConfigFileId = application.getConfigFile();

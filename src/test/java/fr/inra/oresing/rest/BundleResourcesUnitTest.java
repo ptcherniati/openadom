@@ -47,6 +47,7 @@ class BundleResourcesUnitTest {
     @Mock CreateDataUseCase        createDataUseCase;
     @Mock DataService              dataService;
     @Mock LocaleResolver           localeResolver;
+    @Mock fr.inra.oresing.persistence.JsonRowMapper<Object> jsonRowMapper;
 
     private ExecutorService normalExecutor;
     private ExecutorService heavyExecutor;
@@ -60,7 +61,7 @@ class BundleResourcesUnitTest {
                 getApplicationUseCase, getCurrentUserUseCase,
                 writeUploadBundleUseCase, sendZipLinkByMailUseCase,
                 readEntryUseCase, createDataUseCase,
-                dataService, localeResolver,
+                dataService, localeResolver, jsonRowMapper,
                 normalExecutor, heavyExecutor);
     }
 

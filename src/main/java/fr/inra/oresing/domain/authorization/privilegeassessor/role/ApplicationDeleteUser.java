@@ -5,7 +5,7 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotAppli
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
-import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
+import fr.inra.oresing.domain.authorization.AuthorizationParsed;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.util.List;

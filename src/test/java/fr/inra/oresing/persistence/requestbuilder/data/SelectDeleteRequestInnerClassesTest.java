@@ -3,7 +3,7 @@ package fr.inra.oresing.persistence.requestbuilder.data;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.data.read.query.*;
-import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.domain.repository.data.DataRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Nested;

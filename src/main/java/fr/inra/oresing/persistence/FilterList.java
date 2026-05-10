@@ -1,5 +1,7 @@
 package fr.inra.oresing.persistence;
 
+import fr.inra.oresing.domain.data.RefsLinked;
+
 import java.util.List;
 
 /**

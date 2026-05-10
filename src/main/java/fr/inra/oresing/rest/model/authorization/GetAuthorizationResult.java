@@ -1,6 +1,8 @@
 package fr.inra.oresing.rest.model.authorization;
 
 import fr.inra.oresing.domain.OreSiUser;
+import fr.inra.oresing.domain.authorization.AuthorizationParsed;
+import fr.inra.oresing.domain.authorization.AuthorizationsResult;
 
 import java.util.List;
 import java.util.Map;

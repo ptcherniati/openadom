@@ -23,7 +23,6 @@ import reactor.core.publisher.FluxSink;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Consumer;
@@ -39,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Slf4j
 @org.junit.jupiter.api.Tag("SUITE")
 @org.junit.jupiter.api.Tag("core.config")
+@org.junit.jupiter.api.Tag("GENERATE_CYPRESS_FIXTURES")
 public class ApplicationConfigurationServiceTest extends AbstractIntegrationTest {
 
     public static final Map<String, List<ReactiveResult>> errors = new HashMap<>();
@@ -46,14 +46,19 @@ public class ApplicationConfigurationServiceTest extends AbstractIntegrationTest
 
     @AfterAll
     static void registerErrors() throws IOException {
-        final JsonRowMapper jsonMapper = new JsonRowMapper<>();
-        final String errorsToJson = jsonMapper
-                .toJson(errors);
-        try (
-                final PrintWriter writerTxt = new PrintWriter("ui/cypress/fixtures/applications/errors/errors.json", StandardCharsets.UTF_8)
-        ) {
-            writerTxt.write(errorsToJson);
+        String baseDirProp = System.getProperty(fr.inra.oresing.rest.fixtures.CypressFixtureWriter.BASE_DIR_PROPERTY);
+        if (baseDirProp == null) {
+            log.debug("registerErrors ignoré (propriété {} non définie)",
+                    fr.inra.oresing.rest.fixtures.CypressFixtureWriter.BASE_DIR_PROPERTY);
+            return;
         }
+        final JsonRowMapper jsonMapper = new JsonRowMapper<>();
+        final String errorsToJson = jsonMapper.toJson(errors);
+        fr.inra.oresing.rest.fixtures.CypressFixtureWriter writer =
+                new fr.inra.oresing.rest.fixtures.CypressFixtureWriter(java.nio.file.Paths.get(baseDirProp));
+        writer.write("ui/cypress/fixtures/applications/errors/errors.json", errorsToJson);
+        log.info("register errors file (sanitisé) : {}/ui/cypress/fixtures/applications/errors/errors.json",
+                baseDirProp);
     }
 
     private static Flux<ReactiveResult> buildFluxRequestJDJson(final Consumer<FluxSink<ReactiveResult>> fluxSink) {

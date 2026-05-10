@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.OreSiAuthorization;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
+import fr.inra.oresing.domain.sql.SqlStatement;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.*;
@@ -157,7 +158,7 @@ public class UpdateRolesOnManagement {
         SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
         return statements.stream()
                 .map(statement -> new SqlPolicy(
-                        authorization.toIdForReference(statement, dataName),
+                        authorization.toIdForReference(SqlStatement.valueOf(statement.name()), dataName),
                         sqlSchemaForApplication.referenceValue(),
                         SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                         Collections.singletonList(statement),

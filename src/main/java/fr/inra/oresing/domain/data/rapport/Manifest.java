@@ -1,6 +1,6 @@
 package fr.inra.oresing.domain.data.rapport;
 
-import fr.inra.oresing.persistence.data.read.bundle.FileContent;
+import fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,15 +8,15 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public record Manifest(
-        Map<String, List<FileContent>> referenceTypeFiles,
-        Map<String, List<FileContent>> referenceFilesInErrors,
+        Map<String, List<BundleFileContent>> referenceTypeFiles,
+        Map<String, List<BundleFileContent>> referenceFilesInErrors,
         Map<String, List<String>> referenceTypeDeps
 ) {
     public Manifest() {
         this(new ConcurrentHashMap<>(), new ConcurrentHashMap<>(), new ConcurrentHashMap<>());
     }
 
-    public synchronized void add(String reference, FileContent fileContent) {
+    public synchronized void add(String reference, BundleFileContent fileContent) {
         referenceTypeFiles
                 .computeIfAbsent(reference, k -> Collections.synchronizedList(new ArrayList<>()))
                 .add(fileContent);
@@ -29,7 +29,7 @@ public record Manifest(
                 .addAll(deps);
     }
 
-    public synchronized void addError(String reference, FileContent fileContent) {
+    public synchronized void addError(String reference, BundleFileContent fileContent) {
         referenceFilesInErrors
                 .computeIfAbsent(reference, k -> Collections.synchronizedList(new ArrayList<>()))
                 .add(fileContent);
@@ -51,7 +51,7 @@ public record Manifest(
                         (map, referenceType) -> map.put(
                                 referenceType,
                                 referenceTypeFiles().get(referenceType).stream()
-                                        .map(FileContent::refsLinked)
+                                        .map(BundleFileContent::refsLinked)
                                         .flatMap(Collection::stream)
                                         .filter(Predicate.not(referenceType::equals))
                                         .collect(Collectors.toCollection(LinkedList::new))

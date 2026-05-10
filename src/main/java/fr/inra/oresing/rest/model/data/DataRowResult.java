@@ -17,7 +17,7 @@ public record DataRowResult(
         String naturalKey,
         String hierarchicalKey,
         Map<String, Object> values,
-        List<fr.inra.oresing.persistence.RefsLinked> refsLinkeds, Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo,
+        List<fr.inra.oresing.domain.data.RefsLinked> refsLinkeds, Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo,
         //Long totalRows,
         //Long rowNumber,
         Map<Object, Object> displaysForRow,
@@ -51,12 +51,12 @@ public record DataRowResult(
         //   - refsLinked() peut être null pour certaines apps (ex: télédétection sans références)
         //   - referenceType() et naturalKey() peuvent être null en mode horizontalisé (PatternComponent)
         //   - Collectors.groupingBy() ne supporte PAS les clés null → d'où le .filter() avant
-        Map<String, Map<String, fr.inra.oresing.persistence.RefsLinked>> refsLinkedMap =
+        Map<String, Map<String, fr.inra.oresing.domain.data.RefsLinked>> refsLinkedMap =
                 dataRow.refsLinked() != null
                         ? dataRow.refsLinked().stream()
                                 .filter(r -> r.referenceType() != null && r.naturalKey() != null)
                                 .collect(Collectors.groupingBy(
-                                        fr.inra.oresing.persistence.RefsLinked::referenceType,
+                                        fr.inra.oresing.domain.data.RefsLinked::referenceType,
                                         Collectors.toMap(
                                                 r -> r.naturalKey().getSql(),
                                                 r -> r,
@@ -74,7 +74,7 @@ public record DataRowResult(
                 .map(referenceEntry -> {
                     String referenceName = referenceEntry.getKey();
                     // Lookup O(1) dans le Map au lieu de stream().filter().findFirst()
-                    Map<String, fr.inra.oresing.persistence.RefsLinked> refsByNaturalKey =
+                    Map<String, fr.inra.oresing.domain.data.RefsLinked> refsByNaturalKey =
                             refsLinkedMap.getOrDefault(referenceName, Map.of());
                     Map<Object, Object> naturalKeysDisplay = referenceEntry.getValue().values().stream()
                             .map(RefsLinkedToValue::hierarchicalKey)
@@ -83,7 +83,7 @@ public record DataRowResult(
                             .map(hierarchicalKey -> hierarchicalKey.getSql().replaceAll(".*[a-z]K", ""))
                             .map(naturalKey -> {
                                 // Lookup O(1) au lieu de stream().filter().findFirst()
-                                fr.inra.oresing.persistence.RefsLinked refsLinked = refsByNaturalKey.get(naturalKey);
+                                fr.inra.oresing.domain.data.RefsLinked refsLinked = refsByNaturalKey.get(naturalKey);
                                 String displayValue;
                                 if (refsLinked != null) {
                                     // Choisir le nom d'affichage selon la locale (fr ou en), avec fallback sur default

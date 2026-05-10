@@ -584,6 +584,10 @@
                             </optionalAnnotations>
                             <excludeClasses>
                                 <class>com.google.common.base.Predicate</class>
+                                <!-- Alias dépréciés REST → les versions domaine sont utilisées -->
+                                <class>fr.inra.oresing.rest.model.authorization.AuthorizationParsed</class>
+                                <class>fr.inra.oresing.rest.model.authorization.AuthorizationsResult</class>
+                                <class>fr.inra.oresing.rest.model.authorization.GetGrantableResult</class>
                             </excludeClasses>
                             <outputFile>${project.basedir}/../frontend/src/types/generated/generated-backend-types-module.ts
                             </outputFile>
@@ -999,6 +1003,28 @@
         </profile>
 
 
+        <!-- Profil pour les tests tagués "integration.migration" (ex: ComparingConfiguration) -->
+        <profile>
+            <id>integration.migration</id>
+            <properties>
+                <junit.jupiter.tags>integration.migration</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${maven-surefire-plugin.version}</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
         <!-- Profil pour les tests use-cases -->
         <profile>
             <id>use-cases</id>
@@ -1039,7 +1065,7 @@
                             <excludedGroups>
                                 SUITE,OTHERS_TEST,core.basic,core.config,core.auth,
                                 domain.model,domain.checker,domain.i18n,
-                                integration.rest,integration.persistence,integration.bundle,
+                                integration.rest,integration.persistence,integration.migration,integration.bundle,
                                 app.monsoere,app.haute_frequence,app.acbb,
                                 app.olac,app.foret,app.pattern,app.recursivity,app.teledetection,
                                 use-cases,
@@ -1055,6 +1081,57 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
+        </profile>
+
+        <!--
+          Profil generate-fixtures : génère les fixtures Cypress sanitisées.
+          Auto-suffisant : aucun autre profil ne doit être combiné.
+
+          Ce profil fait TROIS choses essentielles :
+          1. groups=GENERATE_CYPRESS_FIXTURES → seuls les tests qui produisent
+             des fichiers cypress sont exécutés (CypressFixtureGeneratorTest,
+             ApplicationConfigurationServiceTest, TestReferencesErrors,
+             OreSiResourcesTest#addApplicationMonsoreWithRepositoryDynamic)
+          2. surefire.excludedGroups="" ET excludedGroups explicite → lève
+             l'exclusion par défaut "docker-required". SANS cela, les tests
+             héritant d'AbstractIntegrationTest (@Tag("docker-required")) seraient
+             ignorés et aucun fichier ne serait généré.
+             Note Maven : la propriété seule ne suffit pas car le merge de plugin
+             peut conserver docker-required ; l'élément <excludedGroups> dans la
+             configuration du profil est obligatoire pour forcer la valeur vide.
+          3. cypress.fixtures.base.dir activé → les gardes écrivent les fichiers
+
+          Usage : mvn test -P generate-fixtures
+        -->
+        <profile>
+            <id>generate-fixtures</id>
+            <properties>
+                <junit.jupiter.tags>GENERATE_CYPRESS_FIXTURES</junit.jupiter.tags>
+                <!-- Vide la propriété pour que ${surefire.excludedGroups} se résolve en "" -->
+                <surefire.excludedGroups></surefire.excludedGroups>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${maven-surefire-plugin.version}</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                            <!-- Référence explicite à la propriété vidée ci-dessus.
+                                 Nécessaire car Maven peut conserver la valeur de la
+                                 configuration de base (docker-required) lors du merge
+                                 si on se contente de vider la propriété sans la référencer
+                                 explicitement ici. -->
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <systemPropertyVariables>
+                                <cypress.fixtures.base.dir>${project.basedir}</cypress.fixtures.base.dir>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
 
         <!--

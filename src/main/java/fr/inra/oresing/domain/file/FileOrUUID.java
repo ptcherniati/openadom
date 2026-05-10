@@ -2,7 +2,7 @@ package fr.inra.oresing.domain.file;
 
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.persistence.BinaryFileInfos;
+import fr.inra.oresing.domain.BinaryFileInfos;
 
 import java.util.*;
 

@@ -4,7 +4,7 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.PrivilegeAssessorD
 import fr.inra.oresing.domain.authorization.privilegeassessor.PrivilegeAssessorDomainForSystem;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomainEnum;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomainEnum;
-import fr.inra.oresing.rest.model.authorization.AuthorizationsResult;
+import fr.inra.oresing.domain.authorization.AuthorizationsResult;
 
 public interface AuthorizationService {
     AuthorizationsResult getAuthorizationsForUserAndPublic(String applicationName, String currentUser);
