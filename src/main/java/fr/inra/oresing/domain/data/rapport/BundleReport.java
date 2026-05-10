@@ -1,9 +1,9 @@
 package fr.inra.oresing.domain.data.rapport;
 
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.event.ImportProgressEvent;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.domain.filesenderclient.MessageInformations;
-import fr.inra.oresing.rest.reactive.ReactiveResult;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public record BundleReport(List<ReactiveResult> results, Locale locale, String origin, Application application) implements MessageInformations {
-    record Results(Application application, List<ReactiveResult> results) {}
+public record BundleReport(List<ImportProgressEvent> results, Locale locale, String origin, Application application) implements MessageInformations {
+    record Results(Application application, List<ImportProgressEvent> results) {}
     private static final Map<Locale, String> TITLE_MESSAGES = Map.of(
             Locale.ENGLISH, "Restoration report of %s",
             Locale.FRENCH, "Rapport de restauration de %s"
@@ -47,7 +47,7 @@ public record BundleReport(List<ReactiveResult> results, Locale locale, String o
     }
 
 
-    public BundleReport(List<ReactiveResult> results, Locale locale, String origin, Application application) {
+    public BundleReport(List<ImportProgressEvent> results, Locale locale, String origin, Application application) {
         this.results = results;
         this.application = application;
         this.locale = locale;
@@ -58,8 +58,8 @@ public record BundleReport(List<ReactiveResult> results, Locale locale, String o
         this(new LinkedList<>(), locale, origin, application);
     }
 
-    public void add(ReactiveResult reactiveResult) {
-        results().add(reactiveResult);
+    public void add(ImportProgressEvent event) {
+        results().add(event);
     }
 
     public String title() {
