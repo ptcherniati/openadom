@@ -25,7 +25,7 @@ import fr.inra.oresing.domain.data.menu.ReferenceScope;
 import fr.inra.oresing.domain.data.read.DataHeaderReader;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.repository.data.DataRepository;
-import fr.inra.oresing.persistence.JsonRowMapper;
+import fr.inra.oresing.domain.Mapper;
 import fr.inra.oresing.domain.data.deposit.BuildColumns;
 import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import org.apache.commons.collections4.CollectionUtils;
@@ -40,7 +40,7 @@ public record AsynchroneFileImporterContext(
         PublishContext.PublishContextBuilder publishContextBuilder,
         ImmutableSet<LineChecker<? extends FieldType<?>>> lineCheckers,
         Set<LineChecker<? extends FieldType<?>>> transformedLineCheckers,
-        JsonRowMapper<Object> jsonRowMapper,
+        Mapper jsonRowMapper,
         ConcurrentHashMap<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids,
         ConcurrentHashMap<Ltree, List<RowWithReferenceDatum>> missingParentLine,
         ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences,
@@ -86,7 +86,7 @@ public record AsynchroneFileImporterContext(
             PublishContext.PublishContextBuilder publishContextBuilder,
             ImmutableSet<LineChecker<? extends FieldType<?>>> lineCheckers,
             Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey,
-            JsonRowMapper<Object> jsonRowMapper,
+            Mapper jsonRowMapper,
             DataRepository referenceValueRepository) {
 
         final StandardDataDescription referenceDescription = constants.dataConfiguration();

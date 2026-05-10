@@ -1,5 +1,7 @@
 package fr.inra.oresing.persistence;
 
+import fr.inra.oresing.domain.data.DataRows;
+import fr.inra.oresing.domain.data.DataRows;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
@@ -27,6 +29,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import reactor.core.publisher.Flux;
@@ -59,7 +62,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         super(application);
     }
 
-    private static String addReferenceConditions(final MultiValueMap<String, String> params, final MapSqlParameterSource paramSource) {
+    private static String addReferenceConditions(final java.util.Map<String, java.util.List<String>> params, final MapSqlParameterSource paramSource) {
         final AtomicInteger i = new AtomicInteger();
         // kv.value='LPF' OR t.refvalues @> '{"esp_nom":"ALO"}'::jsonb
         String cond = params.entrySet().stream().flatMap(e -> {
@@ -472,7 +475,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 .query(query, paramSource, getJsonRowMapper());
     }
 
-    public Stream<DataValue> findAllByReferenceTypeWithReferencingReferencesStream(final String refType, final MultiValueMap<String, String> params) {
+    public Stream<DataValue> findAllByReferenceTypeWithReferencingReferencesStream(final String refType, final java.util.Map<String, java.util.List<String>> params) {
         final int offset = Optional.of(params)
                 .map(m -> m.remove("_offset_"))
                 .filter(l -> !l.isEmpty())
@@ -1137,11 +1140,10 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     }
 
     @Override
-    public Flux<FileContent> getStoredData(Application application, String dataName) {
+    public Flux<fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent> getStoredData(Application application, String dataName) {
         MapSqlParameterSource params = new MapSqlParameterSource();
         String sql = FileContent.buildFileNameRequest(application, dataName);
-
-        return Flux.<FileContent>fromStream(
+        return Flux.<fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent>fromStream(
                 getNamedParameterJdbcTemplate().queryForStream(
                         sql,
                         params,
@@ -1150,7 +1152,8 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                             List<String> refsLinked = sqlArray != null
                                     ? Arrays.asList((String[]) sqlArray.getArray())
                                     : Collections.emptyList();
-                            return new FileContent(refsLinked,
+                            return new fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent(
+                                    refsLinked,
                                     rs.getString("fileName"),
                                     rs.getBinaryStream("fileContent")
                             );

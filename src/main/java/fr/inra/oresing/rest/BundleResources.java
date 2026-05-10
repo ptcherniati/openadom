@@ -95,6 +95,7 @@ public class BundleResources {
     // ── services ──────────────────────────────────────────────────────────────
     private final DataService              dataService;
     private final LocaleResolver           localeResolver;
+    private final fr.inra.oresing.domain.Mapper mapper;
 
     // ── executors ─────────────────────────────────────────────────────────────
     private final ExecutorService normalExecutorService;
@@ -109,6 +110,7 @@ public class BundleResources {
             CreateDataUseCase createDataUseCase,
             DataService dataService,
             LocaleResolver localeResolver,
+            fr.inra.oresing.persistence.JsonRowMapper<?> jsonRowMapper,
             @Qualifier("normalExecutorService") ExecutorService normalExecutorService,
             @Qualifier("heavyExecutorService")  ExecutorService heavyExecutorService) {
         this.getApplicationUseCase    = getApplicationUseCase;
@@ -119,6 +121,7 @@ public class BundleResources {
         this.createDataUseCase        = createDataUseCase;
         this.dataService              = dataService;
         this.localeResolver           = localeResolver;
+        this.mapper                   = jsonRowMapper;
         this.normalExecutorService    = normalExecutorService;
         this.heavyExecutorService     = heavyExecutorService;
     }
@@ -221,7 +224,7 @@ public class BundleResources {
             }
             sink.next(new ReactiveTypeProgress(0L));
             final Application application = getApplicationUseCase.execute(nameOrId);
-            BundleReport rapport = new BundleReport(locale, origin, application);
+            BundleReport rapport = new BundleReport(locale, origin, application, mapper);
 
             boolean completedSuccessfully = false;
             try {

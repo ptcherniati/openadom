@@ -6,7 +6,7 @@ import fr.inra.oresing.domain.application.configuration.checker.DateChecker;
 import fr.inra.oresing.domain.data.deposit.DataImporter;
 import fr.inra.oresing.domain.exceptions.authorization.AuthorizationRequestException;
 import fr.inra.oresing.domain.exceptions.authorization.SiOreAuthorizationRequestException;
-import fr.inra.oresing.persistence.data.read.bundle.FileContent;
+import fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -221,7 +221,7 @@ public record Submission(
                 .filter(DateChecker.class::isInstance)
                 .map(DateChecker.class::cast)
                 .map(DateChecker::pattern)
-                .map(FileContent::sanitizePatternForFilename)
+                .map(BundleFileContent::sanitizePatternForFilename)
                 .orElse(DD_MM_YYYY_FOR_FILE);
     }
 }

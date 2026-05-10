@@ -8,7 +8,7 @@ import fr.inra.oresing.domain.checker.CheckerTarget;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DefaultCheckerValidationCheckResult;
-import fr.inra.oresing.persistence.SqlPrimitiveType;
+
 
 import java.io.IOException;
 import java.util.function.Supplier;

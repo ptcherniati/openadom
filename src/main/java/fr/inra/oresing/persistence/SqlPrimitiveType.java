@@ -1,10 +1,10 @@
 package fr.inra.oresing.persistence;
 
-import java.util.Set;
-
 /**
- * L'ensemble des types SQL qui peuvent être utilisés pour représenter des valeurs des données.
+ * @deprecated Déplacé vers {@link fr.inra.oresing.domain.checker.type.SqlPrimitiveType}.
+ *             Cet alias sera supprimé dans une prochaine version.
  */
+@Deprecated(forRemoval = true)
 public enum SqlPrimitiveType {
     UUID,
     LTREE,
@@ -15,19 +15,9 @@ public enum SqlPrimitiveType {
     BOOLEAN,
     JSONB;
 
-    /**
-     * Le type en SQL, tel qu'il faut l'écrire pour faire un cast
-     */
-    public String getSql() {
-        return name();
-    }
+    public String getSql() { return name(); }
 
-    /**
-     * Est-ce que la chaîne vide peut être convertie dans ce type.
-     * <p>
-     * Par example <code>SELECT ''::UUID</code> donne <code>invalid input syntax for type uuid: ""</code> donc non
-     */
     public boolean isEmptyStringValidValue() {
-        return Set.of(TEXT, LTREE).contains(this);
+        return java.util.Set.of(TEXT, LTREE).contains(this);
     }
 }

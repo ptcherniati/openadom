@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest.data;
 
+import fr.inra.oresing.domain.data.DataRows;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
@@ -28,6 +29,7 @@ import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisation;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForBuildBundleReport;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForDownloadDatasetQuery;
 import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent;
 import fr.inra.oresing.persistence.data.read.bundle.FileContent;
 import fr.inra.oresing.rest.HierarchicalReferenceAsTree;
 import fr.inra.oresing.rest.data.extraction.DataCsvBuilder;
@@ -405,7 +407,7 @@ public class DataService {
         log.info("getDataFromStoredCsvStream {}", reference);
 
         DataRepository dataRepository = repo.getRepository(application).data();
-        Flux<FileContent> storedData = dataRepository.getStoredData(application, reference);
+        Flux<BundleFileContent> storedData = dataRepository.getStoredData(application, reference);
 
         try {
             Boolean result = storedData
@@ -860,7 +862,7 @@ private PlatformTransactionManager transactionManager;
                                 Function.identity(),
                                 referenceName -> manifest.referenceTypeFiles()
                                         .get(referenceName).stream()
-                                        .map(FileContent::fileName)
+                                        .map(BundleFileContent::fileName)
                                         .toList(),
                                 (v1, v2) -> v1,
                                 LinkedHashMap::new

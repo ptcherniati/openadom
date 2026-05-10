@@ -1,5 +1,6 @@
 package fr.inra.oresing.persistence;
 
+import fr.inra.oresing.domain.data.DataRows;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.PatternComponent;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;

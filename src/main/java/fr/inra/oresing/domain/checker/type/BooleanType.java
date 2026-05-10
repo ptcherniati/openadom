@@ -10,7 +10,7 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.BooleanValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.groovy.GroovyExpression;
-import fr.inra.oresing.persistence.SqlPrimitiveType;
+
 
 import java.io.IOException;
 import java.util.HashMap;

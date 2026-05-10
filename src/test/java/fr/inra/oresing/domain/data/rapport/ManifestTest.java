@@ -1,6 +1,6 @@
 package fr.inra.oresing.domain.data.rapport;
 
-import fr.inra.oresing.persistence.data.read.bundle.FileContent;
+import fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -20,8 +20,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Manifest — tests unitaires")
 class ManifestTest {
 
-    private static FileContent fc(String fileName, List<String> refs) {
-        return new FileContent(refs, fileName, null);
+    private static BundleFileContent fc(String fileName, List<String> refs) {
+        return new BundleFileContent(refs, fileName, null);
     }
 
     // ─── constructeur ───────────────────────────────────────────────────────
@@ -41,7 +41,7 @@ class ManifestTest {
     @DisplayName("add() peuple referenceTypeFiles et referenceTypeDeps")
     void addPopulatesFilesAndDeps() {
         Manifest m = new Manifest();
-        FileContent fc = fc("communes.csv", List.of("regions"));
+        BundleFileContent fc = fc("communes.csv", List.of("regions"));
 
         m.add("communes", fc);
 
@@ -56,7 +56,7 @@ class ManifestTest {
     void addIgnoresSelfReference() {
         Manifest m = new Manifest();
         // communes se référence elle-même (auto-référence)
-        FileContent fc = fc("communes.csv", List.of("communes", "regions"));
+        BundleFileContent fc = fc("communes.csv", List.of("communes", "regions"));
 
         m.add("communes", fc);
 
@@ -82,7 +82,7 @@ class ManifestTest {
     @DisplayName("addError() peuple referenceFilesInErrors")
     void addErrorPopulatesErrors() {
         Manifest m = new Manifest();
-        FileContent fc = fc("bad.csv", List.of());
+        BundleFileContent fc = fc("bad.csv", List.of());
 
         m.addError("communes", fc);
 
