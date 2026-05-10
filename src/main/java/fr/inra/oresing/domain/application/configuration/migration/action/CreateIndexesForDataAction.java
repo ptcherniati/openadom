@@ -25,9 +25,9 @@ public record CreateIndexesForDataAction(
 
     @Override
     public void execute(MigrationContext context) {
-        context.serviceContainer().authenticationService().setRoleAdmin();
-        context.migrationRepositories().repository().application().updateAuthorizationIndexes(context.newApplication());
-        context.serviceContainer().authenticationService().setRoleForClient();
+        context.authenticationPort().activateAdminRole();
+        context.migrationApplicationPort().updateAuthorizationIndexes(context.newApplication());
+        context.authenticationPort().setRoleForClient();
         log.info("CreateIndexesForDataAction for {} : {}", context.applicationName(), dataName());
     }
 }

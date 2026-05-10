@@ -7,7 +7,6 @@ import fr.inra.oresing.domain.application.configuration.migration.plan.Migration
 import fr.inra.oresing.domain.application.configuration.migration.report.MigrationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -16,8 +15,10 @@ import java.util.List;
 /**
  * Exécuteur de plan de migration.
  * Exécute les actions du plan dans l'ordre : PRE → CORE → POST
+ * <p>
+ * Classe domaine pure — pas d'annotation Spring. Déclarée comme {@code @Bean}
+ * dans {@code rest.data.migration.MigrationConfiguration}.
  */
-@Component
 public class MigrationExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(MigrationExecutor.class);

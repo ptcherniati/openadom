@@ -1,4 +1,6 @@
-package fr.inra.oresing.domain.application.configuration.migration;
+package fr.inra.oresing.rest.config;
+
+import fr.inra.oresing.rest.config.MigrationProperties;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;

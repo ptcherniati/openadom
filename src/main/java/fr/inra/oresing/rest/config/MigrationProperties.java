@@ -1,4 +1,4 @@
-package fr.inra.oresing.domain.application.configuration.migration;
+package fr.inra.oresing.rest.config;
 
 import lombok.Getter;
 import lombok.Setter;

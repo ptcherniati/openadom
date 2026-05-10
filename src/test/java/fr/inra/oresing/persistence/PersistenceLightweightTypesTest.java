@@ -1,7 +1,6 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.domain.additionalfiles.OperationAdditionalFileType;
-import fr.inra.oresing.domain.data.RefsLinked;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

@@ -22,7 +22,7 @@ public record SaveConfigurationAction(String id, Application newApplication) imp
     @Override
     public void execute(MigrationContext context) {
         log.info("SaveConfigurationAction {} : {}", context.applicationName(), newApplication().getConfiguration().version());
-        context.migrationRepositories().repository().application().store(newApplication());
+        context.migrationApplicationPort().storeApplication(newApplication());
     }
 
     @Override

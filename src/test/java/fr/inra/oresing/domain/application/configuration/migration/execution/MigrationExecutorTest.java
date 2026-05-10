@@ -7,6 +7,7 @@ import fr.inra.oresing.domain.application.configuration.migration.plan.Migration
 import fr.inra.oresing.domain.application.configuration.migration.plan.MigrationPlan;
 import fr.inra.oresing.domain.application.configuration.migration.plan.MigrationStatus;
 import fr.inra.oresing.domain.application.configuration.migration.report.MigrationResult;
+import fr.inra.oresing.domain.port.MigrationApplicationPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -159,12 +160,13 @@ class MigrationExecutorTest {
         @Test
         @DisplayName("retourne FAILED si une action lève une exception")
         void failingActionReturnsFailure() {
-            MigrationContext context = Mockito.mock(MigrationContext.class, RETURNS_DEEP_STUBS);
-            // Extraire le mock intermédiaire AVANT la configuration du doThrow
-            var appRepo = context.migrationRepositories().repository().application();
-            // Configurer addReferenceToAuthorizationScope() pour throw sur ce mock
+            // Créer des mocks de ports explicites (plus fiable que RETURNS_DEEP_STUBS sur un record)
+            MigrationApplicationPort portMock = Mockito.mock(MigrationApplicationPort.class);
+            fr.inra.oresing.domain.port.AuthenticationPort authMock = Mockito.mock(fr.inra.oresing.domain.port.AuthenticationPort.class);
+            MigrationContext context = new MigrationContext(portMock, authMock, "testApp", null, null, null, null);
+            // Configurer addReferenceToAuthorizationScope() pour throw
             Mockito.doThrow(new RuntimeException("simulated error"))
-                    .when(appRepo)
+                    .when(portMock)
                     .addReferenceToAuthorizationScope(Mockito.any(), Mockito.any());
 
             MigrationPlan plan = new MigrationPlan(MigrationMode.EXECUTE, Set.of(), MigrationStatus.APPROVED);

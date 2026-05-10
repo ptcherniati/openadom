@@ -9,7 +9,7 @@ import fr.inra.oresing.domain.application.ApplicationInformation;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.application.configuration.migration.plan.MigrationMode;
-import fr.inra.oresing.domain.application.configuration.migration.MigrationProperties;
+import fr.inra.oresing.rest.config.MigrationProperties;
 import fr.inra.oresing.domain.application.configuration.migration.report.MigrationResult;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationCreator;

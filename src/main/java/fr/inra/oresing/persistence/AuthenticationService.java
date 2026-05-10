@@ -7,6 +7,7 @@ import fr.inra.oresing.domain.OreSiEntity;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.AuthenticationServiceImpl;
+import fr.inra.oresing.domain.port.AuthenticationPort;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
@@ -39,7 +40,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Transactional(readOnly = true)
-public class AuthenticationService implements AuthenticationServiceImpl {
+public class AuthenticationService implements AuthenticationServiceImpl, AuthenticationPort {
     @Setter
     private ServiceContainer serviceContainer;
 
@@ -128,6 +129,12 @@ public class AuthenticationService implements AuthenticationServiceImpl {
     public OreSiopenAdomAdminRole setRoleAdmin() {
         setRole(OreSiRole.openAdomAdmin());
         return OreSiRole.openAdomAdmin();
+    }
+
+    /** Implémentation du port domaine {@link fr.inra.oresing.domain.port.AuthenticationPort#activateAdminRole()}. */
+    @Override
+    public void activateAdminRole() {
+        setRoleAdmin();
     }
 
     /**

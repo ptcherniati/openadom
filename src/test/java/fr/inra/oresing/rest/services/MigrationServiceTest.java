@@ -2,7 +2,7 @@ package fr.inra.oresing.rest.services;
 
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Configuration;
-import fr.inra.oresing.domain.application.configuration.migration.MigrationProperties;
+import fr.inra.oresing.rest.config.MigrationProperties;
 import fr.inra.oresing.domain.application.configuration.migration.execution.MigrationExecutor;
 import fr.inra.oresing.domain.application.configuration.migration.plan.MigrationMode;
 import fr.inra.oresing.domain.application.configuration.migration.plan.MigrationStatus;

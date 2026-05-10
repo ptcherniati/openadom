@@ -3,7 +3,6 @@ package fr.inra.oresing.rest.services;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
-import fr.inra.oresing.domain.application.configuration.migration.MigrationProperties;
 import fr.inra.oresing.domain.application.configuration.migration.change.ConfigurationChange;
 import fr.inra.oresing.domain.application.configuration.migration.change.DataAdded;
 import fr.inra.oresing.domain.application.configuration.migration.change.IgnorableChange;
@@ -17,7 +16,10 @@ import fr.inra.oresing.domain.application.configuration.migration.plan.Migration
 import fr.inra.oresing.domain.application.configuration.migration.plan.MigrationPlan;
 import fr.inra.oresing.domain.application.configuration.migration.plan.MigrationStatus;
 import fr.inra.oresing.domain.application.configuration.migration.report.MigrationResult;
+import fr.inra.oresing.domain.port.AuthenticationPort;
+import fr.inra.oresing.domain.port.MigrationApplicationPort;
 import fr.inra.oresing.persistence.JsonRowMapper;
+import fr.inra.oresing.rest.config.MigrationProperties;
 import fr.inra.oresing.rest.data.migration.MigrationConfiguration;
 import org.apache.commons.collections4.CollectionUtils;
 import org.javers.core.Javers;
@@ -263,13 +265,31 @@ public class MigrationService {
             Application oldApplication,
             Application newApplication
     ) {
-        String schemaName = "si_" + applicationName;
         SchemaInfo schemaInfo = migrationRepositories.repository().getRepository(applicationName).getSchemaInfo();
         DataInfo dataInfo = migrationRepositories.repository().getRepository(applicationName).getDataInfo();
 
+        AuthenticationPort authenticationPort = serviceContainer.authenticationService();
+
+        MigrationApplicationPort migrationApplicationPort = new MigrationApplicationPort() {
+            @Override
+            public void storeApplication(Application application) {
+                migrationRepositories.repository().application().store(application);
+            }
+
+            @Override
+            public boolean addReferenceToAuthorizationScope(String appName, java.util.Collection<String> identifiers) {
+                return migrationRepositories.repository().application().addReferenceToAuthorizationScope(appName, identifiers);
+            }
+
+            @Override
+            public void updateAuthorizationIndexes(Application application) {
+                migrationRepositories.repository().application().updateAuthorizationIndexes(application);
+            }
+        };
+
         return new MigrationContext(
-                migrationRepositories,
-                serviceContainer,
+                migrationApplicationPort,
+                authenticationPort,
                 applicationName,
                 oldApplication,
                 newApplication,
