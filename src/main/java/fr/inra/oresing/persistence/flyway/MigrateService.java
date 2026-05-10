@@ -50,10 +50,37 @@ public class MigrateService {
     private BeanFactory beanFactory;
 
     public void migrateAll() {
+        // Flyway main : idempotent at every boot . When a new V<N>__*.sql
+        // is added under migration/main , Flyway compares the file set
+        // against public.flyway_schema_history and only applies the deltas .
+        // Already-installed migrations ( V1 + V2 historical ) are skipped
+        // by Flyway itself ; new ones ( V6 + ) are applied generically on
+        // every existing instance without manual psql intervention .
+        //
+        // validateOnMigrate = false : tolerates the legacy mismatch
+        // observed on existing instances where flyway_schema_history . V2
+        // carries description " oa metrics schema " while the current
+        // V2__oa_audit_schema.sql in repo would otherwise raise a
+        // checksum / description error . The version number remains the
+        // contract that drives apply / skip decisions ; only the
+        // historical body validation is relaxed . Each V<N>__ file uses
+        // CREATE IF NOT EXISTS / ADD IF NOT EXISTS so a re-run on an
+        // already-migrated object is a no-op ( defense in depth ) .
+        final Flyway mainFlyway = Flyway.configure()
+                .dataSource(dataSource)
+                .locations("classpath:migration/main")
+                .baselineOnMigrate(true)
+                .validateOnMigrate(false)
+                .placeholders(Map.of("publicRoleId", publicRoleId))
+                .load();
+
         List<Application> allSchemas;
         final MigrateService migrateService = beanFactory.getBean(MigrateService.class);
         try {
             allSchemas = applicationRepository.findAll();
+            // Public schema exists -> let Flyway apply any new V<N>__
+            // detected since last boot ( idempotent no-op when up to date ) .
+            mainFlyway.migrate();
         } catch (BadSqlGrammarException e) {
             log.info("""
                     \u001B[34m
@@ -62,14 +89,7 @@ public class MigrateService {
                     ****************************************
                     \u001B[0m
                     """);
-            final Flyway load = Flyway.configure()
-                    .dataSource(dataSource)
-                    .locations("classpath:migration/main")
-                    .baselineOnMigrate(true)
-                    .placeholders(Map.of(
-                        "publicRoleId", publicRoleId))// initialise si schéma non vide sans table d’historique
-                    .load();
-            load.migrate();
+            mainFlyway.migrate();
             allSchemas = applicationRepository.findAll();
             log.info("""
                     \u001B[32m
