@@ -4,8 +4,7 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.ApplicationDescription;
 import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
-import fr.inra.oresing.rest.OreSiResources;
-import fr.inra.oresing.rest.filesenderclient.MessageInformations;
+import fr.inra.oresing.domain.filesenderclient.MessageInformations;
 
 import java.util.Locale;
 import java.util.Optional;
@@ -50,7 +49,7 @@ public sealed interface DownloadDatasetQuery extends MessageInformations
                                 .map(Application::getConfiguration)
                                 .map(Configuration::applicationDescription)
                                 .map(ApplicationDescription::defaultLanguage)
-                                .orElseGet(OreSiResources::getDefaultLocale)
+                                .orElse(Locale.FRENCH)
                 );
         return Locale.of(Locale.forLanguageTag(locale.getLanguage()).getLanguage());
     }

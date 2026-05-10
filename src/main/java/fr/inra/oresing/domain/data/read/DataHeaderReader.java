@@ -12,7 +12,7 @@ import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
 import fr.inra.oresing.domain.data.deposit.validation.transformer.data.RowWithReferenceDatum;
 import fr.inra.oresing.domain.file.FileOrUUID;
-import fr.inra.oresing.rest.data.BuildColumns;
+import fr.inra.oresing.domain.data.deposit.BuildColumns;
 import org.apache.commons.csv.CSVRecord;
 
 import java.util.*;

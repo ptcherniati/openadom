@@ -14,7 +14,7 @@ import fr.inra.oresing.domain.data.deposit.context.ContextConstants;
 import fr.inra.oresing.domain.data.deposit.context.column.PatternColumnFactory;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.persistence.JsonRowMapper;
-import fr.inra.oresing.rest.data.BuildColumns;
+import fr.inra.oresing.domain.data.deposit.BuildColumns;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;

@@ -1,14 +1,11 @@
 package fr.inra.oresing.rest.filesenderclient;
-
-import fr.inra.oresing.domain.application.Application;
-
-import java.util.List;
-import java.util.Locale;
-
-public record BuildBundleReport(
-        Application application,
-        List<String> referentielsAvecDonnees,
-        List<String> referentielsAvecDonneesExemple,
-        List<String> referentielsEnErreur,
-        Locale locale) implements MessageInformations {
+/**
+ * @deprecated Utiliser {@link fr.inra.oresing.domain.filesenderclient.BuildBundleReport}.
+ *             Cette classe sera supprimée lors du prochain cycle de nettoyage.
+ */
+@Deprecated(since = "2026-05", forRemoval = true)
+public final class BuildBundleReport {
+    private BuildBundleReport() {
+        // Utilitaire de redirection — ne pas instancier
+    }
 }

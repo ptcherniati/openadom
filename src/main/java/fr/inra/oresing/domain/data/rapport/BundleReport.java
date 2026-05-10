@@ -2,7 +2,7 @@ package fr.inra.oresing.domain.data.rapport;
 
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.persistence.JsonRowMapper;
-import fr.inra.oresing.rest.filesenderclient.MessageInformations;
+import fr.inra.oresing.domain.filesenderclient.MessageInformations;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
 
 import java.io.IOException;
