@@ -40,6 +40,14 @@ public class WorkflowLogRepository {
     private static final String DELETE_OLDER_THAN_SQL =
             "SELECT oa_audit.delete_workflow_logs_older_than(?::int)";
 
+    /** Suppression d'une seule ligne d'historique par correlation_id . */
+    private static final String DELETE_BY_CORRELATION_ID_SQL =
+            "DELETE FROM oa_audit.workflow_log WHERE correlation_id = ?::uuid";
+
+    /** Suppression totale ( admin ) . */
+    private static final String DELETE_ALL_SQL =
+            "DELETE FROM oa_audit.workflow_log";
+
     private static final String INSERT_START_SQL = """
             SELECT oa_audit.record_workflow_start(
                 ?::uuid, ?::varchar(32), ?::uuid, ?::varchar(128),
@@ -174,6 +182,28 @@ public class WorkflowLogRepository {
             return 0;
         }
         return jdbcTemplate.update(DELETE_OLDER_THAN_SQL, retentionDays);
+    }
+
+    /**
+     * Supprime une seule entree par correlation_id ( endpoint admin
+     * d'oa-live , bouton corbeille par ligne ) .
+     *
+     * @return 1 si supprimee , 0 si l'id n'existait pas
+     */
+    public int deleteByCorrelationId(java.util.UUID correlationId) {
+        if (correlationId == null) return 0;
+        return jdbcTemplate.update(DELETE_BY_CORRELATION_ID_SQL, correlationId.toString());
+    }
+
+    /**
+     * Supprime toutes les entries de {@code oa_audit.workflow_log} ( endpoint
+     * admin d'oa-live , bouton " purge totale " avec confirmation textuelle
+     * style GitLab ) . Operation irreversible .
+     *
+     * @return nombre de lignes supprimees
+     */
+    public int deleteAll() {
+        return jdbcTemplate.update(DELETE_ALL_SQL);
     }
 
     private void bindEntry(PreparedStatement ps, WorkflowLogEntry e) throws SQLException {

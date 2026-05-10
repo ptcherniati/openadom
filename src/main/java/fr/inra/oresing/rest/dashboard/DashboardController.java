@@ -96,6 +96,47 @@ public class DashboardController {
     }
 
     @Operation(
+        summary = "Supprimer une entree d'historique",
+        description = "DELETE d'une seule ligne workflow_log par correlation_id . "
+                + "Operation irreversible reservee aux admins . Cote oa-live , "
+                + "le bouton corbeille declenche une modale de confirmation .")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Entree supprimee"),
+        @ApiResponse(responseCode = "401", description = "JWT absent ou invalide"),
+        @ApiResponse(responseCode = "403", description = "Reserve aux admins"),
+        @ApiResponse(responseCode = "404", description = "correlation_id inconnu")
+    })
+    @org.springframework.security.access.prepost.PreAuthorize(
+            "hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
+    @DeleteMapping("/history/{correlationId}")
+    public ResponseEntity<Void> deleteHistoryEntry(
+            @Parameter(description = "correlation_id ( UUID )", required = true)
+            @PathVariable java.util.UUID correlationId) {
+        return service.deleteWorkflowLog(correlationId)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
+    }
+
+    @Operation(
+        summary = "Purger tout l'historique workflow_log",
+        description = "DELETE FROM oa_audit.workflow_log . Operation irreversible "
+                + "reservee aux admins . Cote oa-live , doit etre precedee d'une "
+                + "confirmation textuelle ( saisie du nom de l'application ou d'un "
+                + "mot-cle , a la GitLab ) .")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lignes supprimees ( count )"),
+        @ApiResponse(responseCode = "401", description = "JWT absent ou invalide"),
+        @ApiResponse(responseCode = "403", description = "Reserve aux admins")
+    })
+    @org.springframework.security.access.prepost.PreAuthorize(
+            "hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
+    @DeleteMapping("/history")
+    public ResponseEntity<java.util.Map<String, Integer>> deleteAllHistory() {
+        int deleted = service.deleteAllWorkflowLogs();
+        return ResponseEntity.ok(java.util.Map.of("deleted", deleted));
+    }
+
+    @Operation(
         summary = "Workflow detail",
         description = "Full detail of a single workflow , identified by its correlation id. "
                 + "Looks up the in-memory registry first ( live data for running workflows ) , "

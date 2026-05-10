@@ -117,7 +117,13 @@ public record DashboardWorkflowDTO(
                 + "'workflow vivant mais lent' de 'workflow mort' via un pill vert/orange/"
                 + "rouge selon l'age . Null si jamais beat ( workflow trop court , phase "
                 + "non heartbeat-ee , workflow termine ) .")
-        Instant lastHeartbeatAt) {
+        Instant lastHeartbeatAt,
+
+        @Schema(description = "Metadata jsonb du workflow ( champs libres encodes par le "
+                + "use case proprietaire ; ex. PUBLISH_TOGGLE encode { published: boolean } "
+                + "pour distinguer publication / depublication ) . Null pour les workflows "
+                + "in-memory ( snapshot ) ou si la metadata est absente .")
+        Map<String, Object> metadata) {
 
     public static DashboardWorkflowDTO fromSnapshot(fr.inra.oresing.workflow.cascade.history.WorkflowSnapshot s) {
         List<ChunkDTO> chunkDtos = s.chunks() == null
@@ -147,7 +153,8 @@ public record DashboardWorkflowDTO(
                 s.progressPercentage(), s.bytesTotal(), s.recordsTotal(),
                 chunkDtos, workerDtos, parallelism, strategy, sinkChunkDtos,
                 importConfig,
-                s.lastHeartbeatAt());
+                s.lastHeartbeatAt(),
+                null);
     }
 
     /** Per-chunk DTO mirroring {@link fr.inra.oresing.workflow.cascade.history.ChunkSnapshot}. */

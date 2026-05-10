@@ -128,7 +128,7 @@ public class PublishToggleUseCase {
         }
 
         recordEnd(correlationId, userId, userLogin, application.getName(),
-                dataName, fileName, startedAt, result, failure);
+                dataName, fileName, startedAt, result, failure, published);
 
         if (failure != null) {
             if (failure instanceof RuntimeException re) throw re;
@@ -140,7 +140,8 @@ public class PublishToggleUseCase {
     private void recordEnd(
             UUID correlationId, UUID userId, String userLogin,
             String applicationName, String dataName, String fileName,
-            Instant startedAt, WorkflowResult result, Throwable failure) {
+            Instant startedAt, WorkflowResult result, Throwable failure,
+            boolean published) {
         Instant  endTime  = Instant.now();
         Duration duration = Duration.between(startedAt, endTime);
         boolean  success  = failure == null
@@ -151,6 +152,12 @@ public class PublishToggleUseCase {
         String   stage    = result == null
                 ? null
                 : result.failedStage().map(Enum::name).orElse(null);
+
+        // Encode l'action ( publication / depublication ) dans la metadata
+        // jsonb du workflow_log . Le type de workflow reste PUBLISH_TOGGLE
+        // ( un seul type cote audit ) ; l'oa-live affiche dynamiquement
+        // " Publication " ou " Depublication " en lisant ce flag .
+        java.util.Map<String, Object> metadata = java.util.Map.of("published", published);
 
         try {
             logWriter.recordEnd(new WorkflowLogEntry(
@@ -165,7 +172,7 @@ public class PublishToggleUseCase {
                     0L,                   // bytesTotal
                     List.of(),
                     fatal,
-                    null,
+                    metadata,
                     stage,
                     null));
         } catch (RuntimeException e) {

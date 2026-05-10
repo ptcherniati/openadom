@@ -64,6 +64,7 @@ public class DashboardService {
     private final fr.inra.oresing.monitoring.session.UserSessionLogRepository sessionLogRepository;
     private final fr.inra.oresing.monitoring.session.UserSessionLogWriter sessionLogWriter;
     private final fr.inra.oresing.monitoring.session.JwtBlacklistRegistry jwtBlacklist;
+    private final fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository workflowLogRepository;
     private final NamedParameterJdbcTemplate jdbc;
     private final AuthenticationService authenticationService;
     private final ImportProperties importProperties;
@@ -145,12 +146,23 @@ public class DashboardService {
         p.addValue("limit", l);
         p.addValue("offset", o);
 
+        // P1.8 : project ONLY metadata . published instead of the full
+        // metadata jsonb . The listing only needs " published " ( read by
+        // WorkflowTable . workflowTypeLabel for PUBLISH_TOGGLE rows ) ;
+        // shipping the full jsonb sends 1 - 10 KB per row of unused
+        // payload ( errors , importConfig , strategy ) consumed only by
+        // the detail endpoint . On a 100-row page that's up to 1 MB
+        // saved per fetch with no functional change . Iso-result for
+        // the listing : same set of rows , only the metadata payload is
+        // trimmed - the detail endpoint ( which projects the full
+        // metadata::text ) is unchanged .
         List<DashboardWorkflowDTO> items = jdbc.query(
                 "SELECT correlation_id, workflow_type, user_id, user_login, " +
                 "       application_name, data_type, resource_name, " +
                 "       start_time, end_time, duration_ms, status, " +
                 "       records_processed, records_failed, chunks_processed, " +
-                "       progress_percentage, bytes_total, last_heartbeat_at " +
+                "       progress_percentage, bytes_total, last_heartbeat_at, " +
+                "       jsonb_build_object('published', metadata->'published')::text AS metadata_json " +
                 "  FROM oa_audit.workflow_log " +
                 where +
                 " ORDER BY start_time DESC " +
@@ -626,6 +638,7 @@ public class DashboardService {
     // ---------------------------------------------------------------- //
 
     private DashboardWorkflowDTO mapSummary(ResultSet rs, int rn) throws SQLException {
+        Map<String, Object> metadata = readMetadataIfPresent(rs);
         return new DashboardWorkflowDTO(
                 rs.getObject("correlation_id", UUID.class),
                 rs.getString("workflow_type"),
@@ -650,7 +663,29 @@ public class DashboardService {
                 null,
                 List.of(),
                 null,
-                toInstant(rs.getTimestamp("last_heartbeat_at")));
+                toInstant(rs.getTimestamp("last_heartbeat_at")),
+                metadata);
+    }
+
+    /**
+     * Lit la colonne {@code metadata_json} si presente dans le ResultSet
+     * ( SELECT le projete via {@code metadata::text AS metadata_json} ) ;
+     * retourne null si absente ou non parsable . Centralise pour mapSummary
+     * et mapDetail .
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> readMetadataIfPresent(ResultSet rs) {
+        try {
+            String json = rs.getString("metadata_json");
+            if (json == null || json.isBlank()) return null;
+            return objectMapper.readValue(json, Map.class);
+        } catch (SQLException e) {
+            // Colonne absente du SELECT ( ancien chemin ) : pas une erreur .
+            return null;
+        } catch (Exception e) {
+            log.warn("Could not parse metadata_json : {}", e.getMessage());
+            return null;
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -803,5 +838,28 @@ public class DashboardService {
                 .cancel(correlationId.toString(),
                         "Cancelled by " + (me.userLogin() != null ? me.userLogin() : me.userId()));
         return new CancelResult(signalled);
+    }
+
+    /**
+     * Supprime une entree d'historique workflow_log par correlation_id .
+     * Reserve aux admins .
+     *
+     * @return true si la ligne existait et a ete supprimee , false sinon
+     */
+    public boolean deleteWorkflowLog(java.util.UUID correlationId) {
+        return workflowLogRepository.deleteByCorrelationId(correlationId) > 0;
+    }
+
+    /**
+     * Purge totale de oa_audit.workflow_log . Operation irreversible
+     * reservee aux admins ; doit etre conditionnee par une confirmation
+     * textuelle cote frontend ( cf. modale GitLab-style ) .
+     *
+     * @return nombre de lignes supprimees
+     */
+    public int deleteAllWorkflowLogs() {
+        int deleted = workflowLogRepository.deleteAll();
+        log.warn("workflow_log purge totale demandee par admin : {} entries supprimees", deleted);
+        return deleted;
     }
 }
