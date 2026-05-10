@@ -52,15 +52,48 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
      * relations data ( referencevalue + reference_reference ). Toggle
      * publish ne change pas ces relations donc le cache reste valide.
      *
-     * Invalidation : sur toute mutation reelle ( import , delete ,
-     * unpublish-with-delete ) via clearCacheForApplication ; TTL
-     * defensif de 30 min pour borner la stale-tolerance .
+     * Configuration ( meme pattern que filterListCache /
+     * checkedFormatComponentsCache ) :
+     * <ul>
+     *   <li>{@code openadom.cache.referenced-files.enabled} : si {@code false} ,
+     *       chaque appel re-execute la SQL ( bypass complet ) ;</li>
+     *   <li>{@code openadom.cache.referenced-files.max-entries} : capacite LRU ;</li>
+     *   <li>{@code openadom.cache.referenced-files.ttl-minutes} : TTL ;
+     *       si {@code <= 0} l'auto-rebuild est desactive ( pas de TTL , les
+     *       entrees vivent jusqu'a invalidation explicite ) .</li>
+     * </ul>
      *
-     * Cle : nameOrId + "::" + dataType + "::" + sortedIds .
+     * Invalidation : sur toute mutation reelle ( import , delete ,
+     * unpublish-with-delete ) via {@link #invalidateReferencedFilesCache} .
+     *
+     * Cle : applicationId + "::" + dataType + "::" + singleFileId .
      * Valeur : List<ReferencedBinaryFiles> immutable .
      */
-    private final MemoryCache<String, List<ReferencedBinaryFiles>> referencedFilesCache =
-            new MemoryCache<>("referencedFiles", 200, 30L);
+    @org.springframework.beans.factory.annotation.Value(
+            "${openadom.cache.referenced-files.enabled:true}")
+    private boolean referencedFilesCacheEnabled;
+
+    @org.springframework.beans.factory.annotation.Value(
+            "${openadom.cache.referenced-files.max-entries:200}")
+    private int referencedFilesCacheMaxEntries;
+
+    @org.springframework.beans.factory.annotation.Value(
+            "${openadom.cache.referenced-files.ttl-minutes:30}")
+    private long referencedFilesCacheTtlMinutes;
+
+    private MemoryCache<String, List<ReferencedBinaryFiles>> referencedFilesCache;
+
+    @jakarta.annotation.PostConstruct
+    void initReferencedFilesCache() {
+        this.referencedFilesCache = new MemoryCache<>(
+                "referencedFiles",
+                referencedFilesCacheMaxEntries,
+                referencedFilesCacheTtlMinutes);
+        log.info("referencedFilesCache initialised : enabled={} maxEntries={} ttlMinutes={}",
+                referencedFilesCacheEnabled,
+                referencedFilesCacheMaxEntries,
+                referencedFilesCacheTtlMinutes);
+    }
 
     public BinaryFileService(OreSiRepository repository, ServiceContainer serviceContainer, AuthenticationService authenticationService, JsonRowMapper jsonRowMapper) {
         this.repository = repository;
@@ -187,8 +220,29 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     }
 
     @Override
+    public Set<UUID> findBinaryFileIdsWithLinks(UUID applicationId, String datatype, Set<UUID> ids) {
+        if (ids == null || ids.isEmpty()) return Set.of();
+        // Reutilise le cache JVM existant ( referencedFilesCache ) via le
+        // chemin {@link #getReferencedBinaryFiles} ; on extrait juste les
+        // ids distincts qui ont au moins une entree . Hit cache = sub-ms ,
+        // miss = unique query SQL (3s 1ere fois) cachee ensuite .
+        return getReferencedBinaryFiles(applicationId, datatype, ids).stream()
+                .map(ReferencedBinaryFiles::binaryFileId)
+                .collect(Collectors.toSet());
+    }
+
+    @Override
     public List<ReferencedBinaryFiles> getReferencedBinaryFiles(UUID applicationId, String datatype, Set<UUID> binaryFileIds) {
         if (binaryFileIds == null || binaryFileIds.isEmpty()) return List.of();
+
+        // Bypass complet si cache desactive : query SQL directe pour le set
+        // entier , pas de write cache . Permet de mesurer la latence "naked"
+        // ou de desactiver le cache temporairement en prod sans rebuild .
+        if (!referencedFilesCacheEnabled) {
+            log.debug("referencedFiles cache disabled , querying directly for {} ids", binaryFileIds.size());
+            return getBinaryFileRepository(applicationId.toString())
+                    .getReferencedBinaryFiles(datatype, binaryFileIds);
+        }
 
         // Cache PER binaryFileId ( pas sur le set complet ) : sinon la
         // cle change a chaque toggle publish/depublie ( liste publishedIds

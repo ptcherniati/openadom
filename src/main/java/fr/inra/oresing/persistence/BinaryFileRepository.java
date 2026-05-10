@@ -47,6 +47,30 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
     }
 
     @Override
+    /**
+     * Lightweight version of {@link #getReferencedBinaryFiles} : retourne
+     * uniquement le {@link Set} des binaryfile ids qui ont au moins une
+     * liaison sortante via {@code reference_reference} ( vers un autre
+     * binaryfile ) . Pour le gating UI ( bouton publish/depublie + delete )
+     * qui n'a besoin que d'un boolean par fichier .
+     *
+     * <p>Implementation : reuse la query lourde sous-jacente
+     * ( {@link #getReferencedBinaryFiles} ) car les variantes EXISTS
+     * forcaient le planner sur un Hash Right Semi Join 30s+ ( vs
+     * 3s pour la query CTE-filtree apres index V6 ) . On garde la
+     * meme query et on extrait juste les ids distincts cote Java .
+     * Le vrai gain perf vient du cache memoire ( cf. {@link
+     * fr.inra.oresing.rest.binaryFile.BinaryFileService#findBinaryFileIdsWithLinks }) ;
+     * le payload reduit ( Set<UUID> au lieu de List<ReferencedBinaryFiles> )
+     * ne sert qu'a alleger la JSON serialization cote handler .
+     */
+    public Set<UUID> findBinaryFileIdsWithLinks(String dataType, Set<UUID> binaryfileIds) {
+        if (binaryfileIds == null || binaryfileIds.isEmpty()) return Set.of();
+        return getReferencedBinaryFiles(dataType, binaryfileIds).stream()
+                .map(ReferencedBinaryFiles::binaryFileId)
+                .collect(java.util.stream.Collectors.toSet());
+    }
+
     public List<ReferencedBinaryFiles> getReferencedBinaryFiles(String dataType, Set<UUID> binaryfileIds) {
         // Pushes the (referencetype , binaryfile) selectivity into a CTE
         // before joining reference_reference + referencevalue2 . The

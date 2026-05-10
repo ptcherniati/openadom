@@ -42,4 +42,15 @@ public interface BinaryFileService {
             AdditionalBinaryFile additionalBinaryFile);
 
     List<ReferencedBinaryFiles> getReferencedBinaryFiles(UUID applicationId, String datatype, Set<UUID> id);
+
+    /**
+     * Lightweight version : retourne uniquement le {@link Set} des
+     * binaryfile ids ayant au moins une liaison sortante via
+     * {@code reference_reference} . Utilise pour le gating UI ( bouton
+     * publish/depublie + delete ) qui n'a besoin que d'un boolean par
+     * fichier . Beaucoup plus rapide que
+     * {@link #getReferencedBinaryFiles} sur gros volumes ( EXISTS s'arrete
+     * au premier match au lieu d'enumerer tout le graphe ).
+     */
+    Set<UUID> findBinaryFileIdsWithLinks(UUID applicationId, String datatype, Set<UUID> ids);
 }

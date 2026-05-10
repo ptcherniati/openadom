@@ -564,15 +564,20 @@ public class OreSiResources {
                 .filter(bf -> bf.getParams() != null && bf.getParams().published())
                 .map(BinaryFile::getId)
                 .collect(Collectors.toSet());
-        final Map<UUID, List<ReferencedBinaryFiles>> refsByFileId;
+        // Optimisation B / scaling 900M : on remplace l'enumeration complete
+        // du graphe ( getReferencedBinaryFiles ) par un EXISTS qui retourne
+        // juste le set des fileIds qui ont des liaisons sortantes . Cote
+        // front , isLinked() lit directement BinaryFileResult.hasLinks .
+        // Le champ legacy referencedFiles reste null ( backward compat
+        // pour les callers qui itereraient encore l'ancien shape ; aucun
+        // dans openADOM aujourd'hui ).
+        final Set<UUID> idsWithLinks;
         if (publishedIds.isEmpty() || rawFiles.isEmpty()) {
-            refsByFileId = Map.of();
+            idsWithLinks = Set.of();
         } else {
             UUID applicationId = rawFiles.getFirst().getApplication();
-            refsByFileId = getReferencedBinaryFilesUseCase
-                    .execute(applicationId, dataType, publishedIds)
-                    .stream()
-                    .collect(Collectors.groupingBy(ReferencedBinaryFiles::binaryFileId));
+            idsWithLinks = serviceContainer.binaryFileService()
+                    .findBinaryFileIdsWithLinks(applicationId, dataType, publishedIds);
         }
 
         final List<BinaryFileResult> files = rawFiles.stream()
@@ -588,9 +593,8 @@ public class OreSiResources {
                                 .map(BinaryFileInfos::publisheduser)
                                 .map(users::get)
                                 .orElse(null),
-                        binaryFile.getParams() != null && binaryFile.getParams().published()
-                                ? refsByFileId.getOrDefault(binaryFile.getId(), List.of())
-                                : null
+                        idsWithLinks.contains(binaryFile.getId()),
+                        null
                 ))
                 .toList();
 
