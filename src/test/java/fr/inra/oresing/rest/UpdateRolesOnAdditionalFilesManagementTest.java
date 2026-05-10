@@ -4,6 +4,7 @@ import fr.inra.oresing.domain.PolicyDescription;
 import fr.inra.oresing.domain.additionalfiles.OreSiAdditionalFileAuthorization;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
+import fr.inra.oresing.domain.additionalfiles.OperationAdditionalFileType;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.persistence.*;
 import org.junit.jupiter.api.BeforeEach;
