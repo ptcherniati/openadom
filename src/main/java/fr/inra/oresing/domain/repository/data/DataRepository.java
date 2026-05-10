@@ -9,7 +9,6 @@ import fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
 import fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery;
-import reactor.core.publisher.Flux;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -90,11 +89,11 @@ public interface DataRepository {
 
     Map<String, String> findHierarchicalKeysByKeyForReferenceTypes(List<String> referenceType);
 
-    Flux<DataRows> findAllByDataTypeFlux(DownloadDatasetQuery downloadDatasetQuery);
+    Stream<DataRows> findAllByDataTypeStream(DownloadDatasetQuery downloadDatasetQuery);
 
     List<ReferenceScope.NodeDescription> getNodesForMenu(MenuType menuType);
 
-    Flux<BundleFileContent> getStoredData(Application application, String dataName);
+    Stream<BundleFileContent> getStoredData(Application application, String dataName);
 
     void flush();
 

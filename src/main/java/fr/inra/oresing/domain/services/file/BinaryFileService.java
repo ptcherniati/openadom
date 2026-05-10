@@ -9,7 +9,6 @@ import fr.inra.oresing.domain.data.DataFile;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFileResult;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
@@ -18,7 +17,6 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface BinaryFileService {
-    @Transactional()
     UUID storeFile(Application application, DataFile file, String comment, BinaryFileDataset binaryFileDataset) throws IOException;
 
 
@@ -26,7 +24,6 @@ public interface BinaryFileService {
 
     Optional<BinaryFile> getFileWithData(String applicationNameOrID, UUID id);
 
-    @Transactional
     Optional<UUID> removeFile(Application application, UUID id);
 
     ReportErrors findPublishedVersion(String nameOrId, String dataType, FileOrUUID params, Set<BinaryFile> filesToStore, boolean searchOverlaps);

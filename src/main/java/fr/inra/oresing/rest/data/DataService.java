@@ -1,6 +1,7 @@
 package fr.inra.oresing.rest.data;
 
 import fr.inra.oresing.domain.data.DataRows;
+import fr.inra.oresing.domain.data.DataRows;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
@@ -28,6 +29,7 @@ import fr.inra.oresing.workflow.cascade.CascadeImportPipeline;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisation;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForBuildBundleReport;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForDownloadDatasetQuery;
+import fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent;
 import fr.inra.oresing.persistence.data.read.bundle.FileContent;
@@ -71,6 +73,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 @Slf4j
 @Component
@@ -407,7 +410,7 @@ public class DataService {
         log.info("getDataFromStoredCsvStream {}", reference);
 
         DataRepository dataRepository = repo.getRepository(application).data();
-        Flux<BundleFileContent> storedData = dataRepository.getStoredData(application, reference);
+        Flux<BundleFileContent> storedData = Flux.fromStream(dataRepository.getStoredData(application, reference));
 
         try {
             Boolean result = storedData

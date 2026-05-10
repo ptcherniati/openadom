@@ -797,6 +797,11 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 });
     }
 
+    @Override
+    public java.util.stream.Stream<DataRows> findAllByDataTypeStream(final DownloadDatasetQuery downloadDatasetQuery) {
+        return findAllByDataTypeFlux(downloadDatasetQuery).toStream();
+    }
+
     public Flux<DataRows> findAllByDataTypeFlux(final DownloadDatasetQuery downloadDatasetQuery) {
         return findAllByDataTypeFlux(downloadDatasetQuery, getNamedParameterJdbcTemplate());
     }
@@ -1140,25 +1145,23 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     }
 
     @Override
-    public Flux<fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent> getStoredData(Application application, String dataName) {
+    public Stream<fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent> getStoredData(Application application, String dataName) {
         MapSqlParameterSource params = new MapSqlParameterSource();
         String sql = FileContent.buildFileNameRequest(application, dataName);
-        return Flux.<fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent>fromStream(
-                getNamedParameterJdbcTemplate().queryForStream(
-                        sql,
-                        params,
-                        (rs, rowNum) -> {
-                            final Array sqlArray = rs.getArray("refsLinked");
-                            List<String> refsLinked = sqlArray != null
-                                    ? Arrays.asList((String[]) sqlArray.getArray())
-                                    : Collections.emptyList();
-                            return new fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent(
-                                    refsLinked,
-                                    rs.getString("fileName"),
-                                    rs.getBinaryStream("fileContent")
-                            );
-                        }
-                )
+        return getNamedParameterJdbcTemplate().queryForStream(
+                sql,
+                params,
+                (rs, rowNum) -> {
+                    final Array sqlArray = rs.getArray("refsLinked");
+                    List<String> refsLinked = sqlArray != null
+                            ? Arrays.asList((String[]) sqlArray.getArray())
+                            : Collections.emptyList();
+                    return new fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent(
+                            refsLinked,
+                            rs.getString("fileName"),
+                            rs.getBinaryStream("fileContent")
+                    );
+                }
         );
     }
 
