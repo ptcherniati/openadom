@@ -2,6 +2,9 @@ package fr.inra.oresing.domain.application.normalized;
 
 import fr.inra.oresing.domain.application.configuration.BasicComponent;
 import fr.inra.oresing.domain.application.configuration.DynamicComponent;
+import fr.inra.oresing.domain.application.configuration.PatternComponent;
+import fr.inra.oresing.domain.application.configuration.PatternComponentAdjacents;
+import fr.inra.oresing.domain.application.configuration.PatternComponentQualifiers;
 import fr.inra.oresing.domain.application.configuration.Tag;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescriptionBuilder;
