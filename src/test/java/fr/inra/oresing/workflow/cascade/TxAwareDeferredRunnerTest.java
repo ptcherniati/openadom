@@ -180,4 +180,32 @@ class TxAwareDeferredRunnerTest {
                 runner.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK));
         verify(deferred).cleanup();
     }
+
+    @Test
+    @DisplayName("afterCommit() : onPostCommitFailure lève RuntimeException → absorbée silencieusement")
+    void afterCommitOnPostCommitFailureThrows() throws SQLException {
+        DeferredFinalize deferred = mock(DeferredFinalize.class);
+        doThrow(new RuntimeException("execute failed")).when(deferred).execute();
+        Consumer<Throwable> onFailure = t -> { throw new RuntimeException("callback threw"); };
+
+        TxAwareDeferredRunner runner = new TxAwareDeferredRunner(
+                deferred, CORR_ID, null, onFailure, null);
+
+        assertDoesNotThrow(() -> runner.afterCommit());
+    }
+
+    @Test
+    @DisplayName("afterCompletion(UNKNOWN) : cleanup + onTxRolledBack appelés")
+    void afterCompletionUnknownStatus() throws SQLException {
+        DeferredFinalize deferred = mock(DeferredFinalize.class);
+        Runnable onRolledBack = mock(Runnable.class);
+
+        TxAwareDeferredRunner runner = new TxAwareDeferredRunner(
+                deferred, CORR_ID, null, null, onRolledBack);
+
+        runner.afterCompletion(TransactionSynchronization.STATUS_UNKNOWN);
+
+        verify(deferred).cleanup();
+        verify(onRolledBack).run();
+    }
 }
