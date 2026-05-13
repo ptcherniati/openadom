@@ -34,6 +34,7 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 @Tag("core.config")
+@Tag("domain.model")
 @DisplayName("ConfigEditService — tests unitaires")
 class ConfigEditServiceTest {
 

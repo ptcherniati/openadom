@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests unitaires pour OreSiRole et OreSiPublicRole.
  */
 @Tag("core.config")
+@Tag("domain.model")
 @DisplayName("OreSiRole / OreSiPublicRole – factories et helpers SQL")
 class OreSiRoleTest {
 

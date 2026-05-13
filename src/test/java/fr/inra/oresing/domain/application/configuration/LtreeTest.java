@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Tag("core.config")
+@Tag("domain.model")
 class LtreeTest {
     @Test
     void assertThatAStringWithInvalidCharactersCanBeEncodedTwice() {

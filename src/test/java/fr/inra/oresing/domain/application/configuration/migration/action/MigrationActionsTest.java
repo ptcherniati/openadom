@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Tag;
  */
 @DisplayName("MigrationAction record types — métadonnées")
 @Tag("core.config")
+@Tag("domain.model")
 class MigrationActionsTest {
 
     // ------------------------------------------------------------------ //

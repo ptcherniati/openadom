@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests unitaires pour les inner classes de SelectRequest et DeleteRequest.
  */
 @Tag("core.config")
+@Tag("domain.model")
 @DisplayName("SelectRequest / DeleteRequest inner classes – tests unitaires")
 class SelectDeleteRequestInnerClassesTest {
 

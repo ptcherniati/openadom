@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Tag("core.config")
+@Tag("domain.model")
 class SectionBuilderTest {
 
     @Test

@@ -8,6 +8,7 @@ import java.util.Locale;
 import java.util.Map;
 
 @Tag("core.config")
+@Tag("domain.model")
 class InternationalizationsTest {
 
     @Test

@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.Set;
 
 @Tag("core.config")
+@Tag("domain.model")
 class CheckerDescriptionTest {
 
     @Test

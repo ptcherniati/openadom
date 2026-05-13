@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests unitaires pour les méthodes statiques de NodeSchemaValidator.
  */
 @Tag("core.config")
+@Tag("domain.model")
 @DisplayName("NodeSchemaValidator – méthodes statiques")
 class NodeSchemaValidatorStaticTest {
 

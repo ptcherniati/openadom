@@ -22,6 +22,7 @@ import static fr.inra.oresing.domain.application.configuration.date.LocalDateTim
 
 @Slf4j
 @Tag("core.config")
+@Tag("domain.model")
 class LocalDateTimeRangeTest {
     public static final String SQL_INTERVAL = "[\"2024-01-01 23:54:00\",\"2024-03-12 20:55:00\")";
     public static final LocalDateTime FROM = LocalDateTime.of(2024, 1, 1, 23, 54, 0);

@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Mutation.oldString/newString.
  */
 @Tag("core.config")
+@Tag("domain.model")
 @DisplayName("ConfigField — builder et cast")
 class ConfigFieldTest {
 

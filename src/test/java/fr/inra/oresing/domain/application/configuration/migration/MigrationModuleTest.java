@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Tag;
  * Aucun contexte Spring, aucune base de données.
  */
 @Tag("core.config")
+@Tag("domain.model")
 class MigrationModuleTest {
 
     // ------------------------------------------------------------------ //

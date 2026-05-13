@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * options autorisées/bloquées par field enum hot-editable.
  */
 @Tag("core.config")
+@Tag("domain.model")
 @DisplayName("StrategyOptionsResolver — résolution des options enum")
 class StrategyOptionsResolverTest {
 

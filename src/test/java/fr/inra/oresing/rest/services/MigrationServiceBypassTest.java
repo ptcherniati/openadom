@@ -45,6 +45,7 @@ import static org.mockito.Mockito.when;
  * <p>Ces tests n'utilisent ni Spring ni Docker : injection Mockito uniquement.
  */
 @Tag("core.config")
+@Tag("domain.model")
 @ExtendWith(MockitoExtension.class)
 class MigrationServiceBypassTest {
 

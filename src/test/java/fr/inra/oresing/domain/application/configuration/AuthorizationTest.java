@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 @Tag("core.config")
+@Tag("domain.model")
 class AuthorizationTest {
 
     @Test

@@ -343,4 +343,87 @@ class WorkflowActiveRegistryTest {
                 Instant.now(), null, null);
         assertEquals(25.0, cs.progressPercentage());
     }
+
+    // ─── StageWorkerStat ──────────────────────────────────────────────────
+
+    @Test
+    void stageWorkerStat_initial_values() {
+        WorkflowActiveRegistry.StageWorkerStat stat = new WorkflowActiveRegistry.StageWorkerStat();
+        assertEquals("IDLE", stat.status);
+        assertNull(stat.currentChunk);
+        assertEquals(0L, stat.currentRecordsProcessed);
+        assertEquals(0L, stat.currentRecordsTotal);
+        assertEquals(0, stat.chunksDone);
+        assertNull(stat.lastDurationMs);
+        assertNull(stat.lastActivity);
+    }
+
+    @Test
+    void stageWorkerStat_recordEnd_increments_chunksDone_and_resets() {
+        WorkflowActiveRegistry.StageWorkerStat stat = new WorkflowActiveRegistry.StageWorkerStat();
+        stat.status = "RUNNING";
+        stat.currentChunk = 3;
+        stat.currentRecordsProcessed = 100L;
+        stat.currentRecordsTotal = 200L;
+
+        stat.recordEnd(50L);
+
+        assertEquals("IDLE", stat.status);
+        assertNull(stat.currentChunk);
+        assertEquals(0L, stat.currentRecordsProcessed);
+        assertEquals(0L, stat.currentRecordsTotal);
+        assertEquals(1, stat.chunksDone);
+        assertEquals(50L, stat.lastDurationMs);
+    }
+
+    @Test
+    void stageWorkerStat_recordEnd_with_null_duration() {
+        WorkflowActiveRegistry.StageWorkerStat stat = new WorkflowActiveRegistry.StageWorkerStat();
+        stat.recordEnd(null);
+        assertEquals(1, stat.chunksDone);
+        assertNull(stat.lastDurationMs);
+    }
+
+    @Test
+    void stageWorkerStat_recordEnd_sliding_window_capped_at_10() {
+        WorkflowActiveRegistry.StageWorkerStat stat = new WorkflowActiveRegistry.StageWorkerStat();
+        for (int i = 0; i < 15; i++) {
+            stat.recordEnd((long) i * 10);
+        }
+        assertEquals(15, stat.chunksDone);
+        // recentDurationsMs has at most 10 entries
+        assertTrue(stat.recentDurationsMs.size() <= 10);
+    }
+
+    @Test
+    void stageWorkerStat_toSnapshot_idle_no_pct() {
+        WorkflowActiveRegistry.StageWorkerStat stat = new WorkflowActiveRegistry.StageWorkerStat();
+        WorkerSnapshot ws = stat.toSnapshot("SOURCE", "worker-1");
+        assertEquals("SOURCE", ws.stage());
+        assertEquals("worker-1", ws.name());
+        assertEquals("IDLE", ws.status());
+        assertNull(ws.currentChunkProgressPercentage());
+        assertNull(ws.avgChunkDuration());
+        assertEquals(0, ws.chunkCount());
+    }
+
+    @Test
+    void stageWorkerStat_toSnapshot_with_progress() {
+        WorkflowActiveRegistry.StageWorkerStat stat = new WorkflowActiveRegistry.StageWorkerStat();
+        stat.status = "RUNNING";
+        stat.currentChunk = 2;
+        stat.currentRecordsProcessed = 50L;
+        stat.currentRecordsTotal = 100L;
+        WorkerSnapshot ws = stat.toSnapshot("SINK", "sink-1");
+        assertEquals(50.0, ws.currentChunkProgressPercentage());
+    }
+
+    @Test
+    void stageWorkerStat_toSnapshot_with_avg_duration() {
+        WorkflowActiveRegistry.StageWorkerStat stat = new WorkflowActiveRegistry.StageWorkerStat();
+        stat.recordEnd(100L);
+        stat.recordEnd(200L);
+        WorkerSnapshot ws = stat.toSnapshot("TRANSFORM", "t-1");
+        assertNotNull(ws.avgChunkDuration());
+    }
 }
