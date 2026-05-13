@@ -89,7 +89,8 @@ class StringTypeTest {
         gen.close();
         String json = baos.toString();
         assertThat(json).contains("myKey");
-        // les caractères de contrôle sont échappés dans la chaîne (le moteur Jackson échappe déjà \n en \\n)
+        // Jackson échappe les caractères de contrôle dans la sortie JSON
+        // (ex: newline → la séquence JSON \n, tab → \t, etc.)
         assertThat(json).isNotEmpty();
     }
 

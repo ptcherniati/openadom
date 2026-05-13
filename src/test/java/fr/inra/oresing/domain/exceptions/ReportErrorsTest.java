@@ -20,10 +20,8 @@ class ReportErrorsTest {
 
     private static final Mapper MAPPER = obj -> obj.toString();
 
-    private CsvRowValidationCheckResult mockResult(String content) {
-        CsvRowValidationCheckResult r = Mockito.mock(CsvRowValidationCheckResult.class);
-        // Le mapper va sérialiser ce mock via toJson() → retourner une string légère
-        return r;
+    private CsvRowValidationCheckResult mockResult() {
+        return Mockito.mock(CsvRowValidationCheckResult.class);
     }
 
     @Test
