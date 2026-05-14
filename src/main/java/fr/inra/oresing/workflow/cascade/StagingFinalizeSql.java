@@ -32,6 +32,14 @@ public final class StagingFinalizeSql {
 
     private static final Logger log = LoggerFactory.getLogger(StagingFinalizeSql.class);
 
+    /** Functional interface used internally to execute a single SQL batch,
+     *  covering both {@link PreparedStatement} (filtered) and
+     *  {@link java.sql.Statement} (non-filtered) paths without duplicating the loop. */
+    @FunctionalInterface
+    private interface SqlBatchExecutor {
+        int execute() throws SQLException;
+    }
+
     /** Bulk-INSERT batch size ( rows ) . Override via {@code -Dapp.import.bulkInsertBatchSize=N} . */
     public static final int BULK_INSERT_BATCH_SIZE =
             Integer.getInteger("app.import.bulkInsertBatchSize", 50_000);
@@ -197,9 +205,15 @@ public final class StagingFinalizeSql {
                 + "     )"
                 + " ) as joins"
                 + (filtered ? " WHERE s.correlation_id = ?" : "");
-        try (PreparedStatement ps = connection.prepareStatement(snapshotRefRefSql)) {
-            if (filtered) ps.setObject(1, UUID.fromString(correlationId));
-            ps.executeUpdate();
+        if (filtered) {
+            try (PreparedStatement ps = connection.prepareStatement(snapshotRefRefSql)) {
+                ps.setObject(1, UUID.fromString(correlationId));
+                ps.executeUpdate();
+            }
+        } else {
+            try (Statement stmt = connection.createStatement()) {
+                stmt.executeUpdate(snapshotRefRefSql);
+            }
         }
 
         String deleteRefRefSql = "DELETE FROM " + schemaName + ".reference_reference"
@@ -253,21 +267,40 @@ public final class StagingFinalizeSql {
         // cote DB declenchera une SQLException ici , propagee en
         // SinkException + rollback automatique de la transaction sticky .
         long stagingPrev = countStagingRows(connection, stagingTable, correlationId, filtered);
-        try (PreparedStatement ps = connection.prepareStatement(batchInsertSql)) {
+        // Prepare the batch executor : use PreparedStatement with ? parameter when
+        // filtered ( SHARED_UNLOGGED , needs correlation_id filter ) , plain Statement
+        // otherwise ( PER_CONNECTION_TEMP , no parameter needed ) .
+        // This avoids the Sonar S4174 "PreparedStatement has no parameters" warning
+        // while keeping the loop body identical between both paths .
+        final Statement batchStmt;
+        final SqlBatchExecutor batchExecutor;
+        if (filtered) {
+            PreparedStatement ps = connection.prepareStatement(batchInsertSql);
             if (UPSERT_BATCH_TIMEOUT_SECONDS > 0) {
                 ps.setQueryTimeout(UPSERT_BATCH_TIMEOUT_SECONDS);
             }
+            UUID corrUuid = UUID.fromString(correlationId);
+            batchExecutor = () -> { ps.setObject(1, corrUuid); return ps.executeUpdate(); };
+            batchStmt = ps;
+        } else {
+            Statement stmt = connection.createStatement();
+            if (UPSERT_BATCH_TIMEOUT_SECONDS > 0) {
+                stmt.setQueryTimeout(UPSERT_BATCH_TIMEOUT_SECONDS);
+            }
+            batchExecutor = () -> stmt.executeUpdate(batchInsertSql);
+            batchStmt = stmt;
+        }
+        try (Statement ignored = batchStmt) {
             int batchNum = 0;
             long totalAffected = 0L;
             while (stagingPrev > 0) {
                 batchNum++;
-                if (filtered) ps.setObject(1, UUID.fromString(correlationId));
-                int affected = ps.executeUpdate();
+                int affected = batchExecutor.execute();
                 totalAffected += affected;
                 if (affected > 0) {
                     try {
                         onBatchUpserted.accept((long) affected);
-                    } catch (RuntimeException ignored) {
+                    } catch (RuntimeException ignoredEx) {
                         /* best effort : un consommateur fautif ne doit pas
                            casser le UPSERT en cours */
                     }
@@ -321,9 +354,16 @@ public final class StagingFinalizeSql {
                                          String correlationId, boolean filtered) throws SQLException {
         String sql = "SELECT COUNT(*) FROM " + stagingTable
                 + (filtered ? " WHERE correlation_id = ?" : "");
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            if (filtered) ps.setObject(1, UUID.fromString(correlationId));
-            try (ResultSet rs = ps.executeQuery()) {
+        if (filtered) {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setObject(1, UUID.fromString(correlationId));
+                try (ResultSet rs = ps.executeQuery()) {
+                    return rs.next() ? rs.getLong(1) : 0L;
+                }
+            }
+        } else {
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(sql)) {
                 return rs.next() ? rs.getLong(1) : 0L;
             }
         }

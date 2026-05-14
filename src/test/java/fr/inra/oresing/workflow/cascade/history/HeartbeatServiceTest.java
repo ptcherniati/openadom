@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
@@ -98,7 +99,7 @@ class HeartbeatServiceTest {
         UUID corrId = UUID.randomUUID();
         HeartbeatService.Heartbeat hb = service.start(corrId);
         hb.close();
-        hb.close();   // doit etre no-op , pas d'exception
+        assertThatCode(hb::close).doesNotThrowAnyException();
     }
 
     @Test

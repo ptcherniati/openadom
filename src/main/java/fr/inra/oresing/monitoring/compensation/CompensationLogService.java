@@ -56,6 +56,7 @@ public class CompensationLogService {
     }
 
     /** Default TTL ( 240 min ) . */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public UUID record(String operationType,
                        String targetSchema, String targetTable, String targetId,
                        UUID correlationId, UUID userId, String userLogin,
@@ -89,7 +90,7 @@ public class CompensationLogService {
             log.debug("compensateNow : row {} already gone , no-op", id);
             return true;
         }
-        return runHandlerAndDelete(entry);
+        return doRunHandlerAndDelete(entry);
     }
 
     /**
@@ -99,6 +100,17 @@ public class CompensationLogService {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public boolean runHandlerAndDelete(CompensationLogEntry entry) {
+        return doRunHandlerAndDelete(entry);
+    }
+
+    /**
+     * Logique d'execution du handler et de suppression de la row .
+     * Separee pour eviter l'auto-invocation proxy-bypass : les methodes
+     * publiques transactionnelles ( {@link #compensateNow} et
+     * {@link #runHandlerAndDelete} ) appellent cette methode privee
+     * directement , sans passer par le proxy Spring .
+     */
+    private boolean doRunHandlerAndDelete(CompensationLogEntry entry) {
         var handler = handlerRegistry.handlerFor(entry.operationType());
         if (handler.isEmpty()) {
             log.error("No CompensationHandler for operationType '{}' , skipping row {}",

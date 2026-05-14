@@ -13,6 +13,7 @@ import org.springframework.security.web.csrf.CsrfToken;
 import java.util.function.Supplier;
 
 import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
 
 /**
  * Tests unitaires de SpaCsrfTokenRequestHandler.
@@ -41,8 +42,8 @@ class SpaCsrfTokenRequestHandlerTest {
 
         handler.handle(request, response, tokenSupplier);
 
-        // The key behavior: no NPE and the supplier was consumed
-        // (no assertion needed — if we reach here without exception, the handler worked)
+        // The key behavior: the parent handler must have set the CSRF token as a request attribute.
+        verify(request, atLeastOnce()).setAttribute(any(), any());
     }
 
     @Test

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -69,8 +70,8 @@ class WorkflowZombieSweeperTest {
     @DisplayName("constructor stocke le seuil ( log info au boot )")
     void constructor_logs_config() {
         WorkflowLogRepository repo = mock(WorkflowLogRepository.class);
-        new WorkflowZombieSweeper(repo, 15);
-        // Pas d'assertion logging ; juste valider que le ctor ne plante pas
-        // avec un seuil legitime ( valide en SQL avec p_minutes > 0 ) .
+        WorkflowZombieSweeper sweeper = new WorkflowZombieSweeper(repo, 15);
+        // Valider que le constructeur initialise correctement l'objet
+        assertThat(sweeper).isNotNull();
     }
 }

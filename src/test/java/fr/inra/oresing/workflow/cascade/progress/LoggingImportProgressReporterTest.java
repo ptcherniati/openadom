@@ -66,7 +66,8 @@ class LoggingImportProgressReporterTest {
         @DisplayName("onTotalLinesKnown enregistre le total sans lever d'exception")
         void totalLinesKnownDoesNotThrow() {
             reporter.onTotalLinesKnown("id-1", 1000L);
-            // pas d'exception → test OK
+            // trackedCount n'est pas incrémenté par onTotalLinesKnown seul
+            assertThat(reporter.trackedCount()).isZero();
         }
 
         @Test
@@ -77,6 +78,7 @@ class LoggingImportProgressReporterTest {
             reporter.onLinesProcessed("id-1", 250);
             reporter.onLinesProcessed("id-1", 500);
             // 1000/1000 = 100% — ne doit pas lever d'exception (filled >= BAR_WIDTH)
+            assertThat(reporter.trackedCount()).isEqualTo(1);
         }
 
         @Test
@@ -84,7 +86,7 @@ class LoggingImportProgressReporterTest {
         void zeroTotalLinesNoDivisionByZero() {
             reporter.onTotalLinesKnown("id-zero", 0L);
             reporter.onLinesProcessed("id-zero", 10);
-            // pas d'exception
+            assertThat(reporter.trackedCount()).isEqualTo(1);
         }
     }
 
@@ -116,6 +118,7 @@ class LoggingImportProgressReporterTest {
             // après release, onLinesProcessed ne doit plus voir le grandTotal
             // (pas de NullPointerException, barre absente)
             reporter.onLinesProcessed("id-1", 50);
+            assertThat(reporter.trackedCount()).isEqualTo(1);
         }
 
         @Test
@@ -144,6 +147,8 @@ class LoggingImportProgressReporterTest {
         void defaultOnTotalLinesKnownIsNoOp() {
             ImportProgressReporter noop = (cid, delta) -> { /* no-op */ };
             noop.onTotalLinesKnown("id-1", 100L); // méthode default
+            // La méthode default doit exister et ne pas lever d'exception
+            assertThat(noop).isNotNull();
         }
     }
 }
