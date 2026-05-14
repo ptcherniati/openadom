@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests unitaires de {@link Component}.
  * Aucun contexte Spring ni base de données.
  */
-@org.junit.jupiter.api.Tag("domain.model")
 @DisplayName("Component — factory of() et buildRequests()")
 @org.junit.jupiter.api.Tag("domain.model")
 class ComponentTest {
