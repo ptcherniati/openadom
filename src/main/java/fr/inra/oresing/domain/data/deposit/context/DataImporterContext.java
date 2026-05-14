@@ -296,7 +296,6 @@ public class DataImporterContext {
         return constants.hierarchicalKeyFactory().parent();
     }
 
-    @SuppressWarnings("java:S3740")
     public boolean existsColumn(final DataColumn column, Map<DataColumn, DataColumnValue<?, ?>> constantColumnsValues) {
         return columnsWithPatternColumns.stream()
                        .map(registeredColumn -> registeredColumn.as(column.column()))

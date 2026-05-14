@@ -27,9 +27,8 @@ public record DatePattern<T extends TemporalAccessor>(
     public static final String MM_YYYY = "MM/yyyy";
     public static final String YYYY = "yyyy";
     public static final String DD_MM_YYYY = "dd/MM/yyyy";
-    // DEFAULT est volontairement non-paramétré : la méthode factory of() retourne différents T selon le pattern
-    @SuppressWarnings("rawtypes")
-    public static final DatePattern DEFAULT = DatePattern.of(DD_MM_YYYY);
+    // DEFAULT est volontairement wildcard : la méthode factory of() retourne différents T selon le pattern
+    public static final DatePattern<?> DEFAULT = DatePattern.of(DD_MM_YYYY);
 
     public static <T extends TemporalAccessor> DatePattern<T> of(final String pattern) {
         switch (pattern) {
