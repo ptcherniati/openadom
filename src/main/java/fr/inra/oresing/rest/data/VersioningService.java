@@ -24,6 +24,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.FileNotFoundException;
@@ -166,16 +168,30 @@ public class VersioningService {
         return dataVersioningResult;
 
         } catch (RuntimeException | IOException ex) {
-            // Best-effort cleanup synchrone : tente la compensation immediatement
-            // ( smart-check protege contre data loss ) . Si fail , le sweeper
-            // rattrapera apres TTL .
+            // Compensation differee : on NE PEUT PAS appeler compensateNow()
+            // directement ici car la tx outer est encore ACTIVE et tient un
+            // verrou ROW EXCLUSIVE sur binaryfile (via checkAndStoreFile).
+            // compensateNow(REQUIRES_NEW) ouvrirait une nouvelle connexion et
+            // attendrait ce verrou → deadlock applicatif infini.
+            // Solution : enregistrer afterCompletion pour executer la
+            // compensation APRES que la tx outer ait rollbacke et libere
+            // ses verrous . Le sweeper rattrape si afterCompletion echoue .
             if (compId != null) {
-                try {
-                    compensationLogService.compensateNow(compId);
-                } catch (RuntimeException compErr) {
-                    log.warn("compensateNow failed for {} ( sweeper will retry ) : {}",
-                            compId, compErr.getMessage());
-                }
+                final UUID finalCompId = compId;
+                TransactionSynchronizationManager.registerSynchronization(
+                        new TransactionSynchronization() {
+                            @Override
+                            public void afterCompletion(int status) {
+                                if (status == TransactionSynchronization.STATUS_ROLLED_BACK) {
+                                    try {
+                                        compensationLogService.compensateNow(finalCompId);
+                                    } catch (RuntimeException compErr) {
+                                        log.warn("compensateNow afterCompletion failed for {} ( sweeper will retry ) : {}",
+                                                finalCompId, compErr.getMessage());
+                                    }
+                                }
+                            }
+                        });
             }
             throw ex;
         }
