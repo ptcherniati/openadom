@@ -12,6 +12,7 @@ import java.util.Set;
 
 @org.junit.jupiter.api.Tag("core.config")
 @org.junit.jupiter.api.Tag("domain.model")
+@org.junit.jupiter.api.Tag("domain.model")
 class ComponentDescriptionTest {
 
     @Test

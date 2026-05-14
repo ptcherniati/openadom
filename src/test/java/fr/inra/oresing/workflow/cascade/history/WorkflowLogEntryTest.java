@@ -1,6 +1,7 @@
 package fr.inra.oresing.workflow.cascade.history;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -14,6 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * au demarrage du workflow ( pour fermer le trou d'observabilite SIGKILL ) .
  */
 @DisplayName("WorkflowLogEntry")
+@Tag("domain.model")
 class WorkflowLogEntryTest {
 
     @Test

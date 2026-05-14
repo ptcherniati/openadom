@@ -1,6 +1,7 @@
 package fr.inra.oresing.workflow.cascade.config;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.EnumMap;
@@ -14,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("CascadePoolReloader")
+@Tag("domain.model")
 class CascadePoolReloaderTest {
 
     private CascadePoolReloader newReloaderWithRealTpe(ThreadPoolExecutor tpe) {

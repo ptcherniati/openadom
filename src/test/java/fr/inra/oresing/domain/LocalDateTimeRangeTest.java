@@ -2,11 +2,13 @@ package fr.inra.oresing.domain;
 
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.checker.type.DateType;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @org.junit.jupiter.api.Tag("domain.model")
+@Tag("domain.model")
 public class LocalDateTimeRangeTest {
 
     private static DateType getDateCheckerConfiguration(final String pattern, final String duration) {

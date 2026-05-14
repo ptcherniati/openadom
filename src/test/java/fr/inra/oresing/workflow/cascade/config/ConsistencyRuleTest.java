@@ -2,6 +2,7 @@ package fr.inra.oresing.workflow.cascade.config;
 
 import fr.inra.oresing.workflow.cascade.config.rules.*;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("ConsistencyRule strategies ( cascade 2.1.0 )")
+@Tag("domain.model")
 class ConsistencyRuleTest {
 
     private ConsistencyRule.EffectiveConfig cfg(Map<String, Object> overrides) {

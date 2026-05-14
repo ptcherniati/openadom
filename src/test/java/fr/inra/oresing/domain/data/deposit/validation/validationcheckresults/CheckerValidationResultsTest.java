@@ -8,6 +8,7 @@ import fr.inra.oresing.domain.checker.type.IntegerType;
 import fr.inra.oresing.domain.checker.type.NullType;
 import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.DataColumn;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("domain.model")
 class CheckerValidationResultsTest {
 
     private static final DataColumn TARGET = new DataColumn("col");

@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @org.junit.jupiter.api.Tag("domain.model")
 @DisplayName("Component — factory of() et buildRequests()")
+@org.junit.jupiter.api.Tag("domain.model")
 class ComponentTest {
 
     private static final UUID APP_ID = UUID.randomUUID();

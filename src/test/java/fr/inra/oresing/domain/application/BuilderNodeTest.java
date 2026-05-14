@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.application.configuration.Node;
 import fr.inra.oresing.domain.application.configuration.Validation;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -13,6 +14,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @org.junit.jupiter.api.Tag("core.config")
+@Tag("domain.model")
 class BuilderNodeTest {
     final Map<String, BuilderNode> builderNodes = Arrays.stream(new JsonRowMapper<BuilderNode>().readValue("""
             [

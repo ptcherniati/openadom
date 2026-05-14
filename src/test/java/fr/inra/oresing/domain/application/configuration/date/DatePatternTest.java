@@ -17,6 +17,7 @@ import static fr.inra.oresing.domain.application.configuration.date.DatePattern.
 import static fr.inra.oresing.domain.application.configuration.date.DatePattern.YYYY;
 
 @org.junit.jupiter.api.Tag("domain.model")
+@Tag("domain.model")
 class DatePatternTest {
     public static final String DATE = "12/01/1925";
     public static final String TIME = "12:23:56";
