@@ -235,7 +235,7 @@ public class DataService {
         final CheckerFactory checkerFactory = new CheckerFactory(referenceValueRepository);
         Function<String, List<DataValue>> getDatavaluesByReference = reference -> referenceValueRepository.findAllByReferenceType(reference);
         PublishContext.PublishContextBuilder publishContextBuilder = new PublishContext.PublishContextBuilder(application, dataName, fileOrUUID, getDatavaluesByReference);
-        final ImmutableSet<LineChecker<? extends FieldType<?>>> lineCheckers = checkerFactory.getCheckers(application, dataName,
+        final ImmutableSet<LineChecker<?>> lineCheckers = checkerFactory.getCheckers(application, dataName,
                 publishContextBuilder);
         final ContextConstants contextConstants = ContextConstants.with(
                 application,

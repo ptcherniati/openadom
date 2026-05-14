@@ -213,7 +213,7 @@ public class DataValidator {
             Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey,
             RecursionStrategy recursionStrategy,
             final RowWithReferenceDatum rowWithReferenceDatum,
-            final Set<LineChecker<? extends FieldType<?>>> transformedLineCheckers,
+            final Set<LineChecker<?>> transformedLineCheckers,
             PublishContext.PublishContextBuilder publishContextBuilder) {
         final DataDatum referenceDatumBeforeChecking = rowWithReferenceDatum.referenceDatum();
         final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo = new HashMap<>();
@@ -244,7 +244,7 @@ public class DataValidator {
         return buildReferenceDataAfterChecking(buildKey, recursionStrategy, transformedLineCheckers, publishContextBuilder, referenceDatumAfterChecking);
     }
 
-    private List<ReferenceDatumAfterChecking> buildReferenceDataAfterChecking(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, Set<LineChecker<? extends FieldType<?>>> transformedLineCheckers, PublishContext.PublishContextBuilder publishContextBuilder, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
+    private List<ReferenceDatumAfterChecking> buildReferenceDataAfterChecking(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, Set<LineChecker<?>> transformedLineCheckers, PublishContext.PublishContextBuilder publishContextBuilder, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
         List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = List.of();
         if (recursionStrategy instanceof WithRecursion withRecursion) {
             addBuildedLineKeysToReferenceValues(buildKey, withRecursion, referenceDatumAfterChecking);
@@ -264,7 +264,7 @@ public class DataValidator {
     private List<ReferenceDatumAfterChecking> testLinesRegardingRecursivity(
             Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey,
             RecursionStrategy recursionStrategy,
-            Set<LineChecker<? extends FieldType<?>>> transformedLineCheckers,
+            Set<LineChecker<?>> transformedLineCheckers,
             PublishContext.PublishContextBuilder publishContextBuilder,
             ReferenceDatumAfterChecking referenceDatumAfterChecking) {
         if (recursionStrategy instanceof WithRecursion withRecursion) {

@@ -1,7 +1,7 @@
 package fr.inra.oresing.domain.application.configuration.examples;
+import fr.inra.oresing.domain.application.configuration.type.ConfigurationSchemaNodeType;
 
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
-import fr.inra.oresing.domain.application.configuration.type.ConfigurationSchemaNodeType;
 import fr.inra.oresing.domain.application.configuration.type.I18nType;
 import fr.inra.oresing.domain.application.configuration.type.TitleType;
 
@@ -16,7 +16,7 @@ class TitleExampleBuilder {
     public static final TitleType QUALITY_CLASS = buildTitle(
             buildI18n("Indic de qualité", "Quality class"),
             buildI18n("0 pour une valeur valide ; 2 pour une valeur incorrecte", " 0 for valid value; 2 for bad value"));
-    public static final ConfigurationSchemaNodeType RIGHT_REQUEST_DESCRIPTION = TitleExampleBuilder.buildTitle(
+    public static final ConfigurationSchemaNodeType<?> RIGHT_REQUEST_DESCRIPTION = TitleExampleBuilder.buildTitle(
             buildI18n(
                     "Formulaire de demande de droits de l'application MONSORE",
                     "MONSORE App Rights Request Form"),

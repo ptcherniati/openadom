@@ -1,8 +1,8 @@
 package fr.inra.oresing.domain.application.configuration.examples;
+import fr.inra.oresing.domain.application.configuration.type.ConfigurationSchemaNodeType;
 
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.type.CollectionType;
-import fr.inra.oresing.domain.application.configuration.type.ConfigurationSchemaNodeType;
 import fr.inra.oresing.domain.application.configuration.type.ReferenceScopeType;
 import fr.inra.oresing.domain.application.configuration.type.StringType;
 

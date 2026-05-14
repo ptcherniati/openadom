@@ -1,4 +1,5 @@
 package fr.inra.oresing.rest.model.configuration.builder;
+import fr.inra.oresing.domain.application.configuration.type.ConfigurationSchemaNodeType;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -158,7 +159,7 @@ public class NodeSchemaValidator {
             String childLabel = entry.getKey();
             JsonNode child = entry.getValue();
 
-            Optional<ConfigurationSchemaNodeType> schema;
+            Optional<ConfigurationSchemaNodeType<?>> schema;
             if (path.contains(ConfigurationSchemaNode.OA_FILE_NAME) && ConfigurationSchemaNode.OA_REFERENCE_SCOPES.equals(childLabel)) {
                 schema = rootSchema.sectionBuilder().findSchema(REFERENCE_SCOPES_FOR_FILE);
 

@@ -55,7 +55,7 @@ class DataColumnPatternValueTest {
         @Test
         @DisplayName("constructeur avec Map directe crée les valeurs")
         void constructorWithMap() {
-            Map<DataColumn, DataColumnValue> values = new LinkedHashMap<>();
+            Map<DataColumn, DataColumnValue<?, ?>> values = new LinkedHashMap<>();
             DataColumn dc = new DataColumn("col1");
             values.put(dc, new DataColumnSingleValue(StringType.getStringTypeFromStringValue("val")));
             DataColumnPatternValue dcpv = new DataColumnPatternValue(values);
@@ -70,7 +70,7 @@ class DataColumnPatternValueTest {
     @Test
     @DisplayName("getValuesToCheck retourne un PatternType")
     void getValuesToCheck() {
-        Map<DataColumn, DataColumnValue> values = new LinkedHashMap<>();
+        Map<DataColumn, DataColumnValue<?, ?>> values = new LinkedHashMap<>();
         DataColumn dc = new DataColumn("col1");
         values.put(dc, new DataColumnSingleValue(StringType.getStringTypeFromStringValue("v")));
         DataColumnPatternValue dcpv = new DataColumnPatternValue(values);
@@ -89,7 +89,7 @@ class DataColumnPatternValueTest {
         @Test
         @DisplayName("toJsonForDatabase retourne une map String -> Object")
         void toJsonForDatabase() {
-            Map<DataColumn, DataColumnValue> values = new LinkedHashMap<>();
+            Map<DataColumn, DataColumnValue<?, ?>> values = new LinkedHashMap<>();
             values.put(new DataColumn("c1"),
                     new DataColumnSingleValue(StringType.getStringTypeFromStringValue("hello")));
             DataColumnPatternValue dcpv = new DataColumnPatternValue(values);
@@ -100,7 +100,7 @@ class DataColumnPatternValueTest {
         @Test
         @DisplayName("toJsonForFrontend retourne une map String -> Object")
         void toJsonForFrontend() {
-            Map<DataColumn, DataColumnValue> values = new LinkedHashMap<>();
+            Map<DataColumn, DataColumnValue<?, ?>> values = new LinkedHashMap<>();
             values.put(new DataColumn("c2"),
                     new DataColumnSingleValue(StringType.getStringTypeFromStringValue("world")));
             DataColumnPatternValue dcpv = new DataColumnPatternValue(values);
@@ -112,7 +112,7 @@ class DataColumnPatternValueTest {
         @DisplayName("toJsonForDatabase avec IntegerType retourne la valeur entière")
         void toJsonForDatabaseWithIntegerType() {
             IntegerType intType = IntegerType.of(42);
-            Map<DataColumn, DataColumnValue> values = new LinkedHashMap<>();
+            Map<DataColumn, DataColumnValue<?, ?>> values = new LinkedHashMap<>();
             values.put(new DataColumn("num"), new DataColumnSingleValue(intType));
             DataColumnPatternValue dcpv = new DataColumnPatternValue(values);
             Map<String, Object> result = dcpv.toJsonForDatabase();
@@ -123,7 +123,7 @@ class DataColumnPatternValueTest {
         @DisplayName("toJsonForDatabase avec BooleanType retourne la valeur booléenne")
         void toJsonForDatabaseWithBooleanType() {
             BooleanType boolType = new BooleanType(true);
-            Map<DataColumn, DataColumnValue> values = new LinkedHashMap<>();
+            Map<DataColumn, DataColumnValue<?, ?>> values = new LinkedHashMap<>();
             values.put(new DataColumn("flag"), new DataColumnSingleValue(boolType));
             DataColumnPatternValue dcpv = new DataColumnPatternValue(values);
             Map<String, Object> result = dcpv.toJsonForDatabase();
@@ -138,7 +138,7 @@ class DataColumnPatternValueTest {
     @Test
     @DisplayName("put ajoute une entrée dans la map")
     void put() {
-        Map<DataColumn, DataColumnValue> values = new LinkedHashMap<>();
+        Map<DataColumn, DataColumnValue<?, ?>> values = new LinkedHashMap<>();
         DataColumnPatternValue dcpv = new DataColumnPatternValue(values);
         DataColumn dc = new DataColumn("added");
         dcpv.put(dc, new DataColumnSingleValue(StringType.getStringTypeFromStringValue("v")));
@@ -152,7 +152,7 @@ class DataColumnPatternValueTest {
     @Test
     @DisplayName("toObjectsExposedInGroovyContext retourne une map clé -> valeur sérialisée")
     void toObjectsExposedInGroovyContext() {
-        Map<DataColumn, DataColumnValue> values = new LinkedHashMap<>();
+        Map<DataColumn, DataColumnValue<?, ?>> values = new LinkedHashMap<>();
         values.put(new DataColumn("g"),
                 new DataColumnSingleValue(StringType.getStringTypeFromStringValue("groovy")));
         DataColumnPatternValue dcpv = new DataColumnPatternValue(values);
@@ -164,7 +164,7 @@ class DataColumnPatternValueTest {
     @Test
     @DisplayName("toObjectsExposedInGroovyContext avec valeur null retourne null pour la clé")
     void toObjectsExposedInGroovyContextWithNull() {
-        Map<DataColumn, DataColumnValue> values = new LinkedHashMap<>();
+        Map<DataColumn, DataColumnValue<?, ?>> values = new LinkedHashMap<>();
         values.put(new DataColumn("empty"), null);
         DataColumnPatternValue dcpv = new DataColumnPatternValue(values);
         Map<String, Object> ctx = dcpv.toObjectsExposedInGroovyContext();

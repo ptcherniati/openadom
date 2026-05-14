@@ -34,8 +34,8 @@ import java.util.stream.Collectors;
 public record AsynchroneFileImporterContext(
         ContextConstants contextConstants,
         PublishContext.PublishContextBuilder publishContextBuilder,
-        ImmutableSet<LineChecker<? extends FieldType<?>>> lineCheckers,
-        Set<LineChecker<? extends FieldType<?>>> transformedLineCheckers,
+        ImmutableSet<LineChecker<?>> lineCheckers,
+        Set<LineChecker<?>> transformedLineCheckers,
         Mapper jsonRowMapper,
         ConcurrentHashMap<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids,
         ConcurrentHashMap<Ltree, List<RowWithReferenceDatum>> missingParentLine,
@@ -80,7 +80,7 @@ public record AsynchroneFileImporterContext(
     public static AsynchroneFileImporterContext of(
             ContextConstants constants,
             PublishContext.PublishContextBuilder publishContextBuilder,
-            ImmutableSet<LineChecker<? extends FieldType<?>>> lineCheckers,
+            ImmutableSet<LineChecker<?>> lineCheckers,
             Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey,
             Mapper jsonRowMapper,
             DataRepository referenceValueRepository) {

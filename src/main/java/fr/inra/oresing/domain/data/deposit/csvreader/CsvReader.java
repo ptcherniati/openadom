@@ -32,9 +32,9 @@ public class CsvReader {
     }
 
     @SuppressWarnings("java:S1452")
-    public Set<LineChecker<? extends FieldType<?>>> buildLineCheckers(Map<DataColumn, DataColumnValue<?, ?>> constantColumnsValues) {
-        final HashSet<LineChecker<? extends FieldType<?>>> linecheckersBuilder = new HashSet<>();
-        for (final LineChecker<? extends FieldType<?>> lineChecker : dataImporterContext.lineCheckers()) {
+    public Set<LineChecker<?>> buildLineCheckers(Map<DataColumn, DataColumnValue<?, ?>> constantColumnsValues) {
+        final HashSet<LineChecker<?>> linecheckersBuilder = new HashSet<>();
+        for (final LineChecker<?> lineChecker : dataImporterContext.lineCheckers()) {
             if (!dataImporterContext.existsColumn(lineChecker.target(), constantColumnsValues)) {
                 continue;
             }

@@ -1,4 +1,5 @@
 package fr.inra.oresing.domain.application.configuration.type;
+import fr.inra.oresing.domain.application.configuration.type.ConfigurationSchemaNodeType;
 
 import com.google.common.base.Strings;
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
@@ -47,7 +48,7 @@ public record RootType(SectionBuilder sectionBuilder,
         final StringBuilder builder = new StringBuilder();
         for (final Map.Entry<String, ConfigurationSchemaNodeType<?>> entry : children.entrySet()) {
             final String label = entry.getKey();
-            final ConfigurationSchemaNodeType value = entry.getValue();
+            final ConfigurationSchemaNodeType<?> value = entry.getValue();
             if (value == null) {
                 continue;
             }

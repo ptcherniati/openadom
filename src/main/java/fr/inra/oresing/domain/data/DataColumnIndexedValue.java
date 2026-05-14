@@ -13,7 +13,7 @@ public record DataColumnIndexedValue(
         Map<Ltree, String> values) implements DataColumnValue<MapType<String, String>, Map<String, String>> {
 
     @Override
-    public MapType getValuesToCheck() {
+    public MapType<Ltree, String> getValuesToCheck() {
         return new MapType<>(values);
     }
 

@@ -1,4 +1,5 @@
 package fr.inra.oresing.domain.application.configuration.type;
+import fr.inra.oresing.domain.application.configuration.type.ConfigurationSchemaNodeType;
 
 
 import com.google.common.base.Strings;
@@ -58,7 +59,7 @@ public record GroovyExpressionType(SectionBuilder sectionBuilder,
                         ConfigurationSchemaNode.OA_EXPRESSION)
                 )
                 .append(expression);
-        ConfigurationSchemaNodeType exceptions = this.children.get(ConfigurationSchemaNode.OA_GROOVY_EXCEPTIONS);
+        ConfigurationSchemaNodeType<?> exceptions = this.children.get(ConfigurationSchemaNode.OA_GROOVY_EXCEPTIONS);
         if (exceptions == null) {
             return expressionExample.toString();
         }

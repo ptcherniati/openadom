@@ -35,16 +35,16 @@ public record DataRow(
                         .map(Map.Entry::getKey)
                 ).toList();
         Map<String, FieldType<?>> values = new HashMap<>(dataRows.getValues().getFirst());
-        Map<String, ListType<? extends FieldType<?>>> listTypeMap = patternComponentKeys.stream()
+        @SuppressWarnings({"unchecked", "rawtypes"})
+        Map<String, ListType<FieldType<?>>> listTypeMap = (Map) patternComponentKeys.stream()
                 .map(componentKey -> {
-
-                            final ListType<MapType<?, ?>> listTypes = new ListType<>(new MapType(Map.of()));
+                            final ListType<MapType<?, ?>> listTypes = new ListType<>(new MapType<>(Map.of()));
                             dataRows.getValues().stream()
                                     .filter(value -> value.containsKey(componentKey))
                                     .map(value -> value.get(componentKey))
                                     .map(MapType.class::cast)
                                     .forEach(listTypes::add);
-                            return new AbstractMap.SimpleEntry<String, ListType>(componentKey, listTypes);
+                            return new AbstractMap.SimpleEntry<String, ListType<MapType<?, ?>>>(componentKey, listTypes);
                         }
                 )
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));

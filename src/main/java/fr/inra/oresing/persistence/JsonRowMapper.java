@@ -76,6 +76,7 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
         };
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static JsonSerializer<FieldType> getFieldTypeJsonSerializer() {
         return new JsonSerializer<>() {
             @Override
