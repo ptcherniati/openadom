@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 /**
  * Tests unitaires pour {@link LoggingImportProgressReporter}.
@@ -146,9 +147,11 @@ class LoggingImportProgressReporterTest {
         @DisplayName("L'implémentation no-op de onTotalLinesKnown ne lève pas d'exception")
         void defaultOnTotalLinesKnownIsNoOp() {
             ImportProgressReporter noop = (cid, delta) -> { /* no-op */ };
-            noop.onTotalLinesKnown("id-1", 100L); // méthode default
-            // La méthode default doit exister et ne pas lever d'exception
-            assertThat(noop).isNotNull();
+            // La méthode default doit exister et être invocable plusieurs fois sans effet
+            assertThatCode(() -> {
+                noop.onTotalLinesKnown("id-1", 100L);
+                noop.onTotalLinesKnown("id-1", 0L);
+            }).doesNotThrowAnyException();
         }
     }
 }

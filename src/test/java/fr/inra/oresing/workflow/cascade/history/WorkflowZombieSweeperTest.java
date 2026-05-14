@@ -71,7 +71,7 @@ class WorkflowZombieSweeperTest {
     void constructor_logs_config() {
         WorkflowLogRepository repo = mock(WorkflowLogRepository.class);
         WorkflowZombieSweeper sweeper = new WorkflowZombieSweeper(repo, 15);
-        // Valider que le constructeur initialise correctement l'objet
-        assertThat(sweeper).isNotNull();
+        // Valider que le seuil passé au constructeur est correctement stocké
+        assertThat(sweeper.getThresholdMinutes()).isEqualTo(15);
     }
 }
