@@ -29,15 +29,15 @@ public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheck
         this.target = target;
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings("unchecked")
     private static ListType<FieldType<?>> buildValueFromFieldType(final Collection<? extends ValidationCheckResult> validationsCheckresult) {
         if (CollectionUtils.isEmpty(validationsCheckresult)) {
             return new ListType<>(NullType.INSTANCE);
         }
         final List<FieldType<?>> allValues = new ArrayList<>();
         for (final ValidationCheckResult vcr : validationsCheckresult) {
-            if (vcr instanceof CheckerValidationCheckResult<?> cvr && cvr.value() != null) {
-                allValues.add((FieldType<?>) cvr.value());
+            if (vcr instanceof CheckerValidationCheckResult<?> cvr && cvr.value() instanceof FieldType<?> ft) {
+                allValues.add(ft);
             }
         }
         if (allValues.isEmpty()) {

@@ -20,7 +20,9 @@ public record DataColumnPatternValue(
             case PatternType<?, ?> patternType -> {
                 final Map<DataColumn, DataColumnValue<?, ?>> patternValues = new HashMap<>();
                 for (final Map.Entry<?, ?> entry : patternType.getValue().entrySet()) {
-                    patternValues.put(new DataColumn(entry.getKey().toString()), new DataColumnSingleValue((FieldType<?>) entry.getValue()));
+                    if (entry.getValue() instanceof FieldType<?> ft) {
+                        patternValues.put(new DataColumn(entry.getKey().toString()), new DataColumnSingleValue(ft));
+                    }
                 }
                 yield patternValues;
             }
@@ -29,7 +31,7 @@ public record DataColumnPatternValue(
     }
 
     @Override
-    public PatternType getValuesToCheck() {
+    public PatternType<String, FieldType<?>> getValuesToCheck() {
         Map<String, FieldType<?>> valuesToCheck = values().entrySet()
                 .stream().collect(Collectors.toMap(e -> e.getKey().column(), e -> e.getValue().getValuesToCheck()));
         return new PatternType<>(valuesToCheck);

@@ -102,11 +102,8 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
     public ImmutableMap<String, FieldType<?>> toJsonForDatabase() {
         final Map<String, FieldType<?>> map = new LinkedHashMap<>();
         for (final Map.Entry<DataColumn, DataColumnValue<?, ?>> entry : values.entrySet()) {
-            if (entry.getValue() instanceof DataColumnIndexedValue) {
-                final FieldType<?> valueThatMayBeNull = Optional.of(entry.getValue())
-                        .map(v -> (FieldType<?>) v.toJsonForDatabase())
-                        .orElse(new MapType(new HashMap<>()));
-                map.put(entry.getKey().toJsonForDatabase(), valueThatMayBeNull);
+            if (entry.getValue() instanceof DataColumnIndexedValue indexedValue) {
+                map.put(entry.getKey().toJsonForDatabase(), indexedValue.toJsonForDatabase());
             } else if (entry.getValue() instanceof DataColumnPatternValue patternValue) {
                 final FieldType<Map<String, Object>> valueThatMayBeNull = Optional.of(patternValue)
                         .map(DataColumnPatternValue::toJsonForDatabase)
