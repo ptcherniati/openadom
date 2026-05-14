@@ -9,8 +9,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -36,10 +34,10 @@ public class Ltree implements Comparable<Ltree> {
     private static final Pattern LABEL_INVALID_CHARACTERS_REGEX = Pattern.compile("\\W");
     private static final Pattern VALID_LABEL_REGEX = Pattern.compile("\\w+");
     private static final Ltree EMPTY_LTREE_SINGLETON = new Ltree("");
-    private static final Set<String> knownSymbolCodes = Collections.unmodifiableSet(IntStream.range(0, 0x3FF)
+    private static final Set<String> knownSymbolCodes = Set.copyOf(IntStream.range(0, 0x3FF)
             .filter(Character::isValidCodePoint)
             .filter(Character::isDefined)
-            .mapToObj(i -> Character.getName(i).replaceAll("[ -]", "")).collect(Collectors.toCollection(HashSet::new)));
+            .mapToObj(i -> Character.getName(i).replaceAll("[ -]", "")).collect(Collectors.toSet()));
     String sql;
 
     private Ltree(final String sql) {

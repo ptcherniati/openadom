@@ -300,7 +300,7 @@ public final class StagingFinalizeSql {
                 if (affected > 0) {
                     try {
                         onBatchUpserted.accept((long) affected);
-                    } catch (RuntimeException ignored) {
+                    } catch (RuntimeException e) {
                         /* best effort : un consommateur fautif ne doit pas
                            casser le UPSERT en cours */
                     }
