@@ -5,7 +5,6 @@ import com.google.common.primitives.Ints;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.checker.LineChecker;
-import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;

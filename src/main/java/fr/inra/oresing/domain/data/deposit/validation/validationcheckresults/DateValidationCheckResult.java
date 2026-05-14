@@ -32,7 +32,7 @@ public record DateValidationCheckResult(ValidationLevel level, String message, M
                         }
                 )
                 .collect(Collectors.toCollection(TreeSet::new));
-        return new DateValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, dates, datesTime, (DateType) value.copy());
+        return new DateValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, dates, datesTime, value.copy());
     }
 
     public static DateValidationCheckResult error(final CheckerTarget target, final String message, final ImmutableMap<String, Object> messageParams, final DateType value) {

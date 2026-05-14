@@ -19,11 +19,6 @@ public non-sealed class PatternType<K, V> extends AbstractMapType<K, V> implemen
     }
 
     @Override
-    public Map<K, V> getValue() {
-        return super.getValue();
-    }
-
-    @Override
     public SqlPrimitiveType getSqlType() {
         return SqlPrimitiveType.JSONB;
     }

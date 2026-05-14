@@ -13,7 +13,7 @@ public record StringValidationCheckResult(ValidationLevel level, String message,
                                           StringType value) implements CheckerValidationCheckResult<StringType> {
 
     public static StringValidationCheckResult success(final CheckerTarget target, final StringType value) {
-        return new StringValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, (StringType) value.copy());
+        return new StringValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, value.copy());
     }
 
     public static StringValidationCheckResult error(final CheckerTarget target, final String message, final ImmutableMap<String, Object> messageParams) {

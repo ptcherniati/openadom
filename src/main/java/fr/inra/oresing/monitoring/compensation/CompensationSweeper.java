@@ -47,7 +47,8 @@ public class CompensationSweeper {
     @Scheduled(cron = "${app.compensation.sweep.cron:0 0 3 * * *}")
     public void sweep() {
         long start = System.currentTimeMillis();
-        int compensated = 0, failed = 0;
+        int compensated = 0;
+        int failed = 0;
 
         List<CompensationLogEntry> stale = service.findStalePendingForSweep(batchSize);
         log.info("CompensationSweeper : {} stale PENDING rows found ( ttl exceeded )", stale.size());
@@ -72,7 +73,8 @@ public class CompensationSweeper {
     /** Permet de declencher manuellement le sweeper depuis l'endpoint admin . */
     public SweepResult sweepNow() {
         long start = System.currentTimeMillis();
-        int compensated = 0, failed = 0;
+        int compensated = 0;
+        int failed = 0;
         List<CompensationLogEntry> stale = service.findStalePendingForSweep(batchSize);
         for (CompensationLogEntry entry : stale) {
             if (service.runHandlerAndDelete(entry)) compensated++;

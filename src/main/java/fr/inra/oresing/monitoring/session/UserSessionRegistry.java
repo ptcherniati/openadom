@@ -105,7 +105,7 @@ public class UserSessionRegistry {
         return bySessionId.values().stream()
                 .filter(s -> s.isActive(now))
                 .sorted(Comparator.comparing(SessionInfo::loginTime).reversed())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -116,7 +116,7 @@ public class UserSessionRegistry {
         detectJwtExpired(now);
         return bySessionId.values().stream()
                 .sorted(Comparator.comparing(SessionInfo::loginTime).reversed())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**

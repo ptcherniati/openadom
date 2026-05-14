@@ -75,7 +75,7 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType<Fiel
 
     @Override
     public String toValueString(final AsynchroneFileImporterContext referenceImporterContext, final String referencedColumn, final String locale) {
-        return (String) values.getValue().stream()
+        return values.getValue().stream()
                 .map(s -> referenceImporterContext.getDisplayNamesByReferenceAndNaturalKey(referencedColumn, s.toString(), locale))
                 .collect(Collectors.joining(",", "[", "]"));
     }
@@ -87,15 +87,17 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType<Fiel
     }
 
     public String getCsvCellContent() {
-        return values.getValue().stream()
+        List<String> cellValues = values.getValue().stream()
                 .map(Object::toString)
-                .peek(value -> Preconditions.checkState(
-                        !value.contains(ManyValuesStaticColumn.CSV_CELL_SEPARATOR),
-                        ExceptionMessage.SEPARATOR_USING_IN_VALUE.toMessage(),
-                        value,
-                        ManyValuesStaticColumn.CSV_CELL_SEPARATOR
-                ))
-                .collect(Collectors.joining(ManyValuesStaticColumn.CSV_CELL_SEPARATOR));
-
+                .toList();
+        for (String value : cellValues) {
+            Preconditions.checkState(
+                    !value.contains(ManyValuesStaticColumn.CSV_CELL_SEPARATOR),
+                    ExceptionMessage.SEPARATOR_USING_IN_VALUE.toMessage(),
+                    value,
+                    ManyValuesStaticColumn.CSV_CELL_SEPARATOR
+            );
+        }
+        return String.join(ManyValuesStaticColumn.CSV_CELL_SEPARATOR, cellValues);
     }
 }

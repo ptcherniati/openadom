@@ -65,7 +65,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         // kv.value='LPF' OR t.refvalues @> '{"esp_nom":"ALO"}'::jsonb
         String cond = params.entrySet().stream().flatMap(e -> {
                     final String k = e.getKey();
-                    if (StringUtils.equalsAnyIgnoreCase("_row_id_", k)) {
+                    if ("_row_id_".equalsIgnoreCase(k)) {
                         final String collect = e.getValue().stream().map(v -> {
                                     final String arg = ":arg" + i.getAndIncrement();
                                     paramSource.addValue(arg, v);
@@ -74,7 +74,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                 .collect(Collectors.joining(", "));
                         return Stream.ofNullable(String.format("array[id]::uuid[] <@ array[%s]::uuid[]", collect));
                     }
-                    if (StringUtils.equalsAnyIgnoreCase("_row_key_", k)) {
+                    if ("_row_key_".equalsIgnoreCase(k)) {
                         final String collect = e.getValue().stream()
                                 .map(v -> {
                                     final String arg = ":arg" + i.getAndIncrement();
@@ -87,7 +87,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         }
                         return Stream.ofNullable(String.format(" (naturalKey in (%1$s) or hierarchicalKey in (%1$s)) ", collect));
                     }
-                    if (StringUtils.equalsAnyIgnoreCase("any", k)) {
+                    if ("any".equalsIgnoreCase(k)) {
                         return e.getValue().stream().map(v -> {
                             final String arg = ":arg" + i.getAndIncrement();
                             paramSource.addValue(arg, v);

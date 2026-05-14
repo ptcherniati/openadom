@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -178,7 +179,7 @@ public class CompensationLogRepository {
     }
 
     private Map<String, Object> deserializeJson(String json) {
-        if (json == null || json.isBlank()) return null;
+        if (json == null || json.isBlank()) return Collections.emptyMap();
         try {
             return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
         } catch (Exception ex) {
