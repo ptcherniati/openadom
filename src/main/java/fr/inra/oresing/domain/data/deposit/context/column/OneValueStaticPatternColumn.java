@@ -45,7 +45,7 @@ public abstract class OneValueStaticPatternColumn extends Column {
     }
 
     @Override
-    public Optional<DataColumnValue> computeValue(DataDatum referenceDatum) {
+    public Optional<DataColumnValue<?, ?>> computeValue(DataDatum referenceDatum) {
         return Optional.empty();
     }
 
@@ -79,7 +79,7 @@ public abstract class OneValueStaticPatternColumn extends Column {
 
     @Override
     public void pushValue(final String cellContent, final DataDatum referenceDatum, final Map<String, Map<String, Map<String,LinkedLines>>> refsLinkedTo) {
-        Map<DataColumn, DataColumnValue> columnValues = new HashMap<>();
+        Map<DataColumn, DataColumnValue<?, ?>> columnValues = new HashMap<>();
         columnValues.put(new DataColumn(Column.__VALUE__), new DataColumnSingleValue(StringType.getStringTypeFromStringValue(cellContent)));
         columnValues.putAll(referenceDatum.values());
         final DataColumnValue<Map<String, Object>, Map<String, Object>> referenceColumnValue = new DataColumnPatternValue(columnValues);
@@ -93,7 +93,7 @@ public abstract class OneValueStaticPatternColumn extends Column {
             final DataDatum qualifierComponents,
             DataDatum adjacentComponents,
             final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo) {
-        Map<DataColumn, DataColumnValue> columnValues = new HashMap<>();
+        Map<DataColumn, DataColumnValue<?, ?>> columnValues = new HashMap<>();
         columnValues.put(new DataColumn(Column.__VALUE__), new DataColumnSingleValue(StringType.getStringTypeFromStringValue(cellContent)));
         columnValues.put(new DataColumn(Column.__COLUMN_NAME__), new DataColumnSingleValue(StringType.getStringTypeFromStringValue(headerName)));
         columnValues.put(new DataColumn(Column.__ORIGINAL_COLUMN_NAME__), new DataColumnSingleValue(StringType.getStringTypeFromStringValue(headerInFile)));
@@ -116,7 +116,7 @@ public abstract class OneValueStaticPatternColumn extends Column {
     }
 
     public DataDatum buildAdjacentComponents(List<String> adjacentComponentsValues) {
-        Map<DataColumn, DataColumnValue> columnValues = new HashMap<>();
+        Map<DataColumn, DataColumnValue<?, ?>> columnValues = new HashMap<>();
         for (int i = 0; i < adjacentColumns.size(); i++) {
             Column adjacentColumn = adjacentColumns.get(i);
             DataColumn dataColumn = adjacentColumn.getReferenceColumn();

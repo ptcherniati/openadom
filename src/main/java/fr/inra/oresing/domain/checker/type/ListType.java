@@ -59,16 +59,17 @@ public non-sealed class ListType<F extends FieldType<?>> implements FieldType<Li
     }
 
     @Override
-    public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
+    @SuppressWarnings("unchecked")
+    public CheckerValidationCheckResult<ListType<F>> check(final String value, final LineChecker<?> lineChecker) {
         final FieldType<?> underlyingType = lineChecker.fieldTypeForOne();
         final List<ValidationCheckResult> collect = Arrays.stream(value.split(","))
                 .map(v -> underlyingType.check(v, lineChecker))
                 .map(v -> {
                     this.value.add((F) underlyingType.copy());
-                    return v;
+                    return (ValidationCheckResult) v;
                 })
                 .collect(Collectors.toList());
-        return new DefaultManyValidationCheckResult(collect, lineChecker.target());
+        return (CheckerValidationCheckResult<ListType<F>>) (CheckerValidationCheckResult<?>) new DefaultManyValidationCheckResult(collect, lineChecker.target());
     }
 
     @Override
@@ -77,7 +78,7 @@ public non-sealed class ListType<F extends FieldType<?>> implements FieldType<Li
     }
 
     @Override
-    public FieldType copy() {
+    public ListType<F> copy() {
         final ListType<F> listType = clone.get();
         if (value != null) {
             listType.value = value.stream().collect(Collectors.toCollection(ArrayList::new));

@@ -163,7 +163,7 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
     }
 
     @Override
-    public CheckerValidationCheckResult check(final String rawValue, final LineChecker lineChecker) {
+    public CheckerValidationCheckResult<ReferenceType> check(final String rawValue, final LineChecker<?> lineChecker) {
         final String localRawValue = Ltree.escapeToLabel(rawValue, knownSpecialCharacters);
         final CheckerTarget target = lineChecker.target();
         value = Ltree.fromSql(localRawValue);
@@ -223,7 +223,7 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
     }
 
     @Override
-    public FieldType copy() {
+    public ReferenceType copy() {
         // R-P2-2 : copie avec partage des caches seenOnce + precomputedResults
         // → les workers Cascade parallèles alimentent et consomment le même cache.
         final ReferenceType referenceType = new ReferenceType(
@@ -261,8 +261,8 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
     }
 
     @Override
-    public DataColumnValue transform(final LineChecker lineChecker,
-                                     final DataColumnValue referenceColumnRawValue,
+    public DataColumnValue<?, ?> transform(final LineChecker<?> lineChecker,
+                                     final DataColumnValue<?, ?> referenceColumnRawValue,
                                      final DataColumn referenceColumn,
                                      final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo) {
         return Optional.ofNullable(value)

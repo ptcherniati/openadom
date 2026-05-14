@@ -15,13 +15,13 @@ import java.util.stream.Collectors;
 
 public class DataDatum implements SomethingThatCanProvideEvaluationContext, SomethingToBeStoredAsJsonInDatabase<Map<String, FieldType<?>>>, SomethingToBeSentToFrontend<Map<String, FieldType<?>>> {
 
-    private final Map<DataColumn, DataColumnValue> values;
+    private final Map<DataColumn, DataColumnValue<?, ?>> values;
 
     public DataDatum() {
         this(new LinkedHashMap<>());
     }
 
-    public DataDatum(final Map<DataColumn, DataColumnValue> values) {
+    public DataDatum(final Map<DataColumn, DataColumnValue<?, ?>> values) {
         super();
         this.values = values;
     }
@@ -31,11 +31,11 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
     }
 
     public static DataDatum fromDatabaseJson(final Map<String, Object> mapFromDatabase) {
-        final Map<DataColumn, DataColumnValue> result = new LinkedHashMap<>();
+        final Map<DataColumn, DataColumnValue<?, ?>> result = new LinkedHashMap<>();
         for (final Map.Entry<String, Object> entry : mapFromDatabase.entrySet()) {
             final DataColumn referenceColumn = new DataColumn(entry.getKey());
             final Object storedValue = entry.getValue();
-            final DataColumnValue referenceColumnValue;
+            final DataColumnValue<?, ?> referenceColumnValue;
             switch (storedValue) {
                 case final Map map -> {
                     final Map<String, String> castedStoredValue = (Map<String, String>) map;
@@ -72,37 +72,39 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
                         .anyMatch(registerColumn -> registerColumn.equals(column));
     }
 
-    public DataColumnValue get(final DataColumn column) {
+    public DataColumnValue<?, ?> get(final DataColumn column) {
         Preconditions.checkArgument(
                 contains(column),
                 ExceptionMessage.MISSING_COLUMN.toMessage(),
                 column.column(),
                 values.keySet().stream().map(DataColumn::column).collect(Collectors.joining(" - "))
         );
-        return Optional.of(values)
-                .map(values -> values.get(column))
-                .orElseGet(() -> values().entrySet().stream()
-                        .filter(entry -> entry.getValue() instanceof DataColumnPatternValue)
-                        .flatMap(entry -> ((DataColumnPatternValue) entry.getValue()).values().entrySet().stream()
-                                .filter(storedColumn -> Column.COLUMN_IN_COLUMN_PATTERN.formatted(entry.getKey().column(), storedColumn.getKey().column()).equals(column.column())))
-                        .map(Map.Entry::getValue)
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalArgumentException(Strings.lenientFormat(ExceptionMessage.MISSING_COLUMN.toMessage(), column.column(), values().values().stream()
-                                .filter(DataColumnPatternValue.class::isInstance)
-                                .map(DataColumnPatternValue.class::cast)
-                                .map(DataColumnPatternValue::values)
-                                .map(Map::keySet)
-                                .flatMap(values -> values.stream().map(DataColumn::column))
-                                .collect(Collectors.joining(" - "))))));
+        final DataColumnValue<?, ?> directValue = values.get(column);
+        if (directValue != null) {
+            return directValue;
+        }
+        return values().entrySet().stream()
+                .filter(entry -> entry.getValue() instanceof DataColumnPatternValue)
+                .flatMap(entry -> ((DataColumnPatternValue) entry.getValue()).values().entrySet().stream()
+                        .filter(storedColumn -> Column.COLUMN_IN_COLUMN_PATTERN.formatted(entry.getKey().column(), storedColumn.getKey().column()).equals(column.column())))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(Strings.lenientFormat(ExceptionMessage.MISSING_COLUMN.toMessage(), column.column(), values().values().stream()
+                        .filter(DataColumnPatternValue.class::isInstance)
+                        .map(DataColumnPatternValue.class::cast)
+                        .map(DataColumnPatternValue::values)
+                        .map(Map::keySet)
+                        .flatMap(v -> v.stream().map(DataColumn::column))
+                        .collect(Collectors.joining(" - ")))));
     }
 
     @Override
     public ImmutableMap<String, FieldType<?>> toJsonForDatabase() {
         final Map<String, FieldType<?>> map = new LinkedHashMap<>();
-        for (final Map.Entry<DataColumn, DataColumnValue> entry : values.entrySet()) {
+        for (final Map.Entry<DataColumn, DataColumnValue<?, ?>> entry : values.entrySet()) {
             if (entry.getValue() instanceof DataColumnIndexedValue) {
                 final FieldType<?> valueThatMayBeNull = Optional.of(entry.getValue())
-                        .map(SomethingToBeStoredAsJsonInDatabase<FieldType<?>>::toJsonForDatabase)
+                        .map(v -> (FieldType<?>) v.toJsonForDatabase())
                         .orElse(new MapType(new HashMap<>()));
                 map.put(entry.getKey().toJsonForDatabase(), valueThatMayBeNull);
             } else if (entry.getValue() instanceof DataColumnPatternValue patternValue) {
@@ -112,10 +114,10 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
                         .orElse(new MapType<>(Map.of()));
                 map.put(entry.getKey().toJsonForDatabase(), valueThatMayBeNull);
             } else {
-                final FieldType<?> valueThatMayBeNull = Optional.ofNullable(entry.getValue())
-                        .map(SomethingToBeStoredAsJsonInDatabase<FieldType<?>>::toJsonForDatabase)
-                        .map(FieldType.class::cast)
-                        .orElse(StringType.getStringTypeFromStringValue(""));
+                final Object dbValue = Optional.ofNullable(entry.getValue())
+                        .map(DataColumnValue::toJsonForDatabase)
+                        .orElse(null);
+                final FieldType<?> valueThatMayBeNull = dbValue instanceof FieldType<?> ft ? ft : StringType.getStringTypeFromStringValue("");
                 map.put(entry.getKey().toJsonForDatabase(), valueThatMayBeNull);
             }
         }
@@ -124,7 +126,7 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
 
     public ImmutableMap<String, Object> toObjectsExposedInGroovyContext() {
         final Map<String, Object> map = new LinkedHashMap<>();
-        for (final Map.Entry<DataColumn, DataColumnValue> entry : values.entrySet()) {
+        for (final Map.Entry<DataColumn, DataColumnValue<?, ?>> entry : values.entrySet()) {
             if (entry.getValue() instanceof DataColumnPatternValue patternValue) {
                 map.put(entry.getKey().toJsonForDatabase(), patternValue.toObjectsExposedInGroovyContext());
             } else {
@@ -138,8 +140,8 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
         return ImmutableMap.copyOf(map);
     }
 
-    public void put(final DataColumn column, final DataColumnValue value) {
-        final DataColumnValue replaced;
+    public void put(final DataColumn column, final DataColumnValue<?, ?> value) {
+        final DataColumnValue<?, ?> replaced;
         if (values().entrySet().stream()
                 .filter(entry -> entry.getValue() instanceof DataColumnPatternValue)
                 .anyMatch(entry -> ((DataColumnPatternValue) entry.getValue()).values().containsKey(column))) {
@@ -182,7 +184,7 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
     @Override
     public Map<String, FieldType<?>> toJsonForFrontend() {
         final Map<String, FieldType<?>> map = new LinkedHashMap<>();
-        for (final Map.Entry<DataColumn, DataColumnValue> entry : values.entrySet()) {
+        for (final Map.Entry<DataColumn, DataColumnValue<?, ?>> entry : values.entrySet()) {
             if (entry.getValue() instanceof DataColumnIndexedValue(
                     Map<Ltree, String> values1
             ) && values1 instanceof final Map<Ltree, String> m) {
@@ -195,7 +197,7 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
                 continue;
             }
             final FieldType<?> valueThatMayBeNull = Optional.ofNullable(entry.getValue())
-                    .map(DataColumnValue<FieldType<?>, FieldType<?>>::toJsonForFrontend)
+                    .map(v -> (FieldType<?>) v.toJsonForFrontend())
                     .orElse(null);
             map.put(entry.getKey().toJsonForDatabase(), valueThatMayBeNull);
         }
@@ -210,7 +212,7 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
         );
     }
 
-    public Map<DataColumn, DataColumnValue> values() {
+    public Map<DataColumn, DataColumnValue<?, ?>> values() {
         return values;
     }
 

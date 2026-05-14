@@ -11,10 +11,10 @@ import java.util.Map;
 public record FloatValidationCheckResult(ValidationLevel level,
                                          String message, Map<String, Object> messageParams,
                                          CheckerTarget target,
-                                         FloatType value) implements CheckerValidationCheckResult {
+                                         FloatType value) implements CheckerValidationCheckResult<FloatType> {
     public static FloatValidationCheckResult success(final CheckerTarget target, final FloatType value) {
 
-        return new FloatValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, (FloatType) value.copy());
+        return new FloatValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, value.copy());
     }
 
     public static FloatValidationCheckResult error(final CheckerTarget target, final String message, final ImmutableMap<String, Object> messageParams) {

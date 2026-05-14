@@ -12,12 +12,19 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public record DataColumnPatternValue(
-        Map<DataColumn, DataColumnValue> values) implements DataColumnValue<Map<String, Object>, Map<String, Object>> {
+        Map<DataColumn, DataColumnValue<?, ?>> values) implements DataColumnValue<Map<String, Object>, Map<String, Object>> {
 
+    @SuppressWarnings("unchecked")
     public DataColumnPatternValue(FieldType<?> valuesToCheck) {
         this(switch (valuesToCheck) {
-            case PatternType patternType -> patternType.getValue();
-            case null, default -> new HashMap<>();
+            case PatternType<?, ?> patternType -> {
+                final Map<DataColumn, DataColumnValue<?, ?>> patternValues = new HashMap<>();
+                for (final Map.Entry<?, ?> entry : patternType.getValue().entrySet()) {
+                    patternValues.put(new DataColumn(entry.getKey().toString()), new DataColumnSingleValue((FieldType<?>) entry.getValue()));
+                }
+                yield patternValues;
+            }
+            case null, default -> new HashMap<DataColumn, DataColumnValue<?, ?>>();
         });
     }
 
@@ -66,13 +73,13 @@ public record DataColumnPatternValue(
                 }));
     }
 
-    public void put(DataColumn secondPatternOfColumn, DataColumnValue valueToStoreInDatabase) {
+    public void put(DataColumn secondPatternOfColumn, DataColumnValue<?, ?> valueToStoreInDatabase) {
         values().put(secondPatternOfColumn, valueToStoreInDatabase);
     }
 
     public Map<String, Object> toObjectsExposedInGroovyContext() {
         Map<String, Object> result = new HashMap<>();
-        for (Map.Entry<DataColumn, DataColumnValue> dataColumnDataColumnValueEntry : values.entrySet()) {
+        for (Map.Entry<DataColumn, DataColumnValue<?, ?>> dataColumnDataColumnValueEntry : values.entrySet()) {
             final Object valueThatMayBeNull = Optional.ofNullable(dataColumnDataColumnValueEntry.getValue())
                     .map(SomethingToBeStoredAsJsonInDatabase::toJsonForDatabase)
                     .map(Object::toString)

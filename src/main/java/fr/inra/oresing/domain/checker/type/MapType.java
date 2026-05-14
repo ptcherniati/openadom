@@ -23,7 +23,7 @@ public non-sealed class MapType<K, V> extends AbstractMapType<K, V> implements F
     }
 
     @Override
-    public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
+    public CheckerValidationCheckResult<MapType<K, V>> check(final String value, final LineChecker<?> lineChecker) {
         return null;
     }
 

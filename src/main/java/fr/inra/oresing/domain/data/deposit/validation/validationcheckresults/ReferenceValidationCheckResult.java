@@ -9,6 +9,7 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.DataColumnValue;
+import fr.inra.oresing.domain.data.LinkedLines;
 
 import java.util.Map;
 import java.util.Set;
@@ -30,11 +31,11 @@ public record ReferenceValidationCheckResult(CheckerTarget target, ValidationLev
                                              Set<Ltree> matchedReferenceHierarchicalKey,
                                              @JsonIgnore Set<UUID> matchedReferenceId, String message,
                                              Map<String, Object> messageParams,
-                                             ReferenceType value) implements CheckerValidationCheckResult {
+                                             ReferenceType value) implements CheckerValidationCheckResult<ReferenceType> {
     @JsonIgnore
     public static ReferenceValidationCheckResult success(final CheckerTarget target, final String rawValue, final Set<Ltree> matchedReferenceHierarchicalKey, final Set<UUID> matchedReferenceId,
                                                          final ReferenceType value) {
-        final ReferenceType copy = (ReferenceType) value.copy();
+        final ReferenceType copy = value.copy();
         copy.uuid = value.getUuid();
         return new ReferenceValidationCheckResult(
                 target,
@@ -54,7 +55,7 @@ public record ReferenceValidationCheckResult(CheckerTarget target, ValidationLev
     }
 
     @Override
-    public DataColumnValue transform(final LineChecker lineChecker, final DataColumnValue referenceColumnRawValue, final DataColumn dataColumn, final Map refsLinkedTo) {
+    public DataColumnValue<?, ?> transform(final LineChecker<?> lineChecker, final DataColumnValue<?, ?> referenceColumnRawValue, final DataColumn dataColumn, final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo) {
         return value().transform(lineChecker, referenceColumnRawValue, dataColumn, refsLinkedTo);
     }
 }

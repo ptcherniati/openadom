@@ -154,7 +154,7 @@ public record DataHeaderReader(
     public RowWithReferenceDatum addConstantsToRow(
             final RowWithReferenceDatum rowWithReferenceDatum
     ) {
-        final ImmutableMap<DataColumn, DataColumnValue> values = ImmutableMap.<DataColumn, DataColumnValue>builder()
+        final ImmutableMap<DataColumn, DataColumnValue<?, ?>> values = ImmutableMap.<DataColumn, DataColumnValue<?, ?>>builder()
                 .putAll(constantValues().values())
                 .putAll(rowWithReferenceDatum.referenceDatum().values())
                 .build();

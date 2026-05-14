@@ -66,7 +66,7 @@ public non-sealed class BooleanType implements FieldType<Boolean> {
     }
 
     @Override
-    public CheckerValidationCheckResult<BooleanType> check(final String value, final LineChecker lineCheckerWarper) {
+    public CheckerValidationCheckResult<BooleanType> check(final String value, final LineChecker<?> lineCheckerWarper) {
         this.value = Boolean.parseBoolean(value);
         return BooleanValidationCheckResult.success(lineCheckerWarper.target(), this);
     }
@@ -77,7 +77,7 @@ public non-sealed class BooleanType implements FieldType<Boolean> {
     }
 
     @Override
-    public FieldType copy() {
+    public BooleanType copy() {
         final BooleanType booleanType = clone.get();
         booleanType.value = value;
         return booleanType;

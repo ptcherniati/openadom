@@ -29,7 +29,7 @@ public non-sealed class PatternType<K, V> extends AbstractMapType<K, V> implemen
     }
 
     @Override
-    public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
+    public CheckerValidationCheckResult<PatternType<K, V>> check(final String value, final LineChecker<?> lineChecker) {
         return null;
     }
 
@@ -49,9 +49,8 @@ public non-sealed class PatternType<K, V> extends AbstractMapType<K, V> implemen
     }
 
     @Override
-    public FieldType copy() {
-        final PatternType mapType = clone.get();
-        return mapType;
+    public PatternType<K, V> copy() {
+        return clone.get();
     }
 
     @Override
@@ -67,14 +66,18 @@ public non-sealed class PatternType<K, V> extends AbstractMapType<K, V> implemen
     }
 
     @Override
-    public CheckerValidationCheckResult postTreatment(CheckerValidationCheckResult checkerValidationCheckResult) {
-        return PatternValidationCheckResult.of(checkerValidationCheckResult, this);
+    @SuppressWarnings("unchecked")
+    public CheckerValidationCheckResult<PatternType<K, V>> postTreatment(CheckerValidationCheckResult<?> checkerValidationCheckResult) {
+        return (CheckerValidationCheckResult<PatternType<K, V>>) (Object) PatternValidationCheckResult.of(checkerValidationCheckResult, this);
     }
 
     public FieldType<?> getColumnValue() {
-        return Optional.ofNullable(getValue())
+        final V columnVal = Optional.ofNullable(getValue())
                 .map(map -> map.get(Column.__VALUE__))
-                .map(FieldType.class::cast)
-                .orElse(NullType.INSTANCE);
+                .orElse(null);
+        if (columnVal instanceof FieldType<?> ft) {
+            return ft;
+        }
+        return NullType.INSTANCE;
     }
 }

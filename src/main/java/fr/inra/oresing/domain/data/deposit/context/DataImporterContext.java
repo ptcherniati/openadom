@@ -297,7 +297,7 @@ public class DataImporterContext {
     }
 
     @SuppressWarnings("java:S3740")
-    public boolean existsColumn(final DataColumn column, Map<DataColumn, DataColumnValue> constantColumnsValues) {
+    public boolean existsColumn(final DataColumn column, Map<DataColumn, DataColumnValue<?, ?>> constantColumnsValues) {
         return columnsWithPatternColumns.stream()
                        .map(registeredColumn -> registeredColumn.as(column.column()))
                        .anyMatch(Objects::nonNull) ||

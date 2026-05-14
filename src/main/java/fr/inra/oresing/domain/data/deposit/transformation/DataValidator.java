@@ -35,7 +35,7 @@ public class DataValidator {
         }
         Map<String, Object> context = new HashMap<>();
 
-        final CheckerValidationCheckResult validationCheckResults = testValues(rowWithReferenceDatum, publishContextBuilder, lineChecker, context, referenceDatumBeforeChecking);
+        final CheckerValidationCheckResult<?> validationCheckResults = testValues(rowWithReferenceDatum, publishContextBuilder, lineChecker, context, referenceDatumBeforeChecking);
         registerCheckedValues(lineChecker, validationCheckResults, referenceDatumBeforeChecking, refsLinkedTo, referenceDatum);
 
         if (validationCheckResults != null && !validationCheckResults.isSuccess()) {
@@ -44,13 +44,13 @@ public class DataValidator {
         return null;
     }
 
-    static void registerCheckedValues(LineChecker lineChecker, CheckerValidationCheckResult validationCheckResults, DataDatum referenceDatumBeforeChecking, Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo, DataDatum referenceDatum) {
+    static void registerCheckedValues(LineChecker<?> lineChecker, CheckerValidationCheckResult<?> validationCheckResults, DataDatum referenceDatumBeforeChecking, Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo, DataDatum referenceDatum) {
         Optional.ofNullable(validationCheckResults)
                 .filter(ValidationCheckResult::isSuccess)
                 .ifPresent(validationCheckResult -> {
                             final DataColumn dataColumn = (DataColumn) validationCheckResult.target();
-                            final DataColumnValue referenceColumnRawValue = referenceDatumBeforeChecking.get(dataColumn);
-                            DataColumnValue valueToStoreInDatabase =
+                            final DataColumnValue<?, ?> referenceColumnRawValue = referenceDatumBeforeChecking.get(dataColumn);
+                            DataColumnValue<?, ?> valueToStoreInDatabase =
                                     validationCheckResults.transform(
                                             lineChecker,
                                             referenceColumnRawValue,
@@ -60,9 +60,9 @@ public class DataValidator {
                                     .map(DataColumn::new)
                                     .toList();
                             DataColumn firstPatternOfColumn = patternOfColumn.get(0);
-                            DataColumnValue columnValue = referenceDatum.get(firstPatternOfColumn);
+                            DataColumnValue<?, ?> columnValue = referenceDatum.get(firstPatternOfColumn);
                             if (columnValue instanceof DataColumnPatternValue(
-                                    Map<DataColumn, DataColumnValue> values
+                                    Map<DataColumn, DataColumnValue<?, ?>> values
                             )) {
                                 if (patternOfColumn.size() > 1) {
                                     DataColumn secondPatternOfColumn = patternOfColumn.get(1);
@@ -78,7 +78,7 @@ public class DataValidator {
                 );
     }
 
-    static List<ReferenceDatumAfterChecking> registerErrors(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, LineChecker lineChecker, CheckerValidationCheckResult validationCheckResults, DataDatum referenceDatumBeforeChecking, ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder) {
+    static List<ReferenceDatumAfterChecking> registerErrors(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, LineChecker<?> lineChecker, CheckerValidationCheckResult<?> validationCheckResults, DataDatum referenceDatumBeforeChecking, ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder) {
         boolean isLineCheckerRecusrsiveReference = Optional.ofNullable(lineChecker.checkerDescription())
                 .filter(ReferenceChecker.class::isInstance)
                 .map(ReferenceChecker.class::cast)
@@ -99,7 +99,7 @@ public class DataValidator {
         return null;
     }
 
-    static List<ReferenceDatumAfterChecking> registerMissingLine(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, LineChecker lineChecker, DataDatum referenceDatumBeforeChecking) {
+    static List<ReferenceDatumAfterChecking> registerMissingLine(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, LineChecker<?> lineChecker, DataDatum referenceDatumBeforeChecking) {
         Optional.ofNullable(lineChecker.checkerDescription())
                 .filter(ReferenceChecker.class::isInstance)
                 .map(ReferenceChecker.class::cast)
@@ -139,7 +139,7 @@ public class DataValidator {
                 ));
     }
 
-    CheckerValidationCheckResult testValues(RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker<? extends FieldType<?>> lineChecker, Map<String, Object> context, DataDatum referenceDatumBeforeChecking) {
+    CheckerValidationCheckResult<?> testValues(RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker<?> lineChecker, Map<String, Object> context, DataDatum referenceDatumBeforeChecking) {
         switch (lineChecker.transformer()) {
             case LineChecker.LineTransformer.ChainTransformersLineTransformer transformers -> {
                 for (LineChecker.LineTransformer transformer : transformers.transformers()) {
@@ -177,12 +177,12 @@ public class DataValidator {
         return lineChecker.checkReference(referenceDatumBeforeChecking, context);
     }
 
-    static boolean matchingTarget(RowWithReferenceDatum rowWithReferenceDatum, LineChecker<? extends FieldType<?>> lineChecker) {
+    static boolean matchingTarget(RowWithReferenceDatum rowWithReferenceDatum, LineChecker<?> lineChecker) {
         return rowWithReferenceDatum.referenceDatum().values()
                 .entrySet()
                 .stream()
                 .flatMap(entry -> {
-                    if (entry.getValue() instanceof DataColumnPatternValue(Map<DataColumn, DataColumnValue> values)) {
+                    if (entry.getValue() instanceof DataColumnPatternValue(Map<DataColumn, DataColumnValue<?, ?>> values)) {
                         return values.keySet().stream()
                                 .map(dataColumn -> dataColumn.column().equals(Column.__VALUE__) ?
                                         entry.getKey() :

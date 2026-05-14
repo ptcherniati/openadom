@@ -138,8 +138,8 @@ public non-sealed class DateType implements FieldType<LocalDateTime> {
     }
 
     @Override
-    public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
-        CheckerValidationCheckResult validationCheckResult;
+    public CheckerValidationCheckResult<DateType> check(final String value, final LineChecker<?> lineChecker) {
+        CheckerValidationCheckResult<DateType> validationCheckResult;
         final DataColumn target = lineChecker.target();
         final Matcher matcher = Pattern.compile(PATTERN_DATE_REGEXP_FIND_DATE).matcher(value);
         LocalDateTime valuetoDate = null;
@@ -186,7 +186,7 @@ public non-sealed class DateType implements FieldType<LocalDateTime> {
     }
 
     @Override
-    public FieldType copy() {
+    public DateType copy() {
         final DateType dateType = new DateType(
                 pattern,
                 duration,

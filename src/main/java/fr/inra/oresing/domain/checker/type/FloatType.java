@@ -55,7 +55,7 @@ public non-sealed class FloatType implements FieldType<Float> {
     }
 
     @Override
-    public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
+    public CheckerValidationCheckResult<FloatType> check(final String value, final LineChecker<?> lineChecker) {
         FloatValidationCheckResult validationCheckResult;
         final DataColumn target = lineChecker.target();
         try {
@@ -101,7 +101,7 @@ public non-sealed class FloatType implements FieldType<Float> {
     }
 
     @Override
-    public FieldType copy() {
+    public FloatType copy() {
         final FloatType floatType = clone.get();
         floatType.value = value;
         return floatType;

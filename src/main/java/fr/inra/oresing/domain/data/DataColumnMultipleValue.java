@@ -21,17 +21,18 @@ import java.util.stream.Collectors;
  * @param <U>
  */
 @Value
-public class DataColumnMultipleValue<U> implements DataColumnValue<ListType, FieldType> {
+public class DataColumnMultipleValue<U> implements DataColumnValue<ListType<FieldType<?>>, FieldType<?>> {
 
     private static final String COLLECTION_AS_JSON_STRING_SEPARATOR = ",";
-    ListType values;
+    ListType<FieldType<?>> values;
 
-    public DataColumnMultipleValue(final List values) {
+    @SuppressWarnings("unchecked")
+    public DataColumnMultipleValue(final List<?> values) {
         super();
-        final ListType fieldsType = new ListType(StringType.getStringTypeFromStringValue(null));
+        final ListType<FieldType<?>> fieldsType = new ListType<>(StringType.getStringTypeFromStringValue(null));
         for (final Object value : values) {
             if (value instanceof FieldType) {
-                fieldsType.getValue().add(value);
+                fieldsType.getValue().add((FieldType<?>) value);
             } else {
                 fieldsType.getValue().add(StringType.getStringTypeFromStringValue("" + value));
             }
@@ -39,32 +40,32 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType, Fie
         this.values = fieldsType;
     }
 
-    public DataColumnMultipleValue(final ListType values) {
+    public DataColumnMultipleValue(final ListType<FieldType<?>> values) {
         this.values = values;
     }
 
     @Override
-    public ListType toJsonForDatabase() {
+    public ListType<FieldType<?>> toJsonForDatabase() {
         return values;
     }
 
     @Override
-    public FieldType getValuesToCheck() {
+    public FieldType<?> getValuesToCheck() {
 
         return values;
     }
 
     @Override
-    public DataColumnValue<ListType, FieldType> transform(Function<FieldType<?>, FieldType<?>> transformation) {
-        final ListType fieldType = Optional.ofNullable((FieldType<?>) values)
+    public DataColumnValue<ListType<FieldType<?>>, FieldType<?>> transform(Function<FieldType<?>, FieldType<?>> transformation) {
+        final ListType<FieldType<?>> fieldType = Optional.ofNullable((FieldType<?>) values)
                 .map(transformation)
                 .filter(ListType.class::isInstance)
-                .map(ListType.class::cast)
+                .map(t -> (ListType<FieldType<?>>) t)
                 .orElse(values);
         return Optional.ofNullable(fieldType)
                 .map(ListType::getValue)
-                .map(DataColumnMultipleValue::new)
-                .orElse(new DataColumnMultipleValue<>(ListType.EMPTY_LIST));
+                .map(v -> new DataColumnMultipleValue<U>(v))
+                .orElse(new DataColumnMultipleValue<>(List.of()));
     }
 
     private U stringToValue(final String s) {
@@ -80,23 +81,20 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType, Fie
     }
 
     @Override
-    public FieldType toJsonForFrontend() {
+    @SuppressWarnings("java:S1452")
+    public FieldType<?> toJsonForFrontend() {
         return values.copy();
     }
 
     public String getCsvCellContent() {
-        return (String) values.getValue().stream()
+        return values.getValue().stream()
                 .map(Object::toString)
-                .map(value -> {
-                            Preconditions.checkState(
-                                    !value.toString().contains(ManyValuesStaticColumn.CSV_CELL_SEPARATOR),
-                                    ExceptionMessage.SEPARATOR_USING_IN_VALUE.toMessage(),
-                                    value,
-                                    ManyValuesStaticColumn.CSV_CELL_SEPARATOR
-                            );
-                            return values;
-                        }
-                )
+                .peek(value -> Preconditions.checkState(
+                        !value.contains(ManyValuesStaticColumn.CSV_CELL_SEPARATOR),
+                        ExceptionMessage.SEPARATOR_USING_IN_VALUE.toMessage(),
+                        value,
+                        ManyValuesStaticColumn.CSV_CELL_SEPARATOR
+                ))
                 .collect(Collectors.joining(ManyValuesStaticColumn.CSV_CELL_SEPARATOR));
 
     }

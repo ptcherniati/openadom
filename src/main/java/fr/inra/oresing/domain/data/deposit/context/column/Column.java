@@ -83,7 +83,7 @@ public abstract class Column implements Comparable<Column> {
                         }
 
                         @Override
-                        public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
+                        public Optional<DataColumnValue<?, ?>> computeValue(final DataDatum referenceDatum) {
                             throw new UnsupportedOperationException("pas de valeur calculable pour " + referenceColumn);
                         }
                     };
@@ -101,7 +101,7 @@ public abstract class Column implements Comparable<Column> {
             }
 
             @Override
-            public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
+            public Optional<DataColumnValue<?, ?>> computeValue(final DataDatum referenceDatum) {
                 final ImmutableMap<String, Object> evaluationContext = ImmutableMap.<String, Object>builder()
                         .putAll(contextForExpression)
                         .putAll(referenceDatum.getEvaluationContext())
@@ -127,7 +127,7 @@ public abstract class Column implements Comparable<Column> {
             }
 
             @Override
-            public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
+            public Optional<DataColumnValue<?, ?>> computeValue(final DataDatum referenceDatum) {
                 final ImmutableMap<String, Object> evaluationContext = ImmutableMap.<String, Object>builder()
                         .putAll(contextForExpression)
                         .putAll(referenceDatum.getEvaluationContext())
@@ -177,11 +177,11 @@ public abstract class Column implements Comparable<Column> {
                 }
 
                 @Override
-                public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
+                public Optional<DataColumnValue<?, ?>> computeValue(final DataDatum referenceDatum) {
                     if (defaultValue == null) {
                         throw new UnsupportedOperationException(NO_DEFAULT_VALUE_MSG + referenceColumn);
                     }
-                    final Optional<DataColumnValue> dataColumnValue = Optional.ofNullable(referenceColumn).map(referenceDatum.values()::get);
+                    final Optional<DataColumnValue<?, ?>> dataColumnValue = Optional.ofNullable(referenceColumn).map(referenceDatum.values()::get);
                     if (dataColumnValue
                             .map(DataColumnValue::getValuesToCheck)
                             .map(FieldType::getValue)
@@ -210,11 +210,11 @@ public abstract class Column implements Comparable<Column> {
                 }
 
                 @Override
-                public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
+                public Optional<DataColumnValue<?, ?>> computeValue(final DataDatum referenceDatum) {
                     if (defaultValue == null) {
                         throw new UnsupportedOperationException(NO_DEFAULT_VALUE_MSG + referenceColumn);
                     }
-                    final Optional<DataColumnValue> dataColumnValue = Optional.ofNullable(referenceColumn).map(referenceDatum.values()::get);
+                    final Optional<DataColumnValue<?, ?>> dataColumnValue = Optional.ofNullable(referenceColumn).map(referenceDatum.values()::get);
                     if (dataColumnValue
                             .map(DataColumnValue::getValuesToCheck)
                             .map(FieldType::getValue)
@@ -264,7 +264,7 @@ public abstract class Column implements Comparable<Column> {
             }
 
             @Override
-            public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
+            public Optional<DataColumnValue<?, ?>> computeValue(final DataDatum referenceDatum) {
                 throw new UnsupportedOperationException(NO_DEFAULT_VALUE_MSG + referenceColumn);
             }
         };
@@ -293,7 +293,7 @@ public abstract class Column implements Comparable<Column> {
         return presenceConstraint.isExpected();
     }
 
-    public abstract Optional<DataColumnValue> computeValue(DataDatum referenceDatum);
+    public abstract Optional<DataColumnValue<?, ?>> computeValue(DataDatum referenceDatum);
 
     @Override
     public int compareTo(final Column o) {
