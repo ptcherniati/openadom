@@ -164,9 +164,9 @@ public record Submission(
         public String createExampleSubmissionFileName() {
             int scopeIndex = 0;
 
-            Pattern r = Pattern.compile("\\([^)]*+\\)"); // regex for capturing groups
+            Pattern capturingGroupPattern = Pattern.compile("\\([^)]*+\\)"); // regex for capturing groups
             LinkedList<String> scopes = new LinkedList<>(authorizationScopes);
-            Matcher m = r.matcher(pattern());
+            Matcher m = capturingGroupPattern.matcher(pattern());
 
             StringBuilder sb = new StringBuilder();
 
