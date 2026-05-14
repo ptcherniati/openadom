@@ -21,7 +21,7 @@ class BinaryFileDatasetTest {
     @Test
     @DisplayName("EMPTY_INSTANCE() crée une instance vide")
     void emptyInstance() {
-        BinaryFileDataset bfd = BinaryFileDataset.EMPTY_INSTANCE();
+        BinaryFileDataset bfd = BinaryFileDataset.emptyInstance();
         assertThat(bfd).isNotNull();
         assertThat(bfd.getDatatype()).isNull();
         assertThat(bfd.getFrom()).isNull();

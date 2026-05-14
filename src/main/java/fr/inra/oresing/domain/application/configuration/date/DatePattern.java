@@ -41,13 +41,13 @@ public record DatePattern<T extends TemporalAccessor>(
                 return (DatePattern<T>) new DatePattern<>(YYYY, DateTimeFormatter.ofPattern(YYYY), LocalDate.class, TypeOfDate.DATE);
             }
             default -> {
-                String NOW;
+                String now;
                 Class<T> type;
                 DateTimeFormatter dateTimeFormatter;
                 TypeOfDate typeOfDate;
                 try {
                     dateTimeFormatter = DateTimeFormatter.ofPattern(pattern);
-                    NOW = dateTimeFormatter.format(LocalDateTime.now());
+                    now = dateTimeFormatter.format(LocalDateTime.now());
                 } catch (final DateTimeParseException | IllegalArgumentException e) {
                     throw new SiOreConfigurationFormatException(
                             ConfigurationException.INVALID_PATTERN_FOR_CHECKER_DATE,
@@ -55,17 +55,17 @@ public record DatePattern<T extends TemporalAccessor>(
                     );
                 }
                 try {
-                    final LocalDateTime localDateTime = LocalDateTime.parse(NOW, dateTimeFormatter);
+                    final LocalDateTime localDateTime = LocalDateTime.parse(now, dateTimeFormatter);
                     type = (Class<T>) localDateTime.getClass();
                     typeOfDate = TypeOfDate.DATETIME;
                 } catch (final DateTimeParseException | IllegalArgumentException dte) {
                     try {
-                        final LocalDate localDate = LocalDate.parse(NOW, dateTimeFormatter);
+                        final LocalDate localDate = LocalDate.parse(now, dateTimeFormatter);
                         type = (Class<T>) localDate.getClass();
                         typeOfDate = TypeOfDate.DATE;
                     } catch (final DateTimeParseException | IllegalArgumentException de) {
                         try {
-                            final LocalTime localTime = LocalTime.parse(NOW, dateTimeFormatter);
+                            final LocalTime localTime = LocalTime.parse(now, dateTimeFormatter);
                             type = (Class<T>) localTime.getClass();
                             typeOfDate = TypeOfDate.TIME;
                         } catch (final DateTimeParseException | IllegalArgumentException te) {
@@ -83,26 +83,25 @@ public record DatePattern<T extends TemporalAccessor>(
 
     public T format(final String dateToFormat, boolean isEnd) {
         final DatePattern<LocalDate> temporalAccessorDatePattern = DatePattern.of(DD_MM_YYYY);
-        LocalDate date = null;
         if (MM_YYYY.equals(pattern())) {
-            date = temporalAccessorDatePattern.format("01/%s".formatted(dateToFormat));
-            if (isEnd) {
+            LocalDate date = temporalAccessorDatePattern.format("01/%s".formatted(dateToFormat));
+            if (isEnd && date != null) {
                 return (T) date.with(TemporalAdjusters.lastDayOfMonth());
             }
+            return (T) date;
         } else if (YYYY.equals(pattern())) {
-            date = temporalAccessorDatePattern.format("01/01/%s".formatted(dateToFormat));
-            if (isEnd) {
+            LocalDate date = temporalAccessorDatePattern.format("01/01/%s".formatted(dateToFormat));
+            if (isEnd && date != null) {
                 return (T) date.with(TemporalAdjusters.lastDayOfYear());
             }
+            return (T) date;
         } else {
             return format(dateToFormat);
         }
-        return (T) date;
     }
 
     public T format(final String dateToFormat) {
         final DatePattern<LocalDate> temporalAccessorDatePattern = DatePattern.of(DD_MM_YYYY);
-        LocalDate date = null;
         if (MM_YYYY.equals(pattern())) {
             return (T) temporalAccessorDatePattern.format("01/%s".formatted(dateToFormat));
         }

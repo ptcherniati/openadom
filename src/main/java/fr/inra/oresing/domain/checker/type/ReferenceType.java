@@ -146,7 +146,7 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
 
     private Set<String> getSpecialCharacters(String naturalKey) {
         Predicate<String> containsSpecialCharacter = naturalKey::contains;
-        return Ltree.KNOWN_SYMBOL_CODES
+        return Ltree.getKnownSymbolCodes()
                 .stream()
                 .filter(containsSpecialCharacter)
                 .collect(Collectors.toSet());

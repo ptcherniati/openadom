@@ -26,5 +26,4 @@ public class PolicyDescription {
             return null;
         }
     }
-    // List<String> roles;
 }

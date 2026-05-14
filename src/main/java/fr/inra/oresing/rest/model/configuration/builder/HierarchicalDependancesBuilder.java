@@ -84,9 +84,7 @@ public record HierarchicalDependancesBuilder(
                         }
                     });
         }
-        return Node.buildNode(
-                nodes.values(),
-                new Validation(buildErrorWithValidationParams, null, Map.of("domainTags", domainTags)));
+        return Node.buildNode(nodes.values());
     }
 
 

@@ -23,6 +23,7 @@ public record Submission(
 ) {
 
     public static final String DD_MM_YYYY_FOR_FILE = "dd-MM-yyyy";
+    private static final String FILE_NAME_FORMAT_KEY = "fileNameFormat";
 
     public BinaryFileDataset parseFileName(Map<String, ComponentDescription> componentDescriptions, String fileName, BinaryFileDataset binaryFileDataset) {
         final String timeScopePattern = getTimeScopePattern(componentDescriptions);
@@ -41,33 +42,11 @@ public record Submission(
                 String value = matcher.group(groupIndex);
                 if (groupIndex == fileNameParsing().startDate()) {
                     if (Strings.isNullOrEmpty(binaryFileDataset.getFrom())) {
-                        try {
-                            binaryFileDataset.setFrom(LocalDate.parse(value, DateTimeFormatter.ofPattern(timeScopePattern)).atStartOfDay().format(DataImporter.ISO_DATE_TIME_FORMATTER));
-                        } catch (DateTimeParseException dtpe) {
-                            throw new SiOreAuthorizationRequestException(
-                                    AuthorizationRequestException.BAD_FILE_NAME_START_DATE,
-                                    Map.of(
-                                            "startDate", value,
-                                            "dateformat", DD_MM_YYYY_FOR_FILE,
-                                            "fileNameFormat", fileNameParsing().createExampleSubmissionFileName()
-                                    )
-                            );
-                        }
+                        parseStartDate(binaryFileDataset, value, timeScopePattern);
                     }
                 } else if (groupIndex == fileNameParsing().endDate()) {
                     if (Strings.isNullOrEmpty(binaryFileDataset.getTo())) {
-                        try {
-                            binaryFileDataset.setTo(LocalDate.parse(value, DateTimeFormatter.ofPattern(timeScopePattern)).atStartOfDay().format(DataImporter.ISO_DATE_TIME_FORMATTER));
-                        } catch (DateTimeParseException dtpe) {
-                            throw new SiOreAuthorizationRequestException(
-                                    AuthorizationRequestException.BAD_FILE_NAME_END_DATE,
-                                    Map.of(
-                                            "endDate", value,
-                                            "dateformat", DD_MM_YYYY_FOR_FILE,
-                                            "fileNameFormat", fileNameParsing().createExampleSubmissionFileName()
-                                    )
-                            );
-                        }
+                        parseEndDate(binaryFileDataset, value, timeScopePattern);
                     }
                 } else {
                     String component = fileNameParsing().authorizationScopes.get(groupIndex - 1);
@@ -88,9 +67,39 @@ public record Submission(
         } catch (Exception e) {
             throw new SiOreAuthorizationRequestException(
                     AuthorizationRequestException.INVALID_FILE_NAME,
-                    Map.of("fileNameFormat", fileNameParsing().createExampleSubmissionFileName())
+                    Map.of(FILE_NAME_FORMAT_KEY, fileNameParsing().createExampleSubmissionFileName())
             );
 
+        }
+    }
+
+    private void parseStartDate(BinaryFileDataset binaryFileDataset, String value, String timeScopePattern) {
+        try {
+            binaryFileDataset.setFrom(LocalDate.parse(value, DateTimeFormatter.ofPattern(timeScopePattern)).atStartOfDay().format(DataImporter.ISO_DATE_TIME_FORMATTER));
+        } catch (DateTimeParseException dtpe) {
+            throw new SiOreAuthorizationRequestException(
+                    AuthorizationRequestException.BAD_FILE_NAME_START_DATE,
+                    Map.of(
+                            "startDate", value,
+                            "dateformat", DD_MM_YYYY_FOR_FILE,
+                            FILE_NAME_FORMAT_KEY, fileNameParsing().createExampleSubmissionFileName()
+                    )
+            );
+        }
+    }
+
+    private void parseEndDate(BinaryFileDataset binaryFileDataset, String value, String timeScopePattern) {
+        try {
+            binaryFileDataset.setTo(LocalDate.parse(value, DateTimeFormatter.ofPattern(timeScopePattern)).atStartOfDay().format(DataImporter.ISO_DATE_TIME_FORMATTER));
+        } catch (DateTimeParseException dtpe) {
+            throw new SiOreAuthorizationRequestException(
+                    AuthorizationRequestException.BAD_FILE_NAME_END_DATE,
+                    Map.of(
+                            "endDate", value,
+                            "dateformat", DD_MM_YYYY_FOR_FILE,
+                            FILE_NAME_FORMAT_KEY, fileNameParsing().createExampleSubmissionFileName()
+                    )
+            );
         }
     }
 
@@ -122,7 +131,7 @@ public record Submission(
             return patternToBeReplacedByGroupCapture;
         }
 
-        public LinkedList<String> orderedGroups() {
+        public List<String> orderedGroups() {
             Map<Integer, String> orderedGroups = new HashMap<>();
             int scopeIndex = 0;
             for (int i = 1; i < groupCount() + 1; i++) {
@@ -140,7 +149,6 @@ public record Submission(
         }
 
         public int groupCount() {
-            Matcher matcher = GROUP_CAPTURE_PATTERN.matcher(pattern());
             return patternGroups().size();
         }
 
@@ -156,7 +164,7 @@ public record Submission(
         public String createExampleSubmissionFileName() {
             int scopeIndex = 0;
 
-            Pattern r = Pattern.compile("\\(.*?\\)"); // regex for capturing groups
+            Pattern r = Pattern.compile("\\([^)]*+\\)"); // regex for capturing groups
             LinkedList<String> scopes = new LinkedList<>(authorizationScopes);
             Matcher m = r.matcher(pattern());
 
@@ -166,7 +174,7 @@ public record Submission(
             while (m.find()) {
                 groupCount++;
                 if (groupCount == startDate || groupCount == endDate) {
-                    m.appendReplacement(sb, "dd-MM-yyyy");
+                    m.appendReplacement(sb, DD_MM_YYYY_FOR_FILE);
                 } else {
                     if (scopeIndex < authorizationScopes.size()) {
                         m.appendReplacement(sb, "%sNK".formatted(scopes.pop()));

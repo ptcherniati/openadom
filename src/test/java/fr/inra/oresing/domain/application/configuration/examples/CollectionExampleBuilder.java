@@ -5,19 +5,23 @@ import fr.inra.oresing.domain.application.configuration.type.*;
 import java.util.*;
 
 class CollectionExampleBuilder {
-    protected static final CollectionType.MapType<BasicComponentType> ESPECE_BASIC_COMPONENTS = new CollectionType.MapType<BasicComponentType>(
+
+    private CollectionExampleBuilder() {
+    }
+
+    protected static final CollectionType.MapType<BasicComponentType> ESPECE_BASIC_COMPONENTS = new CollectionType.MapType<>(
             createEspeceBasicComponentsMap(),
             false,
             false,
             BasicComponentType.EMPTY_INSTANCE()
     );
-    protected static final CollectionType.MapType<BasicComponentType> SITES_BASIC_COMPONENTS = new CollectionType.MapType<BasicComponentType>(
+    protected static final CollectionType.MapType<BasicComponentType> SITES_BASIC_COMPONENTS = new CollectionType.MapType<>(
             createSitesBasicComponentsMap(),
             false,
             false,
             BasicComponentType.EMPTY_INSTANCE()
     );
-    protected static final CollectionType.MapType<ComputedComponentType> SITES_COMPUTED_COMPONENTS = new CollectionType.MapType<ComputedComponentType>(
+    protected static final CollectionType.MapType<ComputedComponentType> SITES_COMPUTED_COMPONENTS = new CollectionType.MapType<>(
             createSitesComputedComponentsMap(),
             false,
             false,
@@ -29,10 +33,10 @@ class CollectionExampleBuilder {
             false,
             BasicComponentType.EMPTY_INSTANCE()
     );
-    protected static final CollectionType.MapType<BasicComponentType> TAXON_BASIC_COMPONENTS = new CollectionType.MapType<BasicComponentType>(Map.of("tax_taxon", BasicComponentExampleBuilder.TAXON_NOM), false, false, BasicComponentType.EMPTY_INSTANCE());
-    protected static final CollectionType.MapType<DynamicComponentType> TAXON_DYNAMIC_COMPONENTS = new CollectionType.MapType<DynamicComponentType>(Map.of("tax_propriete_taxon", DynamicComponentsExampleBuilder.PROPRIETE_TAXON), false, false, DynamicComponentType.EMPTY_INSTANCE());
-    protected static final CollectionType.MapType<ComputedComponentType> ESPECE_COMPUTED_COMPONENTS = new CollectionType.MapType<ComputedComponentType>(Map.of("spe_date_heure", ComputedComponentExampleBuilder.DATE_HEURE), false, false, ComputedComponentType.EMPTY_INSTANCE());
-    protected static final CollectionType.MapType<BasicComponentType> PROJET_BASIC_COMPONENTS = new CollectionType.MapType<BasicComponentType>(
+    protected static final CollectionType.MapType<BasicComponentType> TAXON_BASIC_COMPONENTS = new CollectionType.MapType<>(Map.of("tax_taxon", BasicComponentExampleBuilder.TAXON_NOM), false, false, BasicComponentType.EMPTY_INSTANCE());
+    protected static final CollectionType.MapType<DynamicComponentType> TAXON_DYNAMIC_COMPONENTS = new CollectionType.MapType<>(Map.of("tax_propriete_taxon", DynamicComponentsExampleBuilder.PROPRIETE_TAXON), false, false, DynamicComponentType.EMPTY_INSTANCE());
+    protected static final CollectionType.MapType<ComputedComponentType> ESPECE_COMPUTED_COMPONENTS = new CollectionType.MapType<>(Map.of("spe_date_heure", ComputedComponentExampleBuilder.DATE_HEURE), false, false, ComputedComponentType.EMPTY_INSTANCE());
+    protected static final CollectionType.MapType<BasicComponentType> PROJET_BASIC_COMPONENTS = new CollectionType.MapType<>(
             createProjetBasicComponentsMap(),
             false,
             false,
@@ -221,7 +225,7 @@ class CollectionExampleBuilder {
         return new CollectionType.MapType<>(columns, false, false, I18nType.EMPTY_INSTANCE());
     }
 
-    protected static CollectionType.ArrayType<CollectionType.MapType<PatternComponentQualifierType>> COMPONENT_QUALIFIERS(final String prefix) {
+    protected static CollectionType.ArrayType<CollectionType.MapType<PatternComponentQualifierType>> componentQualifiers(final String prefix) {
         return new CollectionType.ArrayType<>(
                 createComponentQualifiersList(prefix),
                 false,
@@ -244,7 +248,7 @@ class CollectionExampleBuilder {
         return new CollectionType.MapType<>(map, false, false, PatternComponentQualifierType.EMPTY_INSTANCE());
     }
 
-    protected static CollectionType.ArrayType<CollectionType.MapType<PatternComponentAdjacentType>> COMPONENT_ADJACENTS(final String prefix) {
+    protected static CollectionType.ArrayType<CollectionType.MapType<PatternComponentAdjacentType>> componentAdjacents(final String prefix) {
         return new CollectionType.ArrayType<>(
                 createComponentAdjacentsList(prefix),
                 false,

@@ -2,7 +2,6 @@ package fr.inra.oresing.domain.application;
 
 import fr.inra.oresing.domain.application.configuration.BuilderNode;
 import fr.inra.oresing.domain.application.configuration.Node;
-import fr.inra.oresing.domain.application.configuration.Validation;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
@@ -178,7 +177,7 @@ class BuilderNodeTest {
 
     @Test
     void TestBuildOrderedNodes() {
-        final SortedSet<Node> orderedNodes = Node.buildNode(builderNodes.values(), new Validation(null, null, null));
+        final SortedSet<Node> orderedNodes = Node.buildNode(builderNodes.values());
 
         Assertions.assertEquals(
                 """

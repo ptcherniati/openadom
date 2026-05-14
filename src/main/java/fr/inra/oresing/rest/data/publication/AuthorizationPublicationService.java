@@ -56,7 +56,7 @@ public class AuthorizationPublicationService {
         Optional.ofNullable(fileOrUUIDLocal)
                 .map(par -> par.binaryfiledataset() != null ?
                         fileOrUUIDLocal.binaryfiledataset() :
-                        BinaryFileDataset.EMPTY_INSTANCE()
+                        BinaryFileDataset.emptyInstance()
                 )
                 .ifPresent(binaryFileDataset -> binaryFileDataset.setDatatype(dataName));
         return fileOrUUIDLocal;

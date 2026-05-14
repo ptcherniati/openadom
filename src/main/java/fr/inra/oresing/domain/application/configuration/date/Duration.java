@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Duration {
-    public static final Pattern PATTERN = Pattern.compile("([0-9]*) (NANOS|MICROS|MILLIS|SECONDS|MINUTES|HOURS|HALF_DAYS|DAYS|WEEKS|MONTHS|YEARS)", Pattern.CASE_INSENSITIVE);
+    public static final Pattern PATTERN = Pattern.compile("(\\d*) (NANOS|MICROS|MILLIS|SECONDS|MINUTES|HOURS|HALF_DAYS|DAYS|WEEKS|MONTHS|YEARS)", Pattern.CASE_INSENSITIVE);
     long amount = 1;
     TemporalUnit temporalUnit = ChronoUnit.DAYS;
 

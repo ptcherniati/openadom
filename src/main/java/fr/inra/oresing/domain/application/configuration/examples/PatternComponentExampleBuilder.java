@@ -40,8 +40,8 @@ class PatternComponentExampleBuilder {
         children.put(ConfigurationSchemaNode.OA_EXPORT_HEADER, exportHeader);
         children.put(ConfigurationSchemaNode.OA_REQUIRED, BooleanExampleBuilder.FALSE);
         children.put(ConfigurationSchemaNode.OA_CHECKER, FloatCheckerExampleBuilder.OF);
-        children.put(ConfigurationSchemaNode.OA_COMPONENT_QUALIFIERS, CollectionExampleBuilder.COMPONENT_QUALIFIERS(prefix));
-        children.put(ConfigurationSchemaNode.OA_COMPONENT_ADJACENTS, CollectionExampleBuilder.COMPONENT_ADJACENTS(prefix));
+        children.put(ConfigurationSchemaNode.OA_COMPONENT_QUALIFIERS, CollectionExampleBuilder.componentQualifiers(prefix));
+        children.put(ConfigurationSchemaNode.OA_COMPONENT_ADJACENTS, CollectionExampleBuilder.componentAdjacents(prefix));
 
         return new PatternComponentType(children);
     }

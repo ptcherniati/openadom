@@ -42,7 +42,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
@@ -172,15 +171,15 @@ public class OreSiNg implements WebMvcConfigurer {
 
         private Object buildGitInfo() {
                 org.springframework.boot.actuate.info.Info.Builder infoBuilder = new org.springframework.boot.actuate.info.Info.Builder();
-            infoBuilder.withDetail("branch", Optional.ofNullable(gitProperties.get("git.branch")).orElse(""));
-            infoBuilder.withDetail("commit.id", Optional.ofNullable(gitProperties.get("git.commit.id")).orElse(""));
-            infoBuilder.withDetail("commit.abbrev", Optional.ofNullable(gitProperties.get("git.commit.id.abbrev")).orElse(""));
-            infoBuilder.withDetail("time", Optional.ofNullable(gitProperties.get("git.commit.time")).orElse(""));
-            infoBuilder.withDetail("remote.origin.url", Optional.ofNullable(gitProperties.get("git.remote.origin.url")).orElse(""));
-            infoBuilder.withDetail("commit.user.name", Optional.ofNullable(gitProperties.get("git.commit.user.name")).orElse(""));
-            infoBuilder.withDetail("commit.user.email", Optional.ofNullable(gitProperties.get("git.commit.user.email")).orElse(""));
-            infoBuilder.withDetail("commit.message.short", Optional.ofNullable(gitProperties.get("git.commit.message.short")).orElse(""));
-            infoBuilder.withDetail("commit.message.full", Optional.ofNullable(gitProperties.get("git.commit.message.full")).orElse(""));
+            infoBuilder.withDetail("branch", gitProperties.getOrDefault("git.branch", ""));
+            infoBuilder.withDetail("commit.id", gitProperties.getOrDefault("git.commit.id", ""));
+            infoBuilder.withDetail("commit.abbrev", gitProperties.getOrDefault("git.commit.id.abbrev", ""));
+            infoBuilder.withDetail("time", gitProperties.getOrDefault("git.commit.time", ""));
+            infoBuilder.withDetail("remote.origin.url", gitProperties.getOrDefault("git.remote.origin.url", ""));
+            infoBuilder.withDetail("commit.user.name", gitProperties.getOrDefault("git.commit.user.name", ""));
+            infoBuilder.withDetail("commit.user.email", gitProperties.getOrDefault("git.commit.user.email", ""));
+            infoBuilder.withDetail("commit.message.short", gitProperties.getOrDefault("git.commit.message.short", ""));
+            infoBuilder.withDetail("commit.message.full", gitProperties.getOrDefault("git.commit.message.full", ""));
             return infoBuilder.build();
         }
     }

@@ -81,10 +81,9 @@ public final class SqlIdentifierUtils {
          *         ou dépasse 63 caractères
          */
         public static IdentifierTest forStringIdentifier(final String identifier) {
-            Optional.ofNullable(identifier)
+            return Optional.ofNullable(identifier)
                     .map(IdentifierTest::new)
                     .orElseThrow(() -> new FieldNameTooLongForSqlFieldException(identifier));
-            return new IdentifierTest(identifier);
         }
 
         /** Lève {@link FieldNameTooLongForSqlFieldException} si la longueur dépasse 63. */
