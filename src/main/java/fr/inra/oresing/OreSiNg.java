@@ -172,16 +172,21 @@ public class OreSiNg implements WebMvcConfigurer {
 
         private Object buildGitInfo() {
                 org.springframework.boot.actuate.info.Info.Builder infoBuilder = new org.springframework.boot.actuate.info.Info.Builder();
-            infoBuilder.withDetail("branch", Objects.requireNonNullElse(gitProperties.get("git.branch"), ""));
-            infoBuilder.withDetail("commit.id", Objects.requireNonNullElse(gitProperties.get("git.commit.id"), ""));
-            infoBuilder.withDetail("commit.abbrev", Objects.requireNonNullElse(gitProperties.get("git.commit.id.abbrev"), ""));
-            infoBuilder.withDetail("time", Objects.requireNonNullElse(gitProperties.get("git.commit.time"), ""));
-            infoBuilder.withDetail("remote.origin.url", Objects.requireNonNullElse(gitProperties.get("git.remote.origin.url"), ""));
-            infoBuilder.withDetail("commit.user.name", Objects.requireNonNullElse(gitProperties.get("git.commit.user.name"), ""));
-            infoBuilder.withDetail("commit.user.email", Objects.requireNonNullElse(gitProperties.get("git.commit.user.email"), ""));
-            infoBuilder.withDetail("commit.message.short", Objects.requireNonNullElse(gitProperties.get("git.commit.message.short"), ""));
-            infoBuilder.withDetail("commit.message.full", Objects.requireNonNullElse(gitProperties.get("git.commit.message.full"), ""));
+            infoBuilder.withDetail("branch", getPropertyOrEmpty("git.branch"));
+            infoBuilder.withDetail("commit.id", getPropertyOrEmpty("git.commit.id"));
+            infoBuilder.withDetail("commit.abbrev", getPropertyOrEmpty("git.commit.id.abbrev"));
+            infoBuilder.withDetail("time", getPropertyOrEmpty("git.commit.time"));
+            infoBuilder.withDetail("remote.origin.url", getPropertyOrEmpty("git.remote.origin.url"));
+            infoBuilder.withDetail("commit.user.name", getPropertyOrEmpty("git.commit.user.name"));
+            infoBuilder.withDetail("commit.user.email", getPropertyOrEmpty("git.commit.user.email"));
+            infoBuilder.withDetail("commit.message.short", getPropertyOrEmpty("git.commit.message.short"));
+            infoBuilder.withDetail("commit.message.full", getPropertyOrEmpty("git.commit.message.full"));
             return infoBuilder.build();
+        }
+
+        private String getPropertyOrEmpty(String key) {
+            String val = gitProperties.get(key);
+            return val != null ? val : "";
         }
     }
 

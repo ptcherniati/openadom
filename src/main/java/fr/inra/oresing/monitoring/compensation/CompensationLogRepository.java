@@ -126,15 +126,15 @@ public class CompensationLogRepository {
      * transaction caller ( = thread sweeper ) .
      */
     public List<CompensationLogEntry> lockStalePendingBatch(int batchSize) {
-        return jdbc.query(FN_LOCK_STALE_PENDING, ROW_MAPPER, batchSize);
+        return jdbc.query(FN_LOCK_STALE_PENDING, rowMapper, batchSize);
     }
 
     public List<CompensationLogEntry> findByStatus(String status, int limit) {
-        return jdbc.query(SELECT_BY_STATUS_SQL, ROW_MAPPER, status, limit);
+        return jdbc.query(SELECT_BY_STATUS_SQL, rowMapper, status, limit);
     }
 
     public CompensationLogEntry findById(UUID id) {
-        List<CompensationLogEntry> list = jdbc.query(SELECT_BY_ID_SQL, ROW_MAPPER, id);
+        List<CompensationLogEntry> list = jdbc.query(SELECT_BY_ID_SQL, rowMapper, id);
         return list.isEmpty() ? null : list.get(0);
     }
 
@@ -145,7 +145,7 @@ public class CompensationLogRepository {
         return n == null ? 0 : n;
     }
 
-    private final RowMapper<CompensationLogEntry> ROW_MAPPER = (ResultSet rs, int rowNum) -> {
+    private final RowMapper<CompensationLogEntry> rowMapper = (ResultSet rs, int rowNum) -> {
         Timestamp lastAttempt = rs.getTimestamp("last_attempt_at");
         return new CompensationLogEntry(
                 (UUID) rs.getObject("id"),

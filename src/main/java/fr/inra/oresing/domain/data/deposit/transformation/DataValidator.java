@@ -228,7 +228,7 @@ public class DataValidator {
         // par checkLineForChecker qui appelle manyChecker.value().getValue().clear()
         // au debut , et par OneChecker.check(value) qui re-clone le
         // FieldType ( interne ).
-        for (final LineChecker lineChecker : transformedLineCheckers) {
+        for (final LineChecker<?> lineChecker : transformedLineCheckers) {
             final List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = checkLineForChecker(recursionStrategy, rowWithReferenceDatum, publishContextBuilder, lineChecker, referenceDatumBeforeChecking, refsLinkedTo, referenceDatum, allCheckerErrorsBuilder);
             if (referenceDatumAfterCheckings != null) return referenceDatumAfterCheckings;
         }

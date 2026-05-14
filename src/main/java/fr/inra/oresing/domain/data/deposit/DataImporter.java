@@ -396,11 +396,11 @@ public class DataImporter {
 
         try (InputStream is = Files.newInputStream(tempFile)) {
             CSVParser parser = CSVParser.parse(is, StandardCharsets.UTF_8, fmt);
-            for (CSVRecord record : parser) {
+            for (CSVRecord csvRecord : parser) {
                 for (Map.Entry<Integer, ReferenceType> entry : refTypeByColIndex.entrySet()) {
                     int colIdx = entry.getKey();
-                    if (colIdx < record.size()) {
-                        String val = record.get(colIdx);
+                    if (colIdx < csvRecord.size()) {
+                        String val = csvRecord.get(colIdx);
                         // Ignorer les valeurs vides : Ltree.escapeToLabel("") lève nullLabel
                         if (val != null && !val.isBlank()) {
                             freq.get(colIdx).merge(val, 1, Integer::sum);

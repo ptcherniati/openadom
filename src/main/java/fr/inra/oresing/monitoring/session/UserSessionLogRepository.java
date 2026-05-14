@@ -55,7 +55,7 @@ public class UserSessionLogRepository {
     public int insertBatch(Collection<UserSessionLogEntry> entries) {
         if (entries == null || entries.isEmpty()) return 0;
         int[][] results = jdbcTemplate.batchUpdate(INSERT_SQL, entries, entries.size(),
-                (PreparedStatement ps, UserSessionLogEntry e) -> bind(ps, e));
+                UserSessionLogRepository::bind);
         int inserted = 0;
         for (int[] batch : results) {
             for (int r : batch) {
@@ -106,7 +106,7 @@ public class UserSessionLogRepository {
         }
         sql.append(" ORDER BY login_time DESC ");
         sql.append(" LIMIT :limit OFFSET :offset ");
-        p.addValue("limit",  Math.min(Math.max(limit, 1), 500));
+        p.addValue("limit",  Math.clamp(limit, 1, 500));
         p.addValue("offset", Math.max(offset, 0));
 
         return named.query(sql.toString(), p, (rs, n) -> new UserSessionLogEntry(

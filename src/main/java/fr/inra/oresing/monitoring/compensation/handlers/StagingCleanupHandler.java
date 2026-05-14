@@ -99,8 +99,7 @@ public class StagingCleanupHandler implements CompensationHandler {
             case "PER_WORKFLOW_TABLE":
                 cleanupPerWorkflowTable(schema, table, entry);
                 break;
-            case "":
-            case "null":
+            case "", "null":
                 // Fallback : si payload absent / corrompu , on tente DELETE
                 // par corrId ( comportement SHARED_UNLOGGED ) qui est le moins
                 // destructif . Loggue warn pour signaler la donnee manquante .

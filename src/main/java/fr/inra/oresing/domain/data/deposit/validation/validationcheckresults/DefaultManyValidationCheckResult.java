@@ -63,7 +63,7 @@ public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheck
                             .map(StringType::getStringTypeFromStringValue)
                             .toList()
             );
-            default -> new DataColumnMultipleValue<>((List) value().getValue());
+            default -> new DataColumnMultipleValue<>(value().getValue());
         };
     }
 

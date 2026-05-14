@@ -307,7 +307,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                 totalUpserted += affected;
                                 batchCount++;
                                 try {
-                                    onBatchUpserted.accept((long) affected);
+                                    onBatchUpserted.accept(affected);
                                 } catch (RuntimeException ignored) {
                                     /* best effort : un consommateur fautif ne doit pas
                                        casser le UPSERT en cours */
@@ -346,7 +346,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         }
                     }
                 });
-        return upserted == null ? 0L : upserted;
+        return upserted;
     }
 
 
@@ -826,7 +826,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     }
 
     public Flux<FilterList> getFilterList(final String dataName) {
-        final Stream result;
+        final Stream<FilterList> result;
         // #59 - Optimisation : precalcul du flag isHierarchique dans une CTE separee.
         // Avant : jsonb_path_exists(application.configuration, ...) etait appele pour chaque ligne
         // de la jointure components_grouped x parents_grouped (ex: 4850 appels pour t_soil_analysis_sana).

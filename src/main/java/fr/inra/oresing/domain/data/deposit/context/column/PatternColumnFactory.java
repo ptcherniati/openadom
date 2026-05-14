@@ -37,9 +37,9 @@ public class PatternColumnFactory {
     @Getter
     private final Map<String, PatternColumn> patternColumns = new HashMap<>();
     @Getter
-    private List<Column> expectedPatternColumns = ImmutableList.of();
+    private List<Column> expectedPatternColumns = List.of();
     @Getter
-    private List<String> extraColumns = ImmutableList.of();
+    private List<String> extraColumns = List.of();
     public PatternColumnFactory(final DataRepository dataRepository, final List<PatternDescription> patternComponentDescriptions) {
         super();
         this.patternComponentDescriptions = patternComponentDescriptions;

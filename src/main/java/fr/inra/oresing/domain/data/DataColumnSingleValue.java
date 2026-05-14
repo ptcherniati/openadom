@@ -6,7 +6,7 @@ import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
 import lombok.Value;
 
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * Permet de stocker la valeur pour une colonne d'un référentiel lorsque cette colonne a une seule valeur associée ({@link Multiplicity#ONE}).
@@ -41,7 +41,7 @@ public class DataColumnSingleValue implements DataColumnValue<FieldType<?>, Fiel
     }
 
     @Override
-    public DataColumnSingleValue transform(final Function<FieldType<?>, FieldType<?>> transformation) {
+    public DataColumnSingleValue transform(final UnaryOperator<FieldType<?>> transformation) {
         final FieldType<?> transformedValue = transformation.apply(value);
         return new DataColumnSingleValue(transformedValue);
     }

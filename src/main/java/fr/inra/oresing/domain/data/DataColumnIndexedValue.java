@@ -6,7 +6,7 @@ import fr.inra.oresing.domain.checker.type.MapType;
 import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
 
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 public record DataColumnIndexedValue(
@@ -18,7 +18,7 @@ public record DataColumnIndexedValue(
     }
 
     @Override
-    public DataColumnIndexedValue transform(final Function<FieldType<?>, FieldType<?>> transformation) {
+    public DataColumnIndexedValue transform(final UnaryOperator<FieldType<?>> transformation) {
         final Map<Ltree, String> transformedValues = null;//Maps.transformValues(values, transformation::apply);
         return new DataColumnIndexedValue(null);
     }

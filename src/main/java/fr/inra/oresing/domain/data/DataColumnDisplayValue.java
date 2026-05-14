@@ -8,7 +8,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * Permet de stocker la valeur pour une colonne d'un référentiel lorsque cette colonne a une seule valeur associée ({@link Multiplicity#ONE}).
@@ -32,7 +32,7 @@ public record DataColumnDisplayValue(
     }
 
     @Override
-    public DataColumnValue<String, ReferenceColumnDisplayValueForLocale> transform(final Function<FieldType<?>, FieldType<?>> transformation) {
+    public DataColumnValue<String, ReferenceColumnDisplayValueForLocale> transform(final UnaryOperator<FieldType<?>> transformation) {
         return null;
     }
 

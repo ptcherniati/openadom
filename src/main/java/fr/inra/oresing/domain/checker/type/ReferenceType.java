@@ -127,7 +127,7 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
      * dans {@link #check}. Rebuild complet à chaque appel de setReferenceValues.
      */
     private void buildNaturalKeyIndex(ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues) {
-        Map<Ltree, DataValue.LineIdentityColumnName> index = new HashMap<>(referenceValues.size() * 2);
+        Map<Ltree, DataValue.LineIdentityColumnName> index = HashMap.newHashMap(referenceValues.size());
         for (DataValue.LineIdentityColumnName key : referenceValues.keySet()) {
             index.put(key.naturalKey(), key);
         }

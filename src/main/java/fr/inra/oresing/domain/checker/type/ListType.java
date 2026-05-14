@@ -33,13 +33,14 @@ public non-sealed class ListType<F extends FieldType<?>> implements FieldType<Li
     private final F fieldType;
     List<F> value = new LinkedList<>();
 
+    @SuppressWarnings("unchecked")
     public ListType(F fieldType) {
         this.fieldType = fieldType;
-        clone = () -> new ListType(fieldType.copy());
+        clone = () -> new ListType<>((F) fieldType.copy());
     }
 
-    public static ListType getListTypeFromListValue(final List<StringType> value) {
-        final ListType listType = new ListType(StringType.getStringTypeFromStringValue(""));
+    public static ListType<StringType> getListTypeFromListValue(final List<StringType> value) {
+        final ListType<StringType> listType = new ListType<>(StringType.getStringTypeFromStringValue(""));
         listType.value = value;
         return listType;
     }
@@ -68,7 +69,7 @@ public non-sealed class ListType<F extends FieldType<?>> implements FieldType<Li
                     this.value.add((F) underlyingType.copy());
                     return (ValidationCheckResult) v;
                 })
-                .collect(Collectors.toList());
+                .toList();
         return (CheckerValidationCheckResult<ListType<F>>) (CheckerValidationCheckResult<?>) new DefaultManyValidationCheckResult(collect, lineChecker.target());
     }
 

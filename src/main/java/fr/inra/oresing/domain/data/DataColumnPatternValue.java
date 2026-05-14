@@ -8,7 +8,7 @@ import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 public record DataColumnPatternValue(
@@ -38,7 +38,7 @@ public record DataColumnPatternValue(
     }
 
     @Override
-    public DataColumnPatternValue transform(final Function<FieldType<?>, FieldType<?>> transformation) {
+    public DataColumnPatternValue transform(final UnaryOperator<FieldType<?>> transformation) {
         transformation.apply(values().get(new DataColumn(Column.__VALUE__)).getValuesToCheck());
         final Map<Ltree, String> transformedValues = null;//Maps.transformValues(values, transformation::apply);
         return new DataColumnPatternValue((FieldType<?>) null);

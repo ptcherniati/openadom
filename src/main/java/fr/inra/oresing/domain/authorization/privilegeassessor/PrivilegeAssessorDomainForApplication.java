@@ -96,7 +96,7 @@ public record PrivilegeAssessorDomainForApplication<P extends PrivilegeApplicati
     }
 
     public Map<AuthorizationsForUserResult.Roles, Boolean> getAuthorizationsForUser(String dataName) {
-        Map<AuthorizationsForUserResult.Roles, Boolean> roleForDatatype = new HashMap<>();
+        Map<AuthorizationsForUserResult.Roles, Boolean> roleForDatatype = new EnumMap<>(AuthorizationsForUserResult.Roles.class);
 
         Set<OperationType> rolesSetted = Optional.ofNullable(authorizations().userAuthorizations())
                 .map(map -> map.get(dataName))

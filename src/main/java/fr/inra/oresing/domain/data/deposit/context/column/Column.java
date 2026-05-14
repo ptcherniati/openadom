@@ -229,7 +229,7 @@ public abstract class Column implements Comparable<Column> {
                                         .toList()
                                 )
                                 .map(ListType::getListTypeFromListValue)
-                                .map(DataColumnMultipleValue::new);
+                                .map(lt -> new DataColumnMultipleValue<>(lt.getValue()));
                     }
                     return dataColumnValue;
                 }

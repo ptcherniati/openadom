@@ -12,7 +12,7 @@ import lombok.Value;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 /**
@@ -56,7 +56,7 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType<Fiel
     }
 
     @Override
-    public DataColumnValue<ListType<FieldType<?>>, FieldType<?>> transform(Function<FieldType<?>, FieldType<?>> transformation) {
+    public DataColumnValue<ListType<FieldType<?>>, FieldType<?>> transform(UnaryOperator<FieldType<?>> transformation) {
         final ListType<FieldType<?>> fieldType = Optional.ofNullable((FieldType<?>) values)
                 .map(transformation)
                 .filter(ListType.class::isInstance)
