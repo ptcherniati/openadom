@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests unitaires pour les records de changement de migration (0% de couverture dans SonarQube).
  */
 @Tag("core.config")
+@Tag("domain.model")
 @DisplayName("Migration change records – instanciation et accesseurs")
 class MigrationChangeRecordsTest {
 

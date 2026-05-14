@@ -98,6 +98,9 @@ fi
 JACOCO_XML="target/site/jacoco/jacoco.xml"
 JACOCO_EXEC="target/jacoco.exec"
 
+# Répertoire où IntelliJ 2026.x stocke ses fichiers de couverture JaCoCo (.exec)
+INTELLIJ_COVERAGE_DIR="${HOME}/.cache/JetBrains/IntelliJIdea2026.1/coverage"
+
 # ── Mode update-profile : delta coverage ────────────────────────────────────
 # Lance UNIQUEMENT le profil Maven demandé. JaCoCo opère en mode append=true
 # (défaut), ce qui fusionne la nouvelle couverture dans target/jacoco.exec
@@ -173,12 +176,36 @@ fi
 # ── Phase 1 : Tests + génération du rapport Jacoco ──────────────────────────
 if [ "${SKIP_TESTS}" = true ]; then
   if [ ! -f "${JACOCO_XML}" ]; then
-    echo "⚠️  --skip-tests actif mais ${JACOCO_XML} introuvable."
-    echo "    Exécutez d'abord : mvn test -DexcludedGroups=docker-required"
-    echo "    Ou relancez sans --skip-tests."
-    exit 1
+    # Tentative de récupération automatique depuis le cache IntelliJ (.exec JaCoCo)
+    INTELLIJ_EXEC=""
+    if [ -d "${INTELLIJ_COVERAGE_DIR}" ]; then
+      # Prend le .exec le plus récent (couverture complète en priorité, sinon le + récent)
+      INTELLIJ_EXEC=$(ls -t "${INTELLIJ_COVERAGE_DIR}"/backend\$All_in_si_ore_ng.exec \
+                         "${INTELLIJ_COVERAGE_DIR}"/*.exec 2>/dev/null | head -1)
+    fi
+
+    if [ -n "${INTELLIJ_EXEC}" ] && [ -f "${INTELLIJ_EXEC}" ]; then
+      echo "ℹ️  ${JACOCO_XML} absent — récupération depuis IntelliJ :"
+      echo "    📂 $(basename "${INTELLIJ_EXEC}") ($(du -sh "${INTELLIJ_EXEC}" | cut -f1))"
+      cp "${INTELLIJ_EXEC}" "${JACOCO_EXEC}"
+      mvn --batch-mode jacoco:report -DskipTests -q
+      if [ ! -f "${JACOCO_XML}" ]; then
+        echo "❌  Échec de la génération du rapport JaCoCo depuis ${INTELLIJ_EXEC}."
+        exit 1
+      fi
+      echo "✅  ${JACOCO_XML} régénéré depuis le cache IntelliJ ($(du -sh "${JACOCO_XML}" | cut -f1))"
+    else
+      echo "⚠️  --skip-tests actif mais ${JACOCO_XML} introuvable."
+      echo "    Solutions :"
+      echo "    1) Relancer sans --skip-tests : ./sonar-local.sh branch"
+      echo "    2) Lancer les tests Maven     : mvn test -DexcludedGroups=docker-required"
+      echo "    3) Lancer les tests dans IntelliJ avec couverture (Run > Run … with Coverage)"
+      echo "       puis réessayer — le .exec sera détecté automatiquement."
+      exit 1
+    fi
+  else
+    echo "ℹ️  Tests ignorés, réutilisation de ${JACOCO_XML}"
   fi
-  echo "ℹ️  Tests ignorés, réutilisation de ${JACOCO_XML}"
 else
   EXCLUDED_GROUPS="docker-required"
   if [ "${WITH_DOCKER}" = true ]; then

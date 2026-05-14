@@ -1,6 +1,7 @@
 package fr.inra.oresing.workflow.cascade.config;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -8,6 +9,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("domain.model")
 @DisplayName("SinkConcurrencyEstimator ( cascade 2.1.0 )")
 class SinkConcurrencyEstimatorTest {
 
@@ -86,6 +88,66 @@ class SinkConcurrencyEstimatorTest {
         m.put("pool.sink", 1);
         var e = SinkConcurrencyEstimator.estimate(m);
         assertEquals(SinkConcurrencyEstimator.Mode.SINGLE_FORCED, e.mode());
+        assertEquals(1, e.effectiveSinks());
+    }
+
+    @Test
+    @DisplayName("DIRECT_COPY + PER_WORKFLOW_TABLE + STAGED = pool.sink workers")
+    void perWorkflowStaged() {
+        Map<String, Object> m = base();
+        m.put("sinkStrategy", "DIRECT_COPY");
+        m.put("stagingStrategy", "PER_WORKFLOW_TABLE");
+        m.put("pipelineMode", "STAGED");
+        m.put("pool.sink", 3);
+        var e = SinkConcurrencyEstimator.estimate(m);
+        assertEquals(SinkConcurrencyEstimator.Mode.PARALLEL_POOL, e.mode());
+        assertEquals(3, e.effectiveSinks());
+        assertTrue(e.explanation().contains("STAGED"));
+    }
+
+    @Test
+    @DisplayName("Fallback sur config indéfinie (sinkStrategy null) = SINGLE_INHERENT")
+    void fallbackUndefinedConfig() {
+        Map<String, Object> m = new HashMap<>();
+        // Pas de sinkStrategy défini → null → fallback
+        var e = SinkConcurrencyEstimator.estimate(m);
+        assertEquals(SinkConcurrencyEstimator.Mode.SINGLE_INHERENT, e.mode());
+        assertEquals(1, e.effectiveSinks());
+        assertNotNull(e.explanation());
+    }
+
+    @Test
+    @DisplayName("Fallback sur sinkStrategy inconnue = SINGLE_INHERENT")
+    void fallbackUnknownStrategy() {
+        Map<String, Object> m = base();
+        m.put("sinkStrategy", "UNKNOWN_STRATEGY");
+        var e = SinkConcurrencyEstimator.estimate(m);
+        assertEquals(SinkConcurrencyEstimator.Mode.SINGLE_INHERENT, e.mode());
+        assertEquals(1, e.effectiveSinks());
+    }
+
+    @Test
+    @DisplayName("intOf() avec pool.sink String numérique est parsé correctement")
+    void intOfStringValue() {
+        Map<String, Object> m = base();
+        m.put("sinkStrategy", "DIRECT_COPY");
+        m.put("stagingStrategy", "SHARED_UNLOGGED");
+        m.put("pipelineMode", "PIPELINED");
+        m.put("pool.sink", "5");   // String, pas Integer
+        var e = SinkConcurrencyEstimator.estimate(m);
+        assertEquals(5, e.effectiveSinks());
+    }
+
+    @Test
+    @DisplayName("intOf() avec pool.sink non-numérique revient au défaut (1)")
+    void intOfNonNumericFallsBackToDefault() {
+        Map<String, Object> m = base();
+        m.put("sinkStrategy", "DIRECT_COPY");
+        m.put("stagingStrategy", "SHARED_UNLOGGED");
+        m.put("pipelineMode", "PIPELINED");
+        m.put("pool.sink", "not-a-number");
+        var e = SinkConcurrencyEstimator.estimate(m);
+        // intOf fallback = 1 → Math.max(1,1) = 1 → SINGLE_FORCED
         assertEquals(1, e.effectiveSinks());
     }
 }

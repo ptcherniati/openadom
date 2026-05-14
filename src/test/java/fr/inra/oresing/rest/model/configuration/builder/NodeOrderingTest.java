@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * déposer les référentiels dans un ordre précis.</p>
  */
 @Tag("core.config")
+@Tag("domain.model")
 class NodeOrderingTest {
 
     // -----------------------------------------------------------------------

@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * </ol>
  */
 @Tag("core.config")
+@Tag("domain.model")
 class NodeComparatorTest {
 
     // -----------------------------------------------------------------------

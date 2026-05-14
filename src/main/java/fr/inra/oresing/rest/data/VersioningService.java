@@ -2,6 +2,7 @@ package fr.inra.oresing.rest.data;
 
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
+import fr.inra.oresing.domain.BinaryFileInfos;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.DataWriter;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
@@ -10,7 +11,6 @@ import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
 import fr.inra.oresing.mail.EmailService;
-import fr.inra.oresing.domain.BinaryFileInfos;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.UserRepository;

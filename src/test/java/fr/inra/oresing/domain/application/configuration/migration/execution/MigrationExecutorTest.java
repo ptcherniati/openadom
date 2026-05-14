@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Tag;
  */
 @DisplayName("MigrationExecutor — orchestration des phases de migration")
 @Tag("core.config")
+@Tag("domain.model")
 class MigrationExecutorTest {
 
     private MigrationExecutor executor;

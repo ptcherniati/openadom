@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Set;
 
 @Tag("core.config")
+@Tag("domain.model")
 class GroovyExpressionCheckerTest {
 
     @Test

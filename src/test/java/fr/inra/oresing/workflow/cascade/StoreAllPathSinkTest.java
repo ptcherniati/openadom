@@ -5,6 +5,7 @@ import fr.inrae.ore.cascade.model.chunk.Chunk;
 import fr.inrae.ore.cascade.model.chunk.ChunkMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
@@ -35,6 +36,7 @@ import static org.mockito.Mockito.when;
  *       incremente ( le sink ne ment pas ) .</li>
  * </ul>
  */
+@Tag("domain.model")
 @DisplayName("StoreAllPathSink ( rowcount instrumentation )")
 class StoreAllPathSinkTest {
 
@@ -127,6 +129,81 @@ class StoreAllPathSinkTest {
         assertThat((Object) sink).isInstanceOf(RowCountingSink.class);
         RowCountingSink counting = sink;
         assertThat(counting.getRowsWritten()).isZero();
+    }
+
+    // ─── deferToCaller mode ───────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("deferToCaller mode : write capture le path sans appeler storeAll")
+    void deferredMode_write_capturesPath_noStoreAll() {
+        StoreAllPathSink deferred = new StoreAllPathSink(repo, null, true);
+        Path merged = Path.of("/tmp/deferred.csv");
+
+        deferred.write(chunkOf(0, merged));
+
+        verifyNoInteractions(repo);
+        assertThat(deferred.getRowsWritten()).isZero();
+    }
+
+    @Test
+    @DisplayName("takeDeferredMergedPath retourne le path capté puis le reset (consume-once)")
+    void deferredMode_takeDeferredPath_consumesOnce() {
+        StoreAllPathSink deferred = new StoreAllPathSink(repo, null, true);
+        Path merged = Path.of("/tmp/deferred2.csv");
+        deferred.write(chunkOf(0, merged));
+
+        java.util.Optional<Path> first  = deferred.takeDeferredMergedPath();
+        java.util.Optional<Path> second = deferred.takeDeferredMergedPath();
+
+        assertThat(first).contains(merged);
+        assertThat(second).isEmpty();
+    }
+
+    @Test
+    @DisplayName("takeDeferredMergedPath retourne empty si aucun write en deferToCaller mode")
+    void deferredMode_takeEmpty() {
+        StoreAllPathSink deferred = new StoreAllPathSink(repo, null, true);
+        assertThat(deferred.takeDeferredMergedPath()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("recordDeferredRowsWritten met à jour getRowsWritten")
+    void recordDeferredRowsWritten_setsCount() {
+        StoreAllPathSink deferred = new StoreAllPathSink(repo, null, true);
+        deferred.recordDeferredRowsWritten(9_876L);
+        assertThat(deferred.getRowsWritten()).isEqualTo(9_876L);
+    }
+
+    @Test
+    @DisplayName("setup avec correlationId null n'échoue pas (parseUuid null-safe)")
+    void setup_nullCorrelationId_doesNotThrow() {
+        sink.setup(null);
+        assertThat(sink.getRowsWritten()).isZero();
+    }
+
+    @Test
+    @DisplayName("setup avec correlationId invalide n'échoue pas (parseUuid IAE caught)")
+    void setup_invalidUuid_doesNotThrow() {
+        sink.setup("not-a-uuid");
+        assertThat(sink.getRowsWritten()).isZero();
+    }
+
+    @Test
+    @DisplayName("write avec registry non-null publie le rowcount via addFinalRows")
+    void write_withRegistry_publishesRowCount() {
+        fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry registry =
+                new fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry();
+        java.util.UUID cid = java.util.UUID.randomUUID();
+
+        StoreAllPathSink sinkWithRegistry = new StoreAllPathSink(repo, registry, false);
+        sinkWithRegistry.setup(cid.toString());
+
+        Path merged = Path.of("/tmp/registry-write.csv");
+        when(repo.storeAll(eq(merged), any(), any())).thenReturn(42L);
+
+        sinkWithRegistry.write(chunkOf(0, merged));
+
+        assertThat(sinkWithRegistry.getRowsWritten()).isEqualTo(42L);
     }
 
     // ---- helpers --------------------------------------------------------

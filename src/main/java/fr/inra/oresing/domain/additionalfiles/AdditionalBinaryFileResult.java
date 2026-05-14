@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.additionalfiles;
 
-import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
 import fr.inra.oresing.domain.authorization.AuthorizationParsed;
 import lombok.Value;
 

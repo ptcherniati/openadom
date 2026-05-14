@@ -3,7 +3,6 @@ package fr.inra.oresing.domain.data.deposit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
-import fr.inra.oresing.workflow.cascade.config.ImportProperties;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
@@ -22,6 +21,7 @@ import fr.inra.oresing.domain.data.deposit.validation.transformer.data.RowWithRe
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.ReferenceValidationCheckResult;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.file.FileBomResolver;
+import fr.inra.oresing.workflow.cascade.config.ImportProperties;
 import fr.inra.oresing.workflow.cascade.progress.ImportProgressReporter;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;

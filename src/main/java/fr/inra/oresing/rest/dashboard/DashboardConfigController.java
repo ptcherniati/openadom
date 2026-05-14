@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest.dashboard;
 
+import fr.inra.oresing.workflow.cascade.config.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -9,18 +10,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import fr.inra.oresing.workflow.cascade.config.ConfigChangeAudit;
-import fr.inra.oresing.workflow.cascade.config.ConfigEditService;
-import fr.inra.oresing.workflow.cascade.config.ConfigFieldRegistry;
-import fr.inra.oresing.workflow.cascade.config.SinkConcurrencyEstimator;
-import fr.inra.oresing.workflow.cascade.config.StrategyOptionsResolver;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;

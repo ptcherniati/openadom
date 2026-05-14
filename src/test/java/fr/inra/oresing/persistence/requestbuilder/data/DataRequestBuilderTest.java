@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
  * {@link SelectRequest#build()}.
  */
 @Tag("core.config")
+@Tag("domain.model")
 class DataRequestBuilderTest {
 
     @Test

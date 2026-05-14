@@ -9,6 +9,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 @Tag("core.config")
+@Tag("domain.model")
 class NodeTest {
 
     @Test

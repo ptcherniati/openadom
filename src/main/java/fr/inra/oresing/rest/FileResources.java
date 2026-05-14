@@ -1,8 +1,8 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.domain.BinaryFile;
-import fr.inra.oresing.domain.ReferencedBinaryFiles;
 import fr.inra.oresing.domain.BinaryFileInfos;
+import fr.inra.oresing.domain.ReferencedBinaryFiles;
 import fr.inra.oresing.rest.model.data.BinaryFileResult;
 import fr.inra.oresing.rest.model.data.UserDescriptionResult;
 import fr.inra.oresing.rest.usecases.security.authorization.GetAllUsersUseCase;
@@ -24,11 +24,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 

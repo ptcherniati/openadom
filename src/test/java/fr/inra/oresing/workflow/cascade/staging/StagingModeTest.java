@@ -1,6 +1,7 @@
 package fr.inra.oresing.workflow.cascade.staging;
 
 import fr.inra.oresing.workflow.cascade.config.ImportProperties;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -15,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  *
  * @author R.YAHIAOUI
  */
+@Tag("domain.model")
 class StagingModeTest {
 
     private static final UUID CID = UUID.fromString("11dbf758-b670-43bc-9c91-aa64544016ae");

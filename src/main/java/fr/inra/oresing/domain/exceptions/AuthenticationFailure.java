@@ -3,8 +3,8 @@ package fr.inra.oresing.domain.exceptions;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fr.inra.oresing.OreSiException;
 import fr.inra.oresing.domain.OreSiUser;
-import fr.inra.oresing.domain.user.CreateUserRequest;
 import fr.inra.oresing.domain.authorization.LoginAdminResult;
+import fr.inra.oresing.domain.user.CreateUserRequest;
 import lombok.Getter;
 
 import java.io.Serializable;

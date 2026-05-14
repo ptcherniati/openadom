@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests unitaires pour DatagroupType.
  */
 @Tag("core.config")
+@Tag("domain.model")
 @DisplayName("DatagroupType – factory methods")
 class DatagroupTypeTest {
 

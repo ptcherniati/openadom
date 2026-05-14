@@ -1,11 +1,6 @@
 package fr.inra.oresing.workflow.extraction;
 
-import fr.inra.oresing.workflow.cascade.history.HeartbeatService;
-import fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry;
-import fr.inra.oresing.workflow.cascade.history.WorkflowLogEntry;
-import fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository;
-import fr.inra.oresing.workflow.cascade.history.WorkflowLogWriter;
-import fr.inra.oresing.workflow.cascade.history.WorkflowSnapshot;
+import fr.inra.oresing.workflow.cascade.history.*;
 import fr.inra.oresing.workflow.cascade.metrics.OpenadomMetrics;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

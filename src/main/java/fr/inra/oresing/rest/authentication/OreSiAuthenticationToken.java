@@ -2,11 +2,11 @@ package fr.inra.oresing.rest.authentication;
 
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.domain.BinaryFile;
+import fr.inra.oresing.domain.authorization.LoginAdminResult;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.rest.data.publication.StoreFile;
-import fr.inra.oresing.domain.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.security.AuthorizationFilter;
 import lombok.Getter;
 import lombok.Setter;

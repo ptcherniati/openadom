@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Locale;
 
 @Tag("core.config")
+@Tag("domain.model")
 class ConstantImportTest {
 
     @Test

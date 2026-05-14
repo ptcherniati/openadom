@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * </ul>
  */
 @Tag("core.config")
+@Tag("domain.model")
 class NodeBuildTest {
 
     // -----------------------------------------------------------------------

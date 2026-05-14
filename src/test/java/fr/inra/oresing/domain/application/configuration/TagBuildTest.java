@@ -15,6 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @org.junit.jupiter.api.Tag("core.config")
 @DisplayName("Tag – buildTag, buildTags et sous-types")
+@org.junit.jupiter.api.Tag("domain.model")
 class TagBuildTest {
 
     @Test

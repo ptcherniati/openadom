@@ -4,9 +4,9 @@ import com.google.common.base.Strings;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.configuration.checker.DateChecker;
 import fr.inra.oresing.domain.data.deposit.DataImporter;
+import fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent;
 import fr.inra.oresing.domain.exceptions.authorization.AuthorizationRequestException;
 import fr.inra.oresing.domain.exceptions.authorization.SiOreAuthorizationRequestException;
-import fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;

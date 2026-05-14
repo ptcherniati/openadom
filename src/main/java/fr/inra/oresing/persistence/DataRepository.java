@@ -1,6 +1,5 @@
 package fr.inra.oresing.persistence;
 
-import fr.inra.oresing.domain.data.DataRows;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
@@ -9,6 +8,7 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.data.DataColumn;
+import fr.inra.oresing.domain.data.DataRows;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
@@ -40,7 +40,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Array;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;

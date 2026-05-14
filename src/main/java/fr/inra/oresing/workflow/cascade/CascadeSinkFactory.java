@@ -8,6 +8,7 @@ import fr.inrae.ore.cascade.api.builder.SinkBuilder;
 import fr.inrae.ore.cascade.api.defaults.db.RowSerializer;
 import fr.inrae.ore.cascade.api.defaults.db.staging.FinalizeHook;
 import fr.inrae.ore.cascade.api.defaults.db.staging.FinalizeMode;
+import fr.inrae.ore.cascade.api.defaults.db.staging.StagingPostgresSink;
 import fr.inrae.ore.cascade.api.defaults.db.staging.StagingTableSpec;
 import fr.inrae.ore.cascade.core.defaults.db.WriteMode;
 import fr.inrae.ore.cascade.model.core.Sink;

@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * que de les router vers une règle « no-op ».
  */
 @Tag("core.config")
+@Tag("domain.model")
 class MigrationConfigurationTest {
 
     private final Javers javers = new MigrationConfiguration().javers();

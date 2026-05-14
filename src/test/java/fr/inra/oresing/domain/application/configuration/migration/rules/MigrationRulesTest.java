@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests unitaires pour IgnorableRule et DataAddedRule.
  */
 @Tag("core.config")
+@Tag("domain.model")
 @DisplayName("Migration rules – IgnorableRule et DataAddedRule")
 class MigrationRulesTest {
 

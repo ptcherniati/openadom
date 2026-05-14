@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Tag("core.config")
+@Tag("domain.model")
 class ValidationTest {
 
     @Test

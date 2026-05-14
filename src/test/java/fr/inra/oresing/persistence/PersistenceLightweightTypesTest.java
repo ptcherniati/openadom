@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Tag;
  */
 @DisplayName("Persistence lightweight types")
 @Tag("core.config")
+@Tag("domain.model")
 class PersistenceLightweightTypesTest {
 
     // ---------------------------------------------------------

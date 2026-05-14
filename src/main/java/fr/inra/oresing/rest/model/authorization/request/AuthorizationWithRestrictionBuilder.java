@@ -1,8 +1,8 @@
 package fr.inra.oresing.rest.model.authorization.request;
 
 import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
-import fr.inra.oresing.domain.authorization.request.AuthorizationWithRestriction;
 import fr.inra.oresing.domain.authorization.request.AuthorizationInput;
+import fr.inra.oresing.domain.authorization.request.AuthorizationWithRestriction;
 import org.apache.commons.collections.MapUtils;
 
 import java.util.HashMap;

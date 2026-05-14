@@ -1,6 +1,7 @@
 package fr.inra.oresing.persistence.flyway;
 
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.application.SiOreConfigurationFormatException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
@@ -10,7 +11,6 @@ import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.index.AuthorizationIndex;
-import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
