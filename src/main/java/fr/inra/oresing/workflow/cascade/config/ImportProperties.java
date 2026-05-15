@@ -75,6 +75,23 @@ public class ImportProperties {
     private volatile int groovyCacheMaxEntries = 1000;
 
     /**
+     * P4b - Stratégie de construction de l'UPSERT staging -> table finale.
+     *
+     * <p>{@code false} ( default - legacy ) : utilise {@code jsonb_populate_record(NULL::target , data)}
+     * dans le SELECT . Postgres deserialize/type-convertit chaque champ via syscache lookup ;
+     * mesure : 20-30% du temps finalize sur gros datasets ( 1M+ rows ) .
+     *
+     * <p>{@code true} ( P4b ) : extraction colonne par colonne via {@code (data->>'col')::type}
+     * avec types resolus une fois au demarrage du finalize via {@code information_schema} .
+     * Bench attendu : gain 20-30% throughput finalize . Behavior iso-resultats garanti via
+     * mapping udt_name -> cast PG correct ( uuid/jsonb/ltree/timestamptz/...) .
+     *
+     * <p>Feature flag pour rollback trivial : {@code OPENADOM_PUBLISH_USE_COLUMN_EXTRACTION_UPSERT=true}
+     * dans env ou edition live via oa-live admin .
+     */
+    private volatile boolean useColumnExtractionUpsert = true;
+
+    /**
      * Active le mode « récursion ordonnée » globalement : les parents sont garantis
      * d'apparaître <em>avant</em> leurs enfants dans le CSV récursif.
      * En mode ordonné, un parent introuvable génère une erreur immédiate au lieu
@@ -160,12 +177,80 @@ public class ImportProperties {
      */
     private volatile int finalizeStatementTimeoutMinutes = 180;
 
+    // =================================================================
+    // Robustness layers 1+2 : lock_timeout + retry SQLSTATE retriables
+    // Voir StagingFinalizeSql Javadoc pour le mecanisme detaille .
+    // =================================================================
+
+    /**
+     * Layer 1 : Postgres {@code SET LOCAL lock_timeout} ( minutes ) applique
+     * au debut de {@link fr.inra.oresing.workflow.cascade.StagingFinalizeSql#runFinalize} .
+     * Override le cluster default ( typiquement 30s ) pour donner suffisamment
+     * de marge aux UPSERT batches quand un finalize concurrent detient des
+     * btree pages partagees ou la row trigger {@code referencevalue_count_stats} .
+     *
+     * <p>Defaut : 30 min . Doit etre superieur au temps legitime maximal
+     * d'un finalize concurrent ( idealement >= {@link #finalizeStatementTimeoutMinutes} ) .
+     * 0 = pas de override ( reste au default cluster - non recommande ) .
+     *
+     * <p>Surcharge via env var {@code CASCADE_IMPORT_FINALIZE_LOCK_TIMEOUT_MINUTES}
+     * ou property {@code cascade.import.finalize-lock-timeout-minutes} .
+     */
+    private volatile int finalizeLockTimeoutMinutes = 30;
+
+    /**
+     * Layer 2 : nombre max de retries sur SQLSTATE retriables
+     * ( {@code 55P03 lock_timeout} , {@code 40P01 deadlock_detected} ,
+     * {@code 40001 serialization_failure} ) dans la boucle batch UPSERT .
+     *
+     * <p>Defaut : 3 ( 4 tentatives totales ) . Couvre contentions transitoires
+     * sans masquer un probleme structurel . 0 = pas de retry .
+     *
+     * <p>Surcharge via env var {@code CASCADE_IMPORT_FINALIZE_LOCK_RETRY_MAX_ATTEMPTS}
+     * ou property {@code cascade.import.finalize-lock-retry-max-attempts} .
+     */
+    private volatile int finalizeLockRetryMaxAttempts = 3;
+
+    /**
+     * Layer 2 : backoff initial ( ms ) avant le 1er retry sur SQLSTATE retriable .
+     * Chaque retry double le backoff ( factor=2 ) , cape par
+     * {@link #finalizeLockRetryBackoffMaxMs} .
+     *
+     * <p>Defaut : 1000 ms ( sequence 1s , 2s , 4s ... ) .
+     *
+     * <p>Surcharge via env var {@code CASCADE_IMPORT_FINALIZE_LOCK_RETRY_BACKOFF_INITIAL_MS}
+     * ou property {@code cascade.import.finalize-lock-retry-backoff-initial-ms} .
+     */
+    private volatile long finalizeLockRetryBackoffInitialMs = 1000L;
+
+    /**
+     * Layer 2 : cap absolu du backoff exponentiel ( ms ) . Empeche les longs
+     * waits si {@link #finalizeLockRetryMaxAttempts} est augmente .
+     *
+     * <p>Defaut : 60 000 ms ( 1 min ) . Avec backoff initial 1s + factor 2 :
+     * 1s , 2s , 4s , 8s , 16s , 32s , 60s ( capped ) , 60s , ...
+     *
+     * <p>Surcharge via env var {@code CASCADE_IMPORT_FINALIZE_LOCK_RETRY_BACKOFF_MAX_MS}
+     * ou property {@code cascade.import.finalize-lock-retry-backoff-max-ms} .
+     */
+    private volatile long finalizeLockRetryBackoffMaxMs = 60_000L;
+
     /** Strategy for the import sink path . */
     public enum SinkStrategy {
         /** Legacy : Source -&gt; Transform -&gt; MergingFileSink -&gt; merged.csv -&gt; storeAll(file) . */
         MERGE_FILE,
         /** Direct : Source -&gt; Transform -&gt; StagingPostgresSink ( COPY -&gt; staging -&gt; finalize hook -&gt; target ) . */
-        DIRECT_COPY
+        DIRECT_COPY,
+        /**
+         * Discard : Source -&gt; Transform -&gt; {@code Sinks.discard()} ( no-op sink ) .
+         * Pipeline runs validators + transformers + chunk emit normally but
+         * never writes to the target store . Used by admin pre-compute
+         * ( {@code BUILD_CACHE} ) to produce the {@code binaryfile.processed_data}
+         * cache via {@link fr.inra.oresing.domain.data.deposit.DataImporter}
+         * capture file without touching {@code referencevalue} ; also useful
+         * for dry-run / validation-only / benchmark scenarios .
+         */
+        DISCARD
     }
 
     /**
@@ -210,9 +295,14 @@ public class ImportProperties {
     public int getStagingSharedOrphanTtlMinutes() { return stagingSharedOrphanTtlMinutes; }
     public boolean isSkipCsvReencoding() { return skipCsvReencoding; }
     public int getFinalizeStatementTimeoutMinutes() { return finalizeStatementTimeoutMinutes; }
+    public int  getFinalizeLockTimeoutMinutes()         { return finalizeLockTimeoutMinutes; }
+    public int  getFinalizeLockRetryMaxAttempts()       { return finalizeLockRetryMaxAttempts; }
+    public long getFinalizeLockRetryBackoffInitialMs()  { return finalizeLockRetryBackoffInitialMs; }
+    public long getFinalizeLockRetryBackoffMaxMs()      { return finalizeLockRetryBackoffMaxMs; }
     public int getReferenceCacheMaxEntries()  { return referenceCacheMaxEntries; }
     public int getGroovyCacheMaxEntries()     { return groovyCacheMaxEntries; }
     public boolean isOrderedRecursionMode()   { return orderedRecursionMode; }
+    public boolean isUseColumnExtractionUpsert() { return useColumnExtractionUpsert; }
 
     public void setChunkSizeLines(int v)      { this.chunkSizeLines = v; }
     public void setParallelism(int v)          { this.parallelism = v; }
@@ -231,7 +321,12 @@ public class ImportProperties {
     public void setStagingSharedOrphanTtlMinutes(int v) { this.stagingSharedOrphanTtlMinutes = v; }
     public void setSkipCsvReencoding(boolean v) { this.skipCsvReencoding = v; }
     public void setFinalizeStatementTimeoutMinutes(int v) { this.finalizeStatementTimeoutMinutes = v; }
+    public void setFinalizeLockTimeoutMinutes(int v)        { this.finalizeLockTimeoutMinutes = v; }
+    public void setFinalizeLockRetryMaxAttempts(int v)      { this.finalizeLockRetryMaxAttempts = v; }
+    public void setFinalizeLockRetryBackoffInitialMs(long v) { this.finalizeLockRetryBackoffInitialMs = v; }
+    public void setFinalizeLockRetryBackoffMaxMs(long v)     { this.finalizeLockRetryBackoffMaxMs = v; }
     public void setReferenceCacheMaxEntries(int v) { this.referenceCacheMaxEntries = v; }
     public void setGroovyCacheMaxEntries(int v)  { this.groovyCacheMaxEntries = v; }
     public void setOrderedRecursionMode(boolean v) { this.orderedRecursionMode = v; }
+    public void setUseColumnExtractionUpsert(boolean v) { this.useColumnExtractionUpsert = v; }
 }

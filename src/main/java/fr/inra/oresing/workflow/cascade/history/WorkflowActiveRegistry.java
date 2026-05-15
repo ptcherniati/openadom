@@ -120,6 +120,15 @@ public class WorkflowActiveRegistry implements WorkflowListener {
             new ConcurrentHashMap<>();
 
     /**
+     * Snapshot live d'un workflow execute via le FAST path . Quand present ,
+     * oa-live affiche un panel dedie ( phases STREAM_CACHE / BUILD_REFREF /
+     * UPSERT_FINAL / ... ) au lieu de la grille cascade ( workers ) qui ne
+     * s'applique pas - le DataImporter est entierement bypass dans ce mode .
+     */
+    private final ConcurrentMap<UUID, FastPathSnapshot> fastPathByCid =
+            new ConcurrentHashMap<>();
+
+    /**
      * Compteurs in-memory des rows ecrites en staging et en finale par
      * workflow . Mis a jour a chaud par les listeners cascade ( pas de
      * SQL count par poll ) . Approximation acceptable : si une rollback
@@ -227,6 +236,56 @@ public class WorkflowActiveRegistry implements WorkflowListener {
 
     public Optional<FinalizePhaseSnapshot> findFinalizePhase(UUID correlationId) {
         return Optional.ofNullable(finalizePhaseByCid.get(correlationId));
+    }
+
+    /**
+     * Marque immediatement le workflow comme {@code CANCELLED} dans le snapshot
+     * in-memory expose par {@code DashboardService.listInProgress} . Appele par
+     * {@code PublishLifecycleService.rejectIfWorkflowAlreadyInProgress} en complement du
+     * {@code workflow_log.markCancelled} en DB , afin que oa-live Live tab
+     * affiche immediatement le statut CANCELLED sans attendre la fin de Phase 2 .
+     *
+     * <p>No-op si le snapshot n'est pas registered ( workflow termine ou jamais
+     * register ) .
+     */
+    public void markCancelled(UUID correlationId) {
+        if (correlationId == null) return;
+        byCorrelationId.computeIfPresent(correlationId,
+                (id, cur) -> cur.withStatus(WorkflowLogEntry.STATUS_CANCELLED));
+    }
+
+    // ---------- FAST path ( cache rotation ) snapshot ----------
+
+    public void registerFastPath(UUID correlationId, long cacheSizeBytes, Instant at,
+                                  UUID fileId, String filename) {
+        if (correlationId == null) return;
+        fastPathByCid.put(correlationId, FastPathSnapshot.starting(cacheSizeBytes, at, fileId, filename));
+    }
+
+    public void setFastPathPhase(UUID correlationId, String phase) {
+        if (correlationId == null) return;
+        fastPathByCid.computeIfPresent(correlationId, (k, cur) -> cur.withPhase(phase));
+    }
+
+    public void tickFastPathStreamedRows(UUID correlationId, long delta) {
+        if (correlationId == null || delta <= 0) return;
+        fastPathByCid.computeIfPresent(correlationId,
+                (k, cur) -> cur.withStreamedRows(cur.streamedRows() + delta));
+    }
+
+    public void setFastPathUpsertedRows(UUID correlationId, long count) {
+        if (correlationId == null) return;
+        fastPathByCid.computeIfPresent(correlationId, (k, cur) -> cur.withUpsertedRows(count));
+    }
+
+    public void recordFastPathPhaseDuration(UUID correlationId, String phase, long durationMs) {
+        if (correlationId == null) return;
+        fastPathByCid.computeIfPresent(correlationId,
+                (k, cur) -> cur.withPhaseDuration(phase, durationMs));
+    }
+
+    public Optional<FastPathSnapshot> findFastPath(UUID correlationId) {
+        return Optional.ofNullable(fastPathByCid.get(correlationId));
     }
 
     /** Publie le binaryfile source d'un workflow d'import . */
@@ -370,6 +429,7 @@ public class WorkflowActiveRegistry implements WorkflowListener {
         stagingRowsByCid.remove(correlationId);
         finalRowsByCid.remove(correlationId);
         mergeFilePhaseByCid.remove(correlationId);
+        fastPathByCid.remove(correlationId);
         if (removed != null) {
             log.debug("Workflow unregistered : {} / {}",
                     removed.workflowType(), correlationId);

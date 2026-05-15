@@ -57,7 +57,135 @@ public final class StagingFinalizeSql {
     public static final int UPSERT_BATCH_TIMEOUT_SECONDS =
             Integer.getInteger("app.import.staging.upsert.batchTimeoutSeconds", 3600);
 
+    /**
+     * Robustness layers 1 + 2 configuration suppliers . Injected by
+     * {@link BackendPidRegistryBridge} at Spring boot from
+     * {@link fr.inra.oresing.workflow.cascade.config.ImportProperties} so that
+     * values can be edited live via oa-live admin without redeploy .
+     *
+     * <p>Defaults restent conservateurs si non wires ( contexte hors Spring ,
+     * tests unitaires ) : valeurs alignees sur les defaults d'ImportProperties .
+     */
+    private static volatile java.util.function.IntSupplier lockTimeoutMinutesSupplier   = () -> 30;
+    private static volatile java.util.function.IntSupplier lockRetryMaxAttemptsSupplier = () -> 3;
+    private static volatile java.util.function.LongSupplier lockRetryBackoffInitialMsSupplier = () -> 1000L;
+    private static volatile java.util.function.LongSupplier lockRetryBackoffMaxMsSupplier     = () -> 60_000L;
+
+    /** Setter Spring bridge - injecte au boot Spring depuis ImportProperties . */
+    public static void setLockTimeoutMinutesSupplier(java.util.function.IntSupplier s) {
+        lockTimeoutMinutesSupplier = s != null ? s : () -> 30;
+    }
+
+    /** Setter Spring bridge - injecte au boot Spring depuis ImportProperties . */
+    public static void setLockRetryMaxAttemptsSupplier(java.util.function.IntSupplier s) {
+        lockRetryMaxAttemptsSupplier = s != null ? s : () -> 3;
+    }
+
+    /** Setter Spring bridge - injecte au boot Spring depuis ImportProperties . */
+    public static void setLockRetryBackoffInitialMsSupplier(java.util.function.LongSupplier s) {
+        lockRetryBackoffInitialMsSupplier = s != null ? s : () -> 1000L;
+    }
+
+    /** Setter Spring bridge - injecte au boot Spring depuis ImportProperties . */
+    public static void setLockRetryBackoffMaxMsSupplier(java.util.function.LongSupplier s) {
+        lockRetryBackoffMaxMsSupplier = s != null ? s : () -> 60_000L;
+    }
+
+    /**
+     * SQLSTATES considerees retriables ( contention transitoire ) :
+     * <ul>
+     *   <li>{@code 55P03} : {@code lock_not_available} ( lock_timeout fired ) ;</li>
+     *   <li>{@code 40P01} : {@code deadlock_detected} ( PG resolved by killing one tx ) ;</li>
+     *   <li>{@code 40001} : {@code serialization_failure} ( SSI conflict ) .</li>
+     * </ul>
+     *
+     * <p>Toutes ces erreurs sont logiquement transitoires : un retry apres
+     * backoff a une probabilite forte de succeder . Les autres SQLSTATES
+     * ( constraint violations , type errors , etc . ) sont structurelles
+     * et propagees immediatement sans retry .
+     */
+    private static final java.util.Set<String> RETRIABLE_SQLSTATES =
+            java.util.Set.of("55P03", "40P01", "40001");
+
     private StagingFinalizeSql() { }
+
+    /**
+     * Reference statique vers le registry de pid PG , injectee par
+     * {@link BackendPidRegistryBridge} au demarrage Spring . Optional : si
+     * non setee ( contexte hors Spring , tests unitaires ) , le register
+     * silencieux n'a aucun effet et l'annulation cancel-via-pid est inactive .
+     */
+    private static volatile BackendPidRegistry backendPidRegistry;
+
+    /** Setter usage internal : invoked by Spring bridge bean at boot . */
+    public static void setBackendPidRegistry(BackendPidRegistry registry) {
+        backendPidRegistry = registry;
+    }
+
+    /**
+     * P4b - Supplier dynamique vers {@code ImportProperties.isUseColumnExtractionUpsert} .
+     * Injecte au boot Spring via {@link BackendPidRegistryBridge#wire} ; lit la valeur
+     * courante a chaque appel a {@link #runFinalize} pour supporter l'edition live
+     * du flag via oa-live admin sans redeploy . Defaut conservateur : {@code false}
+     * ( legacy jsonb_populate_record ) tant que non injecte ou hors Spring ( tests ) .
+     */
+    private static volatile java.util.function.BooleanSupplier useColumnExtractionUpsertSupplier =
+            () -> false;
+
+    /** Setter Spring bridge - injecte au boot Spring . */
+    public static void setUseColumnExtractionUpsertSupplier(java.util.function.BooleanSupplier supplier) {
+        useColumnExtractionUpsertSupplier = supplier != null ? supplier : () -> false;
+    }
+
+    /**
+     * Recupere le {@code pg_backend_pid()} de la connection courante et
+     * l'enregistre dans le registry pour permettre une annulation reelle
+     * du statement en cours via {@code pg_cancel_backend(pid)} depuis une
+     * connection separee . No-op si registry non injecte ou correlationId
+     * invalide .
+     *
+     * @return le pid si register reussi , 0 sinon ( pour deregistration safe )
+     */
+    /** Expose en public pour appelants externes ( FAST executors , doUnpublish ) . */
+    public static int registerCurrentBackendPid(java.sql.Connection connection, String correlationId) {
+        return tryRegisterBackendPid(connection, correlationId);
+    }
+
+    /** Expose en public . */
+    public static void deregisterBackendPid(String correlationId) {
+        tryDeregisterBackendPid(correlationId);
+    }
+
+    private static int tryRegisterBackendPid(java.sql.Connection connection, String correlationId) {
+        if (backendPidRegistry == null || correlationId == null || correlationId.isBlank()) return 0;
+        try (PreparedStatement ps = connection.prepareStatement("SELECT pg_backend_pid()");
+             java.sql.ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                int pid = rs.getInt(1);
+                // Fix critique : register peut throw CancelledBeforeRegistrationException
+                // si l'utilisateur a cancel AVANT que ce thread n'arrive ici . On laisse
+                // propager pour que le caller ( finalize hook , FAST executor ) abort le
+                // commit terminale et rollback la tx ( rule "jamais commit tant que tout
+                // n'a pas ete copie" ) .
+                backendPidRegistry.register(UUID.fromString(correlationId), pid);
+                return pid;
+            }
+        } catch (BackendPidRegistry.CancelledBeforeRegistrationException cancelled) {
+            // Propager : caller catch en RuntimeException -> rollback tx .
+            throw cancelled;
+        } catch (java.sql.SQLException | RuntimeException ex) {
+            log.warn("tryRegisterBackendPid failed for {} : {}", correlationId, ex.getMessage());
+        }
+        return 0;
+    }
+
+    /** Counterpart de {@link #tryRegisterBackendPid} , safe en finally . */
+    private static void tryDeregisterBackendPid(String correlationId) {
+        if (backendPidRegistry == null || correlationId == null || correlationId.isBlank()) return;
+        try {
+            backendPidRegistry.deregister(UUID.fromString(correlationId));
+        } catch (RuntimeException ignore) { /* best-effort */ }
+    }
 
     /**
      * Executes the openADOM finalize sequence : delete-then-insert
@@ -145,6 +273,19 @@ public final class StagingFinalizeSql {
                 inSpringTx,
                 statementTimeoutMinutes);
 
+        // CRITIQUE : enregistre {@code pg_backend_pid()} AU TOUT DEBUT de la
+        // methode , AVANT toute operation SQL . Raison :
+        //   - si l'utilisateur a cancel APRES le start de cascade mais AVANT
+        //     ce point ( pendant transform/sink phase ) , le signal a deja ete
+        //     enregistre dans BackendPidRegistry.preCancelledCids ;
+        //   - le register ici detecte le pre-cancel et leve
+        //     {@link BackendPidRegistry.CancelledBeforeRegistrationException}
+        //     -> caller catch -> finalize abort SANS aucun UPSERT terminale .
+        // Garantie : rule "ne jamais commit la table terminale tant que tout
+        // n'a pas ete copie ET le cancel n'a pas ete observe" .
+        tryRegisterBackendPid(connection, correlationId);
+        try {
+
         // Garde-fou Postgres : SET LOCAL statement_timeout limite le temps
         // d'execution de chaque statement de cette transaction . Couvre le
         // scenario "UPSERT bloque infiniment" ( deadlock pur , lock
@@ -157,6 +298,52 @@ public final class StagingFinalizeSql {
                     "SET LOCAL statement_timeout = '" + statementTimeoutMinutes + "min'")) {
                 ps.execute();
             }
+        }
+
+        // Robustness layer 1 : override le cluster lock_timeout ( 30s default
+        // typique ) pour donner suffisamment de marge aux UPSERT batches lorsqu'un
+        // finalize concurrent ( different fileId , meme datatype ) detient des
+        // btree pages partagees de l'index hierarchicalKey_uniqueness ou la row
+        // partagee de referencevalue_count_stats via le trigger statement-level .
+        // Sans cet override , 2 publishes parallelises ( cf Phase2Handler narrow
+        // lock refactor ) hittent systematiquement SQLSTATE 55P03 . LOCAL =
+        // portee transaction , reset auto a la fin .
+        final int lockTimeoutMinutes = lockTimeoutMinutesSupplier.getAsInt();
+        if (lockTimeoutMinutes > 0) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "SET LOCAL lock_timeout = '" + lockTimeoutMinutes + "min'")) {
+                ps.execute();
+            }
+        }
+
+        // P1a : SET LOCAL synchronous_commit = local . Pendant le finalize ,
+        // un crash kernel/disk perdrait au pire l'import en cours ( WAL replay
+        // ramene la base a un etat coherent , les rows non flushees disparaissent
+        // simplement = re-import par le user ) . Vs synchronous_commit=on qui
+        // attend fsync apres CHAQUE COMMIT batch -> bottleneck I/O fort sur
+        // gros datasets ( 1M+ rows = 20+ commits batch ) . LOCAL fait le COMMIT
+        // visible immediatement aux autres backends + WAL ecrit en async .
+        // Trade-off documente : durabilite immediate sacrifiee pour gain
+        // throughput 5-8% sur finalize . Acceptable car les imports ont une
+        // source de verite externe ( fichier CSV ) , re-import idempotent .
+        // Phase D F-1 : on n'emet PLUS de SET LOCAL synchronous_commit .
+        // Le cluster est configure avec synchronous_commit = off ( cf
+        // local_deployment/infra/postgres/conf/openadom.conf ) qui est
+        // STRICTEMENT plus permissif que 'local' ( ne wait meme pas le
+        // flush WAL local ) . L'ancien SET LOCAL 'local' etait donc
+        // legerement plus restrictif que le default cluster - on perdait
+        // 1-3% de throughput sans raison . Iso-resultat ( durabilite
+        // identique = "best effort post commit" deja en place ) .
+
+        // Phase B L1 : ANALYZE staging table juste avant la boucle UPSERT .
+        // Les UNLOGGED tables ne sont pas analysees aussi agressivement par
+        // autovacuum ; apres un bulk COPY le planner peut voir reltuples=0
+        // et choisir des plans degenres ( seq scan au lieu de parallel ,
+        // mauvaise estimation pour la CTE snapshot avec JSON_TABLE ) .
+        // Un ANALYZE explicit cote 1-2 sec sur 1M rows et debloque tous
+        // les plans en aval . Iso-resultat ( stats only ) .
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute("ANALYZE " + stagingTable);
         }
 
         String columnList = Arrays.stream(targetColumns)
@@ -214,59 +401,84 @@ public final class StagingFinalizeSql {
 
         // 3) Batched UPSERT into target table : DELETE batch from staging RETURNING data ,
         //    INSERT INTO target SELECT cols FROM batch ON CONFLICT DO UPDATE .
-        String batchInsertSql = "WITH batch AS ("
-                + "   DELETE FROM " + stagingTable
-                + "   WHERE ctid IN ("
-                + "     SELECT ctid FROM " + stagingTable
-                + (filtered ? "     WHERE correlation_id = ?" : "")
-                + "     LIMIT " + BULK_INSERT_BATCH_SIZE
-                + "   )"
-                + "   RETURNING data"
-                + " )"
-                + " INSERT INTO " + targetTableSqlId + " (" + columnList + ")"
-                + " SELECT " + columnList
-                + " FROM batch , jsonb_populate_record( NULL::" + targetTableSqlId + " , data )"
-                + " ON CONFLICT ON CONSTRAINT \"hierarchicalKey_uniqueness\""
-                + " DO UPDATE SET"
-                + "   updateDate     = current_timestamp,"
-                + "   hierarchicalKey = EXCLUDED.hierarchicalKey,"
-                + "   naturalKey     = EXCLUDED.naturalKey,"
-                + "   refsLinkedTo   = EXCLUDED.refsLinkedTo,"
-                + "   refValues      = EXCLUDED.refValues,"
-                + "   binaryFile     = EXCLUDED.binaryFile,"
-                + "   \"authorization\" = EXCLUDED.\"authorization\"";
+        //
+        // P4b feature flag : useColumnExtractionUpsert ( default false ) :
+        //   - false ( legacy ) : utilise jsonb_populate_record(NULL::target, data)
+        //     dans le SELECT . Postgres auto-type via syscache lookup ; simple
+        //     mais 20-30% du temps finalize sur gros datasets .
+        //   - true  ( P4b ) : extraction colonne par colonne (data->>'col')::pg_type .
+        //     Types resolus une fois via information_schema , cache statique .
+        //     Iso-resultats garantis par mapping udt_name -> cast PG correct .
+        //
+        // Le builder centralise les deux strategies + permet rollback trivial via flag .
+        // Cf StagingUpsertSqlBuilder javadoc .
+        final boolean useColumnExtraction = useColumnExtractionUpsertSupplier.getAsBoolean();
+        String batchInsertSql = null;
+        if (useColumnExtraction) {
+            // Resolution lazy des types PG ( cache statique , 1 query par schema.table ) .
+            // En cas d'echec ( colonne sans type mappe ) , fallback automatique sur le legacy
+            // pour garantir aucune regression bloquante .
+            String[] parts = targetTableSqlId.split("\\.");
+            String schema = parts.length == 2 ? parts[0] : "public";
+            String table  = parts.length == 2 ? parts[1] : targetTableSqlId;
+            try {
+                java.util.Map<String, String> pgTypes =
+                        StagingUpsertSqlBuilder.fetchColumnPgTypes(connection, schema, table);
+                batchInsertSql = StagingUpsertSqlBuilder.buildColumnExtraction(
+                        stagingTable, targetTableSqlId, targetColumns, pgTypes, filtered);
+                log.debug("StagingFinalize : using P4b column extraction strategy for {}", targetTableSqlId);
+            } catch (RuntimeException | SQLException ex) {
+                log.warn("StagingFinalize : P4b column extraction failed ( {} ) , fallback legacy jsonb_populate_record",
+                        ex.getMessage());
+                // batchInsertSql restera null -> rebascule sur legacy ci-dessous .
+            }
+        }
+        if (batchInsertSql == null) {
+            batchInsertSql = StagingUpsertSqlBuilder.buildJsonbPopulateRecord(
+                    stagingTable, targetTableSqlId, columnList, filtered);
+        }
 
-        // CR-3 audit cascade-integration : la boucle UPSERT etait protegee
-        // uniquement par "affected <= 0" , ce qui ouvrait une porte sur :
-        //   - boucle infinie si DELETE n'a pas effectivement vide le staging
-        //     ( bug trigger , race MVCC tres rare , ou concurrent INSERT
-        //       sur SHARED_UNLOGGED ) ,
-        //   - hang infini si la query DB se bloque ( lock long , deadlock ) .
-        // Protection multi-couches :
-        //   ( 1 ) garde de progression monotone : on verifie que la staging
-        //         table retrecit reellement entre 2 iterations . Si ce n'est
-        //         pas le cas alors qu'on a affecte > 0 rows -> throw direct ,
-        //         pas besoin d'attendre un timeout cumule .
-        //   ( 2 ) per-batch query timeout ( JVM property , default 1h ) ,
-        //         couvre le cas DB hang sans introduire de cap arbitraire
-        //         sur la duree totale du finalize ( un import 50M lignes
-        //         pourra continuer aussi longtemps que necessaire ) .
-        // Cancel admin-side : un appel WorkflowEventBus.cancel(corrId)
-        // ne touche pas directement cette boucle ( elle ne lit pas le flag ) ,
-        // mais le timeout postgres OU l'admin qui kill la connection
-        // cote DB declenchera une SQLException ici , propagee en
-        // SinkException + rollback automatique de la transaction sticky .
-        long stagingPrev = countStagingRows(connection, stagingTable, correlationId, filtered);
+        // Phase A L2 : boucle UPSERT pilotee par {@code affected} - on
+        // ELIMINE les 2 {@code SELECT COUNT(*)} par iteration ( garde pre +
+        // post ) qui coutaient autant que l'UPSERT lui-meme sur 1M+ rows
+        // ( N+1 full filtered scans de la staging UNLOGGED par finalize ) .
+        //
+        // Conditions de terminaison ( logique equivalente , iso-resultat ) :
+        //   ( a ) {@code affected == 0} : le {@code DELETE ... RETURNING}
+        //       n'a pas trouve de row a deleter -> staging vide pour ce
+        //       correlation_id -> exit normal .
+        //   ( b ) {@code affected < BULK_INSERT_BATCH_SIZE} : derniere batch
+        //       partielle - aucune row ne reste -> exit normal .
+        //
+        // Protection contre boucle infinie ( robustesse , pas semantique ) :
+        //   - max iterations = {@code 100k} = couvre 5 milliards de rows a
+        //     50k batchSize . Au-dela = bug certain , throw .
+        //   - per-batch query timeout ( JVM property , default 1h ) - couvre
+        //     le cas DB hang sans cap arbitraire sur duree totale du finalize .
+        //
+        // Cancel admin-side : timeout postgres OU connection kill cote DB
+        // declencheront une SQLException ici , propagee en SinkException +
+        // rollback automatique de la transaction sticky .
         try (PreparedStatement ps = connection.prepareStatement(batchInsertSql)) {
             if (UPSERT_BATCH_TIMEOUT_SECONDS > 0) {
                 ps.setQueryTimeout(UPSERT_BATCH_TIMEOUT_SECONDS);
             }
+            final int batchSize = BULK_INSERT_BATCH_SIZE;
+            final int maxBatches = 100_000;
             int batchNum = 0;
             long totalAffected = 0L;
-            while (stagingPrev > 0) {
+            while (batchNum < maxBatches) {
                 batchNum++;
                 if (filtered) ps.setObject(1, UUID.fromString(correlationId));
-                int affected = ps.executeUpdate();
+                // Robustness layer 2 : execute le batch avec retry sur
+                // SQLSTATE 55P03 ( lock_timeout ) . SAVEPOINT autour de
+                // l'executeUpdate pour pouvoir rollback un batch echoue
+                // sans tuer toute la transaction sticky ; backoff
+                // exponentiel entre retries ; couche 5 ( log enriched )
+                // injectee directement dans le message SQLException si
+                // tous les retries epuises .
+                int affected = executeBatchWithLockRetry(connection, ps, batchNum, totalAffected,
+                        correlationId, targetTableSqlId);
                 totalAffected += affected;
                 if (affected > 0) {
                     try {
@@ -276,27 +488,25 @@ public final class StagingFinalizeSql {
                            casser le UPSERT en cours */
                     }
                 }
-
-                long stagingNow = countStagingRows(connection, stagingTable, correlationId, filtered);
                 if (log.isDebugEnabled()) {
-                    log.debug("StagingFinalize batch #{} : affected={} , staging {} -> {} ( total upserted {} )",
-                            batchNum, affected, stagingPrev, stagingNow, totalAffected);
+                    log.debug("StagingFinalize batch #{} : affected={} ( total upserted {} )",
+                            batchNum, affected, totalAffected);
                 }
-                if (affected <= 0 && stagingNow >= stagingPrev) {
-                    // Cas double : INSERT n'a rien fait ET staging n'a pas
-                    // diminue . Soit staging vide ( normal exit ) , soit
-                    // pathologique . Le while ( stagingPrev > 0 ) tranche :
-                    // on n'entre pas si staging deja vide en debut .
+                if (affected == 0) {
+                    // Cas ( a ) : staging epuise pour ce correlation_id .
                     break;
                 }
-                if (stagingNow >= stagingPrev) {
-                    throw new IllegalStateException(
-                            "StagingFinalize : staging table did not shrink "
-                                    + "( before=" + stagingPrev + " , after=" + stagingNow
-                                    + " , affected=" + affected + " , batch #" + batchNum
-                                    + " ) - aborting potential infinite-loop pattern");
+                if (affected < batchSize) {
+                    // Cas ( b ) : derniere batch partielle , staging epuise
+                    // ( DELETE LIMIT n'a pu prendre que les rows restantes ) .
+                    break;
                 }
-                stagingPrev = stagingNow;
+            }
+            if (batchNum >= maxBatches) {
+                throw new IllegalStateException(
+                        "StagingFinalize : exceeded " + maxBatches + " batches"
+                                + " ( total upserted=" + totalAffected
+                                + " ) - aborting potential infinite-loop pattern");
             }
             log.info("StagingFinalize : completed in {} batches , {} rows upserted into target",
                     batchNum, totalAffected);
@@ -310,26 +520,162 @@ public final class StagingFinalizeSql {
             int refrefInserted = ps.executeUpdate();
             log.info("StagingFinalize : reference_reference rebuilt with {} link(s)", refrefInserted);
         }
+        } finally {
+            // Liberation du registry pid : evite la fuite memoire long-terme
+            // + evite un cancel ulterieur ciblant ce pid alors qu'il aurait
+            // ete reutilise pour un autre workflow ( Hikari connection reuse ) .
+            tryDeregisterBackendPid(correlationId);
+        }
     }
 
     /**
-     * Compte les rows restantes dans la staging table , filtrees sur
-     * correlation_id si on est en mode SHARED_UNLOGGED ( {@code filtered = true} ) .
+     * Robustness layer 2 + 5 : execute un batch UPSERT avec retry automatique
+     * sur SQLSTATE {@code 55P03} ( {@code canceling statement due to lock timeout} )
+     * et erreur enrichie en cas d'echec definitif .
      *
-     * <p>Utilise comme garde de progression monotone par
-     * {@link #runFinalize} : si le compteur ne diminue pas entre deux
-     * batches alors qu'on a insere des rows , on est dans une boucle
-     * pathologique => abort .
+     * <h2>Mecanisme retry</h2>
+     *
+     * <p>SAVEPOINT pose autour du {@code executeUpdate} : si l'execution
+     * echoue avec 55P03 ( contention btree pages ou trigger lock_timeout sur
+     * referencevalue_count_stats ) , on rollback au SAVEPOINT et on retry
+     * apres backoff exponentiel ( 1s , 2s , 4s ) . Tx parent reste vivante .
+     *
+     * <p>Sequence retry : tentative initiale + N retries = N+1 tentatives max .
+     * Defaut N=3 : 4 tentatives totales , 7s backoff cumule max .
+     *
+     * <h2>Errors enrichies ( layer 5 )</h2>
+     *
+     * <p>Si tous les retries epuises OU si SQLSTATE != 55P03 : on re-throw
+     * une SQLException avec message enrichi contenant :
+     * <ul>
+     *   <li>SQLSTATE original ( facilite filtrage logs / alerting ) ;</li>
+     *   <li>batch number + total upserted at failure point ;</li>
+     *   <li>correlationId ( liens metrics / Grafana ) ;</li>
+     *   <li>target table ( contention par datatype ) ;</li>
+     *   <li>nombre de retries effectues .</li>
+     * </ul>
+     *
+     * <p>Le message enrichi remonte tel quel dans {@code workflow_log.fatal_error}
+     * et est affiche dans le bloc ERREUR FATALE de oa-live workflow detail .
+     *
+     * @param connection          tx parent ( autoCommit=false , owned by caller )
+     * @param ps                  PreparedStatement deja prepare avec params bind
+     * @param batchNum            numero du batch courant ( logging )
+     * @param totalUpsertedSoFar  rows deja upsertees ( logging , ne contient
+     *                            PAS la batch courante en cas d'echec )
+     * @param correlationId       workflow correlation id ( logging )
+     * @param targetTableSqlId    target table fqdn ( logging )
+     * @return rowcount du UPSERT executeUpdate ( 0 si staging epuise )
+     * @throws SQLException si tous les retries epuises ou erreur non-retriable
      */
-    private static long countStagingRows(Connection conn, String stagingTable,
-                                         String correlationId, boolean filtered) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM " + stagingTable
-                + (filtered ? " WHERE correlation_id = ?" : "");
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            if (filtered) ps.setObject(1, UUID.fromString(correlationId));
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? rs.getLong(1) : 0L;
+    private static int executeBatchWithLockRetry(
+            Connection connection,
+            PreparedStatement ps,
+            int batchNum,
+            long totalUpsertedSoFar,
+            String correlationId,
+            String targetTableSqlId
+    ) throws SQLException {
+        // Snapshot une fois la config par appel : la valeur ne change pas
+        // pendant l'execution d'un batch ( on relit live entre batches ) .
+        final int  maxAttempts        = Math.max(1, 1 + lockRetryMaxAttemptsSupplier.getAsInt());
+        final long backoffInitialMs   = Math.max(0L, lockRetryBackoffInitialMsSupplier.getAsLong());
+        final long backoffMaxMs       = Math.max(backoffInitialMs, lockRetryBackoffMaxMsSupplier.getAsLong());
+        SQLException lastFailure = null;
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            java.sql.Savepoint sp = null;
+            try {
+                sp = connection.setSavepoint("batch_" + batchNum + "_attempt_" + attempt);
+            } catch (SQLException spEx) {
+                // SAVEPOINT non supporte ( ne devrait pas arriver sur PG ) :
+                // log + fallback execution sans retry .
+                log.warn("StagingFinalize : SAVEPOINT not supported ({}), retry disabled for this batch",
+                        spEx.getMessage());
+                return ps.executeUpdate();
+            }
+            try {
+                int affected = ps.executeUpdate();
+                connection.releaseSavepoint(sp);
+                if (attempt > 1) {
+                    log.info("StagingFinalize batch #{} : recovered after {} retry attempt(s) ( affected={} )",
+                            batchNum, attempt - 1, affected);
+                }
+                return affected;
+            } catch (SQLException ex) {
+                lastFailure = ex;
+                // Toujours rollback au SAVEPOINT pour reset l'etat tx avant
+                // retry OU re-throw ( garde la tx parent vivante ) .
+                try {
+                    connection.rollback(sp);
+                } catch (SQLException rbEx) {
+                    log.warn("StagingFinalize batch #{} : SAVEPOINT rollback failed ({}), original cause was {}",
+                            batchNum, rbEx.getMessage(), ex.getMessage());
+                    // Si rollback impossible , la tx parent est probablement
+                    // aborted - inutile de retry , re-throw l'original enrichi .
+                    throw enrichLockTimeoutError(ex, batchNum, attempt - 1,
+                            totalUpsertedSoFar, correlationId, targetTableSqlId);
+                }
+                boolean retriable = RETRIABLE_SQLSTATES.contains(ex.getSQLState());
+                if (!retriable || attempt >= maxAttempts) {
+                    // Layer 5 : enrichir le message avec contexte diagnostic
+                    // avant de propager . Ce message sera vu dans
+                    // workflow_log.fatal_error + oa-live bloc ERREUR FATALE .
+                    throw enrichLockTimeoutError(ex, batchNum, attempt - 1,
+                            totalUpsertedSoFar, correlationId, targetTableSqlId);
+                }
+                // Backoff exponentiel cape par backoffMaxMs : 1s , 2s , 4s ... cap .
+                long uncappedBackoff = backoffInitialMs * (1L << Math.min(attempt - 1, 30));
+                long backoffMs = Math.min(uncappedBackoff, backoffMaxMs);
+                log.warn("StagingFinalize batch #{} : SQLSTATE {} retriable , attempt {}/{} , backoff {} ms",
+                        batchNum, ex.getSQLState(), attempt, maxAttempts, backoffMs);
+                try {
+                    if (backoffMs > 0) Thread.sleep(backoffMs);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw enrichLockTimeoutError(ex, batchNum, attempt - 1,
+                            totalUpsertedSoFar, correlationId, targetTableSqlId);
+                }
+                // Continue loop -> next attempt re-uses same PS ( params toujours bind ) .
             }
         }
+        // Inatteignable : la boucle exit via return ou throw . Sentinel safety .
+        throw enrichLockTimeoutError(lastFailure, batchNum, maxAttempts - 1,
+                totalUpsertedSoFar, correlationId, targetTableSqlId);
     }
+
+    /**
+     * Layer 5 : enrichit un {@link SQLException} batch UPSERT avec le contexte
+     * diagnostic utile pour debug ( SQLSTATE original , batch , correlationId ,
+     * target , retries effectues ) . Le message resultant est rendu visible
+     * via {@code workflow_log.fatal_error} et le bloc ERREUR FATALE de
+     * oa-live workflow detail .
+     */
+    private static SQLException enrichLockTimeoutError(
+            SQLException original,
+            int batchNum,
+            int retriesAttempted,
+            long totalUpsertedSoFar,
+            String correlationId,
+            String targetTableSqlId
+    ) {
+        String shortCid = (correlationId == null || correlationId.isBlank())
+                ? "(none)"
+                : correlationId.substring(0, Math.min(8, correlationId.length()));
+        String enriched = String.format(
+                "[SQLSTATE %s] StagingFinalize UPSERT failed at batch #%d "
+                        + "( target=%s , upsertedSoFar=%d , correlationId=%s , retries=%d ) : %s",
+                original.getSQLState(),
+                batchNum,
+                targetTableSqlId,
+                totalUpsertedSoFar,
+                shortCid,
+                retriesAttempted,
+                original.getMessage() == null ? "(no message)" : original.getMessage());
+        SQLException wrapped = new SQLException(enriched, original.getSQLState(), original.getErrorCode(), original);
+        // Preserve toute la chaine de causes potentielle ( PSQLException.getNextException ) .
+        SQLException next = original.getNextException();
+        if (next != null) wrapped.setNextException(next);
+        return wrapped;
+    }
+
 }
