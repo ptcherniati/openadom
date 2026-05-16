@@ -69,6 +69,46 @@ public class DashboardService {
     private final AuthenticationService authenticationService;
     private final ImportProperties importProperties;
     private final ImportRateLimiter importRateLimiter;
+
+    /**
+     * Optional : PublishLifecycleCoordinator absent en mode test sans le bean
+     * publish/unpublish . Injection field-based avec required=false pour
+     * permettre l'instanciation du service en l'absence du coordinator .
+     *
+     * <p><b>Pourquoi</b> : DashboardService.cancelWorkflow ne propageait
+     * la cancellation qu'a {@link WorkflowEventBus} ( consume par les chunks
+     * cascade pour les uploads ) . Pour les workflows publish / unpublish /
+     * delete_file qui n'ont pas de chunks cascade , Phase 2 ignorait le
+     * signal et terminait en COMPLETED / FAILED -> le user ne voyait jamais
+     * CANCELLED dans l'onglet History .
+     *
+     * <p>Bridge : on appelle aussi {@code coordinator.markCancelled} pour
+     * que les checkpoints Phase 2 ( {@code coordinator.isCancelled} aux
+     * lignes 139 / 171 de PublishLifecyclePhase2Handler ) observent
+     * l'annulation et que {@code logWriter.recordEnd} ecrive status =
+     * CANCELLED dans {@code workflow_log} .
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private fr.inra.oresing.rest.usecases.storage.versioning.PublishLifecycleCoordinator publishLifecycleCoordinator;
+
+    /**
+     * Registry des {@code pg_backend_pid()} actifs par workflow ( cf
+     * {@link fr.inra.oresing.workflow.cascade.BackendPidRegistry} javadoc ) .
+     * Permet d'annuler reellement un SQL long ( UPSERT staging -> referencevalue )
+     * en cours via {@code pg_cancel_backend(pid)} depuis cette connection
+     * separee . Sans ce mecanisme , {@code WorkflowEventBus.cancel} ne touche
+     * que les chunks cascade et le SQL UPSERT continue jusqu'a son terme .
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private fr.inra.oresing.workflow.cascade.BackendPidRegistry backendPidRegistry;
+
+    /**
+     * JdbcTemplate dedie pour le cancel statement-level ( pg_cancel_backend ) .
+     * Doit utiliser une connection differente de celle qui execute l'UPSERT
+     * pour pouvoir envoyer le signal pendant que l'UPSERT bloque sur le statement .
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${cascade.extraction.max-concurrent-per-user:-1}")
@@ -98,8 +138,42 @@ public class DashboardService {
         CurrentUserRoles me = authenticationService.getCurrentUserRoles();
         UUID filter = me.isOpenAdomAdmin() ? null : me.userId();
         return registry.list(filter).stream()
-                .map(DashboardWorkflowDTO::fromSnapshot)
+                // Facade pattern : 1 operation utilisateur = 1 row UI .
+                // Cascade cree un workflow IMPORT pour le compte d'un parent
+                // PUBLISH/UNPUBLISH/DELETE_FILE ; on cache le child . Le
+                // parent affiche dans la liste recoit ensuite les stats
+                // progression du child via aggregateChildIntoParent ( meme
+                // helper utilise par findDetail ) afin que la liste UI
+                // montre les chunks/lignes/% en cours - sinon le parent
+                // n'aurait que 0 progress ( aucun worker connecte cote
+                // PublishLifecycleService ) . Workflow IMPORT standalone
+                // ( raw upload direct ) : pass-through , aucune aggregation .
+                .filter(s -> publishLifecycleCoordinator == null
+                        || !publishLifecycleCoordinator.isKnownChild(s.correlationId()))
+                .map(this::aggregateChildIntoParent)
+                .map(s -> enrichWithFastPath(DashboardWorkflowDTO.fromSnapshot(s), s.correlationId()))
                 .toList();
+    }
+
+    /**
+     * Lookup le FAST path snapshot pour ce cid ( ou son child IMPORT si parent
+     * PUBLISH ) et injecte dans la DTO . No-op si pas de snapshot ( workflow
+     * cascade FULL/LITE classique ) .
+     */
+    private DashboardWorkflowDTO enrichWithFastPath(DashboardWorkflowDTO dto, UUID cid) {
+        UUID dataCid = publishLifecycleCoordinator != null
+                ? publishLifecycleCoordinator.getChildImport(cid).orElse(cid)
+                : cid;
+        // FAST path est arme cote child IMPORT cid ; mais en pratique le
+        // PublishFastPathDirectExecutor utilise le PARENT cid ( on lui passe
+        // ev.correlationId() = parent ) . On tente d'abord cid direct .
+        fr.inra.oresing.workflow.cascade.history.FastPathSnapshot snap =
+                registry.findFastPath(cid).orElse(null);
+        if (snap == null && !dataCid.equals(cid)) {
+            snap = registry.findFastPath(dataCid).orElse(null);
+        }
+        if (snap == null) return dto;
+        return DashboardWorkflowDTO.withFastPath(dto, DashboardWorkflowDTO.FastPathDTO.fromSnapshot(snap));
     }
 
     // ---------------------------------------------------------------- //
@@ -109,7 +183,8 @@ public class DashboardService {
     public DashboardWorkflowDTO.Page listHistory(
             Integer limit, Integer offset,
             String type, String status,
-            String app, String user) {
+            String app, String user,
+            boolean terminalOnly) {
 
         CurrentUserRoles me = authenticationService.getCurrentUserRoles();
 
@@ -130,6 +205,13 @@ public class DashboardService {
         if (status != null && !status.isBlank()) {
             where.append(" AND status = :status ");
             p.addValue("status", status);
+        } else if (terminalOnly) {
+            // Sans status explicite , on cache les workflows actifs : ils
+            // appartiennent au Live tab ( WorkflowActiveRegistry , polling
+            // /api/dashboard/workflows/live ) et leur affichage dans
+            // l'historique melange suivi temps-reel et audit post-mortem .
+            // L'utilisateur peut forcer leur visibilite via ?terminalOnly=false .
+            where.append(" AND status NOT IN ('IN_PROGRESS', 'UPLOADING', 'CHUNKING', 'PROCESSING', 'LOADING_DB') ");
         }
         if (app != null && !app.isBlank()) {
             where.append(" AND application_name ILIKE :app ");
@@ -146,9 +228,10 @@ public class DashboardService {
         p.addValue("limit", l);
         p.addValue("offset", o);
 
-        // P1.8 : project ONLY metadata . published instead of the full
-        // metadata jsonb . The listing only needs " published " ( read by
-        // WorkflowTable . workflowTypeLabel for PUBLISH_TOGGLE rows ) ;
+        // P1.8 : project ONLY metadata . published / wasPublished instead
+        // of the full metadata jsonb . The listing only needs the boolean
+        // flag ( read by WorkflowTable . workflowTypeLabel for
+        // PUBLISH / UNPUBLISH / DELETE_FILE rows ) ;
         // shipping the full jsonb sends 1 - 10 KB per row of unused
         // payload ( errors , importConfig , strategy ) consumed only by
         // the detail endpoint . On a 100-row page that's up to 1 MB
@@ -188,9 +271,17 @@ public class DashboardService {
             if (!admin && !s.userId().equals(myUserId)) {
                 return Optional.empty();                         // treat as 404
             }
-            DashboardWorkflowDTO summary = DashboardWorkflowDTO.fromSnapshot(s);
+            // Facade pattern : si s est un parent PUBLISH/UNPUBLISH/DELETE_FILE
+            // avec child cascade IMPORT enregistre , on aggrege les stats
+            // progression du child ( chunks/lignes/progress %/parallelism/sinkChunks )
+            // dans le snapshot retourne . Le type reste celui du parent
+            // ( PUBLISH ) pour coherence metier en UI .
+            WorkflowSnapshot effective = aggregateChildIntoParent(s);
+            DashboardWorkflowDTO summary = enrichWithFastPath(
+                    DashboardWorkflowDTO.fromSnapshot(effective),
+                    effective.correlationId());
             return Optional.of(new DashboardWorkflowDTO.Detail(
-                    summary, null, s.errors(), Map.of()));
+                    summary, null, effective.errors(), Map.of()));
         }
 
         // 2) fallback on oa_audit.workflow_log ( finished )
@@ -214,6 +305,51 @@ public class DashboardService {
             return Optional.empty();                             // 404 , not 403 , to avoid id enumeration
         }
         return Optional.of(d);
+    }
+
+    /**
+     * Facade pattern : si {@code parent} est un workflow PUBLISH/UNPUBLISH/
+     * DELETE_FILE avec un child cascade IMPORT enregistre ET ce child est
+     * encore dans le registry live , retourne un snapshot {@code parent}
+     * enrichi des stats progression du child ( chunks , lignes , progress % ,
+     * parallelism , sinkChunks , workers , strategy , importConfig ) . Le
+     * type / cid / app / dataType restent ceux du parent pour coherence
+     * metier en UI ( "1 operation utilisateur = 1 row" ) .
+     *
+     * <p>Si pas de child enregistre ( parent solo , ou cascade pas encore
+     * demarree ) , ou si le child a deja quitte le registry ( cascade
+     * terminee mais parent Phase 2 encore en finalize ) , retourne le
+     * snapshot parent inchange .
+     *
+     * <p>Aucun effet pour les workflows IMPORT/BUILD_CACHE/EXTRACTION/...
+     * standalone qui n'ont pas de parent : pass-through .
+     */
+    private WorkflowSnapshot aggregateChildIntoParent(WorkflowSnapshot parent) {
+        if (publishLifecycleCoordinator == null) return parent;
+        Optional<UUID> childCid = publishLifecycleCoordinator.getChildImport(parent.correlationId());
+        if (childCid.isEmpty()) return parent;
+        Optional<WorkflowSnapshot> childSnapshot = registry.find(childCid.get());
+        if (childSnapshot.isEmpty()) return parent;
+        WorkflowSnapshot child = childSnapshot.get();
+        // Merge ordonne par specificite : on prend les valeurs du child pour
+        // les champs progress ( connus seulement de cascade ) , et celles du
+        // parent pour les champs metier ( type=PUBLISH , app , dataType ) .
+        return parent
+                .withProgress(
+                        child.recordsProcessed(),
+                        child.recordsFailed(),
+                        child.chunksProcessed(),
+                        child.progressPercentage(),
+                        child.bytesTotal())
+                .withRecordsTotal(child.recordsTotal())
+                .withChunks(child.chunks())
+                .withParallelism(child.parallelism())
+                .withSinkChunks(child.sinkChunks())
+                .withImportConfig(child.importConfig())
+                .withStrategy(child.strategy())
+                .withWorkers(child.workers())
+                .withLastHeartbeatAt(child.lastHeartbeatAt() != null
+                        ? child.lastHeartbeatAt() : parent.lastHeartbeatAt());
     }
 
     // ---------------------------------------------------------------- //
@@ -466,9 +602,24 @@ public class DashboardService {
             return Optional.empty();
         }
 
+        // P0 facade fix : si correlationId est un parent PUBLISH avec child
+        // cascade IMPORT enregistre , les compteurs cascade ( stagingRows ,
+        // finalRows , finalizePhase , binaryFileId , mergeFilePhase ) sont
+        // populated dans WorkflowActiveRegistry sous le child cid ( cf
+        // CascadeImportPipeline lines 318/624/651/681/786 ) . On resout donc
+        // le dataCid une fois et on l'utilise pour TOUS les side-map lookups
+        // registry , tandis que correlationId reste utilise pour la requete
+        // workflow_log ( oa_audit.workflow_log persiste le parent cid via
+        // recordStart Phase 1 ) . Sans cette resolution , le bloc STAGING UI
+        // affiche 0/0 systematiquement pour les workflows publish/unpublish
+        // alors que sinks transferent les rows ( bug reporte ) .
+        final UUID dataCid = publishLifecycleCoordinator != null
+                ? publishLifecycleCoordinator.getChildImport(correlationId).orElse(correlationId)
+                : correlationId;
+
         fr.inra.oresing.workflow.cascade.history.FinalizePhaseSnapshot phase =
-                registry.findFinalizePhase(correlationId).orElse(null);
-        UUID binaryFileId = registry.findBinaryFileId(correlationId).orElse(null);
+                registry.findFinalizePhase(dataCid).orElse(null);
+        UUID binaryFileId = registry.findBinaryFileId(dataCid).orElse(null);
         fr.inra.oresing.workflow.cascade.history.StrategySnapshot strategy = snap.strategy();
 
         long expectedTotal = snap.recordsTotal() > 0 ? snap.recordsTotal() : snap.recordsProcessed();
@@ -482,7 +633,7 @@ public class DashboardService {
         //   3. fallback COUNT(*) ( workflows legacy ou COUNT failed )
         long finalCount = -1L;
         String appName = snap.applicationName();
-        long registryFinal = registry.finalRows(correlationId);
+        long registryFinal = registry.finalRows(dataCid);
         if (registryFinal > 0) {
             finalCount = registryFinal;
         } else {
@@ -521,12 +672,15 @@ public class DashboardService {
         long stagingRemaining = -1L;
         if (strategy != null && "SHARED_UNLOGGED".equals(strategy.stagingStrategy())) {
             try {
+                // Staging rows sont tagges par child cascade cid ( cf cascade
+                // sink INSERT ) , donc on filtre par dataCid , pas par
+                // correlationId parent .
                 Long n = jdbc.queryForObject(
                         "SELECT COUNT(*) FROM oa_staging.referencevalue_import_shared WHERE correlation_id = :cid",
-                        new MapSqlParameterSource("cid", correlationId), Long.class);
+                        new MapSqlParameterSource("cid", dataCid), Long.class);
                 stagingRemaining = n != null ? n : 0L;
             } catch (RuntimeException ex) {
-                log.debug("finalizeProgress : staging count failed for {} : {}", correlationId, ex.getMessage());
+                log.debug("finalizeProgress : staging count failed for {} : {}", dataCid, ex.getMessage());
             }
         }
 
@@ -575,13 +729,13 @@ public class DashboardService {
         long stagingRowsWritten;
         boolean isDirectCopy = strategy != null && "DIRECT_COPY".equals(strategy.sinkStrategy());
         if (isDirectCopy) {
-            stagingRowsWritten = registry.stagingRows(correlationId);
+            stagingRowsWritten = registry.stagingRows(dataCid);
         } else {
             stagingRowsWritten = Math.max(
-                    registry.stagingRows(correlationId),
+                    registry.stagingRows(dataCid),
                     snap.recordsProcessed());
         }
-        long finalRowsWritten = registry.finalRows(correlationId);
+        long finalRowsWritten = registry.finalRows(dataCid);
         // Phase COMPLETED : on garantit finalRows = expected pour que l'UI
         // bascule a 100 % meme sans hook batch UPSERT granulaire .
         if (FinalizePhaseSnapshotConst.PHASE_COMPLETED.equals(phaseName)
@@ -603,7 +757,7 @@ public class DashboardService {
         // ( chemin batche UPSERT TEMP -> finale lit le rowcount par batch via
         // {@link WorkflowActiveRegistry#addFinalRows} ) , donc on peut afficher
         // une bar determinate pendant la phase UPSERT_FINAL .
-        String mergeFilePhase = registry.findMergeFilePhase(correlationId).orElse(null);
+        String mergeFilePhase = registry.findMergeFilePhase(dataCid).orElse(null);
         boolean mergeFileFinalObservable = strategy != null
                 && "MERGE_FILE".equals(strategy.sinkStrategy())
                 && "UPSERT_FINAL".equals(mergeFilePhase);
@@ -664,7 +818,8 @@ public class DashboardService {
                 List.of(),
                 null,
                 toInstant(rs.getTimestamp("last_heartbeat_at")),
-                metadata);
+                metadata,
+                null);
     }
 
     /**
@@ -824,20 +979,95 @@ public class DashboardService {
      */
     public CancelResult cancelWorkflow(UUID correlationId) {
         CurrentUserRoles me = authenticationService.getCurrentUserRoles();
-        WorkflowSnapshot snap = registry.find(correlationId)
-                .orElseThrow(() -> new java.util.NoSuchElementException(
-                        "Workflow not found : " + correlationId));
-        boolean owner = me.userId() != null && me.userId().equals(snap.userId());
+        // Resolution owner : 3 sources possibles , dans cet ordre :
+        //   ( 1 ) WorkflowActiveRegistry ( uploads cascade en cours ) ;
+        //   ( 2 ) workflow_log IN_PROGRESS ( publish / unpublish / delete_file
+        //         qui n'enregistrent pas dans le registry live ) ;
+        //   ( 3 ) workflow_log toute ligne ( idempotence : si le workflow est
+        //         deja terminal , on retourne 200 signalled=false plutot que 404 .
+        //         Permet aux clients qui retry un cancel apres race condition
+        //         de ne pas tomber en erreur ) .
+        java.util.Optional<UUID> liveOwner = registry.find(correlationId)
+                .map(WorkflowSnapshot::userId)
+                .or(() -> workflowLogRepository.findActiveUserId(correlationId));
+
+        if (liveOwner.isEmpty()) {
+            // Idempotence : si le workflow existe en statut terminal , on
+            // considere la demande satisfaite ( no-op ) .
+            java.util.Optional<UUID> terminalOwner = workflowLogRepository.findAnyUserId(correlationId);
+            if (terminalOwner.isPresent()) {
+                UUID owner = terminalOwner.get();
+                boolean isOwner = me.userId() != null && me.userId().equals(owner);
+                if (!me.isOpenAdomAdmin() && !isOwner) {
+                    throw new java.util.NoSuchElementException(
+                            "Workflow not found : " + correlationId);
+                }
+                return new CancelResult(false);
+            }
+            throw new java.util.NoSuchElementException(
+                    "Workflow not found : " + correlationId);
+        }
+
+        UUID ownerUserId = liveOwner.get();
+        boolean owner = me.userId() != null && me.userId().equals(ownerUserId);
         if (!me.isOpenAdomAdmin() && !owner) {
             // Same response shape as "not found" to avoid leaking which
             // workflows exist to non-owner non-admin users.
             throw new java.util.NoSuchElementException(
                     "Workflow not found : " + correlationId);
         }
-        boolean signalled = WorkflowEventBus.getInstance()
-                .cancel(correlationId.toString(),
-                        "Cancelled by " + (me.userLogin() != null ? me.userLogin() : me.userId()));
-        return new CancelResult(signalled);
+        String reason = "Cancelled by " + (me.userLogin() != null ? me.userLogin() : me.userId());
+
+        // P0 cancel-divergence fix : propagation symetrique sur l'arbre
+        // complet de workflows lies ( parent PUBLISH + child IMPORT cascade ) .
+        // Garantit que peu importe le cid clique par l'utilisateur dans
+        // oa-live ( parent ou child ) , le cancel atteint tous les workflows
+        // de l'operation logique - donc Phase 2 verra le flag arme et le
+        // cascade verra son SQL kille . Coherence binaryfile.published
+        // garantie en aval par le FOR UPDATE precondition sur workflow_log
+        // dans commitVisibleFlagAndSynthesis .
+        java.util.Set<UUID> relatedCids = publishLifecycleCoordinator != null
+                ? publishLifecycleCoordinator.getRelatedWorkflows(correlationId)
+                : java.util.Set.of(correlationId);
+        boolean requestedSignalled = false;
+        for (UUID cid : relatedCids) {
+            boolean signalled = cancelOneWorkflow(cid, reason);
+            if (cid.equals(correlationId)) {
+                requestedSignalled = signalled;
+            }
+        }
+        return new CancelResult(requestedSignalled);
+    }
+
+    /**
+     * Annule un workflow unique : signal WorkflowEventBus + markCancelled
+     * coordinator + SQL cancel_workflow + pg_cancel_backend . Helper DRY
+     * utilise par {@link #cancelWorkflow} pour iterer sur l'arbre des
+     * workflows lies ( cf {@code PublishLifecycleCoordinator.getRelatedWorkflows} ) .
+     * Tous les appels downstream sont best-effort + idempotent : meme
+     * comportement qu'on annule le parent , le child , ou les deux .
+     *
+     * @return {@code true} si WorkflowEventBus a signale au moins un listener
+     */
+    private boolean cancelOneWorkflow(UUID cid, String reason) {
+        boolean signalled = WorkflowEventBus.getInstance().cancel(cid.toString(), reason);
+        if (publishLifecycleCoordinator != null) {
+            publishLifecycleCoordinator.markCancelled(cid);
+        }
+        try {
+            workflowLogRepository.markCancelled(cid, reason);
+        } catch (RuntimeException ex) {
+            log.warn("markCancelled SQL failed for {} : {} ( signal envoye au registry / event bus quand meme )",
+                    cid, ex.getMessage());
+        }
+        if (backendPidRegistry != null && jdbcTemplate != null) {
+            try {
+                backendPidRegistry.cancelBackend(jdbcTemplate, cid);
+            } catch (RuntimeException ex) {
+                log.warn("pg_cancel_backend failed for {} : {}", cid, ex.getMessage());
+            }
+        }
+        return signalled;
     }
 
     /**

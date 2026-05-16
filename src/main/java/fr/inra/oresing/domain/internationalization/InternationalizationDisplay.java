@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -117,17 +118,33 @@ public class InternationalizationDisplay {
         return displaysDescription;
     }
 
+    /**
+     * TRANSFORM iter2 #2 : memoize parsePattern result per pattern string .
+     * Profile async-profiler shows {@code Pattern.compile} = 260 samples ( 13% CPU )
+     * on hot transform path . buildDisplayForLocale calls parsePattern per row x
+     * per locale x ( name + description ) , causing N x split("}") + split("\\{")
+     * regex operations . Pattern strings come from app config = bounded ( a few
+     * dozen per application ) , safe to keep as static cache ( app-scoped values ,
+     * never user-input at runtime ) . Use immutable lists for safe sharing .
+     */
+    private static final ConcurrentHashMap<String, List<PatternSection>> PARSE_CACHE =
+            new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, List<String>> COLUMNS_CACHE =
+            new ConcurrentHashMap<>();
+
     public static List<String> getPatternColumns(final String pattern) {
-        return getPatternSplitStream(pattern)
-                .map(k -> k.length > 1 ? k[1] : "")
-                .filter(k -> !Strings.isNullOrEmpty(k))
-                .toList();
+        return COLUMNS_CACHE.computeIfAbsent(pattern, p ->
+                getPatternSplitStream(p)
+                        .map(k -> k.length > 1 ? k[1] : "")
+                        .filter(k -> !Strings.isNullOrEmpty(k))
+                        .toList());
     }
 
     public static List<PatternSection> parsePattern(final String pattern) {
-        return getPatternSplitStream(pattern)
-                .map(PatternSection::new)
-                .toList();
+        return PARSE_CACHE.computeIfAbsent(pattern, p ->
+                getPatternSplitStream(p)
+                        .map(PatternSection::new)
+                        .toList());
     }
 
     private static Stream<String[]> getPatternSplitStream(final String pattern) {

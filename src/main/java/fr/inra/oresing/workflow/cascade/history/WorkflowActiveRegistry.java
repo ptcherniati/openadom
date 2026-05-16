@@ -267,12 +267,6 @@ public class WorkflowActiveRegistry implements WorkflowListener {
         fastPathByCid.computeIfPresent(correlationId, (k, cur) -> cur.withPhase(phase));
     }
 
-    public void tickFastPathStreamedRows(UUID correlationId, long delta) {
-        if (correlationId == null || delta <= 0) return;
-        fastPathByCid.computeIfPresent(correlationId,
-                (k, cur) -> cur.withStreamedRows(cur.streamedRows() + delta));
-    }
-
     public void setFastPathUpsertedRows(UUID correlationId, long count) {
         if (correlationId == null) return;
         fastPathByCid.computeIfPresent(correlationId, (k, cur) -> cur.withUpsertedRows(count));

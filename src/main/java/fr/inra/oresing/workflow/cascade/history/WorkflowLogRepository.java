@@ -61,6 +61,46 @@ public class WorkflowLogRepository {
     private static final String BEAT_SQL =
             "SELECT oa_audit.beat_workflow(?::uuid)";
 
+    /**
+     * Met a jour le champ {@code metadata->>'phase'} d'une row workflow_log
+     * en cours . Utilise {@code jsonb_set} pour preserver les autres cles
+     * de {@code metadata} ( fileId , etc . ) . No-op si la row est deja
+     * terminale ( WHERE status='IN_PROGRESS' ) .
+     */
+    private static final String UPDATE_PHASE_SQL = """
+            UPDATE oa_audit.workflow_log
+               SET metadata = jsonb_set(
+                       COALESCE(metadata, '{}'::jsonb),
+                       '{phase}',
+                       to_jsonb(?::text),
+                       true)
+             WHERE correlation_id = ?::uuid
+               AND status = 'IN_PROGRESS'
+            """;
+
+    /**
+     * P0 cancel-divergence fix : tente d'acquerir un lock {@code FOR UPDATE}
+     * sur la row {@code workflow_log} du correlationId , uniquement si elle
+     * est encore {@code IN_PROGRESS} . Retourne {@code true} si lock acquis
+     * et row encore in-progress . Retourne {@code false} si row terminale
+     * ( COMPLETED / CANCELLED / FAILED ) - dans ce cas , le caller doit
+     * refuser la finalisation pour eviter une divergence avec
+     * {@code binaryfile.published} ( cf scenario "presumed dead vs published"
+     * observe en prod ) .
+     *
+     * <p>Doit imperativement etre appele dans une transaction Spring active
+     * ( {@code PROPAGATION_REQUIRES_NEW} ) . Le lock {@code FOR UPDATE}
+     * empeche le {@code WorkflowZombieSweeper} de marquer la row CANCELLED
+     * pendant que Phase 2 finalise ( cooperation par lock DB , pas par flag
+     * in-process ) .
+     */
+    private static final String LOCK_IN_PROGRESS_FOR_UPDATE_SQL = """
+            SELECT 1 FROM oa_audit.workflow_log
+            WHERE correlation_id = ?::uuid
+              AND status = 'IN_PROGRESS'
+            FOR UPDATE
+            """;
+
     private final JdbcTemplate  jdbcTemplate;
     private final ObjectMapper  objectMapper = new ObjectMapper();
 
@@ -79,6 +119,47 @@ public class WorkflowLogRepository {
     public int insertBatch(Collection<WorkflowLogEntry> entries) {
         if (entries == null || entries.isEmpty()) {
             return 0;
+        }
+        // Fix : pour 1 entry on utilise queryForObject ( la SQL est un
+        // SELECT oa_audit.record_workflow ( ... ) qui retourne un boolean ;
+        // jdbcTemplate.batchUpdate sur un SELECT laisse la connexion en
+        // " idle in transaction " car le driver Postgres ne fire pas
+        // l'auto-commit attendu pour les statements SELECT-as-DML ; cause
+        // des workflow_log restant IN_PROGRESS apres recordEnd ) .
+        if (entries.size() == 1) {
+            WorkflowLogEntry e = entries.iterator().next();
+            try {
+                // Fix : ConnectionCallback + commit/rollback explicite . Avec
+                // queryForObject standard sur SELECT oa_audit.record_workflow(...) ,
+                // Hikari + JDBC PG laisse la connexion en " idle in transaction "
+                // ( SELECT-as-function ne fire pas l'auto-commit attendu meme
+                // avec hikari.autocommit=true ) , bloquant les futurs writes
+                // workflow_log avec RowExclusiveLock . On force ici BEGIN /
+                // executeQuery / COMMIT explicite , puis restore autoCommit
+                // avant retour au pool .
+                Boolean applied = jdbcTemplate.execute(
+                        (java.sql.Connection conn) -> {
+                            boolean prevAuto = conn.getAutoCommit();
+                            conn.setAutoCommit(false);
+                            try (PreparedStatement ps = conn.prepareStatement(INSERT_SQL)) {
+                                bindEntry(ps, e);
+                                try (var rs = ps.executeQuery()) {
+                                    boolean result = rs.next() && rs.getBoolean(1);
+                                    conn.commit();
+                                    return result;
+                                }
+                            } catch (SQLException sqlex) {
+                                try { conn.rollback(); } catch (SQLException ignored) { /* best-effort */ }
+                                throw sqlex;
+                            } finally {
+                                try { conn.setAutoCommit(prevAuto); } catch (SQLException ignored) { /* best-effort */ }
+                            }
+                        });
+                return Boolean.TRUE.equals(applied) ? 1 : 0;
+            } catch (RuntimeException ex) {
+                log.warn("insertBatch ( single ) failed for {} : {}", e.correlationId(), ex.getMessage());
+                throw ex;
+            }
         }
         int[][] results = jdbcTemplate.batchUpdate(INSERT_SQL, entries, entries.size(),
                 (PreparedStatement ps, WorkflowLogEntry e) -> bindEntry(ps, e));
@@ -147,6 +228,33 @@ public class WorkflowLogRepository {
     }
 
     /**
+     * Met a jour le {@code metadata.phase} d'un workflow en cours .
+     * Best-effort : une erreur d'UPDATE ne casse pas le workflow ; au pire
+     * l'UI ne voit pas la nouvelle phase et reste sur la precedente .
+     *
+     * @param correlationId workflow concerne ; {@code null} = no-op
+     * @param phase         nom court de la phase ( ex : {@code "DELETE_ROWS"} ,
+     *                      {@code "COMMIT_VISIBILITY"} , {@code "SYNTHESIS_REBUILD"} ,
+     *                      {@code "CACHE_CAPTURE"} ) . Voir
+     *                      {@link fr.inra.oresing.workflow.WorkflowPhase} pour
+     *                      la liste des constantes .
+     * @return {@code true} si la row a ete updated ( workflow encore IN_PROGRESS ) ,
+     *         {@code false} si row deja terminale ou correlationId/phase invalide
+     */
+    public boolean updatePhase(java.util.UUID correlationId, String phase) {
+        if (correlationId == null || phase == null || phase.isBlank()) {
+            return false;
+        }
+        try {
+            int rows = jdbcTemplate.update(UPDATE_PHASE_SQL, phase, correlationId.toString());
+            return rows > 0;
+        } catch (RuntimeException ex) {
+            log.warn("updatePhase failed for {} ( phase={} ) : {}", correlationId, phase, ex.getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Passe a CANCELLED toutes les rows IN_PROGRESS dont
      * {@code COALESCE ( last_heartbeat_at , start_time )} est anterieur a
      * {@code thresholdMinutes} . Appele par {@link WorkflowZombieSweeper
@@ -169,6 +277,61 @@ public class WorkflowLogRepository {
     public int markZombies(int thresholdMinutes) {
         Integer n = jdbcTemplate.queryForObject(MARK_ZOMBIES_SQL, Integer.class, thresholdMinutes);
         return n == null ? 0 : n;
+    }
+
+    /**
+     * P0 cancel-divergence fix : voir doc de {@link #LOCK_IN_PROGRESS_FOR_UPDATE_SQL} .
+     *
+     * @param correlationId workflow a verrouiller
+     * @return {@code true} si lock acquis et row {@code IN_PROGRESS} , {@code false}
+     *         si la row est terminale ( ou absente )
+     */
+    public boolean tryLockInProgress(java.util.UUID correlationId) {
+        if (correlationId == null) {
+            return false;
+        }
+        java.util.List<Integer> rows = jdbcTemplate.queryForList(
+                LOCK_IN_PROGRESS_FOR_UPDATE_SQL, Integer.class, correlationId.toString());
+        return !rows.isEmpty();
+    }
+
+    /**
+     * P0 cancel-divergence fix : variante de {@link #insertBatch} qui s'execute
+     * dans la transaction Spring courante au lieu d'ouvrir sa propre connexion
+     * avec BEGIN / COMMIT explicite . Indispensable pour le commit atomique
+     * Phase 2 publish ( {@code PublishLifecyclePhase2Handler.commitVisibleFlagAndSynthesis} )
+     * qui doit grouper dans UNE seule tx :
+     * <ol>
+     *   <li>SELECT FOR UPDATE sur workflow_log ( {@link #tryLockInProgress} ) ;</li>
+     *   <li>UPDATE binaryfile.published ;</li>
+     *   <li>buildSynthesis ( UPSERT oresisynthesis ) ;</li>
+     *   <li>UPDATE workflow_log SET status='COMPLETED' ( via cette methode ) .</li>
+     * </ol>
+     *
+     * <p>Sans cette atomicite , un cancel arrivant entre les etapes 3 et 4
+     * pouvait marquer la row CANCELLED en BDD tandis que binaryfile.published
+     * etait deja true ( divergence "Cancelled by admin vs publie le ..." ) .
+     * En groupant tout dans une tx avec lock FOR UPDATE des l'etape 1 , le
+     * cancel SQL ( {@code cancel_workflow} ) bloque sur le lock jusqu'au
+     * COMMIT de l'etape 4 ; il voit alors status='COMPLETED' , son WHERE
+     * NOT IN (terminal) rejette et le cancel devient no-op ( idempotent ) .
+     *
+     * <p>Utilise jdbcTemplate.queryForObject ( Spring-managed ) qui partage
+     * la connexion de la TransactionTemplate active . L'auto-commit issue
+     * documentee dans {@link #insertBatch} ne s'applique pas ici : Spring
+     * controle autoCommit=false sur toute la duree de la tx .
+     *
+     * @return {@code true} si la row a ete passee en terminal ( 1 row updated ) ,
+     *         {@code false} si la row n'etait plus {@code IN_PROGRESS}
+     *         ( filtree par le WHERE de record_workflow )
+     */
+    public boolean recordEndInCurrentTx(WorkflowLogEntry entry) {
+        if (entry == null) {
+            return false;
+        }
+        Boolean applied = jdbcTemplate.queryForObject(
+                INSERT_SQL, Boolean.class, extractEntryArgs(entry));
+        return Boolean.TRUE.equals(applied);
     }
 
     /**
@@ -204,6 +367,169 @@ public class WorkflowLogRepository {
      */
     public int deleteAll() {
         return jdbcTemplate.update(DELETE_ALL_SQL);
+    }
+
+    /**
+     * Renvoie le correlationId d'un workflow IN_PROGRESS sur le fileId
+     * donne , parmi les types fournis . Vide si aucun .
+     *
+     * @param applicationName scope applicatif
+     * @param fileId          fileId stocke en {@code metadata.fileId}
+     * @param workflowTypes   types eligibles ( PUBLISH , UNPUBLISH , DELETE_FILE )
+     */
+    /**
+     * Details ( correlationId + workflow_type + user_login ) du workflow
+     * IN_PROGRESS sur ce fileId , parmi les types fournis . Vide si aucun .
+     *
+     * <p>Utilise par {@code PublishLifecycleService.rejectIfWorkflowAlreadyInProgress}
+     * pour construire un message d'erreur 409 Conflict explicite ( " un PUBLISH
+     * est deja en cours par jdoe " ) en un seul round-trip DB .
+     */
+    public java.util.Optional<ActiveWorkflowDetails> findActiveDetailsByFileId(
+            String applicationName, java.util.UUID fileId, java.util.List<String> workflowTypes) {
+        if (applicationName == null || fileId == null || workflowTypes == null || workflowTypes.isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        final String sql = """
+                SELECT correlation_id::text, workflow_type, user_login FROM oa_audit.workflow_log
+                WHERE application_name = ?
+                  AND status = 'IN_PROGRESS'
+                  AND metadata->>'fileId' = ?
+                  AND workflow_type = ANY (?)
+                ORDER BY start_time DESC
+                LIMIT 1
+                """;
+        try {
+            return java.util.Optional.ofNullable(jdbcTemplate.query(sql, rs -> {
+                if (!rs.next()) return null;
+                return new ActiveWorkflowDetails(
+                        java.util.UUID.fromString(rs.getString(1)),
+                        rs.getString(2),
+                        rs.getString(3));
+            }, applicationName, fileId.toString(), workflowTypes.toArray(new String[0])));
+        } catch (RuntimeException ex) {
+            log.warn("findActiveDetailsByFileId failed for app={} fileId={} : {}",
+                    applicationName, fileId, ex.getMessage());
+            return java.util.Optional.empty();
+        }
+    }
+
+    /**
+     * Details exposes au caller pour la verification 409 Conflict ( type
+     * d'action deja en cours + login auteur ) .
+     */
+    public record ActiveWorkflowDetails(java.util.UUID correlationId,
+                                         String workflowType,
+                                         String userLogin) {
+    }
+
+    /**
+     * Recupere l'identifiant utilisateur du workflow IN_PROGRESS correspondant
+     * a {@code correlationId} . Permet a {@code DashboardService.cancelWorkflow}
+     * de fallback sur la table d'audit quand le {@code WorkflowActiveRegistry}
+     * ( utilise par les uploads cascade ) n'a pas trace du workflow .
+     *
+     * <p>Cas d'usage : workflows publish / unpublish / delete_file qui passent
+     * uniquement par {@code workflow_log} et ne sont pas enregistres dans le
+     * registry live ( pas de chunks cascade a tracer ) .
+     *
+     * @return Optional contenant le user_id du workflow IN_PROGRESS , empty si
+     *         le correlationId est inconnu ou si le workflow est deja terminal
+     */
+    public java.util.Optional<java.util.UUID> findActiveUserId(java.util.UUID correlationId) {
+        if (correlationId == null) return java.util.Optional.empty();
+        try {
+            String userId = jdbcTemplate.queryForObject(
+                    "SELECT user_id::text FROM oa_audit.workflow_log "
+                  + "WHERE correlation_id = ?::uuid AND status = 'IN_PROGRESS'",
+                    String.class,
+                    correlationId.toString());
+            return java.util.Optional.ofNullable(userId).map(java.util.UUID::fromString);
+        } catch (org.springframework.dao.EmptyResultDataAccessException ex) {
+            return java.util.Optional.empty();
+        } catch (RuntimeException ex) {
+            log.warn("findActiveUserId failed for {} : {}", correlationId, ex.getMessage());
+            return java.util.Optional.empty();
+        }
+    }
+
+    /**
+     * Recupere l'identifiant utilisateur d'un workflow par {@code correlationId} ,
+     * quel que soit son statut ( IN_PROGRESS ou terminal ) . Utilise par
+     * {@code DashboardService.cancelWorkflow} pour rendre l'operation idempotente :
+     * si le workflow est deja terminal , on retourne 200 signalled=false plutot
+     * que 404 ( evite l'erreur visible pour double-click ou retry reseau ) .
+     */
+    public java.util.Optional<java.util.UUID> findAnyUserId(java.util.UUID correlationId) {
+        if (correlationId == null) return java.util.Optional.empty();
+        try {
+            String userId = jdbcTemplate.queryForObject(
+                    "SELECT user_id::text FROM oa_audit.workflow_log WHERE correlation_id = ?::uuid",
+                    String.class,
+                    correlationId.toString());
+            return java.util.Optional.ofNullable(userId).map(java.util.UUID::fromString);
+        } catch (org.springframework.dao.EmptyResultDataAccessException ex) {
+            return java.util.Optional.empty();
+        } catch (RuntimeException ex) {
+            log.warn("findAnyUserId failed for {} : {}", correlationId, ex.getMessage());
+            return java.util.Optional.empty();
+        }
+    }
+
+    /**
+     * UPDATE direct d'une row IN_PROGRESS vers un statut terminal
+     * ( CANCELLED en pratique ) . Utilise par la supersedure pour
+     * fermer l'audit du workflow ecrase avant d'en lancer un nouveau .
+     *
+     * @return 1 si la row a ete touchee , 0 si correlationId inconnu ou
+     *         deja terminal
+     */
+    public int markCancelled(java.util.UUID correlationId, String reason) {
+        if (correlationId == null) return 0;
+        // SECURITY DEFINER wrapper - cf V7__oa_audit_cancel_workflow.sql .
+        // Le UPDATE direct echouait sous role applicationManager ( pas de
+        // privilege sur oa_audit.workflow_log ) , wrappe en " bad SQL grammar "
+        // cote Spring . La fonction SECURITY DEFINER s'execute avec les
+        // droits du owner ( openAdomTechUser ) , meme pattern que
+        // record_workflow_start , beat_workflow , mark_zombie_workflows .
+        Integer n = jdbcTemplate.queryForObject(
+                "SELECT oa_audit.cancel_workflow(?::uuid, ?)",
+                Integer.class,
+                correlationId.toString(),
+                reason);
+        return n != null ? n : 0;
+    }
+
+    /**
+     * Args ordonnes pour {@link #INSERT_SQL} a passer a
+     * {@code jdbcTemplate.queryForObject} . Mirror de {@link #bindEntry} .
+     * Utilise pour le path single-entry ( recordEnd terminal ) ou
+     * batchUpdate sur SELECT laisse la connexion idle in tx .
+     */
+    private Object[] extractEntryArgs(WorkflowLogEntry e) {
+        Duration d = e.duration();
+        return new Object[] {
+            e.correlationId(),
+            e.workflowType(),
+            e.userId(),
+            e.userLogin(),
+            e.applicationName(),
+            e.dataType(),
+            e.resourceName(),
+            Timestamp.from(e.startTime()),
+            e.endTime() != null ? Timestamp.from(e.endTime()) : null,
+            d != null ? d.toMillis() : null,
+            e.status(),
+            e.recordsProcessed(),
+            e.recordsFailed(),
+            e.chunksProcessed(),
+            e.bytesTotal(),
+            serializeErrors(e.errors()),
+            e.fatalError(),
+            serializeMetadata(e.metadata()),
+            e.failedStage(),
+            e.finalCount()
+        };
     }
 
     private void bindEntry(PreparedStatement ps, WorkflowLogEntry e) throws SQLException {

@@ -83,7 +83,7 @@ import fr.inra.oresing.rest.usecases.storage.additionalfile.DeleteAdditionalFile
 import fr.inra.oresing.rest.usecases.storage.additionalfile.FindAdditionalFileUseCase;
 import fr.inra.oresing.rest.usecases.storage.additionalfile.GetAdditionalFilesZipStreamUseCase;
 import fr.inra.oresing.rest.usecases.storage.binaryfile.*;
-import fr.inra.oresing.rest.usecases.storage.versioning.UnPublishVersionBeforeDeleteUseCase;
+import fr.inra.oresing.rest.usecases.storage.versioning.PublishLifecycleService;
 import fr.inra.oresing.workflow.cascade.ExtractionRateLimiter;
 import fr.inra.oresing.workflow.cascade.history.WorkflowLogEntry;
 import fr.inra.oresing.workflow.cascade.history.WorkflowLogWriter;
@@ -188,12 +188,11 @@ public class OreSiResources {
     private final GetCharteUseCase getCharteUseCase;
     private final GetAdditionalFilesZipStreamUseCase getAdditionalFilesZipStreamUseCase;
     private final CreateDataUseCase createDataUseCase;
-    private final RemoveFileUseCase removeFileUseCase;
     private final GetFileWithDataUseCase getFileWithDataUseCase;
     private final GetFilesOnRepositoryUseCase getFilesOnRepositoryUseCase;
     private final GetReferencedBinaryFilesUseCase getReferencedBinaryFilesUseCase;
     private final GetStoreFileUseCase getStoreFileUseCase;
-    private final UnPublishVersionBeforeDeleteUseCase unPublishVersionBeforeDeleteUseCase;
+    private final PublishLifecycleService publishLifecycleService;
     private final GetSynthesisUseCase getSynthesisUseCase;
     private final GetSynthesisWithVariableUseCase getSynthesisWithVariableUseCase;
     private final BuildSynthesisUseCase buildSynthesisUseCase;
@@ -264,7 +263,7 @@ public class OreSiResources {
             GetAdditionalFilesZipStreamUseCase getAdditionalFilesZipStreamUseCase,
             CreateDataUseCase createDataUseCase,
             GetStoreFileUseCase getStoreFileUseCase,
-            UnPublishVersionBeforeDeleteUseCase unPublishVersionBeforeDeleteUseCase,
+            PublishLifecycleService publishLifecycleService,
             GetSynthesisUseCase getSynthesisUseCase,
             GetSynthesisWithVariableUseCase getSynthesisWithVariableUseCase,
             BuildSynthesisUseCase buildSynthesisUseCase,
@@ -277,7 +276,6 @@ public class OreSiResources {
             GetReferenceDisplaysByIdUseCase getReferenceDisplaysByIdUseCase,
             GetDataCsvStreamUseCase getDataCsvStreamUseCase,
             GetDataColumnUseCase getDataColumnUseCase,
-            RemoveFileUseCase removeFileUseCase,
             GetFileWithDataUseCase getFileWithDataUseCase,
             GetFilesOnRepositoryUseCase getFilesOnRepositoryUseCase,
             GetReferencedBinaryFilesUseCase getReferencedBinaryFilesUseCase,
@@ -321,7 +319,7 @@ public class OreSiResources {
         this.getAdditionalFilesZipStreamUseCase = getAdditionalFilesZipStreamUseCase;
         this.createDataUseCase = createDataUseCase;
         this.getStoreFileUseCase = getStoreFileUseCase;
-        this.unPublishVersionBeforeDeleteUseCase = unPublishVersionBeforeDeleteUseCase;
+        this.publishLifecycleService = publishLifecycleService;
         this.getSynthesisUseCase = getSynthesisUseCase;
         this.getSynthesisWithVariableUseCase = getSynthesisWithVariableUseCase;
         this.buildSynthesisUseCase = buildSynthesisUseCase;
@@ -334,7 +332,6 @@ public class OreSiResources {
         this.getReferenceDisplaysByIdUseCase = getReferenceDisplaysByIdUseCase;
         this.getDataCsvStreamUseCase = getDataCsvStreamUseCase;
         this.getDataColumnUseCase = getDataColumnUseCase;
-        this.removeFileUseCase = removeFileUseCase;
         this.getFileWithDataUseCase = getFileWithDataUseCase;
         this.getFilesOnRepositoryUseCase = getFilesOnRepositoryUseCase;
         this.getReferencedBinaryFilesUseCase = getReferencedBinaryFilesUseCase;
@@ -446,12 +443,27 @@ public class OreSiResources {
     }
 
 
+    /**
+     * Suppression d'un fichier binaire ( 2-phase async ) .
+     *
+     * <p>Phase 1 ( synchrone , dans cet endpoint ) : check droits ,
+     * supersedure d'un workflow concurrent sur ce {@code fileId} , flag
+     * visuel ( unpublish si etait publie ) + audit workflow_log
+     * IN_PROGRESS + mail START + COMMIT . Phase 2 ( asynchrone ) :
+     * DELETE rows referencevalue si etait publie + DELETE row binaryfile
+     * + recompute synthesis + mail END . Voir
+     * {@code PublishLifecycleService} et {@code PUBLISH_UNPUBLISH.md} .
+     *
+     * <p>Reponse HTTP 202 + body = id du fichier ( retro-compat avec le
+     * frontend qui attendait juste le UUID texte ) ; le correlationId
+     * pour suivre la phase 2 est lisible dans {@code workflow_log} .
+     */
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DELETE_FILE')")
     @DeleteMapping(value = "/applications/{name}/file/{id}", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> removeFile(
             HttpServletRequest request,
             @PathVariable("name") final String applicationName,
-            @PathVariable("id") final UUID id) throws IOException {
+            @PathVariable("id") final UUID id) {
 
         Locale locale = localeResolver.resolveLocale(request);
 
@@ -487,35 +499,16 @@ public class OreSiResources {
         if (!canDelete) {
             throw new NotApplicationCanDeleteRightsException(applicationName, dataName);
         }
-        if (!storeFile.builder().getFileOrUUID().topublish()) {
-            if (!applicationDataDelete.get().hasRightForPublishOrUnPublish(storeFile.fileOrUuid())) {
-                throw new NotApplicationDataWriterForPublishException(applicationName, dataName);
-            }
-            // withEmail=false : le mail "Suppression réussie" est envoyé
-            // post-commit dans finalizePostCommit pour qu il porte le
-            // compteur frais ( cascade 3.0.0 deferred fait tourner le
-            // UPSERT dans afterCommit ; lire le compteur inline donnerait
-            // une valeur stale ) .
-            DataVersioningResult dataVersioningResult = unPublishVersionBeforeDeleteUseCase
-                    .execute(locale, applicationName, id, false);
-            if (dataVersioningResult != null) {
-                // Capture le fileName AVANT removeFileUseCase qui supprime
-                // le binaryFile : sinon le mail aurait fileName=null .
-                String fileName = serviceContainer.binaryFileService()
-                        .getFile(applicationName, id)
-                        .map(fr.inra.oresing.domain.BinaryFile::getName)
-                        .orElse(null);
-                serviceContainer.versioningService().finalizePostCommit(
-                        locale, applicationName, dataName, fileName,
-                        dataVersioningResult, true);
-            }
+        // topublish() est vrai si le fichier ETAIT publie au moment du
+        // delete -> on doit avoir le droit de depublier en cascade .
+        if (!storeFile.builder().getFileOrUUID().topublish()
+                && !applicationDataDelete.get().hasRightForPublishOrUnPublish(storeFile.fileOrUuid())) {
+            throw new NotApplicationDataWriterForPublishException(applicationName, dataName);
         }
-        Optional<UUID> uuid = removeFileUseCase.execute(application, id);
-        if (uuid.isPresent()) {
-            return okResponse(id.toString());
-        } else {
-            throw new NotApplicationCanDeleteRightsException(applicationName, dataName);
-        }
+
+        publishLifecycleService.startDeleteFile(applicationName, id, locale);
+
+        return ResponseEntity.status(org.springframework.http.HttpStatus.ACCEPTED).body(id.toString());
     }
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")

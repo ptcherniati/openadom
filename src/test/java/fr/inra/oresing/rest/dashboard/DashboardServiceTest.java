@@ -66,6 +66,7 @@ class DashboardServiceTest {
     @Mock private AuthenticationService authenticationService;
     @Mock private ImportProperties importProperties;
     @Mock private ImportRateLimiter importRateLimiter;
+    @Mock private fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository workflowLogRepository;
 
     @InjectMocks
     private DashboardService service;
@@ -167,7 +168,7 @@ class DashboardServiceTest {
                     .thenReturn(List.of());
 
             DashboardWorkflowDTO.Page page =
-                    service.listHistory(null, null, null, null, null, null);
+                    service.listHistory(null, null, null, null, null, null, true);
 
             assertEquals(0L, page.total());
             assertTrue(page.items().isEmpty());
@@ -184,7 +185,7 @@ class DashboardServiceTest {
                     .thenReturn(List.of());
 
             DashboardWorkflowDTO.Page page =
-                    service.listHistory(10, 0, "IMPORT", "FINISHED", "myapp", "alice");
+                    service.listHistory(10, 0, "IMPORT", "FINISHED", "myapp", "alice", true);
 
             assertEquals(3L, page.total());
         }
@@ -201,7 +202,7 @@ class DashboardServiceTest {
                     .thenReturn(List.of());
 
             DashboardWorkflowDTO.Page page =
-                    service.listHistory(null, null, null, null, null, null);
+                    service.listHistory(null, null, null, null, null, null, true);
 
             assertEquals(1L, page.total());
         }
@@ -217,7 +218,7 @@ class DashboardServiceTest {
                     .thenReturn(List.of());
 
             DashboardWorkflowDTO.Page page =
-                    service.listHistory(9999, -5, null, null, null, null);
+                    service.listHistory(9999, -5, null, null, null, null, true);
 
             assertEquals(500, page.limit());
             assertEquals(0, page.offset());
@@ -234,7 +235,7 @@ class DashboardServiceTest {
                     .thenReturn(List.of());
 
             DashboardWorkflowDTO.Page page =
-                    service.listHistory(null, null, null, null, null, null);
+                    service.listHistory(null, null, null, null, null, null, true);
 
             assertEquals(0L, page.total());
         }
@@ -281,7 +282,7 @@ class DashboardServiceTest {
                     });
 
             DashboardWorkflowDTO.Page page =
-                    service.listHistory(null, null, null, null, null, null);
+                    service.listHistory(null, null, null, null, null, null, true);
 
             assertEquals(1, page.items().size());
             DashboardWorkflowDTO dto = page.items().getFirst();
@@ -943,6 +944,9 @@ class DashboardServiceTest {
             UUID corrId = UUID.randomUUID();
             when(authenticationService.getCurrentUserRoles()).thenReturn(adminRoles());
             when(registry.find(corrId)).thenReturn(Optional.empty());
+            // Fallback paths on workflowLogRepository : both empty ( truly absent ) .
+            when(workflowLogRepository.findActiveUserId(corrId)).thenReturn(Optional.empty());
+            when(workflowLogRepository.findAnyUserId(corrId)).thenReturn(Optional.empty());
 
             assertThrows(NoSuchElementException.class, () -> service.cancelWorkflow(corrId));
         }

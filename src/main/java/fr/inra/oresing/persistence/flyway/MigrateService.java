@@ -198,8 +198,20 @@ public class MigrateService {
         final Map<String, ActionToDoAfterMigration> callBackFunction = new LinkedHashMap<>();
         callBackFunction.put("1", new Migrate1());
 
+        // validateOnMigrate = false : tolerates legacy checksum / description
+        // mismatch on application schemas migrated before the V2 consolidation .
+        // The previous V2-V14 series was collapsed into a single V2 file ( cf
+        // V2__app_schema_complete.sql ) ; existing instances have V2 applied
+        // with the old "rights_request_treatment" body and V3-V14 separately .
+        // The version number remains the contract that drives apply/skip ; only
+        // the historical body validation is relaxed . Each V<N>__ file uses
+        // CREATE IF NOT EXISTS / ADD IF NOT EXISTS so a re-run on an already-
+        // migrated object is a no-op ( defense in depth ) . Same approach as
+        // mainFlyway above , same justification , same safety contract .
         return Flyway.configure()
                 .dataSource(dataSource)
+                .baselineOnMigrate(true)
+                .validateOnMigrate(false)
                 .placeholders(Map.of(
                         "applicationSchema", sqlSchemaForApplication.getSqlIdentifier(),
                         "requiredAuthorizations", SqlSchemaForApplication.requiredAuthorizationsAttributes(application),

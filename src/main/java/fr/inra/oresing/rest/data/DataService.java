@@ -6,6 +6,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.cancel.CancellationContext;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
 import fr.inra.oresing.domain.checker.CheckerFactory;
@@ -190,8 +191,56 @@ public class DataService {
     public UUID addData(final Application application,
                         final String dataName,
                         final DataFile file) throws IOException {
+        return addData(application, dataName, file,
+                fr.inra.oresing.workflow.cascade.config.CascadeRuntimeOverride.EMPTY);
+    }
+
+    /**
+     * Variante avec override per-call des axes strategiques du pipeline
+     * cascade ( cf
+     * {@link fr.inra.oresing.workflow.cascade.config.CascadeRuntimeOverride} ) .
+     * Utilise par
+     * {@code PublishLifecyclePhase2Handler.doPublish} pour appliquer le
+     * profil memoire-friendly de {@code PublishProperties} sans impacter
+     * les flux upload qui passent par {@code CascadeRuntimeOverride.EMPTY}
+     * et heritent integralement de {@code ImportProperties} .
+     *
+     * @since openadom phase B publish/unpublish refonte
+     */
+    public UUID addData(final Application application,
+                        final String dataName,
+                        final DataFile file,
+                        final fr.inra.oresing.workflow.cascade.config.CascadeRuntimeOverride override) throws IOException {
+        return addData(application, dataName, file, override, false);
+    }
+
+    /**
+     * Variante <strong>lite</strong> : pour un republish ou la data a deja
+     * ete validee anterieurement ( hash de config inchange ) , on saute
+     * dans le {@link DataImporter} :
+     * <ul>
+     *   <li>le pre-warm du ReferenceCache ;</li>
+     *   <li>l'accumulation cross-chunks
+     *       {@code encounteredHierarchicalKeysForConflictDetection}
+     *       ( principal coupable d'OOM sur gros datasets ) .</li>
+     * </ul>
+     * La transformation typee ( String -&gt; UUID , parse date , etc . ) reste
+     * appliquee : indispensable pour produire le CSV staging que les sinks
+     * ingerent .
+     *
+     * <p>Le routage lite vs FULL est de la responsabilite du caller
+     * ( typiquement {@code PublishLifecyclePhase2Handler} ) qui doit
+     * verifier l'invariant via {@link fr.inra.oresing.rest.usecases.storage.versioning.ConfigHashService} .
+     *
+     * @since openadom phase B LiteImporter
+     */
+    public UUID addData(final Application application,
+                        final String dataName,
+                        final DataFile file,
+                        final fr.inra.oresing.workflow.cascade.config.CascadeRuntimeOverride override,
+                        final boolean lightweight) throws IOException {
         serviceContainer.authenticationService().setRoleForClient();
-        addData(application, dataName, file.inputData(), file.params());
+        addData(application, dataName, file.inputData(), file.params(), override, lightweight);
         return file.params().fileid();
     }
 
@@ -199,17 +248,34 @@ public class DataService {
                          final String refType,
                          final InputStream file,
                          final FileOrUUID fileOrUUID) throws IOException {
+        addData(application, refType, file, fileOrUUID,
+                fr.inra.oresing.workflow.cascade.config.CascadeRuntimeOverride.EMPTY,
+                false);
+    }
+
+    private void addData(final Application application,
+                         final String refType,
+                         final InputStream file,
+                         final FileOrUUID fileOrUUID,
+                         final fr.inra.oresing.workflow.cascade.config.CascadeRuntimeOverride override,
+                         final boolean lightweight) throws IOException {
+        CancellationContext.checkpoint("addData entry");
         final DataRepository referenceValueRepository = getReferenceValueRepository(application);
         AsynchroneFileImporterContext referenceImporterContext = getAsynchroneImporterContext(
                 application,
                 refType,
                 fileOrUUID
         );
+        CancellationContext.checkpoint("addData importer context built");
 
-        final DataImporter referenceImporter = new DataImporter(referenceImporterContext);
+        final DataImporter referenceImporter = new DataImporter(
+                referenceImporterContext,
+                cascadeImportPipeline.getImportProperties(),
+                lightweight);
         // Honour cascade.import.skip-csv-reencoding ( default false ) .
         boolean skipReencoding = cascadeImportPipeline.getImportProperties().isSkipCsvReencoding();
         Path path = referenceImporter.prepareContextForDataTreatment(FileBomResolver.of(file), skipReencoding);
+        CancellationContext.checkpoint("addData prepareContext done");
         final String userId = serviceContainer.authenticationService().getCurrentUser().getId().toString();
         cascadeImportPipeline.execute(
                 referenceImporter,
@@ -218,12 +284,9 @@ public class DataService {
                 userId,
                 application.getName(),
                 refType,
-                fileOrUUID == null ? null : fileOrUUID.fileid()
+                fileOrUUID == null ? null : fileOrUUID.fileid(),
+                override
         );
-        //final Path toMerge = referenceImporter.doDataTreatment(path, sharedContext, chunkInfo, workflowProperties, lifecycleManager);
-        /*referenceImporter.treatErrors();
-        referenceValueRepository.storeAll(toMerge);*/
-
     }
 
     public HierarchicalReferenceAsTree getHierarchicalReferenceAsTree(final Application application, final String lowestLevelReference) {
@@ -1069,6 +1132,23 @@ private PlatformTransactionManager transactionManager;
     /** Observabilité : taille courante du cache checkedFormatComponents. */
     public int getCheckedFormatComponentsCacheSize() {
         return checkedFormatComponentsCache == null ? 0 : checkedFormatComponentsCache.size();
+    }
+
+    /**
+     * Observabilité : taille mémoire approximative du cache filterList
+     * via sérialisation Jackson . À appeler uniquement depuis un
+     * endpoint admin ( CacheSizeEstimator ) , pas en hot path .
+     */
+    public long estimateFilterListCacheSizeBytes(com.fasterxml.jackson.databind.ObjectMapper mapper) {
+        return filterListCache == null ? 0L : filterListCache.estimateSizeBytes(mapper);
+    }
+
+    /**
+     * Observabilité : taille mémoire approximative du cache
+     * checkedFormatComponents via sérialisation Jackson .
+     */
+    public long estimateCheckedFormatComponentsCacheSizeBytes(com.fasterxml.jackson.databind.ObjectMapper mapper) {
+        return checkedFormatComponentsCache == null ? 0L : checkedFormatComponentsCache.estimateSizeBytes(mapper);
     }
 
     /** Observabilité : flag + caps des caches ( endpoint admin ). */

@@ -55,9 +55,63 @@ import java.util.Map;
 public class CacheAdminResources {
 
     private final ServiceContainer serviceContainer;
+    private final fr.inra.oresing.cache.CacheSizeEstimator cacheSizeEstimator;
+    private final fr.inra.oresing.cache.CachePreloader cachePreloader;
 
-    public CacheAdminResources(ServiceContainer serviceContainer) {
+    public CacheAdminResources(ServiceContainer serviceContainer,
+                                fr.inra.oresing.cache.CacheSizeEstimator cacheSizeEstimator,
+                                fr.inra.oresing.cache.CachePreloader cachePreloader) {
         this.serviceContainer = serviceContainer;
+        this.cacheSizeEstimator = cacheSizeEstimator;
+        this.cachePreloader = cachePreloader;
+    }
+
+    @Operation(summary = "Prechauffe les caches filterList / checkedFormatComponents "
+            + "( et optionnellement referencedFiles ) pour une application . "
+            + "Operation longue mais non destructive ; les 1eres requetes des "
+            + "users finals beneficient ensuite des hits cache .")
+    @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
+    @PostMapping(value = "/applications/{nameOrId}/admin/preload-caches",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> preloadCaches(
+            @PathVariable("nameOrId") String nameOrId,
+            @org.springframework.web.bind.annotation.RequestParam(name = "includeReferencedFiles", required = false, defaultValue = "true") boolean includeReferencedFiles,
+            @org.springframework.web.bind.annotation.RequestParam(name = "parallel", required = false, defaultValue = "true") boolean parallel) {
+        fr.inra.oresing.domain.application.Application application = serviceContainer.applicationService()
+                .getApplicationOrApplicationAccordingToRights(nameOrId);
+        fr.inra.oresing.cache.CachePreloader.PreloadReport report =
+                cachePreloader.preload(application, includeReferencedFiles, parallel);
+        // Invalide le size cache : les caches viennent d'etre remplis ,
+        // la prochaine consultation des tailles doit recompute .
+        cacheSizeEstimator.invalidate();
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("applicationName", application.getName());
+        body.put("filterListPreloaded", report.filterListPreloaded());
+        body.put("checkedFormatPreloaded", report.checkedFormatPreloaded());
+        body.put("referencedFilesPreloaded", report.referencedFilesPreloaded());
+        body.put("errors", report.errors());
+        body.put("durationMs", report.durationMs());
+        body.put("parallel", report.parallel());
+        body.put("parallelism", report.parallelism());
+        return ResponseEntity.ok(body);
+    }
+
+    @Operation(summary = "Tailles memoire approximatives des caches JVM .",
+            description = "Serialise chaque entree via Jackson et somme les bytes . "
+                    + "Resultat memoise selon openadom.cache.sizes.ttl-minutes ; passer "
+                    + "force=true pour recompute immediat ( apres purge / preload ) .")
+    @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
+    @GetMapping(value = "/admin/caches/sizes", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> cacheSizes(
+            @org.springframework.web.bind.annotation.RequestParam(name = "force", required = false, defaultValue = "false") boolean force) {
+        fr.inra.oresing.cache.CacheSizeEstimator.SizeReport report = cacheSizeEstimator.getReport(force);
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("bytesByCache", report.bytesByCache());
+        body.put("computedAt", report.computedAt().toString());
+        body.put("durationMs", report.durationMs());
+        body.put("ttlMinutes", cacheSizeEstimator.ttlMinutes());
+        body.put("totalBytes", report.bytesByCache().values().stream().mapToLong(Long::longValue).sum());
+        return ResponseEntity.ok(body);
     }
 
     @Operation(

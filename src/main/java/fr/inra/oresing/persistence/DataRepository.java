@@ -376,14 +376,28 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     @Override
 
     public void removeByFileId(final UUID fileId) {
+        // PERF : cast {@code binaryfile::text} eliminait l'usage de l'index sur
+        // la colonne uuid -> SEQ SCAN sur referencevalue entiere ( minutes sur
+        // gros datasets ) . Compare UUID a UUID directement pour utiliser le
+        // btree dedie {@code referencevalue_binaryfile_idx} ( V14 ) .
+        //
+        // NOTE perf : sur fichiers > 500k rows , le cout dominant n'est plus le
+        // DELETE lui-meme ( ~2s pour 800k rows via idx scan ) mais les RI
+        // triggers de la FK {@code reference_reference_referenceid_fkey ON
+        // DELETE CASCADE} qui s'executent PAR LIGNE ( ~50us / call -> 40+ s
+        // pour 800k rows ) . Tentatives de bypass testees ( pre-DELETE bulk +
+        // FK NO ACTION DEFERRABLE + SET CONSTRAINTS DEFERRED ) confirmees
+        // sans gain : le trigger RI_ConstraintTrigger fire de toute facon . La
+        // seule optim restante serait drop FK = integrite app-managed ( risque
+        // orphans si autres paths inserent ) - hors scope actuel .
         final String query = String.format("""
                         DELETE FROM %s
-                        WHERE binaryfile::text = :binaryFile
+                        WHERE binaryfile = :binaryFile
                         """,
                 getTable().getSqlIdentifier()
         );
 
-        Map<String, Object> params = Map.of("binaryFile", fileId.toString());
+        Map<String, Object> params = Map.of("binaryFile", fileId);
         int unpublishedLines = getNamedParameterJdbcTemplate().update(query, params);
         flush();
     }
@@ -661,13 +675,35 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
     @Override
     public ImmutableMap<DataValue.LineIdentityColumnName, UUID> getDataIdPerKeys(final String ReferenceType) {
+        // Avant ce fix : findAllByReferenceType materialisait TOUS les rows
+        // referencevalue ( jsonb refvalues complet inclus ) en List<DataValue>
+        // via Jackson , juste pour extraire 4 colonnes ( id / naturalkey /
+        // hierarchicalkey / patterncolumnname ) . Sur si_acbb t_soil_water_content_swc
+        // = 1.26M rows × ~500-1000 bytes JSON inflation Java = ~1.5-2 GB
+        // heap allocation au demarrage workflow . Cause directe d'OOM .
+        //
+        // Fix : SQL projection uniquement sur les 4 colonnes necessaires
+        // ( ~30 bytes/row ) . Gain x40 : ~40 MB heap au lieu de 1.5-2 GB .
+        final String query = """
+                SELECT id, naturalkey::text AS naturalkey,
+                       hierarchicalkey::text AS hierarchicalkey,
+                       patterncolumnname
+                  FROM %1$s
+                 WHERE application = :applicationId::uuid
+                   AND ReferenceType = :refType
+                """.formatted(getTable().getSqlIdentifier());
+        final MapSqlParameterSource params = new MapSqlParameterSource(APPLICATION_ID, getApplication().getId())
+                .addValue(REF_TYPE, ReferenceType);
         Map<DataValue.LineIdentityColumnName, UUID> dataIdPerKeys = new HashMap<>();
-        // Utilisation de la version non-streaming pour éviter de maintenir une connexion JDBC ouverte
-        findAllByReferenceType(ReferenceType)
-                .forEach(dataValue -> {
-                    DataValue.LineIdentityColumnName naturalKey = dataValue.buildLineIdentityColumnName();
-                    dataIdPerKeys.put(naturalKey, dataValue.getId());
-                });
+        getNamedParameterJdbcTemplate().query(query, params, rs -> {
+            UUID id = UUID.fromString(rs.getString("id"));
+            Ltree naturalKey      = Ltree.fromSql(rs.getString("naturalkey"));
+            Ltree hierarchicalKey = Ltree.fromSql(rs.getString("hierarchicalkey"));
+            String patternColName = rs.getString("patterncolumnname");
+            dataIdPerKeys.put(
+                    new DataValue.LineIdentityColumnName(naturalKey, hierarchicalKey, patternColName),
+                    id);
+        });
         return ImmutableMap.copyOf(dataIdPerKeys);
     }
 

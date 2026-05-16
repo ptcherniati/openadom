@@ -305,10 +305,17 @@ public class PublishLifecyclePhase2Handler {
                 // du commit qui peut s'etaler sur buildSynthesis 10+ sec ) .
                 endTime  = Instant.now();
                 duration = Duration.between(ev.startTime(), endTime);
+                // Live phase = SYNTHESIS_REBUILD : c'est le step dominant en duree
+                // dans commitVisibleFlagAndSynthesis ( la bascule du flag est
+                // ~50 ms , le buildSynthesis ~10s-2min selon volume ) .
+                logRepository.updatePhase(ev.correlationId(),
+                        fr.inra.oresing.workflow.WorkflowPhase.SYNTHESIS_REBUILD);
                 commitVisibleFlagAndSynthesis(application, ev, endTime, duration, recordsProcessed);
                 invalidateReferencedFilesCacheSilently(application.getName());
                 finalStatus = WorkflowLogEntry.STATUS_COMPLETED;
                 committedAtomically = true;
+                logRepository.updatePhase(ev.correlationId(),
+                        fr.inra.oresing.workflow.WorkflowPhase.DONE);
             } finally {
                 lock.unlock();
             }
@@ -464,6 +471,11 @@ public class PublishLifecyclePhase2Handler {
             }
         }
 
+        // Live phase tracking : cascade path active . Detail sub-phases sont
+        // suivies via le sub-IMPORT workflow ( child ) , la phase parent reste
+        // CASCADE_RUNNING jusqu'au commit visibility .
+        logRepository.updatePhase(ev.correlationId(), fr.inra.oresing.workflow.WorkflowPhase.CASCADE_RUNNING);
+
         // ----- LITE / FULL cascade path -----
         FileOrUUID fou = new FileOrUUID(ev.fileId(), dataset, true);
         // Decision lite : Sprint A.5 + Sprint B logic .
@@ -475,23 +487,6 @@ public class PublishLifecyclePhase2Handler {
         log.info("Phase 2 cascade path : fileId={} lite={} ( hashKnown={} hashMatch={} )",
                 ev.fileId(), lite, hashKnown, hashMatch);
 
-        // Capture path : on capture le JSON processed pendant la cascade pour
-        // alimenter le cache processed_data , ce qui permettra le FAST path
-        // au prochain republish ( meme si hash match mais cache vide actuellement ) .
-        java.nio.file.Path capturePath = null;
-        boolean shouldCapture = publishProperties.isCaptureProcessedEnabled();
-        if (shouldCapture) {
-            try {
-                capturePath = java.nio.file.Files.createTempFile("oa_litev2_capture_" + ev.correlationId() + "_", ".jsonl");
-                capturePath.toFile().deleteOnExit();
-                log.debug("Phase 2 cascade capture file : {}", capturePath);
-            } catch (IOException ce) {
-                log.warn("Phase 2 capture file create failed : {} ( non-critical , continuing without capture )",
-                        ce.getMessage());
-                capturePath = null;
-            }
-        }
-
         // Scope CancellationContext deja actif ( cf doPublish ) :
         // DataService.addData -> cascade prep observent token via
         // CancellationContext.checkpoint() . parentCid relaye au
@@ -502,34 +497,50 @@ public class PublishLifecyclePhase2Handler {
                     ev.dataName(),
                     new DataFile(fou, in),
                     publishProperties.toRuntimeOverride(),
-                    lite,
-                    capturePath);
+                    lite);
         }
         // Post-addData : si Phase 2 termine sans throw mais cancel a ete signale ,
-        // on ne committe PAS le capture file ni le flag .
+        // on ne committe PAS le cache .
         token.throwIfCancelled("post-addData capture");
 
-        // Cascade reussi : persiste le capture file dans binaryfile.processed_data
-        // pour activer le FAST path au prochain republish .
-        if (capturePath != null && java.nio.file.Files.exists(capturePath)
-                && java.nio.file.Files.size(capturePath) > 0) {
-            try (InputStream pin = java.nio.file.Files.newInputStream(capturePath)) {
-                long sizeBytes = java.nio.file.Files.size(capturePath);
-                bfRepo.storeProcessedData(ev.fileId(), pin, sizeBytes);
-                log.info("Phase 2 capture persisted : fileId={} processed_size={} bytes ( FAST path armed for next republish )",
-                        ev.fileId(), sizeBytes);
-                // Aussi : capture le hash courant pour signifier que cache est aligne avec config actuelle .
-                configHashService.computeHash(application, ev.dataName()).ifPresent(currentHash -> {
-                    if (params == null || !currentHash.equals(params.configHash())) {
+        // Cache capture conditionnelle : on regenere le cache seulement si
+        // ( a ) la feature flag global isCaptureProcessedEnabled est ON ,
+        // ( b ) le cache est absent OU le configHash est obsolete .
+        // Sinon le cache existant est deja aligne avec la config courante et
+        // sera utilise par le FAST path au prochain republish - ne pas le
+        // re-ecrire economise ~10-30s sur gros datasets ( bench 870k rows ) .
+        if (publishProperties.isCaptureProcessedEnabled()) {
+            String currentHash = configHashService.computeHash(application, ev.dataName()).orElse(null);
+            long existingCacheSize = 0L;
+            try { existingCacheSize = bfRepo.findProcessedSize(ev.fileId()); }
+            catch (RuntimeException ex) { log.debug("findProcessedSize failed : {}", ex.getMessage()); }
+            String storedHash = params != null ? params.configHash() : null;
+            boolean cacheUpToDate = existingCacheSize
+                    > fr.inra.oresing.workflow.cascade.cache.ReferencevalueCacheFormat.HEADER_SIZE_BYTES
+                    && currentHash != null
+                    && currentHash.equals(storedHash);
+            if (cacheUpToDate) {
+                log.info("Phase 2 cache capture skipped : cache present + hash up to date ( fileId={} )", ev.fileId());
+            } else {
+                logRepository.updatePhase(ev.correlationId(),
+                        fr.inra.oresing.workflow.WorkflowPhase.CACHE_CAPTURE);
+                try {
+                    final String schemaName = repository.getRepository(application).data().getSchemaName();
+                    bfRepo.storeProcessedDataDirectCopy(ev.fileId(), (captureConn, out) -> {
+                        out.write(fr.inra.oresing.workflow.cascade.cache.ReferencevalueCacheFormat.buildHeader());
+                        fr.inra.oresing.workflow.cascade.cache.ReferencevalueCacheWriter
+                                .writeCache(captureConn, schemaName, ev.fileId(), out);
+                    });
+                    log.info("Phase 2 cache captured ( direct COPY ) : fileId={} ( FAST path armed for next republish )",
+                            ev.fileId());
+                    if (currentHash != null && !currentHash.equals(storedHash)) {
                         bfRepo.updateConfigHash(ev.fileId(), currentHash);
                         log.info("Phase 2 capture configHash updated for fileId={}", ev.fileId());
                     }
-                });
-            } catch (RuntimeException | IOException persistErr) {
-                log.warn("Phase 2 capture persist failed for fileId={} : {} ( non-critical )",
-                        ev.fileId(), persistErr.getMessage());
-            } finally {
-                try { java.nio.file.Files.deleteIfExists(capturePath); } catch (IOException ignored) { /* best-effort */ }
+                } catch (RuntimeException persistErr) {
+                    log.warn("Phase 2 cache capture failed for fileId={} : {} ( non-critical , FAST path will fall back )",
+                            ev.fileId(), persistErr.getMessage());
+                }
             }
         }
 
@@ -565,75 +576,29 @@ public class PublishLifecyclePhase2Handler {
      * detruit pour rien , forcant le republish a cascade FULL .
      */
     private long doUnpublish(Application application, PublishLifecycleEvent ev) {
-        boolean cachedRotation = publishProperties.getPublishMode()
-                == fr.inra.oresing.workflow.cascade.config.PublishProperties.PublishMode.CACHED_ROTATION;
         DataRepository dataRepo = repository.getRepository(application).data();
         org.springframework.jdbc.core.JdbcTemplate localJdbc =
                 new org.springframework.jdbc.core.JdbcTemplate(dataRepo.getDataSource());
-        if (!cachedRotation) {
-            // Legacy CASCADE_ALWAYS : DELETE simple sans snapshot
-            repository.getRepository(application).data().removeByFileId(ev.fileId());
-            return 0L;
-        }
-        // CACHED_ROTATION : fast path optimization for republish .
-        BinaryFileRepository bfRepo = repository.getRepository(application).binaryFile();
-        long existingCacheSize = 0L;
-        try { existingCacheSize = bfRepo.findProcessedSize(ev.fileId()); }
-        catch (RuntimeException ex) { log.warn("findProcessedSize failed fileId={} : {}", ev.fileId(), ex.getMessage()); }
-        boolean configHashKnown = bfRepo.tryFindById(ev.fileId())
-                .map(BinaryFile::getParams)
-                .map(BinaryFileInfos::configHash)
-                .filter(h -> !h.isBlank())
-                .isPresent();
-        long snapshotRows = 0L;
-        if (existingCacheSize > 0 && configHashKnown) {
-            // Cache + hash deja captures ( upload ou 1er publish ) . Cache
-            // valide tant que configHash inchange - garde-fou applique au
-            // republish via tryFast = hashMatch && processedSize > 0 . On
-            // skip le snapshot redondant + couteux ( evite >1GB string_agg
-            // qui plantait + clearProcessedData destructeur ) .
-            log.info("CACHED_ROTATION unpublish : skip snapshot ( cache deja present , size={} , configHash known ) fileId={}",
-                    existingCacheSize, ev.fileId());
-        } else {
-            // Cache absent OU configHash manquant : fichier pre-feature ou
-            // cache jamais capture . Snapshot best-effort pour alimenter
-            // cache + configHash . En cas d'echec : log warn , pas de
-            // clearProcessedData ( la branch garantit qu'il n'y a rien
-            // a perdre = cache absent au depart ) .
-            var snapshotTx = newRequiresNewTx();
-            try {
-                long[] holder = new long[]{0L};
-                snapshotTx.executeWithoutResult(status ->
-                        backendPidRegistry.runWithRegistration(localJdbc, ev.correlationId(), () -> {
-                            holder[0] = bfRepo.snapshotProcessedDataFromReferenceValue(
-                                    ev.fileId(), dataRepo.getSchemaName());
-                            configHashService.computeHash(application, ev.dataName()).ifPresent(currentHash ->
-                                    bfRepo.updateConfigHash(ev.fileId(), currentHash));
-                        }));
-                snapshotRows = holder[0];
-                log.info("CACHED_ROTATION unpublish : snapshot {} rows -> processed_data ( fileId={} , cache was missing )",
-                        snapshotRows, ev.fileId());
-            } catch (RuntimeException ex) {
-                log.warn("CACHED_ROTATION snapshot failed for fileId={} : {} ( fallback : DELETE only , republish ira en cascade )",
-                        ev.fileId(), ex.getMessage());
-                // Pas de clearProcessedData : on est dans la branche cache-absent ,
-                // rien a clear . Suppression du clearProcessedData destructeur qui
-                // existait dans la version precedente et detruisait des caches
-                // valides pre-existants .
-            }
-        }
+
+        // Live phase = DELETE_ROWS . L'unpublish n'a plus de snapshot best-effort
+        // ( supprime avec le refacto direct-COPY ) : si le cache est absent au
+        // moment de l'unpublish , il restera absent jusqu'au prochain publish ,
+        // qui regenerera le cache via Phase2Handler.doPublishWithinScope
+        // ( voir capture conditionnelle juste apres addData ) .
+        logRepository.updatePhase(ev.correlationId(),
+                fr.inra.oresing.workflow.WorkflowPhase.DELETE_ROWS);
+
         // Checkpoint cancel avant DELETE potentiellement long .
         if (coordinator.isCancelled(ev.correlationId())) {
             throw new java.util.concurrent.CancellationException("Cancelled before DELETE phase");
         }
-        // DELETE referencevalue dans une tx neuve ( evite poison Postgres 25P02
-        // si le snapshot precedent a abort ) . pg_cancel_backend possible via
-        // backendPidRegistry pour interrompre le DELETE long sur gros datasets .
+        // DELETE referencevalue dans une tx neuve . pg_cancel_backend possible
+        // via backendPidRegistry pour interrompre le DELETE long sur gros datasets .
         var deleteTx = newRequiresNewTx();
         deleteTx.executeWithoutResult(status ->
                 backendPidRegistry.runWithRegistration(localJdbc, ev.correlationId(),
-                        () -> repository.getRepository(application).data().removeByFileId(ev.fileId())));
-        return snapshotRows;
+                        () -> dataRepo.removeByFileId(ev.fileId())));
+        return 0L;
     }
 
     /**
@@ -664,12 +629,19 @@ public class PublishLifecyclePhase2Handler {
         if (coordinator.isCancelled(ev.correlationId())) {
             throw new java.util.concurrent.CancellationException("Cancelled before DELETE_FILE");
         }
+        // Live phase tracking : 2 sub-steps visibles , chacune commitee
+        // separement ne donnerait pas atomicite globale ; on garde le SQL
+        // dans une seule tx mais on publie la phase principale juste avant .
+        logRepository.updatePhase(ev.correlationId(),
+                fr.inra.oresing.workflow.WorkflowPhase.DELETE_ROWS);
         newRequiresNewTx().executeWithoutResult(status -> {
             if (ev.wasPublished()) {
                 repository.getRepository(application).data().removeByFileId(ev.fileId());
             }
             serviceContainer.binaryFileService().removeFile(application, ev.fileId());
         });
+        logRepository.updatePhase(ev.correlationId(),
+                fr.inra.oresing.workflow.WorkflowPhase.DELETE_FILE_ROW);
         return 0L;
     }
 

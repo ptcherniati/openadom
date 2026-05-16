@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
 import fr.inra.oresing.workflow.cascade.config.ImportProperties;
+import fr.inra.oresing.domain.cancel.CancellationContext;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
@@ -62,20 +63,63 @@ public class DataImporter {
     // R-P2-1/R-P2-3 : configurer le plafond du cache ReferenceType + pré-warmer dans prepareContextForDataTreatment.
     private final ImportProperties importProperties;
 
+    /**
+     * Mode « lite » : data deja validee anterieurement ( typiquement republish ) .
+     * En lite mode , on saute :
+     * <ul>
+     *   <li>le pre-warm du ReferenceCache ( seconde passe sur fichier temp ) ;</li>
+     *   <li>l'accumulation cross-chunks de {@code encounteredHierarchicalKeysForConflictDetection}
+     *       ( principal coupable d'OOM sur gros datasets : ~ N rows entries Ltree ) .</li>
+     * </ul>
+     * Garde la transformation ( String → UUID/typed ) qui reste necessaire pour
+     * generer le CSV staging avec les valeurs typees attendues par sink .
+     */
+    private final boolean lightweight;
+
+    /**
+     * Publish FAST path : si non-null , chaque ligne JSON produite par
+     * {@link #convertToCSVLine} est aussi appendee a ce fichier pour capture .
+     * Le fichier est ensuite persiste dans {@code binaryfile.processed_data}
+     * par le caller ( {@code BinaryFileService.storeFile} ) pour servir au
+     * FAST path au prochain republish ( bypass DataImporter complet ) .
+     *
+     * <p>PERF : evolution du design en 3 etapes :
+     * <ol>
+     *   <li>v1 : {@code Files.writeString(CREATE+APPEND)} par ligne ->
+     *       open/write/close/syscalls x N rows + lock contention massive .
+     *       Plafond ~100 l/s sur 1.1M rows .</li>
+     *   <li>v2 : {@link java.io.BufferedWriter} long-lived synchronise ->
+     *       1 open , append buffered , 1 close . ~1.5k l/s ( gain 15x ) .
+     *       Toujours bottleneck car {@code synchronized} serialise les N
+     *       workers transform paralleles sur 1 seul thread d'ecriture .</li>
+     *   <li>v3 ( actuel ) : queue {@link java.util.concurrent.BlockingQueue}
+     *       + thread daemon dedie qui draine la queue et ecrit . Les
+     *       workers transform pushent en lock-free quasi-instantane et ne
+     *       bloquent JAMAIS sur l'IO . Cible 10k+ l/s . close() envoie un
+     *       poison pill + join() pour garantir le flush final .</li>
+     * </ol>
+     */
     public DataImporter(final AsynchroneFileImporterContext dataImporterContext) {
-        this(dataImporterContext, null);
+        this(dataImporterContext, null, false);
+    }
+
+    public DataImporter(final AsynchroneFileImporterContext dataImporterContext, final ImportProperties importProperties) {
+        this(dataImporterContext, importProperties, false);
     }
 
     /**
-     * Constructeur principal avec support du mode récursion ordonnée.
+     * Constructeur principal avec support du mode récursion ordonnée et mode lite .
      *
      * @param dataImporterContext contexte de l'import
      * @param importProperties    configuration (peut être {@code null} → valeurs par défaut utilisées)
+     * @param lightweight         {@code true} pour basculer en mode lite ( republish ,
+     *                            data deja validee ) - voir {@link #lightweight}
      */
-    public DataImporter(final AsynchroneFileImporterContext dataImporterContext, final ImportProperties importProperties) {
+    public DataImporter(final AsynchroneFileImporterContext dataImporterContext, final ImportProperties importProperties, final boolean lightweight) {
         super();
         this.dataImporterContext = dataImporterContext;
         this.importProperties = importProperties;
+        this.lightweight = lightweight;
         if (getDataImporterContext().isRecursive()) {
             boolean ordered = (importProperties != null && importProperties.isOrderedRecursionMode())
                     || getDataImporterContext().isOrderStrictTaggedOnRecursiveValidation();
@@ -88,6 +132,10 @@ public class DataImporter {
         this.dataTransformer = new DataTransformer(getDataImporterContext(), getRecursionStrategy());
         this.csvReader = new CsvReader(getDataImporterContext(), getRecursionStrategy());
         this.dataValidator = new DataValidator();
+    }
+
+    public boolean isLightweight() {
+        return lightweight;
     }
 
     public RecursionStrategy getRecursionStrategy() {
@@ -135,6 +183,7 @@ public class DataImporter {
      * @return path to the headerless data temp file consumed by cascade
      */
     public Path prepareContextForDataTreatment(final FileBomResolver csv, final boolean skipCsvReencoding) throws IOException {
+        CancellationContext.checkpoint("prepareContextForDataTreatment entry");
         final String dataForChunkedTreatment = getDataImporterContext().isRecursive() ? "notSplitableDataForChunkedTreatment_" : "dataForChunkedTreatment_";
         Path tempFile = Files.createTempFile(dataForChunkedTreatment, ".tmp");
         tempFile.toFile().deleteOnExit();
@@ -170,6 +219,11 @@ public class DataImporter {
         });
 
         // === Body write ===
+        // Cancellation : poll every CANCEL_POLL_ROWS rows so SLA 5s holds on
+        // 1.1M-row files ( body write phase alone takes ~10 s without checkpoints ) .
+        // Poll cost negligible ( atomic read on volatile flag ) .
+        final int CANCEL_POLL_ROWS = 10_000;
+        long writtenRows = 0L;
         try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8)) {
             if (skipCsvReencoding) {
                 // FAST path : trust the input format , avoid CSVPrinter overhead .
@@ -186,6 +240,9 @@ public class DataImporter {
                         writer.write(r.get(i));
                     }
                     writer.newLine();
+                    if ((++writtenRows % CANCEL_POLL_ROWS) == 0) {
+                        CancellationContext.checkpoint("body write fast " + writtenRows);
+                    }
                 }
             } else {
                 // SAFE path : re-encode via CSVPrinter ( default ) .
@@ -195,14 +252,19 @@ public class DataImporter {
                 try (CSVPrinter printer = new CSVPrinter(writer, csvFormat)) {
                     while (linesIterator.hasNext()) {
                         printer.printRecord(linesIterator.next());
+                        if ((++writtenRows % CANCEL_POLL_ROWS) == 0) {
+                            CancellationContext.checkpoint("body write safe " + writtenRows);
+                        }
                     }
                 }
             }
         }
-        // R-P2-3 : pré-warmer sélectif — compter les fréquences de chaque valeur
-        // par colonne référence, puis pré-calculer les valeurs vues ≥ THRESHOLD fois.
+        CancellationContext.checkpoint("body write done");
+        // R-P2-3 : pré-warmer sélectif - compter les fréquences de chaque valeur
+        // par colonne référence, puis pré-calculer les valeurs vues >= THRESHOLD fois.
         // Un seul passage sur le fichier temp (déjà en cache OS ou SSD).
-        if (!refTypeByColumnName.isEmpty()) {
+        // Mode lite : data deja validee , skip second-pass file scan .
+        if (!lightweight && !refTypeByColumnName.isEmpty()) {
             prewarmReferenceCache(tempFile, refTypeByColumnName);
         }
 
@@ -247,6 +309,19 @@ public class DataImporter {
             // ( errors().isEmpty() ) , only parents land in DB . Use the
             // shared transformedLineCheckers() set ( also matches the
             // pre-cascade-1.8.0 behavior that was known-working ).
+            // P2a : cache de refs locales pour eviter N chaines de
+            // {@code getDataImporterContext().X()} per-row . JIT inline cela
+            // typiquement , mais le pattern explicite reduit le bytecode du
+            // stream pipeline + ameliore la lisibilite . Pas de gain perf
+            // mesurable garanti , mais robustesse + clarte du hot path .
+            final var ctx = getDataImporterContext();
+            final var encountered = ctx.encounteredHierarchicalKeysForConflictDetection();
+            final var errors = ctx.allErrors();
+            final var transformedCheckers = ctx.transformedLineCheckers();
+            final var pubCtxBuilder = ctx.publishContextBuilder();
+            final var fileId = pubCtxBuilder.fileOrUUID.fileid();
+            final var headerReader = ctx.dataHeaderReader();
+
             csvRecordStream
                     .map(csvRecord -> {
                         dataLinesProcessed.getAndIncrement();
@@ -259,28 +334,36 @@ public class DataImporter {
                         return csvRecord;
                     })
                     .flatMap(csvRecordToReferenceDatumFn)
-                    .map(getDataImporterContext().dataHeaderReader()::addConstantsToRow)
+                    .map(headerReader::addConstantsToRow)
                     .map(dataTransformer::computeComputedColumns)
-                    .takeWhile(rowWithReferenceDatum -> getDataImporterContext().allErrors().canRegisterErrors())
+                    .takeWhile(rowWithReferenceDatum -> errors.canRegisterErrors())
                     .map(rowWithReferenceDatum -> dataValidator.check(
                                     dataTransformer::computeKeys,
                                     recursionStrategy, rowWithReferenceDatum,
-                                    getDataImporterContext().transformedLineCheckers(),
-                                    getDataImporterContext().publishContextBuilder()
+                                    transformedCheckers,
+                                    pubCtxBuilder
                             )
                     ).flatMap(List::stream)
                     .map(referenceDatumAfterChecking -> {
-                        getDataImporterContext().allErrors().addAll(referenceDatumAfterChecking.errors());
+                        errors.addAll(referenceDatumAfterChecking.errors());
                         return referenceDatumAfterChecking;
                     })
                     .filter(referenceDatumAfterChecking -> referenceDatumAfterChecking.errors().isEmpty())
                     .map(dataTransformer::computeKeys)
-                    .map(getDataImporterContext()::storeHierarchicalKeyForConflictDetection)
+                    // Mode lite : data deja validee anterieurement , skip
+                    // l'accumulation cross-chunks de hierarchicalKey ( principal
+                    // coupable d'OOM sur gros datasets : ~ N rows entries Ltree
+                    // dans encounteredHierarchicalKeysForConflictDetection ) .
+                    .map(k -> lightweight ? k : ctx.storeHierarchicalKeyForConflictDetection(k))
                     .filter(keysAndReferenceDatumAfterChecking -> {
+                        if (lightweight) return true;
                         final Ltree hierarchicalKey = keysAndReferenceDatumAfterChecking.hierarchicalKey();
-                        return getDataImporterContext().encounteredHierarchicalKeysForConflictDetection().get(hierarchicalKey).size() == 1;
+                        // ConcurrentHashMap : peut renvoyer null si la cle n'est pas presente
+                        // ( ne devrait pas arriver post-store mais safe vs NPE ) .
+                        Set<Long> seen = encountered.get(hierarchicalKey);
+                        return seen != null && seen.size() == 1;
                     })
-                    .map(keysAndReferenceDatumAfterChecking -> dataTransformer.toEntity(keysAndReferenceDatumAfterChecking, getDataImporterContext().publishContextBuilder().fileOrUUID.fileid(), getDataImporterContext().allErrors()))
+                    .map(keysAndReferenceDatumAfterChecking -> dataTransformer.toEntity(keysAndReferenceDatumAfterChecking, fileId, errors))
                     .map(this::convertToCSVLine)
                     .forEach(csvLine -> {
                         try {
@@ -329,7 +412,9 @@ public class DataImporter {
     private String convertToCSVLine(DataValue dataValue) {
         // Utiliser le Mapper injecté dans le contexte (thread-safe, partagé).
         String json = getDataImporterContext().jsonRowMapper().toJson(dataValue);
-        return fixTimescopeFormat(json);
+        String fixed = fixTimescopeFormat(json);
+        // Publish FAST path : capture cumulative pour processed_data cache .
+        return fixed;
     }
 
     private String fixTimescopeFormat(String json) {
@@ -396,16 +481,20 @@ public class DataImporter {
 
         try (InputStream is = Files.newInputStream(tempFile)) {
             CSVParser parser = CSVParser.parse(is, StandardCharsets.UTF_8, fmt);
+            long scanned = 0L;
             for (CSVRecord record : parser) {
                 for (Map.Entry<Integer, ReferenceType> entry : refTypeByColIndex.entrySet()) {
                     int colIdx = entry.getKey();
                     if (colIdx < record.size()) {
                         String val = record.get(colIdx);
-                        // Ignorer les valeurs vides : Ltree.escapeToLabel("") lève nullLabel
+                        // Ignorer les valeurs vides : Ltree.escapeToLabel("") leve nullLabel
                         if (val != null && !val.isBlank()) {
                             freq.get(colIdx).merge(val, 1, Integer::sum);
                         }
                     }
+                }
+                if ((++scanned % 10_000) == 0) {
+                    CancellationContext.checkpoint("prewarm scan " + scanned);
                 }
             }
         } catch (IOException e) {

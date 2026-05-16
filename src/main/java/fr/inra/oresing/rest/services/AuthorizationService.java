@@ -582,6 +582,15 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         return scopesCache == null ? 0 : scopesCache.size();
     }
 
+    /**
+     * Observabilité : taille mémoire approximative du cache scopes via
+     * sérialisation Jackson . Appelée uniquement par CacheSizeEstimator
+     * sur demande admin , pas en hot path .
+     */
+    public long estimateAuthorizationScopesCacheSizeBytes(com.fasterxml.jackson.databind.ObjectMapper mapper) {
+        return scopesCache == null ? 0L : scopesCache.estimateSizeBytes(mapper);
+    }
+
     public boolean isAuthorizationScopesCacheEnabled() {
         return authorizationScopesCacheEnabled;
     }

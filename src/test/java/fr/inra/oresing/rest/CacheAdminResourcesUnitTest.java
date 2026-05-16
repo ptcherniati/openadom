@@ -45,6 +45,8 @@ class CacheAdminResourcesUnitTest {
     private AuthorizationService authorizationService;
     private ApplicationService applicationService;
     private fr.inra.oresing.cache.DataVersioningScopeCacheService dataVersioningScopeCacheService;
+    private fr.inra.oresing.cache.CacheSizeEstimator cacheSizeEstimator;
+    private fr.inra.oresing.cache.CachePreloader cachePreloader;
     private CacheAdminResources resources;
 
     @BeforeEach
@@ -54,13 +56,15 @@ class CacheAdminResourcesUnitTest {
         authorizationService = mock(AuthorizationService.class);
         applicationService = mock(ApplicationService.class);
         dataVersioningScopeCacheService = mock(fr.inra.oresing.cache.DataVersioningScopeCacheService.class);
+        cacheSizeEstimator = mock(fr.inra.oresing.cache.CacheSizeEstimator.class);
+        cachePreloader = mock(fr.inra.oresing.cache.CachePreloader.class);
 
         when(serviceContainer.dataService()).thenReturn(dataService);
         when(serviceContainer.authorizationService()).thenReturn(authorizationService);
         when(serviceContainer.applicationService()).thenReturn(applicationService);
         when(serviceContainer.dataVersioningScopeCacheService()).thenReturn(dataVersioningScopeCacheService);
 
-        resources = new CacheAdminResources(serviceContainer);
+        resources = new CacheAdminResources(serviceContainer, cacheSizeEstimator, cachePreloader);
     }
 
     @Test

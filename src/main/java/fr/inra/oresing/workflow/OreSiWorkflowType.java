@@ -33,6 +33,32 @@ public enum OreSiWorkflowType implements WorkflowTypeKey {
     /** Extraction of an application charte. */
     EXTRACT_CHARTE,
 
-    /** Toggle the {@code published} flag of a binary file (one-shot action). */
-    PUBLISH_TOGGLE
+    /**
+     * Publication d'un fichier deja stocke : DELETE rows existantes ( si
+     * republie ) + INSERT data via cascade pipeline ( pipeline complet
+     * STAGING + finalize ) . Lance par toggle Publier dans le frontend .
+     */
+    PUBLISH,
+
+    /**
+     * Depublication : DELETE rows referencevalue WHERE fileId = X . Le
+     * binaryfile reste en place . Lance par toggle Depublier dans le
+     * frontend .
+     */
+    UNPUBLISH,
+
+    /**
+     * Suppression d'un fichier : DELETE binaryfile + DELETE rows si le
+     * fichier etait publie au moment de la suppression .
+     */
+    DELETE_FILE,
+
+    /**
+     * Construction admin du cache {@code binaryfile.processed_data} pour un
+     * fichier deja uploade : execute la pipeline cascade en mode capture-only
+     * ( pas d'ecriture vers referencevalue ) , persiste le JSON valide+
+     * transforme + le {@code configHash} pour activer le Publish FAST path
+     * au prochain republish . Equivalent " pre-compute " du cache .
+     */
+    BUILD_CACHE
 }

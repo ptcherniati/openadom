@@ -95,6 +95,14 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
                 referencedFilesCacheTtlMinutes);
     }
 
+    /**
+     * LiteImporter : capture du hash de config datatype au moment du upload .
+     * Optionnel ( {@code @Autowired(required = false)} ) : test unitaires
+     * passent sans this bean wired .
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private fr.inra.oresing.rest.usecases.storage.versioning.ConfigHashService configHashService;
+
     public BinaryFileService(OreSiRepository repository, ServiceContainer serviceContainer, AuthenticationService authenticationService, JsonRowMapper jsonRowMapper) {
         this.repository = repository;
         this.serviceContainer = serviceContainer;
@@ -115,6 +123,20 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
         referencedFilesCache.invalidateMatching(k -> k.startsWith(prefix));
     }
 
+    /** Observabilité : taille courante du cache referencedFiles . */
+    public int getReferencedFilesCacheSize() {
+        return referencedFilesCache == null ? 0 : referencedFilesCache.size();
+    }
+
+    /**
+     * Observabilité : taille mémoire approximative du cache
+     * referencedFiles via sérialisation Jackson . Appelée uniquement
+     * par CacheSizeEstimator , pas en hot path .
+     */
+    public long estimateReferencedFilesCacheSizeBytes(com.fasterxml.jackson.databind.ObjectMapper mapper) {
+        return referencedFilesCache == null ? 0L : referencedFilesCache.estimateSizeBytes(mapper);
+    }
+
     @Override
     @Transactional
     public UUID storeFile(final Application application, final DataFile file, String comment, final BinaryFileDataset binaryFileDataset) throws IOException {
@@ -130,7 +152,20 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
         binaryFile.setName(file.fileName() != null ? file.fileName() : "charte.pdf");
         binaryFile.setSize(file.fileSize());
         binaryFile.setFileData(file.inputStream());
-        final BinaryFileInfos binaryFileInfos = BinaryFileInfos.forPublish(false, OreSiApiRequestContext.getRequestUserId(), LocalDateTime.now().toString(), binaryFileDataset);
+        BinaryFileInfos binaryFileInfos = BinaryFileInfos.forPublish(false, OreSiApiRequestContext.getRequestUserId(), LocalDateTime.now().toString(), binaryFileDataset);
+        // LiteImporter : capturer le hash de config du datatype au moment du
+        // upload . Utilise plus tard au republish par
+        // PublishLifecyclePhase2Handler pour decider lite vs FULL ( si le
+        // datatype n'est pas resolu , on garde null = forcer FULL ) .
+        String datatype = Optional.ofNullable(binaryFileDataset)
+                .map(BinaryFileDataset::getDatatype)
+                .orElse(null);
+        if (datatype != null && configHashService != null) {
+            String hash = configHashService.computeHash(application, datatype).orElse(null);
+            if (hash != null) {
+                binaryFileInfos = binaryFileInfos.withConfigHash(hash);
+            }
+        }
         binaryFile.setParams(binaryFileInfos);
         return getBinaryFileRepository(application).store(binaryFile);
     }

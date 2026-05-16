@@ -158,4 +158,54 @@ public class MemoryCache<K, V> {
     public Map<K, Entry<V>> snapshot() {
         return Map.copyOf(map);
     }
+
+    /**
+     * Estime la taille mémoire occupée par les valeurs du cache en
+     * sérialisant chaque entrée en JSON et en sommant les bytes. C'est
+     * une approximation ( la sérialisation JSON ne reflète pas
+     * exactement la footprint heap JVM : overhead objets , compressed
+     * oops , déduplication de strings , etc. ) mais donne un indicateur
+     * fiable de tendance pour l'observabilité admin .
+     *
+     * <p>Coût : O ( N entries * size ( value ) ) en CPU . Ne pas appeler
+     * dans le hot path . Utilisable depuis un endpoint admin dédié avec
+     * un éventuel TTL côté caller pour éviter le hammering .
+     *
+     * @param mapper      Jackson mapper utilisé pour la sérialisation
+     * @param valueExtractor extracteur de la valeur métier depuis l'entrée ;
+     *                    permet aux types {@code V} qui ne sont pas
+     *                    directement sérialisables ( ex . holders avec
+     *                    field timestamp ) de fournir une vue projetée
+     * @return total approximatif en octets ; 0 si cache vide
+     */
+    public long estimateSizeBytes(com.fasterxml.jackson.databind.ObjectMapper mapper,
+                                  java.util.function.Function<V, Object> valueExtractor) {
+        long total = 0L;
+        long expiredSkipped = 0L;
+        for (Map.Entry<K, Entry<V>> e : map.entrySet()) {
+            if (isExpired(e.getValue())) {
+                expiredSkipped++;
+                continue;
+            }
+            try {
+                Object projected = valueExtractor == null
+                        ? e.getValue().value()
+                        : valueExtractor.apply(e.getValue().value());
+                if (projected == null) continue;
+                total += mapper.writeValueAsBytes(projected).length;
+            } catch (com.fasterxml.jackson.core.JsonProcessingException ex) {
+                log.debug("estimateSizeBytes : serialization failed for cache {} entry , skipping : {}",
+                        name, ex.getMessage());
+            }
+        }
+        if (expiredSkipped > 0) {
+            log.debug("estimateSizeBytes : skipped {} expired entries in cache {}", expiredSkipped, name);
+        }
+        return total;
+    }
+
+    /** Variante sans extracteur : sérialise directement la valeur métier. */
+    public long estimateSizeBytes(com.fasterxml.jackson.databind.ObjectMapper mapper) {
+        return estimateSizeBytes(mapper, null);
+    }
 }

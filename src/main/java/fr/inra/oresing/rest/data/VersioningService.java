@@ -165,8 +165,9 @@ public class VersioningService {
         if (compId != null) compensationLogService.confirm(compId);
         // Invalidation cache referencedFiles : toute mutation reelle du
         // binaryfile / des referencevalue rows associees rend le cache
-        // potentiellement obsolete. Le toggle publish ( PublishToggleUseCase )
-        // ne passe pas ici donc il ne deborde pas le cache pour rien.
+        // potentiellement obsolete. Le toggle publish ( PublishLifecycleService )
+        // gere sa propre invalidation en phase 2 ; on s'occupe ici uniquement
+        // du flux upload / createData .
         if (serviceContainer.binaryFileService() instanceof fr.inra.oresing.rest.binaryFile.BinaryFileService bfs) {
             bfs.invalidateReferencedFilesCache(application.getName());
         }
@@ -288,29 +289,6 @@ public class VersioningService {
                 .testAndBuild(dataRepository);
     }
 
-    @Transactional
-    public DataVersioningResult unPublishVersionBeforeDelete(
-            Locale locale, String applicationName, UUID id, boolean withEmail) throws IOException {
-        Optional<BinaryFile> storedFile = serviceContainer.binaryFileService().getFile(applicationName, id);
-        if (storedFile.isPresent()) {
-            Optional<String> dataName = storedFile
-                    .map(BinaryFile::getParams)
-                    .map(BinaryFileInfos::binaryFiledataset)
-                    .map(BinaryFileDataset::getDatatype);
-            if (dataName.isPresent()) {
-                return createData(
-                        locale,
-                        applicationName,
-                        dataName.get(),
-                        null,
-                        true,
-                        withEmail
-                );
-            }
-
-        }
-        return null;
-    }
 
     private DataRepository dataRepository(Application application) {
         return repository.getRepository(application).data();

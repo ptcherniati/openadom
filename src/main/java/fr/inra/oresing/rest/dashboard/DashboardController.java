@@ -41,7 +41,11 @@ import java.util.UUID;
  * <p>Phase 3 dashboard ( issue #62 ).
  */
 @RestController
-@RequestMapping("/api/dashboard/workflows")
+// Double prefix : oa-live admin appelle /api/dashboard/workflows ( apiBase = '' ) ,
+// le frontend OpenADOM principal passe par Fetcher qui prefixe automatiquement
+// /api/v1/ ( cf config.ts API_URL ) . On expose les deux pour eviter de toucher
+// le client : meme controller , meme code , aliases multiples .
+@RequestMapping({"/api/dashboard/workflows", "/api/v1/dashboard/workflows"})
 @RequiredArgsConstructor
 @Tag(name = "Dashboard",
      description = "Endpoints consumed by the oa-live real-time workflow dashboard")
@@ -90,9 +94,14 @@ public class DashboardController {
             @Parameter(description = "Partial match on application_name ( ILIKE %..% )")
             @RequestParam(required = false) String app,
             @Parameter(description = "Partial match on user_login OR user_id ( ILIKE %..% )")
-            @RequestParam(required = false) String user) {
+            @RequestParam(required = false) String user,
+            @Parameter(description = "Exclude active statuses ( IN_PROGRESS / UPLOADING / "
+                    + "CHUNKING / PROCESSING / LOADING_DB ) - default true . Active workflows "
+                    + "are visible in the Live tab , the History view should only show terminal "
+                    + "outcomes ( COMPLETED / FAILED / CANCELLED / RATE_LIMITED ) .")
+            @RequestParam(required = false, defaultValue = "true") boolean terminalOnly) {
         return ResponseEntity.ok(
-                service.listHistory(limit, offset, type, status, app, user));
+                service.listHistory(limit, offset, type, status, app, user, terminalOnly));
     }
 
     @Operation(

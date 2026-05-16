@@ -39,9 +39,14 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
     private Set<String> knownSpecialCharacters = new HashSet<>();
 
     // ─── R-P2-1 : index O(1) naturalKey → LineIdentityColumnName ──────────────
-    // Construit une seule fois dans le constructeur et dans setReferenceValues().
-    // Remplace le stream().filter().findFirst() O(N) dans check().
-    private Map<Ltree, DataValue.LineIdentityColumnName> naturalKeyIndex = new HashMap<>();
+    // Construit une seule fois dans le constructeur original.
+    // TRANSFORM iter2 #1 : volatile + partagé via copy() pour eviter un rebuild
+    // O(N) HashMap (jusqu'a 50k entrees) a chaque copy() per row sur le hot path
+    // toJsonForFrontend. Profile async-profiler: 357 samples (18% CPU) sur
+    // ReferenceType.<init> -> buildNaturalKeyIndex / HashMap.put.
+    // volatile car reassigne lors de setReferenceValues, lu depuis workers
+    // Cascade en parallele.
+    private volatile Map<Ltree, DataValue.LineIdentityColumnName> naturalKeyIndex = new HashMap<>();
 
     // ─── R-P2-2 : cache lazy partagé entre l'original et toutes ses copies ────
     // ConcurrentHashMap → thread-safe pour les workers Cascade parallèles.
@@ -68,22 +73,26 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
         this.seenOnce = ConcurrentHashMap.newKeySet();
         this.precomputedResults = new ConcurrentHashMap<>();
         buildNaturalKeyIndex(referenceValues);
+        // TRANSFORM iter2 #1 : partager l'index avec les copies ; pas de rebuild .
         clone = () -> new ReferenceType(target, refType, referenceValues, transformer,
-                this.lineIdentityColumnName, this.seenOnce, this.precomputedResults);
+                this.lineIdentityColumnName, this.seenOnce, this.precomputedResults,
+                this.naturalKeyIndex);
     }
 
     /**
      * Constructeur de copie partagée (utilisé par copy() et clone).
-     * Les caches {@code seenOnce} et {@code precomputedResults} sont PARTAGÉS
-     * avec l'instance parente → les résultats calculés par un worker bénéficient
-     * à tous les autres workers sans recalcul.
+     * Les caches {@code seenOnce}, {@code precomputedResults} et l'index
+     * {@code naturalKeyIndex} sont PARTAGÉS avec l'instance parente → les
+     * résultats calculés par un worker bénéficient à tous les autres workers
+     * sans recalcul, et l'index O(N) n'est jamais reconstruit lors d'un copy().
      */
     ReferenceType(final CheckerTarget target, final String refType,
                   final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues,
                   final LineChecker.Transformer transformer,
                   DataValue.LineIdentityColumnName lineIdentityColumnName,
                   Set<Ltree> sharedSeenOnce,
-                  Map<Ltree, DataValue.LineIdentityColumnName> sharedPrecomputedResults) {
+                  Map<Ltree, DataValue.LineIdentityColumnName> sharedPrecomputedResults,
+                  Map<Ltree, DataValue.LineIdentityColumnName> sharedNaturalKeyIndex) {
         super();
         this.target = target;
         this.refType = refType;
@@ -92,9 +101,11 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
         this.lineIdentityColumnName = lineIdentityColumnName;
         this.seenOnce = sharedSeenOnce;
         this.precomputedResults = sharedPrecomputedResults;
-        buildNaturalKeyIndex(referenceValues);
+        // TRANSFORM iter2 #1 : pas de rebuild ; on partage l'index immuable .
+        this.naturalKeyIndex = sharedNaturalKeyIndex;
         clone = () -> new ReferenceType(target, refType, referenceValues, transformer,
-                this.lineIdentityColumnName, this.seenOnce, this.precomputedResults);
+                this.lineIdentityColumnName, this.seenOnce, this.precomputedResults,
+                this.naturalKeyIndex);
     }
 
     /** Configure le plafond du cache. Appelé depuis DataImporter après importProperties. */
@@ -224,8 +235,11 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
 
     @Override
     public FieldType copy() {
-        // R-P2-2 : copie avec partage des caches seenOnce + precomputedResults
-        // → les workers Cascade parallèles alimentent et consomment le même cache.
+        // R-P2-2 + TRANSFORM iter2 #1 : copie avec partage des caches seenOnce
+        // + precomputedResults + naturalKeyIndex → les workers Cascade
+        // parallèles partagent les caches ET l'index O(N) n'est jamais
+        // reconstruit (auparavant 357 samples / 18% CPU sur le hot path
+        // toJsonForFrontend → ReferenceType.<init>).
         final ReferenceType referenceType = new ReferenceType(
                 this.target,
                 this.refType,
@@ -233,7 +247,8 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
                 this.transformer,
                 this.lineIdentityColumnName,
                 this.seenOnce,          // partagé
-                this.precomputedResults  // partagé
+                this.precomputedResults, // partagé
+                this.naturalKeyIndex     // partagé : pas de rebuild O(N)
         );
         referenceType.value = value;
         referenceType.maxCacheEntries = this.maxCacheEntries;

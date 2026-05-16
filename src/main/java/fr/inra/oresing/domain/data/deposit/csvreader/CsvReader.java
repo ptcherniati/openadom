@@ -67,13 +67,16 @@ public class CsvReader {
     /**
      * Étant donné les clé hiérarchiques qu'on a rencontré (normalement une seule par ligne), vérifie s'il y a des doublons et calcul des erreurs le cas échéant
      */
-    public Set<CsvRowValidationCheckResult> getHierarchicalKeysConflictErrors(final SetMultimap<Ltree, Long> hierarchicalKeys) {
-        return hierarchicalKeys.asMap().entrySet().stream()
-                .filter(entry -> {
-                    final Collection<Long> lineNumbers = entry.getValue();
-                    return lineNumbers.size() > 1;
+    public Set<CsvRowValidationCheckResult> getHierarchicalKeysConflictErrors(final Map<Ltree, Set<Long>> hierarchicalKeys) {
+        return hierarchicalKeys.entrySet().stream()
+                .filter(entry -> entry.getValue().size() > 1)
+                .flatMap(entry -> {
+                    // Adapter Map.Entry<Ltree, Set<Long>> -> Map.Entry<Ltree, Collection<Long>>
+                    // pour reutiliser buildCsvRowValidationCheckResult sans casser sa signature .
+                    Map.Entry<Ltree, Collection<Long>> adapted =
+                            new AbstractMap.SimpleImmutableEntry<>(entry.getKey(), entry.getValue());
+                    return buildCsvRowValidationCheckResult().apply(adapted);
                 })
-                .flatMap(buildCsvRowValidationCheckResult())
                 .collect(Collectors.toSet());
     }
 

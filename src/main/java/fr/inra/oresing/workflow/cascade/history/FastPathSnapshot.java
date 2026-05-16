@@ -6,27 +6,29 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Snapshot d'un workflow publish executé via le FAST path
- * ( cache {@code processed_data} directement projeté en SQL pur
- * vers {@code referencevalue} , sans cascade DataImporter ) .
+ * Snapshot d'un workflow publish executé via le FAST path direct COPY
+ * ( cache {@code processed_data} restauré tel quel dans {@code referencevalue}
+ * via {@code COPY ... FROM stdin ( FORMAT BINARY )} , sans cascade
+ * DataImporter ni table intermédiaire ) .
  *
- * <p>Phases distinctes du pipeline FAST , exposées au frontend pour
- * remplacer la grille cascade ( workers SOURCE/TRANSFORM/SINK ) non
- * pertinente quand DataImporter est bypass :
+ * <p>Phases distinctes du pipeline , exposées au frontend pour remplacer
+ * la grille cascade ( workers SOURCE/TRANSFORM/SINK ) non pertinente quand
+ * DataImporter est bypassé :
  *
  * <ul>
- *   <li>{@link #PHASE_STREAM_CACHE} : Java lit Large Object processed_data
- *       + INSERT bulk dans temp table parsed_lines . <b>Seule phase avec
- *       progression live</b> ( ticks tous les 5000 lignes ) .</li>
- *   <li>{@link #PHASE_BUILD_REFREF} : INSERT INTO refref_pending
- *       SELECT depuis parsed_lines + JSON_TABLE refsLinkedTo .</li>
- *   <li>{@link #PHASE_DELETE_REFREF} : DELETE FROM reference_reference
- *       WHERE referenceid IN ( refref_pending ) .</li>
- *   <li>{@link #PHASE_UPSERT_FINAL} : INSERT INTO referencevalue ON CONFLICT
- *       DO UPDATE depuis parsed_lines + jsonb_populate_record .
- *       Statement unique , pas de progression intermediaire .</li>
+ *   <li>{@link #PHASE_DELETE_REFREF} : DELETE FROM reference_reference WHERE
+ *       referenceid IN ( SELECT id FROM referencevalue WHERE binaryfile=? ) .
+ *       Supprime les liens pointant vers les rows qu'on va wiper .</li>
+ *   <li>{@link #PHASE_DELETE_EXISTING} : DELETE FROM referencevalue WHERE
+ *       binaryfile = ? . On vide les rows existantes du fichier avant le
+ *       reload depuis cache .</li>
+ *   <li>{@link #PHASE_COPY_IN} : {@code COPY referencevalue FROM stdin
+ *       ( FORMAT BINARY )} streamé depuis le Large Object cache . Une
+ *       seule commande SQL ; PG encode/décode lui-même les types
+ *       composites ( authorization ) en binaire natif .</li>
  *   <li>{@link #PHASE_INSERT_REFREF} : INSERT INTO reference_reference
- *       SELECT FROM refref_pending .</li>
+ *       reconstruit depuis {@code referencevalue.refsLinkedTo} après le
+ *       COPY IN ( JSON_TABLE extraction filtré par binaryfile ) .</li>
  *   <li>{@link #PHASE_CACHE_CLEAR} : UPDATE binaryfile SET processed_data
  *       = NULL ( CACHED_ROTATION uniquement ) .</li>
  *   <li>{@link #PHASE_DONE} : terminé .</li>
@@ -46,17 +48,16 @@ public record FastPathSnapshot(
         /** Nom du fichier d'origine ( {@code BinaryFile.name} ) . Affiche tooltip oa-live . Null si non resolu . */
         String              filename) {
 
-    public static final String PHASE_STREAM_CACHE   = "STREAM_CACHE";
-    public static final String PHASE_BUILD_REFREF   = "BUILD_REFREF";
-    public static final String PHASE_DELETE_REFREF  = "DELETE_REFREF";
-    public static final String PHASE_UPSERT_FINAL   = "UPSERT_FINAL";
-    public static final String PHASE_INSERT_REFREF  = "INSERT_REFREF";
-    public static final String PHASE_CACHE_CLEAR    = "CACHE_CLEAR";
-    public static final String PHASE_DONE           = "DONE";
+    public static final String PHASE_DELETE_REFREF   = "DELETE_REFREF";
+    public static final String PHASE_DELETE_EXISTING = "DELETE_EXISTING";
+    public static final String PHASE_COPY_IN         = "COPY_IN";
+    public static final String PHASE_INSERT_REFREF   = "INSERT_REFREF";
+    public static final String PHASE_CACHE_CLEAR     = "CACHE_CLEAR";
+    public static final String PHASE_DONE            = "DONE";
 
     public static FastPathSnapshot starting(long cacheBytes, Instant at, UUID fileId, String filename) {
         return new FastPathSnapshot(
-                PHASE_STREAM_CACHE,
+                PHASE_DELETE_REFREF,
                 cacheBytes,
                 0L,
                 0L,

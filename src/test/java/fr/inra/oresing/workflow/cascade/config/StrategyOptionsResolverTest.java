@@ -37,7 +37,7 @@ class StrategyOptionsResolverTest {
         fr.inra.oresing.workflow.cascade.ExtractionRateLimiter extractionRl =
                 new fr.inra.oresing.workflow.cascade.ExtractionRateLimiter(
                         5, 0L, null, null, null);
-        ConfigFieldRegistry reg = new ConfigFieldRegistry(props, reloader, importRl, extractionRl,
+        ConfigFieldRegistry reg = new ConfigFieldRegistry(props, new PublishProperties(), reloader, importRl, extractionRl,
                 Optional.empty());
         reg.registerAll();
         return reg;
