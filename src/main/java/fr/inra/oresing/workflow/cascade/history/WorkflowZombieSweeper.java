@@ -1,5 +1,6 @@
 package fr.inra.oresing.workflow.cascade.history;
 
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -56,13 +57,29 @@ public class WorkflowZombieSweeper {
      */
     private volatile int                thresholdMinutes;
 
+    /**
+     * Active le cleanup zombie au boot ( {@link #cleanupOrphansOnBoot} ) . Si
+     * {@code true} ( defaut ) , toute row {@code IN_PROGRESS} existante au
+     * demarrage JVM est passee a {@code CANCELLED} immediatement , sans
+     * attendre le seuil normal . Hypothese : aucune workflow ne peut avoir
+     * survecu a un redemarrage de cette instance ; les rows orphelines
+     * proviennent forcement de la JVM precedente .
+     *
+     * <p>En deploiement multi-instances , desactiver via
+     * {@code app.workflow.zombie-cleanup-on-boot=false} pour eviter de
+     * tuer les workflows legitimes des autres instances .
+     */
+    private final boolean cleanupOnBoot;
+
     public WorkflowZombieSweeper(
             WorkflowLogRepository repository,
-            @Value("${app.workflow.zombie-threshold-minutes:10}") int thresholdMinutes) {
+            @Value("${app.workflow.zombie-threshold-minutes:10}") int thresholdMinutes,
+            @Value("${app.workflow.zombie-cleanup-on-boot:true}") boolean cleanupOnBoot) {
         this.repository       = repository;
         this.thresholdMinutes = thresholdMinutes;
-        log.info("WorkflowZombieSweeper configure : seuil={} min ( IN_PROGRESS plus vieux que ca = presumes morts )",
-                thresholdMinutes);
+        this.cleanupOnBoot    = cleanupOnBoot;
+        log.info("WorkflowZombieSweeper configure : seuil={} min , cleanupOnBoot={} ( IN_PROGRESS plus vieux que ca = presumes morts )",
+                thresholdMinutes, cleanupOnBoot);
     }
 
     public int getThresholdMinutes() {
@@ -77,6 +94,43 @@ public class WorkflowZombieSweeper {
         this.thresholdMinutes = v;
         log.info("WorkflowZombieSweeper threshold change : {} min -> {} min",
                 old, v);
+    }
+
+    /**
+     * Au boot Spring , passe immediatement tous les workflows {@code IN_PROGRESS}
+     * a {@code CANCELLED} avec {@code fatal_error = 'presumed dead at boot'} .
+     * Ces rows ne peuvent etre que des orphelins d'une JVM precedente
+     * ( restart , rebuild , crash ) - cette instance vient de demarrer , aucun
+     * workflow ne peut etre vivant sous sa supervision .
+     *
+     * <p>Sans ce cleanup , le {@code Reject 409} ( UNIQUE partial index sur
+     * workflow_log per fileId ) refuserait toute nouvelle PUBLISH / UNPUBLISH
+     * sur les fichiers concernes jusqu'a ce que le sweeper periodique trigger
+     * apres le seuil ( defaut 10 min ) , causant une fenetre 10 min de
+     * blocage user post-redeploy ( bug observe en dev ) .
+     *
+     * <p>En multi-instances ce comportement est inadequat ( les autres
+     * instances peuvent avoir des workflows legitimes ) : desactiver via
+     * {@code app.workflow.zombie-cleanup-on-boot=false} .
+     */
+    @PostConstruct
+    void cleanupOrphansOnBoot() {
+        if (!cleanupOnBoot) {
+            log.info("Zombie cleanup on boot : skipped ( app.workflow.zombie-cleanup-on-boot=false )");
+            return;
+        }
+        try {
+            int n = repository.markAllInProgressAsOrphans();
+            if (n > 0) {
+                log.warn("Zombie cleanup on boot : {} workflow(s) IN_PROGRESS orphan(s) de la JVM precedente passes a CANCELLED",
+                        n);
+            } else {
+                log.info("Zombie cleanup on boot : aucune row orpheline detectee");
+            }
+        } catch (RuntimeException ex) {
+            log.warn("Zombie cleanup on boot failed : {} ( le sweeper periodique prendra le relais )",
+                    ex.getMessage());
+        }
     }
 
     /**

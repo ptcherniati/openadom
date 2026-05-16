@@ -58,6 +58,32 @@ public class WorkflowLogRepository {
     private static final String MARK_ZOMBIES_SQL =
             "SELECT oa_audit.mark_zombie_workflows(?::int)";
 
+    /**
+     * Au boot Spring : passe TOUTE row {@code IN_PROGRESS} a {@code CANCELLED} ,
+     * sans seuil de duree . Hypothese : la JVM vient de demarrer , donc toute
+     * row IN_PROGRESS est forcement orpheline d'une JVM precedente . Plus
+     * agressif que {@link #MARK_ZOMBIES_SQL} qui necessite un seuil > 0 min .
+     *
+     * <p>{@code FOR UPDATE SKIP LOCKED} pour la coherence avec le sweeper
+     * periodique ( evite double cancel concurrent ; ne tient pas la row si
+     * une autre tx l'a deja lockee - acceptable au boot ) .
+     */
+    private static final String MARK_ALL_INPROGRESS_ORPHAN_SQL = """
+            WITH orphans AS (
+                SELECT correlation_id
+                FROM oa_audit.workflow_log
+                WHERE status = 'IN_PROGRESS'
+                FOR UPDATE SKIP LOCKED
+            )
+            UPDATE oa_audit.workflow_log w
+               SET status      = 'CANCELLED' ,
+                   end_time    = now() ,
+                   duration_ms = EXTRACT(EPOCH FROM (now() - w.start_time)) * 1000 ,
+                   fatal_error = 'presumed dead at boot ( orphan from previous JVM )'
+              FROM orphans o
+             WHERE w.correlation_id = o.correlation_id
+            """;
+
     private static final String BEAT_SQL =
             "SELECT oa_audit.beat_workflow(?::uuid)";
 
@@ -274,6 +300,22 @@ public class WorkflowLogRepository {
      * @param thresholdMinutes seuil ( min ) ; recommande 5 avec heartbeat
      * @return nombre de rows passees a CANCELLED
      */
+    /**
+     * Au boot Spring : passe toutes les rows {@code IN_PROGRESS} a
+     * {@code CANCELLED} immediatement , sans seuil de duree . Voir
+     * {@link #MARK_ALL_INPROGRESS_ORPHAN_SQL} pour la rationale .
+     *
+     * @return le nombre de rows orphelines passees a CANCELLED ( 0 si BD vierge )
+     */
+    public int markAllInProgressAsOrphans() {
+        try {
+            return jdbcTemplate.update(MARK_ALL_INPROGRESS_ORPHAN_SQL);
+        } catch (RuntimeException ex) {
+            log.warn("markAllInProgressAsOrphans failed : {}", ex.getMessage());
+            return 0;
+        }
+    }
+
     public int markZombies(int thresholdMinutes) {
         Integer n = jdbcTemplate.queryForObject(MARK_ZOMBIES_SQL, Integer.class, thresholdMinutes);
         return n == null ? 0 : n;

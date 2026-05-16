@@ -597,22 +597,26 @@ public class DashboardService {
 
         Optional<WorkflowSnapshot> live = registry.find(correlationId);
         if (live.isEmpty()) return Optional.empty();
-        WorkflowSnapshot snap = live.get();
-        if (!admin && !snap.userId().equals(myUserId)) {
+        WorkflowSnapshot rawSnap = live.get();
+        if (!admin && !rawSnap.userId().equals(myUserId)) {
             return Optional.empty();
         }
 
-        // P0 facade fix : si correlationId est un parent PUBLISH avec child
-        // cascade IMPORT enregistre , les compteurs cascade ( stagingRows ,
-        // finalRows , finalizePhase , binaryFileId , mergeFilePhase ) sont
-        // populated dans WorkflowActiveRegistry sous le child cid ( cf
-        // CascadeImportPipeline lines 318/624/651/681/786 ) . On resout donc
-        // le dataCid une fois et on l'utilise pour TOUS les side-map lookups
-        // registry , tandis que correlationId reste utilise pour la requete
-        // workflow_log ( oa_audit.workflow_log persiste le parent cid via
-        // recordStart Phase 1 ) . Sans cette resolution , le bloc STAGING UI
-        // affiche 0/0 systematiquement pour les workflows publish/unpublish
-        // alors que sinks transferent les rows ( bug reporte ) .
+        // Aggregate child IMPORT snapshot into the PUBLISH parent so we read
+        // child-provided fields ( recordsTotal , strategy , parallelism ) via
+        // {@code snap.<...>} below without per-call child lookups . Without
+        // this aggregation , {@code snap.recordsTotal()} stays 0 for PUBLISH
+        // parents - cascade only populates it on the child IMPORT - and the
+        // STAGING / TRANSFERT progress bars in oa-live cannot compute their
+        // denominator , showing 0 / 0 even while sinks are actively writing .
+        WorkflowSnapshot snap = aggregateChildIntoParent(rawSnap);
+
+        // Side-map lookups ( stagingRows / finalRows / finalizePhase /
+        // binaryFileId / mergeFilePhase ) are keyed by the child cascade cid
+        // in WorkflowActiveRegistry ( cf CascadeImportPipeline lines
+        // 318/624/651/681/786 ) . We resolve dataCid once and use it for ALL
+        // side-map lookups , while correlationId stays the parent cid for
+        // workflow_log reads ( oa_audit.workflow_log persists the parent ) .
         final UUID dataCid = publishLifecycleCoordinator != null
                 ? publishLifecycleCoordinator.getChildImport(correlationId).orElse(correlationId)
                 : correlationId;

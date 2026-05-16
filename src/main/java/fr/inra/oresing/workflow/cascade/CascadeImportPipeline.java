@@ -81,6 +81,17 @@ public class CascadeImportPipeline {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private fr.inra.oresing.rest.usecases.storage.versioning.PublishLifecycleCoordinator publishLifecycleCoordinator;
 
+    /**
+     * Optional : utilise pour publier la phase CASCADE_RUNNING sur le parent
+     * PUBLISH quand le cascade pipeline demarre reellement les workers .
+     * Permet a oa-live de distinguer la phase opaque {@code CASCADE_PREPARING}
+     * ( pre-warm checkers + reference cache + CSV normalize , 1-3 min ) de
+     * la phase {@code CASCADE_RUNNING} ( workers actifs , progress visible ) .
+     * Field injection required=false pour preserver les tests sans repository .
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository workflowLogRepository;
+
     public CascadeImportPipeline(
             ImportProperties       importProperties,
             ImportProgressReporter progressReporter,
@@ -250,6 +261,13 @@ public class CascadeImportPipeline {
             }
             log.info("Sub-IMPORT cascade {} enregistre comme child de PUBLISH parent {}",
                     corrUuid, publishParent);
+            // Publie CASCADE_RUNNING sur le PUBLISH parent : la phase
+            // CASCADE_PREPARING ( setup contexte cascade dans DataService ) est
+            // termine , les workers cascade s'apprete a demarrer . Permet a
+            // oa-live de basculer de "Preparation cascade" a "Cascade en cours" .
+            if (workflowLogRepository != null) {
+                workflowLogRepository.updatePhase(publishParent, fr.inra.oresing.workflow.WorkflowPhase.CASCADE_RUNNING);
+            }
         }
 
         // Marqueur lu par le finally : a true des qu un runner deferred a

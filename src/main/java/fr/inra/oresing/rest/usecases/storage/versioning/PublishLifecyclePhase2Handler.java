@@ -471,10 +471,14 @@ public class PublishLifecyclePhase2Handler {
             }
         }
 
-        // Live phase tracking : cascade path active . Detail sub-phases sont
-        // suivies via le sub-IMPORT workflow ( child ) , la phase parent reste
-        // CASCADE_RUNNING jusqu'au commit visibility .
-        logRepository.updatePhase(ev.correlationId(), fr.inra.oresing.workflow.WorkflowPhase.CASCADE_RUNNING);
+        // Live phase tracking : cascade path active . On commence par
+        // CASCADE_PREPARING pour couvrir la phase opaque ( ~1-3 min sur gros
+        // datatypes ) qui se passe dans DataService.getAsynchroneImporterContext :
+        // chargement des LineCheckers , resolution displayByNaturalKey ,
+        // normalisation CSV , pre-warm reference cache . CASCADE_RUNNING sera
+        // publiee plus tard par CascadeImportPipeline.execute quand les workers
+        // demarrent reellement le traitement des chunks .
+        logRepository.updatePhase(ev.correlationId(), fr.inra.oresing.workflow.WorkflowPhase.CASCADE_PREPARING);
 
         // ----- LITE / FULL cascade path -----
         FileOrUUID fou = new FileOrUUID(ev.fileId(), dataset, true);

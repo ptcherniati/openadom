@@ -48,6 +48,16 @@ public final class WorkflowPhase {
 
     private WorkflowPhase() { }
 
+    /**
+     * Preparation du contexte cascade : chargement des LineCheckers ,
+     * resolution des reference rows pour displayByNaturalKey , normalisation
+     * CSV ( BOM / re-encoding ) , pre-warm reference cache . Peut prendre
+     * 1-3 min sur gros datatypes car DataService.getAsynchroneImporterContext
+     * charge en memoire toutes les rows de chaque ReferenceType lie au
+     * datatype publie .
+     */
+    public static final String CASCADE_PREPARING  = "CASCADE_PREPARING";
+
     /** Cascade pipeline ( SOURCE / TRANSFORM / SINK ) en cours d'execution . */
     public static final String CASCADE_RUNNING    = "CASCADE_RUNNING";
 

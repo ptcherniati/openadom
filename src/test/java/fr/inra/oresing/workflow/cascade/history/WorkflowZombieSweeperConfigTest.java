@@ -23,7 +23,7 @@ class WorkflowZombieSweeperConfigTest {
     @Test
     @DisplayName("getThresholdMinutes() retourne la valeur passée au constructeur")
     void constructorStoresThreshold() {
-        WorkflowZombieSweeper sweeper = new WorkflowZombieSweeper(repo(), 20);
+        WorkflowZombieSweeper sweeper = new WorkflowZombieSweeper(repo(), 20, false);
         assertThat(sweeper.getThresholdMinutes()).isEqualTo(20);
     }
 
@@ -31,7 +31,7 @@ class WorkflowZombieSweeperConfigTest {
     @DisplayName("setThresholdMinutes() met à jour le seuil utilisé par sweepZombies()")
     void setThresholdUpdatesValue() {
         WorkflowLogRepository repo = repo();
-        WorkflowZombieSweeper sweeper = new WorkflowZombieSweeper(repo, 10);
+        WorkflowZombieSweeper sweeper = new WorkflowZombieSweeper(repo, 10, false);
 
         sweeper.setThresholdMinutes(25);
 
@@ -44,7 +44,7 @@ class WorkflowZombieSweeperConfigTest {
     @Test
     @DisplayName("setThresholdMinutes(0) lève IllegalArgumentException")
     void setThresholdZeroThrows() {
-        WorkflowZombieSweeper sweeper = new WorkflowZombieSweeper(repo(), 10);
+        WorkflowZombieSweeper sweeper = new WorkflowZombieSweeper(repo(), 10, false);
         assertThatThrownBy(() -> sweeper.setThresholdMinutes(0))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining(">= 1");
@@ -53,7 +53,7 @@ class WorkflowZombieSweeperConfigTest {
     @Test
     @DisplayName("setThresholdMinutes(-1) lève IllegalArgumentException")
     void setThresholdNegativeThrows() {
-        WorkflowZombieSweeper sweeper = new WorkflowZombieSweeper(repo(), 10);
+        WorkflowZombieSweeper sweeper = new WorkflowZombieSweeper(repo(), 10, false);
         assertThatThrownBy(() -> sweeper.setThresholdMinutes(-5))
                 .isInstanceOf(IllegalArgumentException.class);
     }
@@ -61,7 +61,7 @@ class WorkflowZombieSweeperConfigTest {
     @Test
     @DisplayName("setThresholdMinutes(1) est la valeur minimale acceptée")
     void setThresholdOneIsValid() {
-        WorkflowZombieSweeper sweeper = new WorkflowZombieSweeper(repo(), 10);
+        WorkflowZombieSweeper sweeper = new WorkflowZombieSweeper(repo(), 10, false);
         sweeper.setThresholdMinutes(1);
         assertThat(sweeper.getThresholdMinutes()).isEqualTo(1);
     }
@@ -70,7 +70,7 @@ class WorkflowZombieSweeperConfigTest {
     @DisplayName("setThresholdMinutes() n'appelle pas markZombies() immédiatement")
     void setThresholdDoesNotTriggerSweep() {
         WorkflowLogRepository repo = repo();
-        WorkflowZombieSweeper sweeper = new WorkflowZombieSweeper(repo, 10);
+        WorkflowZombieSweeper sweeper = new WorkflowZombieSweeper(repo, 10, false);
 
         sweeper.setThresholdMinutes(30);
 
