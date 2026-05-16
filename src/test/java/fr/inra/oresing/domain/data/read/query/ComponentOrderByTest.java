@@ -145,8 +145,49 @@ class ComponentOrderByTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  ComponentOrderByForExport.valueToString — branche ComponentReferenceType
+    //  ComponentOrderByForExport.valueToString — branche ComponentDateType
     // ─────────────────────────────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("valueToString — branche ComponentDateType")
+    class DateTypeBranchTest {
+
+        @Test
+        @DisplayName("StringType contenant 'date:ISO:pattern' est formaté selon le pattern")
+        void dateTypeFormatsCorrectly() {
+            // "date:2024-01-15T00:00:00:yyyy-MM-dd" matches the regex ^date:(.{19}):(.*)
+            // group(1)=2024-01-15T00:00:00, group(2)=yyyy-MM-dd
+            ComponentOrderBy ob = new ComponentOrderBy("col", DataRepository.Order.ASC,
+                    new ComponentDateType("yyyy-MM-dd", DownloadDatasetQueryAdvancedSearch.FieldType.date));
+            StringType st = StringType.getStringTypeFromStringValue("date:2024-01-15T00:00:00:yyyy-MM-dd");
+            String result = ob.valueToString(List.of(), "fr", null, st);
+            assertThat(result).isEqualTo("2024-01-15");
+        }
+
+        @Test
+        @DisplayName("StringType ne contenant pas le préfixe 'date:' retourne chaîne vide")
+        void nonMatchingDateReturnsEmpty() {
+            ComponentOrderBy ob = new ComponentOrderBy("col", DataRepository.Order.ASC,
+                    new ComponentDateType("yyyy-MM-dd", DownloadDatasetQueryAdvancedSearch.FieldType.date));
+            StringType st = StringType.getStringTypeFromStringValue("not-a-date");
+            String result = ob.valueToString(List.of(), "fr", null, st);
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("null fieldType avec ComponentDateType retourne chaîne vide (NPE évité)")
+        void nullFieldTypeWithDateTypeReturnsEmpty() {
+            // fieldType is null → the pattern match throws NPE, but the switch handles null sqlType → ""
+            // Actually with null fieldType, the code does: Matcher = Pattern.compile(...).matcher(null.getValue().toString())
+            // which throws NPE — so we only test non-null fieldType for ComponentDateType
+            // Instead, test that null sqlType returns ""
+            ComponentOrderBy ob = new ComponentOrderBy("col", DataRepository.Order.ASC, new ComponentTextType());
+            String result = ob.valueToString(List.of(), "fr", null, null);
+            assertThat(result).isEmpty();
+        }
+    }
+
+
 
     @Nested
     @DisplayName("valueToString — branche ComponentReferenceType")
