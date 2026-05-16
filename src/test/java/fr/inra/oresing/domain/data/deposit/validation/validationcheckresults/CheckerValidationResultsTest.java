@@ -3,13 +3,20 @@ package fr.inra.oresing.domain.data.deposit.validation.validationcheckresults;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.domain.checker.type.BooleanType;
+import fr.inra.oresing.domain.checker.type.DateType;
 import fr.inra.oresing.domain.checker.type.FloatType;
 import fr.inra.oresing.domain.checker.type.IntegerType;
 import fr.inra.oresing.domain.checker.type.NullType;
 import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.DataColumn;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalAccessor;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -175,5 +182,43 @@ class CheckerValidationResultsTest {
         assertFalse(warn.isSuccess());
         assertFalse(warn.isError());
         assertEquals(ValidationLevel.WARN, warn.level());
+    }
+
+    // ── DateValidationCheckResult ──────────────────────────────────────────
+
+    @Nested
+    class DateValidationCheckResultTest {
+
+        @Test
+        void success_setsSuccessLevel_andConvertsTemporalAccessors() {
+            DateType dt = DateType.of("date:2024-06-15T00:00:00:yyyy-MM-dd'T'HH:mm:ss");
+            TemporalAccessor ta = LocalDate.of(2024, 6, 15);
+            DateValidationCheckResult result = DateValidationCheckResult.success(TARGET, List.of(ta), dt);
+            assertEquals(ValidationLevel.SUCCESS, result.level());
+            assertNull(result.message());
+            assertNotNull(result.localDateTime());
+            assertFalse(result.localDateTime().isEmpty());
+            assertEquals(LocalDateTime.of(2024, 6, 15, 0, 0), result.localDateTime().first());
+        }
+
+        @Test
+        void error_setsErrorLevel_andPreservesMessage() {
+            DateType dt = DateType.of("date:2024-01-01T00:00:00:yyyy-MM-dd'T'HH:mm:ss");
+            DateValidationCheckResult result = DateValidationCheckResult.error(
+                    TARGET, "badDate", ImmutableMap.of("key", "val"), dt);
+            assertEquals(ValidationLevel.ERROR, result.level());
+            assertEquals("badDate", result.message());
+            assertNull(result.date());
+            assertNull(result.localDateTime());
+        }
+
+        @Test
+        void success_withNullLocalTime_defaultsToMidnight() {
+            // TemporalAccessor with only a date (no time part) → localTime defaults to LocalTime.MIN
+            TemporalAccessor dateOnly = LocalDate.of(2024, 3, 10);
+            DateType dt = DateType.of("date:2024-03-10T00:00:00:yyyy-MM-dd'T'HH:mm:ss");
+            DateValidationCheckResult result = DateValidationCheckResult.success(TARGET, List.of(dateOnly), dt);
+            assertEquals(LocalDateTime.of(2024, 3, 10, 0, 0), result.localDateTime().first());
+        }
     }
 }
