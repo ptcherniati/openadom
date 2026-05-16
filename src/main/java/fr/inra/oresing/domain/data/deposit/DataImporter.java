@@ -49,10 +49,11 @@ public class DataImporter {
 
 
     public static final String HIERARCHICALKEY_SEPARATOR = "K";
-
-
-    /** R-P2-3 : seuil min d'occurrences pour pré-calculer une valeur de référence. */
+    public static final Path ORESING_DATA = Path.of("oresing-data-");
     private static final int PRECOMPUTE_CACHE_THRESHOLD = 2;
+    public static final String NOT_SPLITABLE_DATA_FOR_CHUNKED_TREATMENT = "notSplitableDataForChunkedTreatment_";
+    public static final String DATA_FOR_CHUNKED_TREATMENT = "dataForChunkedTreatment_";
+    public static final String TMP = ".tmp";
 
     private final AsynchroneFileImporterContext dataImporterContext;
     private final RecursionStrategy recursionStrategy;
@@ -61,8 +62,15 @@ public class DataImporter {
     private final CsvReader csvReader;
     // R-P2-1/R-P2-3 : configurer le plafond du cache ReferenceType + pré-warmer dans prepareContextForDataTreatment.
     private final ImportProperties importProperties;
+    static {
+        try {
+            Files.createDirectories(ORESING_DATA);
+        } catch (IOException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
 
-    public DataImporter(final AsynchroneFileImporterContext dataImporterContext) {
+    public DataImporter(final AsynchroneFileImporterContext dataImporterContext) throws IOException {
         this(dataImporterContext, null);
     }
 
@@ -72,7 +80,7 @@ public class DataImporter {
      * @param dataImporterContext contexte de l'import
      * @param importProperties    configuration (peut être {@code null} → valeurs par défaut utilisées)
      */
-    public DataImporter(final AsynchroneFileImporterContext dataImporterContext, final ImportProperties importProperties) {
+    public DataImporter(final AsynchroneFileImporterContext dataImporterContext, final ImportProperties importProperties) throws IOException {
         super();
         this.dataImporterContext = dataImporterContext;
         this.importProperties = importProperties;
@@ -135,8 +143,12 @@ public class DataImporter {
      * @return path to the headerless data temp file consumed by cascade
      */
     public Path prepareContextForDataTreatment(final FileBomResolver csv, final boolean skipCsvReencoding) throws IOException {
-        final String dataForChunkedTreatment = getDataImporterContext().isRecursive() ? "notSplitableDataForChunkedTreatment_" : "dataForChunkedTreatment_";
-        Path tempFile = Files.createTempFile(dataForChunkedTreatment, ".tmp");
+        final String dataForChunkedTreatment = getDataImporterContext().isRecursive() ? NOT_SPLITABLE_DATA_FOR_CHUNKED_TREATMENT : DATA_FOR_CHUNKED_TREATMENT;
+        Path tempFile = Files.createTempFile(
+                ORESING_DATA,
+                dataForChunkedTreatment,
+                TMP
+        );
         tempFile.toFile().deleteOnExit();
         final CSVFormat csvFormat = CSVFormat.Builder.create(CSVFormat.DEFAULT)
                 .setDelimiter(getDataImporterContext().contextConstants().dataConfiguration().separator())

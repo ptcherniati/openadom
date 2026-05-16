@@ -83,6 +83,7 @@ public class BundleResources {
 
     // ── contrôle de concurrence ──────────────────────────────────────────────
     private final ConcurrentHashMap<String, Boolean> runningBundleCreation = new ConcurrentHashMap<>();
+    private final Object remainingLock = new Object();
 
     // ── use cases ────────────────────────────────────────────────────────────
     private final GetApplicationUseCase    getApplicationUseCase;
@@ -100,6 +101,14 @@ public class BundleResources {
     // ── executors ─────────────────────────────────────────────────────────────
     private final ExecutorService normalExecutorService;
     private final ExecutorService heavyExecutorService;
+    private static Path BUNDLE_DIRECTORY = Path.of("bundles");
+    static {
+        try {
+            Files.createDirectories(BUNDLE_DIRECTORY);
+        } catch (IOException e) {
+            log.error("Error creating bundle directory", e);
+        }
+    }
 
     public BundleResources(
             GetApplicationUseCase getApplicationUseCase,
@@ -154,7 +163,7 @@ public class BundleResources {
             Path tempZipDirectory = null;
             try {
                 SecurityContextHolder.setContext(securityContext);
-                tempZipDirectory = Files.createTempDirectory(Paths.get(TMP), fileName);
+                tempZipDirectory = Files.createTempDirectory(BUNDLE_DIRECTORY, fileName);
 
                 BuildBundleReport report = null;
                 try {
@@ -373,7 +382,7 @@ public class BundleResources {
             int MAX_DB_CONCURRENCY) {
 
         List<String> ready;
-        synchronized (remaining) {
+        synchronized (remainingLock) {
             ready = remaining.stream()
                     .filter(ref -> {
                         List<String> deps = references.getOrDefault(ref, List.of())
@@ -404,7 +413,7 @@ public class BundleResources {
         return Flux.fromIterable(ready)
                 .flatMap(processReference, MAX_DB_CONCURRENCY)
                 .then(Mono.defer(() -> {
-                    synchronized (remaining) {
+                    synchronized (remainingLock) {
                         remaining.removeAll(ready);
                     }
                     return processBatchTopological(processed, remaining, processReference, references, MAX_DB_CONCURRENCY);
@@ -428,7 +437,8 @@ public class BundleResources {
                             final String[] split = fileName.split("\\.");
                             File tempFile;
                             try {
-                                tempFile = File.createTempFile(split[0], split[1]);
+                                final String suffix = split.length > 1 ? "." + split[1] : null;
+                                tempFile = Files.createTempFile(BUNDLE_DIRECTORY, split[0], suffix).toFile();
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }

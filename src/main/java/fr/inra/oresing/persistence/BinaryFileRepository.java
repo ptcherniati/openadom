@@ -218,58 +218,82 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
                 """.formatted(getTable().getSqlIdentifier());
     }
 
-    public List<BinaryFile> findByBinaryFileDataset(final String data, final BinaryFileDataset binaryFileDataset, final boolean overlap) {
+    public List<BinaryFile> findByBinaryFileDataset(final String data,
+                                                    final BinaryFileDataset binaryFileDataset,
+                                                    final boolean overlap) {
         final MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
         final List<String> where = new LinkedList<>();
-        if (Optional.ofNullable(binaryFileDataset).map(BinaryFileDataset::getRequiredAuthorizations).isPresent()) {
-            for (final Map.Entry<String, List<Ltree>> entry : binaryFileDataset.getRequiredAuthorizations().entrySet()) {
-                final String t = String.format("params #> '{\"binaryfiledataset\", \"requiredauthorizations\", \"%1$s\"}' @@ ('$ == \"'||:%1$s||'\"')::jsonpath", entry.getKey());
-                mapSqlParameterSource.addValue(entry.getKey(), entry.getValue().getFirst().getSql());
+
+        if (Optional.ofNullable(binaryFileDataset)
+                .map(BinaryFileDataset::getRequiredAuthorizations)
+                .isPresent()) {
+            for (final Map.Entry<String, List<Ltree>> entry :
+                    binaryFileDataset.getRequiredAuthorizations().entrySet()) {
+                final String t = String.format(
+                        "params #> '{\"binaryfiledataset\", \"requiredauthorizations\", \"%1$s\"}' " +
+                        "@@ ('$ == \"'||:%1$s||'\"')::jsonpath",
+                        entry.getKey()
+                );
+                mapSqlParameterSource.addValue(entry.getKey(),
+                        entry.getValue().getFirst().getSql());
                 where.add(t);
             }
         }
+
         if (overlap) {
+            if (binaryFileDataset == null) {
+                throw new IllegalArgumentException(
+                        "binaryFileDataset must not be null when overlap is true");
+            }
             where.add("params  #> '{\"binaryfiledataset\", \"datatype\"}' @@('$ == \"" + data + "\"')");
             where.add("params @@ ('$.published==true')");
+
             final String t = """
-                    (tsrange(
-                        coalesce((params #>> '{"binaryfiledataset", "from"}'), '-infinity')::timestamp,
-                        coalesce((params #>> '{"binaryfiledataset", "to"}'), 'infinity')::timestamp
-                        ) && tsrange(coalesce(:from::timestamp, '-infinity')::timestamp, coalesce(:to::timestamp, 'infinity')::timestamp))
-                        and
-                    (tsrange(
-                        coalesce((params #>> '{"binaryfiledataset", "from"}'), '-infinity')::timestamp,
-                        coalesce((params #>> '{"binaryfiledataset", "to"}'), 'infinity')::timestamp
-                        ) != tsrange(coalesce(:from::timestamp, '-infinity')::timestamp, coalesce(:to::timestamp, 'infinity')::timestamp))
-                    """;
+                (tsrange(
+                    coalesce((params #>> '{"binaryfiledataset", "from"}'), '-infinity')::timestamp,
+                    coalesce((params #>> '{"binaryfiledataset", "to"}'), 'infinity')::timestamp
+                    ) && tsrange(coalesce(:from::timestamp, '-infinity')::timestamp,
+                                 coalesce(:to::timestamp, 'infinity')::timestamp))
+                    and
+                (tsrange(
+                    coalesce((params #>> '{"binaryfiledataset", "from"}'), '-infinity')::timestamp,
+                    coalesce((params #>> '{"binaryfiledataset", "to"}'), 'infinity')::timestamp
+                    ) != tsrange(coalesce(:from::timestamp, '-infinity')::timestamp,
+                                 coalesce(:to::timestamp, 'infinity')::timestamp))
+                """;
             where.add(t);
-            assert binaryFileDataset != null;
+
             mapSqlParameterSource.addValue("from", binaryFileDataset.getFrom());
             mapSqlParameterSource.addValue("to", binaryFileDataset.getTo());
         } else {
             if (Optional.ofNullable(binaryFileDataset).map(BinaryFileDataset::getFrom).isPresent()) {
                 final String from = binaryFileDataset.getFrom();
-                final String t = "params #> '{\"binaryfiledataset\", \"from\"}'  @@ ('$ == \"'||:from||'\"')::jsonpath";
+                final String t = "params #> '{\"binaryfiledataset\", \"from\"}'  " +
+                                 "@@ ('$ == \"'||:from||'\"')::jsonpath";
                 mapSqlParameterSource.addValue("from", from);
                 where.add(t);
             }
             if (Optional.ofNullable(binaryFileDataset).map(BinaryFileDataset::getTo).isPresent()) {
                 final String to = binaryFileDataset.getTo();
-                final String t = "params #> '{\"binaryfiledataset\", \"to\"}'  @@ ('$ == \"'||:to||'\"')::jsonpath";
+                final String t = "params #> '{\"binaryfiledataset\", \"to\"}'  " +
+                                 "@@ ('$ == \"'||:to||'\"')::jsonpath";
                 mapSqlParameterSource.addValue("to", to);
                 where.add(t);
             }
         }
+
         if (where.isEmpty()) {
             where.add("""
-                    params #> '{"binaryfiledataset", "requiredauthorizations"}'= '{}'::jsonb""");
+                params #> '{"binaryfiledataset", "requiredauthorizations"}'= '{}'::jsonb""");
         }
-        final String t = "params #> '{\"binaryfiledataset\", \"datatype\"}'  @@ ('$ == \"'||:data||'\"')::jsonpath";
+
+        final String t = "params #> '{\"binaryfiledataset\", \"datatype\"}'  " +
+                         "@@ ('$ == \"'||:data||'\"')::jsonpath";
         where.add(t);
         mapSqlParameterSource.addValue("data", data);
+
         return find(String.join(" AND ", where), mapSqlParameterSource);
     }
-
     @Override
     public UUID store(BinaryFile entity) {
         Optional<InputStream> inputStreamOpt = Optional.ofNullable(entity)

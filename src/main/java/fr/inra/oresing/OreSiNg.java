@@ -34,11 +34,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.web.servlet.resource.PathResourceResolver;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -101,16 +98,6 @@ public class OreSiNg implements WebMvcConfigurer {
         log.info("=== Adding JsonRequestParamArgumentResolver ===");
         resolvers.addFirst(jsonRequestParamArgumentResolver);
         log.info("=== Total resolvers: " + resolvers.size() + " ===");
-    }
-    @Override
-    public void addResourceHandlers(final ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
-        registry
-                .addResourceHandler("/static/**")
-                .addResourceLocations("file://" + new File(".").getAbsolutePath() + "/src/main/resources/web/", "classpath:/web/")
-                .setCachePeriod(0)
-                .resourceChain(false)
-                .addResolver(new PathResourceResolver());
     }
 
     @Override

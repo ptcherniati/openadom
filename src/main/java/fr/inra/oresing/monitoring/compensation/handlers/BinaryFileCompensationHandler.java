@@ -60,7 +60,10 @@ public class BinaryFileCompensationHandler implements CompensationHandler {
         // ║  Smart-check : on ne delete binaryfile que si AUCUNE row      ║
         // ║  referencevalue ne lui est associee . Sinon le cascade a en   ║
         // ║  realite reussi → preserver les donnees .                     ║
-        // ╚════════════════════════════════════════════════════════════════╝
+        // ╚═══════════════════════════════════════════════════════════════╝
+        // Sonar java:S2077 – "schema" est validé par SAFE_IDENT (^[a-z_][a-z0-9_]*$)
+        //// => uniquement des identifiants SQL simples, sans guillemets ni caractères spéciaux.
+        //// La valeur bindée (fileId) reste paramétrée via ?.
         String existsSql = "SELECT EXISTS ("
                 + "SELECT 1 FROM " + schema + ".referencevalue WHERE binaryfile = ?::uuid )";
         Boolean cascadeProducedRows = jdbc.queryForObject(existsSql, Boolean.class, fileId);

@@ -70,8 +70,10 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
                 uuids.addAll(namedParameterJdbcTemplate.queryForList(
                         query, new MapSqlParameterSource("json", json), UUID.class));
             } catch (final Exception e) {
-                Pattern pattern = Pattern.compile(".*new row violates row-level security policy for.*\"(.*)\".*", Pattern.DOTALL);
-                Matcher matcher = pattern.matcher(Objects.requireNonNull(e.getMessage()));
+                Pattern pattern = Pattern.compile(
+                        "new row violates row-level security policy for\\s+\"([^\"]+)\"",
+                        Pattern.DOTALL
+                );                Matcher matcher = pattern.matcher(Objects.requireNonNull(e.getMessage()));
                 Matcher matcher2 = pattern.matcher(Objects.requireNonNull(e.getCause().getMessage()));
                 if (matcher.matches()) {
                     String table = matcher.group(1);

@@ -35,8 +35,8 @@ public class ApplicationConfigurationService {
     private ApplicationConfigurationService() {
     }
 
-    public static Application unzipConfiguration(final DataFile file, ReactiveEventHelper eventHelper) throws IOException {
-        InputStream inputStream = MultiYaml.parseConfigurationBytes(file);
+    public static Application unzipConfiguration(final DataFile file, ReactiveEventHelper eventHelper, long maxBytesAllowed) throws IOException {
+        InputStream inputStream = MultiYaml.parseConfigurationBytes(file, maxBytesAllowed);
         return ApplicationConfigurationService.parseConfigurationBytes(
                 "", "",
                 eventHelper,

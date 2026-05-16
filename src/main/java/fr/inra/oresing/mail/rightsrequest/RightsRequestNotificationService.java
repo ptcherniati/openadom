@@ -7,6 +7,7 @@ import fr.inra.oresing.domain.rightsrequest.TreatmentDecision;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.UserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -43,7 +44,7 @@ public class RightsRequestNotificationService {
 
     /** Sujet du mail envoyé au demandeur. Placeholder : %1$s = nom localisé de l'application. */
     private static final Map<Locale, String> REQUESTER_SUBJECT = Map.of(
-            Locale.FRENCH,  "OpenADOM - Votre demande d'accès a bien été transmise (%1$s)",
+            Locale.FRENCH, "OpenADOM - Votre demande d'accès a bien été transmise (%1$s)",
             Locale.ENGLISH, "OpenADOM - Your access request has been submitted (%1$s)"
     );
 
@@ -51,47 +52,47 @@ public class RightsRequestNotificationService {
     private static final Map<Locale, String> REQUESTER_BODY = Map.of(
             Locale.FRENCH, """
                     Bonjour %1$s,
-
+                    
                     Votre demande d'accès aux données de l'application "%2$s" a bien été transmise aux gestionnaires.
                     Vous serez notifié dès qu'elle sera traitée.
-
+                    
                     L'équipe OpenADOM""",
             Locale.ENGLISH, """
                     Hello %1$s,
-
+                    
                     Your data access request for application "%2$s" has been submitted to the managers.
                     You will be notified as soon as it is processed.
-
+                    
                     The OpenADOM team"""
     );
 
     /** Sujet du mail envoyé aux gestionnaires. Placeholder : %1$s = nom localisé de l'application. */
     private static final Map<Locale, String> MANAGERS_SUBJECT = Map.of(
-            Locale.FRENCH,  "OpenADOM - Nouvelle demande d'accès à traiter (%1$s)",
+            Locale.FRENCH, "OpenADOM - Nouvelle demande d'accès à traiter (%1$s)",
             Locale.ENGLISH, "OpenADOM - New access request to handle (%1$s)"
     );
 
     /** Sujet du mail envoyé au demandeur lorsque sa demande est approuvée. Placeholder : %1$s = nom localisé de l'application. */
     private static final Map<Locale, String> TREATED_APPROVED_SUBJECT = Map.of(
-            Locale.FRENCH,  "OpenADOM - Votre demande d'accès a été acceptée (%1$s)",
+            Locale.FRENCH, "OpenADOM - Votre demande d'accès a été acceptée (%1$s)",
             Locale.ENGLISH, "OpenADOM - Your access request has been approved (%1$s)"
     );
 
     /** Sujet du mail envoyé au demandeur lorsque sa demande est refusée. Placeholder : %1$s = nom localisé de l'application. */
     private static final Map<Locale, String> TREATED_REJECTED_SUBJECT = Map.of(
-            Locale.FRENCH,  "OpenADOM - Votre demande d'accès a été refusée (%1$s)",
+            Locale.FRENCH, "OpenADOM - Votre demande d'accès a été refusée (%1$s)",
             Locale.ENGLISH, "OpenADOM - Your access request has been rejected (%1$s)"
     );
 
     /** Sujet du mail envoyé aux gestionnaires lors d'une approbation. Placeholder : %1$s = nom localisé de l'application. */
     private static final Map<Locale, String> MANAGERS_TREATMENT_APPROVED_SUBJECT = Map.of(
-            Locale.FRENCH,  "OpenADOM - Une demande d'accès a été approuvée (%1$s)",
+            Locale.FRENCH, "OpenADOM - Une demande d'accès a été approuvée (%1$s)",
             Locale.ENGLISH, "OpenADOM - An access request has been approved (%1$s)"
     );
 
     /** Sujet du mail envoyé aux gestionnaires lors d'un refus. Placeholder : %1$s = nom localisé de l'application. */
     private static final Map<Locale, String> MANAGERS_TREATMENT_REJECTED_SUBJECT = Map.of(
-            Locale.FRENCH,  "OpenADOM - Une demande d'accès a été refusée (%1$s)",
+            Locale.FRENCH, "OpenADOM - Une demande d'accès a été refusée (%1$s)",
             Locale.ENGLISH, "OpenADOM - An access request has been rejected (%1$s)"
     );
 
@@ -108,30 +109,30 @@ public class RightsRequestNotificationService {
     private static final Map<Locale, String> MANAGERS_TREATMENT_APPROVED_BODY = Map.of(
             Locale.FRENCH, """
                     Bonjour,
-
+                    
                     La demande d'accès aux données de l'utilisateur %1$s (%2$s) sur l'application "%3$s" a été APPROUVÉE par %4$s.
-
+                    
                     L'équipe OpenADOM""",
             Locale.ENGLISH, """
                     Hello,
-
+                    
                     The data access request from user %1$s (%2$s) on application "%3$s" has been APPROVED by %4$s.
-
+                    
                     The OpenADOM team"""
     );
 
     private static final Map<Locale, String> MANAGERS_TREATMENT_REJECTED_BODY = Map.of(
             Locale.FRENCH, """
                     Bonjour,
-
+                    
                     La demande d'accès aux données de l'utilisateur %1$s (%2$s) sur l'application "%3$s" a été REFUSÉE par %4$s.
-
+                    
                     L'équipe OpenADOM""",
             Locale.ENGLISH, """
                     Hello,
-
+                    
                     The data access request from user %1$s (%2$s) on application "%3$s" has been REJECTED by %4$s.
-
+                    
                     The OpenADOM team"""
     );
 
@@ -148,27 +149,27 @@ public class RightsRequestNotificationService {
     private static final Map<Locale, String> MANAGERS_BODY = Map.of(
             Locale.FRENCH, """
                     Bonjour,
-
+                    
                     L'utilisateur %1$s (%2$s) a déposé une demande d'accès aux données de l'application "%3$s".
-
+                    
                     Détail de la demande :
                     %4$s
-
+                    
                     Pour traiter la demande, connectez-vous puis ouvrez :
                     %5$s
-
+                    
                     L'équipe OpenADOM""",
             Locale.ENGLISH, """
                     Hello,
-
+                    
                     User %1$s (%2$s) submitted a data access request for application "%3$s".
-
+                    
                     Request detail:
                     %4$s
-
+                    
                     To handle the request, sign in then open:
                     %5$s
-
+                    
                     The OpenADOM team"""
     );
 
@@ -455,7 +456,8 @@ public class RightsRequestNotificationService {
      * slash dans l'URL générée.
      */
     private String buildTreatmentUrl(final Application application, final UUID requestId) {
-        final String base = frontBaseUrl == null ? "" : frontBaseUrl.replaceAll("/+$", "");
+        final String base = StringUtils.removeEnd(frontBaseUrl, "/");
+        ;
         return "%s/applications/%s/authorizationsRequest/treatment/%s".formatted(
                 base,
                 application.getName(),

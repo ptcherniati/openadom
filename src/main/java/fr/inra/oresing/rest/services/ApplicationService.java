@@ -36,10 +36,12 @@ import fr.inra.oresing.rest.reactive.ReactiveTypeProgress;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.unit.DataSize;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -64,6 +66,7 @@ public class ApplicationService {
     private final MigrationService migrationService;
     private final MigrateService flywayMigrateService;
     private final MigrationProperties migrationProperties;
+    private final long multipartMaxFileSizeBytes;
     @Setter
     private ServiceContainer serviceContainer;
 
@@ -72,12 +75,14 @@ public class ApplicationService {
             ServiceContainer serviceContainer,
             MigrationService migrationService,
             MigrateService flywayMigrateService,
-            MigrationProperties migrationProperties) {
+            MigrationProperties migrationProperties,
+            @Value("${spring.servlet.multipart.max-file-size:1MB}") DataSize multipartMaxFileSize) {
         this.repository = repository;
         this.serviceContainer = serviceContainer;
         this.migrationService = migrationService;
         this.flywayMigrateService = flywayMigrateService;
         this.migrationProperties = migrationProperties;
+        this.multipartMaxFileSizeBytes = multipartMaxFileSize.toBytes();
     }
 
     public Application getApplication(final String nameOrId) {
@@ -287,7 +292,7 @@ public class ApplicationService {
         final ReactiveEventHelper helperParsingConfiguration = helperConfiguration.withSubLabel("parsingConfiguration");
         Application newApplication;
         if (Objects.requireNonNull(configurationFile.fileName()).matches(".*\\.zip")) {
-            InputStream multiYAmlInput = MultiYaml.parseConfigurationBytes(configurationFile);
+            InputStream multiYAmlInput = MultiYaml.parseConfigurationBytes(configurationFile, multipartMaxFileSizeBytes);
             helperParsingConfiguration.pushMessage("forMulti", Map.of(APPLICATION_NAME, applicationName));
             newApplication = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, helperConfiguration, FileBomResolver.of(multiYAmlInput));
         } else {
@@ -461,7 +466,7 @@ public class ApplicationService {
         try {
             final Application application;
             if (Objects.requireNonNull(file.fileName()).matches(".*\\.zip")) {
-                application = ApplicationConfigurationService.unzipConfiguration(file, eventHelper);
+                application = ApplicationConfigurationService.unzipConfiguration(file, eventHelper, multipartMaxFileSizeBytes);
             } else {
                 application = ApplicationConfigurationService.parseConfigurationBytes("", "", eventHelper, FileBomResolver.of(file.inputStream()));
             }

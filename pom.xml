@@ -110,7 +110,6 @@
         <guava.version>33.4.8-jre</guava.version>
         <opencsv.version>5.11.1</opencsv.version>
         <bcrypt.version>0.10.2</bcrypt.version>
-        <vue.version>3.5.16</vue.version>
         <json.version>20250517</json.version>
         <ivy.version>2.5.3</ivy.version>
         <groovy.version-jsr223>3.0.25</groovy.version-jsr223>
@@ -364,13 +363,6 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- UI    -->
-        <!-- Vue 3 -->
-        <dependency>
-            <groupId>org.webjars.npm</groupId>
-            <artifactId>vue</artifactId>
-            <version>${vue.version}</version>
-        </dependency>
 
         <!-- Optimisation des performances de (dé)sérialisation JSON via bytecode  -->
         <dependency>
