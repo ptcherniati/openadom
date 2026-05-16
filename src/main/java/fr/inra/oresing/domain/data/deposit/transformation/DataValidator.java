@@ -26,7 +26,17 @@ import java.util.stream.Stream;
 
 public class DataValidator {
 
-    private List<ReferenceDatumAfterChecking> checkLineForChecker(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker<? extends FieldType<?>> lineChecker, DataDatum referenceDatumBeforeChecking, Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo, DataDatum referenceDatum, ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder) {
+    /**
+     * Contexte mutable accumulant les données et erreurs lors de la vérification d'une ligne.
+     */
+    record LineCheckContext(
+            DataDatum referenceDatumBeforeChecking,
+            Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo,
+            DataDatum referenceDatum,
+            ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder
+    ) {}
+
+    private List<ReferenceDatumAfterChecking> checkLineForChecker(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker<? extends FieldType<?>> lineChecker, LineCheckContext ctx) {
         if (matchingTarget(rowWithReferenceDatum, lineChecker)) {
             return null;
         }
@@ -35,11 +45,11 @@ public class DataValidator {
         }
         Map<String, Object> context = new HashMap<>();
 
-        final CheckerValidationCheckResult<?> validationCheckResults = testValues(rowWithReferenceDatum, publishContextBuilder, lineChecker, context, referenceDatumBeforeChecking);
-        registerCheckedValues(lineChecker, validationCheckResults, referenceDatumBeforeChecking, refsLinkedTo, referenceDatum);
+        final CheckerValidationCheckResult<?> validationCheckResults = testValues(rowWithReferenceDatum, publishContextBuilder, lineChecker, context, ctx.referenceDatumBeforeChecking());
+        registerCheckedValues(lineChecker, validationCheckResults, ctx.referenceDatumBeforeChecking(), ctx.refsLinkedTo(), ctx.referenceDatum());
 
         if (validationCheckResults != null && !validationCheckResults.isSuccess()) {
-            return registerErrors(recursionStrategy, rowWithReferenceDatum, lineChecker, validationCheckResults, referenceDatumBeforeChecking, allCheckerErrorsBuilder);
+            return registerErrors(recursionStrategy, rowWithReferenceDatum, lineChecker, validationCheckResults, ctx.referenceDatumBeforeChecking(), ctx.allCheckerErrorsBuilder());
         }
         return null;
     }
@@ -140,7 +150,7 @@ public class DataValidator {
                 ));
     }
 
-    CheckerValidationCheckResult testValues(RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker<? extends FieldType<?>> lineChecker, Map<String, Object> context, DataDatum referenceDatumBeforeChecking) {
+    CheckerValidationCheckResult<?> testValues(RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker<? extends FieldType<?>> lineChecker, Map<String, Object> context, DataDatum referenceDatumBeforeChecking) {
         switch (lineChecker.transformer()) {
             case LineChecker.LineTransformer.ChainTransformersLineTransformer transformers -> {
                 for (LineChecker.LineTransformer transformer : transformers.transformers()) {
@@ -210,7 +220,7 @@ public class DataValidator {
      *     <li>détecter les référentiels utilisés (et conserver les clés vers ceux utilisés pour fixer le refsLinkedTo)</li>
      * </ul>
      */
-    public <F extends FieldType<?>> List<ReferenceDatumAfterChecking> check(
+    public List<ReferenceDatumAfterChecking> check(
             Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey,
             RecursionStrategy recursionStrategy,
             final RowWithReferenceDatum rowWithReferenceDatum,
@@ -229,8 +239,9 @@ public class DataValidator {
         // par checkLineForChecker qui appelle manyChecker.value().getValue().clear()
         // au debut , et par OneChecker.check(value) qui re-clone le
         // FieldType ( interne ).
+        final LineCheckContext ctx = new LineCheckContext(referenceDatumBeforeChecking, refsLinkedTo, referenceDatum, allCheckerErrorsBuilder);
         for (final LineChecker<? extends FieldType<?>> lineChecker : transformedLineCheckers) {
-            final List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = checkLineForChecker(recursionStrategy, rowWithReferenceDatum, publishContextBuilder, lineChecker, referenceDatumBeforeChecking, refsLinkedTo, referenceDatum, allCheckerErrorsBuilder);
+            final List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = checkLineForChecker(recursionStrategy, rowWithReferenceDatum, publishContextBuilder, lineChecker, ctx);
             if (referenceDatumAfterCheckings != null) return referenceDatumAfterCheckings;
         }
         refsLinkedTo.putAll(rowWithReferenceDatum.refsLinkedTo());
