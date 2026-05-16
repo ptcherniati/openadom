@@ -349,17 +349,17 @@ la méthode parente, mais si les deux ont le même nom, c'est source de confusio
 |---|---|---|---|---|
 | P0 | Régression tests (addApplication 400) | OreSiResources, ApplicationService | — | 🔴 À faire |
 | 1.1 | NPE faux positifs OreSiNg | OreSiNg.java | 9 | 🟡 Wontfix à évaluer |
-| 1.2 | Conflits méthodes OaImportWorkerService | OaImportWorkerService | 3 | 🔴 À faire |
-| 1.3 | Type error DataRow | DataRow.java | 1 | 🔴 À faire |
+| 1.2 | Conflits méthodes OaImportWorkerService | OaImportWorkerService | 3 | 🟡 Fichier absent de main source |
+| 1.3 | Type error DataRow | DataRow.java | 1 | ✅ 14473fe |
 | 1.4 | Equals inter-types EmailService | EmailService.java | 1 | ✅ 6462d83 |
 | 2.1 | Champs inutilisés WorkflowOrchestratorImport | WorkflowOrchestratorImport | 5 | ✅ 6462d83 |
 | 2.2 | Imports inutilisés | DataRepository×2, DataRepositoryForBuffer | 4 | ✅ 6462d83 |
 | 2.3 | Variables locales inutilisées | 5 fichiers | 10 | ✅ 6462d83 |
 | 2.4 | Code commenté + délimiteur + var restreinte | WFOImportBuilder, Email, EmailService | 7 | ✅ 6462d83 |
-| 3.1 | Wildcards génériques | 9 fichiers | ~15 | 🔴 À faire |
-| 3.2 | Complexité cognitive | Submission, DataValidator | 2 | 🔴 À faire |
+| 3.1 | Wildcards génériques | 9 fichiers | ~20 | ✅ 14473fe + 1054d57 + 2f0ffcb |
+| 3.2 | Complexité cognitive | Submission, DataValidator | 2 | ✅ 1054d57 + 4111f2f |
 | 3.3 | Injection constructeur AsyncExecutorConf | AsyncExecutorConf | 1 | ✅ e7557b0 |
-| 3.4 | Deprecations + constante dupliquée + @Override | AsyncExecutorConf, OaImportWorker | ~5 | ✅ e7557b0 |
-| 3.5 | Petites corrections restantes | PatternColumnFactory, Component, BundleReport, ManyValuesStatic, OneValueStatic, AuthenticationService, DataRepository(persistence) | ~12 | 🔴 À faire |
+| 3.4 | Deprecations + constante dupliquée + @Override | AsyncExecutorConf, OaImportWorker | ~5 | ✅ e7557b0 + 4111f2f |
+| 3.5 | Petites corrections restantes | BundleReport, ManyValuesStatic, OneValueStatic, Manifest, AuthenticationService, Ltree, DataRepository | ~12 | ✅ 14473fe + 1054d57 |
 | P4 | Couverture (nouvelles tests) | OreSiResources++ | — | 🔴 Après P0 |
 
