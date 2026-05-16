@@ -19,13 +19,16 @@ public record BinaryFileResult(
             UserDescriptionResult createuser,
             UserDescriptionResult publisheduser,
             List<ReferencedBinaryFiles> referencedFiles) {
+        BinaryFileInfosResult params = binaryFile.getParams() == null
+                ? null
+                : BinaryFileInfosResult.of(binaryFile.getParams(), createuser, publisheduser);
         return new BinaryFileResult(
                 binaryFile.getId(),
                 binaryFile.getName(),
                 binaryFile.getComment(),
                 binaryFile.getSize(),
                 referencedFiles,
-                BinaryFileInfosResult.of(binaryFile.getParams(), createuser, publisheduser)
+                params
         );
     }
 }
