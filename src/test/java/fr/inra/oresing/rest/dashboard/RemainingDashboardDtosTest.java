@@ -112,7 +112,7 @@ class RemainingDashboardDtosTest {
         assertThat(dto.stagingStrategy()).isNull();
         assertThat(dto.expectedTotal()).isEqualTo(1000L);
         assertThat(dto.cascadeThroughput()).isEqualTo(500L);
-        assertThat(dto.mergeFilePhase()).isNull();
+        assertThat(dto.subPhase()).isNull();
     }
 
     // ─── FinalizeAggregateDTO ─────────────────────────────────────────────────

@@ -92,9 +92,12 @@ public record FinalizeProgressDTO(
         @Schema(description = "True si la progression du transfert vers la finale est observable temps-reel")
         boolean finalDeterminate,
 
-        @Schema(description = "Sous-phase MERGE_FILE en cours ( MERGE_LOCAL | TEMP_LOAD | UPSERT_FINAL ) "
-                + "; null pour DIRECT_COPY ou avant entree dans le sink storeAll . "
-                + "Permet a la live view de rendre 3 progress bars distinctes "
-                + "( merge local % , COPY -> TEMP indeterminate , UPSERT TEMP -> finale % ) .")
-        String  mergeFilePhase) {
+        @Schema(description = "Sous-phase courante du workflow . Valeurs : "
+                + "MERGE_FILE phases ( MERGE_LOCAL | TEMP_LOAD | UPSERT_FINAL ) , "
+                + "ou phases post-UPSERT communes ( REFREF_REBUILD | "
+                + "SYNTHESIS_REBUILD | CACHE_CAPTURE ) . Null si aucune "
+                + "sous-phase publiee par le backend . La live view rend un "
+                + "spinner indeterminate sous la bar 'UPSERT staging -> "
+                + "table finale' selon cette valeur .")
+        String  subPhase) {
 }

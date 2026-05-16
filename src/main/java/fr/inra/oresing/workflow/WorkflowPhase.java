@@ -90,6 +90,32 @@ public final class WorkflowPhase {
     /** Direct COPY de referencevalue vers cache Large Object ( OAVR header + binary payload ) . */
     public static final String CACHE_CAPTURE      = "CACHE_CAPTURE";
 
+    /** Reconstruction reference_reference apres bulk UPSERT ( shared SQL flow ) . */
+    public static final String REFREF_REBUILD     = "REFREF_REBUILD";
+
+    /** Pre-DELETE counting via {@code SELECT count(*) ... WHERE binaryfile=?}
+     *  pour annoncer recordsTotal au UI avant le DELETE potentiellement long . */
+    public static final String COUNTING_ROWS      = "COUNTING_ROWS";
+
     /** Workflow terminé . */
     public static final String DONE               = "DONE";
+
+    /**
+     * Sous-phases qui s'execitent APRES que la bar "UPSERT staging -> table
+     * finale" a atteint 100 % mais AVANT que le workflow ne passe
+     * COMPLETED . Le bloc finalize oa-live ( WorkflowFinalizeBadge.vue )
+     * rend un spinner indeterminate avec le label localise via
+     * {@code phase.<lowercase>} pour eviter que l'utilisateur croie que
+     * la cascade est figee pendant 10 s a 2 min de traitement post-UPSERT .
+     *
+     * <p>Centralise ici pour eviter la divergence entre la liste backend
+     * ( source : {@link
+     * fr.inra.oresing.workflow.phase.WorkflowPhaseTracker#transitionTo} )
+     * et la liste frontend ( oa-live POST_UPSERT_PHASES_LABELS ) .
+     */
+    public static final java.util.Set<String> POST_UPSERT_PHASES = java.util.Set.of(
+            REFREF_REBUILD,
+            SYNTHESIS_REBUILD,
+            CACHE_CAPTURE
+    );
 }

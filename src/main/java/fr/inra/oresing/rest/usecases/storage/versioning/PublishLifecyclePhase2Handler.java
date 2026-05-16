@@ -124,6 +124,28 @@ public class PublishLifecyclePhase2Handler {
     private fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry workflowActiveRegistry;
 
     /**
+     * Centralized phase tracker : single API for emitting workflow phase
+     * transitions to both {@code workflow_log.metadata.phase} and the
+     * in-memory {@link fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry}
+     * ( resolves childCid automatically ) . Cf
+     * {@link fr.inra.oresing.workflow.phase.WorkflowPhaseTracker} for
+     * rationale - replaces the 3-line boilerplate previously inlined at
+     * every transition site .
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private fr.inra.oresing.workflow.phase.WorkflowPhaseTracker phaseTracker;
+
+    /**
+     * Centralized workflow progress reporter . Publishes the 3 symmetric
+     * counters ( total / progress / completed ) so non-cascade workflows
+     * ( unpublish , delete-file ) also drive the UI progress bar to
+     * 100 % at completion - cf
+     * {@link fr.inra.oresing.workflow.phase.WorkflowProgressReporter} .
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private fr.inra.oresing.workflow.phase.WorkflowProgressReporter progressReporter;
+
+    /**
      * Async post-commit cache capture service . Once Phase 2 has flipped
      * {@code binaryfile.published=true} and the workflow has reached
      * COMPLETED / DONE , this service is invoked to capture the binary
@@ -252,6 +274,13 @@ public class PublishLifecyclePhase2Handler {
                 recordsProcessed = executeAction(application, ev);
             } catch (IOException ioe) {
                 throw new RuntimeException(ioe);
+            } catch (RuntimeException re) {
+                throw re;
+            } catch (Exception ex) {
+                // PhaseScope helpers throw checked Exception ; wrap any
+                // non-runtime exception as unchecked to keep the existing
+                // contract of this async dispatcher .
+                throw new RuntimeException(ex);
             }
 
             // Fix P0-BACK-4 / RC-1 : checkpoint cancel APRES executeAction
@@ -311,19 +340,29 @@ public class PublishLifecyclePhase2Handler {
                     fatalError  = "Superseded by user request";
                     return;
                 }
-                // Publish atomicity : cascade pipeline OK -> commit atomique
-                // flag + synthesis + recordEnd(COMPLETED) dans UNE seule mini-tx
-                // Spring . On capture endTime/duration AVANT la tx pour qu'ils
-                // refletent le moment effectif de fin Phase 2 ( pas le moment
-                // du commit qui peut s'etaler sur buildSynthesis 10+ sec ) .
+                // SYNTHESIS_REBUILD = step dominant ( buildSynthesis 10s-2min )
+                // dans commitVisibleFlagAndSynthesis . Emission persistante
+                // + in-memory via phaseTracker ( resolve childCid auto pour
+                // que le bloc "UPSERT staging -> table finale" rende le
+                // spinner ) .
+                if (phaseTracker != null) {
+                    phaseTracker.transitionTo(ev.correlationId(),
+                            fr.inra.oresing.workflow.WorkflowPhase.SYNTHESIS_REBUILD);
+                } else {
+                    logRepository.updatePhase(ev.correlationId(),
+                            fr.inra.oresing.workflow.WorkflowPhase.SYNTHESIS_REBUILD);
+                }
+                // Capture endTime APRES buildSynthesis pour que la duree
+                // affichee dans l'historique reflete le temps total perceptu
+                // par l'utilisateur ( pas seulement la fin de la phase
+                // cascade ) . Avant ce fix : endTime captured avant la tx
+                // -> historique 6m02s vs live 7m36s , incoherence visible
+                // par l'utilisateur le temps que buildSynthesis termine .
+                commitVisibleFlagAndSynthesis(application, ev,
+                        Instant.now(), Duration.between(ev.startTime(), Instant.now()),
+                        recordsProcessed);
                 endTime  = Instant.now();
                 duration = Duration.between(ev.startTime(), endTime);
-                // Live phase = SYNTHESIS_REBUILD : c'est le step dominant en duree
-                // dans commitVisibleFlagAndSynthesis ( la bascule du flag est
-                // ~50 ms , le buildSynthesis ~10s-2min selon volume ) .
-                logRepository.updatePhase(ev.correlationId(),
-                        fr.inra.oresing.workflow.WorkflowPhase.SYNTHESIS_REBUILD);
-                commitVisibleFlagAndSynthesis(application, ev, endTime, duration, recordsProcessed);
                 invalidateReferencedFilesCacheSilently(application.getName());
                 finalStatus = WorkflowLogEntry.STATUS_COMPLETED;
                 committedAtomically = true;
@@ -403,7 +442,7 @@ public class PublishLifecyclePhase2Handler {
     // Action dispatch
     // ------------------------------------------------------------
 
-    private long executeAction(Application application, PublishLifecycleEvent ev) throws IOException {
+    private long executeAction(Application application, PublishLifecycleEvent ev) throws Exception {
         return switch (ev.action()) {
             case PUBLISH     -> doPublish(application, ev);
             case UNPUBLISH   -> doUnpublish(application, ev);
@@ -600,30 +639,83 @@ public class PublishLifecyclePhase2Handler {
      * snapshot failure - bug observe ou un cache pre-existant valide etait
      * detruit pour rien , forcant le republish a cascade FULL .
      */
-    private long doUnpublish(Application application, PublishLifecycleEvent ev) {
+    private long doUnpublish(Application application, PublishLifecycleEvent ev) throws Exception {
         DataRepository dataRepo = repository.getRepository(application).data();
         org.springframework.jdbc.core.JdbcTemplate localJdbc =
                 new org.springframework.jdbc.core.JdbcTemplate(dataRepo.getDataSource());
 
-        // Live phase = DELETE_ROWS . L'unpublish n'a plus de snapshot best-effort
-        // ( supprime avec le refacto direct-COPY ) : si le cache est absent au
-        // moment de l'unpublish , il restera absent jusqu'au prochain publish ,
-        // qui regenerera le cache via Phase2Handler.doPublishWithinScope
-        // ( voir capture conditionnelle juste apres addData ) .
-        logRepository.updatePhase(ev.correlationId(),
-                fr.inra.oresing.workflow.WorkflowPhase.DELETE_ROWS);
+        // Chaque etape DOIT etre annoncee a l'UI via le PhaseScope :
+        //   1. COUNTING_ROWS   ( ~ms , publie recordsTotal )
+        //   2. DELETE_ROWS     ( bulk DELETE , pput minutes sur gros volumes )
+        // PhaseScope.close() emet la duree finale automatiquement .
+        long rowCount;
+        try (fr.inra.oresing.workflow.phase.PhaseScope scope =
+                     fr.inra.oresing.workflow.phase.PhaseScope.open(phaseTracker, ev.correlationId())) {
 
-        // Checkpoint cancel avant DELETE potentiellement long .
-        if (coordinator.isCancelled(ev.correlationId())) {
-            throw new java.util.concurrent.CancellationException("Cancelled before DELETE phase");
+            rowCount = scope.run(fr.inra.oresing.workflow.WorkflowPhase.COUNTING_ROWS, () -> {
+                long n = dataRepo.countByFileId(ev.fileId());
+                if (progressReporter != null) {
+                    progressReporter.reportTotal(ev.correlationId(), n);
+                }
+                log.info("doUnpublish : {} row(s) to unpublish for fileId={}", n, ev.fileId());
+                return n;
+            });
+
+            scope.run(fr.inra.oresing.workflow.WorkflowPhase.DELETE_ROWS, () -> {
+                if (coordinator.isCancelled(ev.correlationId())) {
+                    throw new java.util.concurrent.CancellationException("Cancelled before DELETE phase");
+                }
+                // DELETE dans une tx neuve . pg_cancel_backend possible via
+                // backendPidRegistry pour interrompre un DELETE long sur gros
+                // datasets ( ON DELETE CASCADE sur reference_reference peut
+                // ajouter ~50us / row ) .
+                var deleteTx = newRequiresNewTx();
+                deleteTx.executeWithoutResult(status ->
+                        backendPidRegistry.runWithRegistration(localJdbc, ev.correlationId(),
+                                () -> dataRepo.removeByFileId(ev.fileId())));
+            });
         }
-        // DELETE referencevalue dans une tx neuve . pg_cancel_backend possible
-        // via backendPidRegistry pour interrompre le DELETE long sur gros datasets .
-        var deleteTx = newRequiresNewTx();
-        deleteTx.executeWithoutResult(status ->
-                backendPidRegistry.runWithRegistration(localJdbc, ev.correlationId(),
-                        () -> dataRepo.removeByFileId(ev.fileId())));
-        return 0L;
+        // Marque le workflow comme 100 % done dans le registry pour que
+        // la bar UI passe de 0 % a 100 % a la completion ( DELETE etant
+        // atomique , aucun progres incremental n'est emis pendant son
+        // execution ) .
+        if (progressReporter != null) {
+            progressReporter.reportCompleted(ev.correlationId(), rowCount);
+        }
+        return rowCount;
+    }
+
+    /**
+     * Pre-counts the {@code referencevalue} rows attached to the binaryfile
+     * being unpublished / deleted and publishes the total to
+     * {@link fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry
+     * #setRecordsTotal} . This lets oa-live switch the "Lignes" column from
+     * "0 / -" to "X / X" and turn the progress bar from indeterminate to
+     * determinate IMMEDIATELY , before the potentially long DELETE on huge
+     * datasets . SELECT count(*) cost ~ms via the
+     * {@code referencevalue_binaryfile_idx} btree ( V14 ) .
+     *
+     * <p>Best-effort : any RuntimeException is swallowed and logged
+     * ( UI display is a quality-of-life feature , not a correctness
+     * requirement ; failing the precount must not abort the unpublish ) .
+     *
+     * @return rows counted ( 0 if the count failed or fileId had no rows )
+     */
+    private long preCountAndPublishRecordsTotal(DataRepository dataRepo,
+                                                PublishLifecycleEvent ev,
+                                                String callerTag) {
+        try {
+            long n = dataRepo.countByFileId(ev.fileId());
+            if (workflowActiveRegistry != null) {
+                workflowActiveRegistry.setRecordsTotal(ev.correlationId(), n);
+            }
+            log.info("{} : {} row(s) for fileId={}", callerTag, n, ev.fileId());
+            return n;
+        } catch (RuntimeException ex) {
+            log.warn("{} : countByFileId failed ( non-critical ) : {}",
+                    callerTag, ex.getMessage());
+            return 0L;
+        }
     }
 
     /**
@@ -649,25 +741,45 @@ public class PublishLifecyclePhase2Handler {
      * Spring native . REQUIRES_NEW garantit une tx fraiche dediee a
      * l'operation atomique , isolee des autres workflows concurrents .
      */
-    private long doDeleteFile(Application application, PublishLifecycleEvent ev) {
+    private long doDeleteFile(Application application, PublishLifecycleEvent ev) throws Exception {
         // Fix P1-BACK-9 : re-check cancellation avant DELETE potentiellement long .
         if (coordinator.isCancelled(ev.correlationId())) {
             throw new java.util.concurrent.CancellationException("Cancelled before DELETE_FILE");
         }
-        // Live phase tracking : 2 sub-steps visibles , chacune commitee
-        // separement ne donnerait pas atomicite globale ; on garde le SQL
-        // dans une seule tx mais on publie la phase principale juste avant .
-        logRepository.updatePhase(ev.correlationId(),
-                fr.inra.oresing.workflow.WorkflowPhase.DELETE_ROWS);
-        newRequiresNewTx().executeWithoutResult(status -> {
-            if (ev.wasPublished()) {
-                repository.getRepository(application).data().removeByFileId(ev.fileId());
-            }
-            serviceContainer.binaryFileService().removeFile(application, ev.fileId());
-        });
-        logRepository.updatePhase(ev.correlationId(),
-                fr.inra.oresing.workflow.WorkflowPhase.DELETE_FILE_ROW);
-        return 0L;
+        long rowCount;
+        try (fr.inra.oresing.workflow.phase.PhaseScope scope =
+                     fr.inra.oresing.workflow.phase.PhaseScope.open(phaseTracker, ev.correlationId())) {
+
+            // Skip precount si le fichier n'etait pas publie ( referencevalue
+            // rows absentes par definition , count toujours 0 ) .
+            rowCount = ev.wasPublished()
+                    ? scope.run(fr.inra.oresing.workflow.WorkflowPhase.COUNTING_ROWS, () -> {
+                        long n = repository.getRepository(application).data().countByFileId(ev.fileId());
+                        if (progressReporter != null) {
+                            progressReporter.reportTotal(ev.correlationId(), n);
+                        }
+                        log.info("doDeleteFile : {} row(s) to delete for fileId={}", n, ev.fileId());
+                        return n;
+                    })
+                    : 0L;
+
+            scope.run(fr.inra.oresing.workflow.WorkflowPhase.DELETE_ROWS, () -> {
+                newRequiresNewTx().executeWithoutResult(status -> {
+                    if (ev.wasPublished()) {
+                        repository.getRepository(application).data().removeByFileId(ev.fileId());
+                    }
+                });
+            });
+
+            scope.run(fr.inra.oresing.workflow.WorkflowPhase.DELETE_FILE_ROW, () -> {
+                newRequiresNewTx().executeWithoutResult(status ->
+                        serviceContainer.binaryFileService().removeFile(application, ev.fileId()));
+            });
+        }
+        if (progressReporter != null) {
+            progressReporter.reportCompleted(ev.correlationId(), rowCount);
+        }
+        return rowCount;
     }
 
     // ------------------------------------------------------------

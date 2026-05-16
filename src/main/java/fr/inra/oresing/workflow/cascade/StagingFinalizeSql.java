@@ -1,5 +1,6 @@
 package fr.inra.oresing.workflow.cascade;
 
+import fr.inra.oresing.persistence.refref.RefrefRebuildSql;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -351,53 +352,15 @@ public final class StagingFinalizeSql {
                 .collect(Collectors.joining(","));
 
         boolean filtered = (correlationId != null && !correlationId.isBlank());
-        String filterSql = filtered ? " AND correlation_id = ? " : "";
 
-        // Reconstruction reference_reference - 4 etapes ordonnees :
-        //
-        //   1. Snapshot ( id , referencesby ) du jsonb refslinkedto dans
-        //      une temp table dediee . Doit se faire AVANT le bulk INSERT
-        //      car celui-ci consomme la staging table via DELETE RETURNING
-        //      ( CTE batchee ) .
-        //   2. DELETE des liens reference_reference existants pour les ids
-        //      importes ( re-import = reconstruction propre ) .
-        //   3. Bulk UPSERT vers la table cible referencevalue ( consomme la
-        //      staging table ) .
-        //   4. INSERT reference_reference depuis le snapshot .
-        //
-        // Ordre crucial : la FK reference_reference_referenceid_fkey pointe
-        // sur referencevalue(id) NON deferred . Le INSERT reference_reference
-        // DOIT se faire APRES le bulk UPSERT sinon la FK echoue au tout
-        // premier depot d'un referentiel ( les UUIDs n'existent pas encore
-        // dans referencevalue ) . Cf bug identique fixe dans
-        // DataRepository.storeAll ( chemin MERGE_FILE ) .
-        try (Statement stmt = connection.createStatement()) {
-            stmt.execute(
-                    "CREATE TEMP TABLE refref_pending ("
-                            + "  referenceid  uuid,"
-                            + "  referencesby uuid"
-                            + ") ON COMMIT DROP");
-        }
-
-        String snapshotRefRefSql = "INSERT INTO refref_pending(referenceid, referencesby)"
-                + " SELECT DISTINCT (s.data->>'" + idJsonPath + "')::uuid AS referenceid,"
-                + "                 referencesby::uuid                  AS referencesby"
-                + " FROM " + stagingTable + " s, JSON_TABLE("
-                + "     s.data, '$.refslinkedto.*.*.*.uuids' COLUMNS ("
-                + "         NESTED PATH '$[*]' COLUMNS(referencesby TEXT PATH '$')"
-                + "     )"
-                + " ) as joins"
-                + (filtered ? " WHERE s.correlation_id = ?" : "");
-        try (PreparedStatement ps = connection.prepareStatement(snapshotRefRefSql)) {
-            if (filtered) ps.setObject(1, UUID.fromString(correlationId));
-            ps.executeUpdate();
-        }
-
-        String deleteRefRefSql = "DELETE FROM " + schemaName + ".reference_reference"
-                + " WHERE referenceid IN ( SELECT referenceid FROM refref_pending )";
-        try (PreparedStatement ps = connection.prepareStatement(deleteRefRefSql)) {
-            ps.executeUpdate();
-        }
+        // Reconstruction reference_reference : SQL centralise dans
+        // {@link RefrefRebuildSql} ( shared avec DataRepository.storeAll ) .
+        // Etapes 1-2 ici ( snapshot + DELETE old links ) , etapes 4-5
+        // apres le UPSERT batche .
+        RefrefRebuildSql.createSourceTable(connection);
+        RefrefRebuildSql.populateSource(connection, stagingTable,
+                filtered ? UUID.fromString(correlationId) : null);
+        RefrefRebuildSql.deleteOldLinks(connection, schemaName);
 
         // 3) Batched UPSERT into target table : DELETE batch from staging RETURNING data ,
         //    INSERT INTO target SELECT cols FROM batch ON CONFLICT DO UPDATE .
@@ -512,14 +475,13 @@ public final class StagingFinalizeSql {
                     batchNum, totalAffected);
         }
 
-        // 4) reference_reference est maintenant valide a inserer car les
-        // UUIDs existent dans referencevalue ( bulk UPSERT vient de finir ) .
-        String insertRefRefSql = "INSERT INTO " + schemaName + ".reference_reference(referenceid, referencesby)"
-                + " SELECT referenceid, referencesby FROM refref_pending";
-        try (PreparedStatement ps = connection.prepareStatement(insertRefRefSql)) {
-            int refrefInserted = ps.executeUpdate();
-            log.info("StagingFinalize : reference_reference rebuilt with {} link(s)", refrefInserted);
-        }
+        // Etapes 4-5 refacto B : refref_pending construit POST-UPSERT via
+        // {@link RefrefRebuildSql} . rv.id post-UPSERT = OLD pour existing
+        // ( ON CONFLICT DO UPDATE preserve l'id ) , NEW pour fresh INSERT .
+        RefrefRebuildSql.createPendingTable(connection);
+        RefrefRebuildSql.populatePending(connection, schemaName);
+        int refrefInserted = RefrefRebuildSql.insertReferenceReference(connection, schemaName);
+        log.info("StagingFinalize : reference_reference rebuilt with {} link(s)", refrefInserted);
         } finally {
             // Liberation du registry pid : evite la fuite memoire long-terme
             // + evite un cancel ulterieur ciblant ce pid alors qu'il aurait

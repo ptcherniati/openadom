@@ -105,8 +105,31 @@ public record AsynchroneFileImporterContext(
 
         BuildColumns result = BuildColumns.buildColumns(componentDescriptionEntryByComputedType, referenceValueRepository);
 
+        // Refacto B ( perf : skip ~110s + ~2.1 GB heap sur datatypes
+        // non-recursifs gros , 16-05-26 ) : la map nk->id n'est plus
+        // necessaire en RAM cote Java pour les datatypes non recursifs .
+        // Les ids existants seront retrouves directement en SQL via JOIN
+        // post-UPSERT dans {@link DataRepository#storeAll} ( refref_pending
+        // build par JOIN sur referencevalue plutot que via s.data->>'id' ) .
+        //
+        // Pour le NON-recursif : id reste random ( generation
+        // {@code UUID.randomUUID()} cote {@code OreSiEntity} ) , puis
+        // l'UPSERT preserve l'id existant via ON CONFLICT DO UPDATE pour
+        // les rows en collision , INSERT l'id NEW pour les nouvelles .
+        // Le JOIN SQL post-UPSERT recupere rv.id correct dans tous les cas .
+        //
+        // Pour le RECURSIF : la map est OBLIGATOIRE car WithRecursion chaine
+        // les UUIDs parent->child au sein du run via
+        // {@code addKnownIdToReferenceValues} . Garder le path actuel .
+        boolean isRecursive = constants.application().getConfiguration()
+                .findCompositeReferencesUsing(constants.refType())
+                .filter(HierarchicalNode::isRecursive)
+                .isPresent();
+
         ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences =
-                referenceValueRepository.getDataIdPerKeys(constants.refType());
+                isRecursive
+                        ? referenceValueRepository.getDataIdPerKeys(constants.refType())
+                        : ImmutableMap.of();
 
         // B4 / #5 : index O(1) pour {@link #getIdForSameHierarchicalKeyInDatabase}.
         // Cette methode est appelee par ligne par DataTransformer ; sur un

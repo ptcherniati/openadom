@@ -1,6 +1,7 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.domain.data.DataRows;
+import fr.inra.oresing.persistence.refref.RefrefRebuildSql;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
@@ -221,59 +222,14 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         long copyMs = (System.nanoTime() - copyStart) / 1_000_000L;
                         log.info("storeAll : COPY phase loaded {} rows into temp table in {} ms", copiedRows, copyMs);
 
-                        // Reconstruction reference_reference - 4 etapes ordonnees :
-                        //
-                        //   1. Snapshot ( id , referencesby ) du jsonb refslinkedto
-                        //      dans une temp table dediee . Doit se faire AVANT le
-                        //      bulk INSERT car celui-ci consomme referencevalue_import
-                        //      via DELETE RETURNING ( CTE batchee ) .
-                        //   2. DELETE des liens reference_reference existants pour
-                        //      les ids importes ( re-import = reconstruction propre ).
-                        //   3. Bulk INSERT/UPSERT vers la table cible referencevalue
-                        //      ( consomme referencevalue_import ).
-                        //   4. INSERT reference_reference depuis le snapshot .
-                        //
-                        // Ordre crucial : la FK reference_reference_referenceid_fkey
-                        // pointe sur referencevalue(id) NON deferred . Le INSERT
-                        // reference_reference DOIT se faire APRES le bulk INSERT
-                        // sinon la FK echoue au tout premier depot d'un referentiel
-                        // ( les UUIDs n'existent pas encore dans referencevalue ) .
-                        // L'ancien ordre 1->2->4->3 marchait par chance uniquement
-                        // sur les re-depots ( les UUIDs existaient deja ) .
-                        try (Statement stmt = connection.createStatement()) {
-                            stmt.execute("""
-                                    CREATE TEMP TABLE refref_pending (
-                                        referenceid  uuid,
-                                        referencesby uuid
-                                    ) ON COMMIT DROP
-                                    """);
-                        }
-
-                        try (Statement stmt = connection.createStatement()) {
-                            stmt.execute("""
-                                    INSERT INTO refref_pending(referenceid, referencesby)
-                                    SELECT DISTINCT
-                                     (s.data->>'id')::uuid AS referenceid,
-                                     referencesby::uuid    AS referencesby
-                                    FROM
-                                     referencevalue_import s,
-                                         JSON_TABLE (
-                                             s.data, '$.refslinkedto.*.*.*.uuids' COLUMNS (
-                                             NESTED PATH '$[*]' COLUMNS(
-                                                     referencesby  TEXT PATH '$')
-                                                 )
-                                         ) as joins
-                                    """);
-                        }
-
-                        try (Statement stmt = connection.createStatement()) {
-                            stmt.execute("""
-                                    DELETE FROM %1$s.reference_reference
-                                    WHERE referenceid IN (
-                                        SELECT referenceid FROM refref_pending
-                                    )
-                                    """.formatted(getSchema().getName()));
-                        }
+                        // Reconstruction reference_reference - refacto B :
+                        // tout le SQL est centralise dans {@link RefrefRebuildSql}
+                        // ( source of truth partagee avec StagingFinalizeSql ) .
+                        // Etapes 1-2 ici ( snapshot + delete old ) , etapes 4-5
+                        // apres le UPSERT batche .
+                        RefrefRebuildSql.createSourceTable(connection);
+                        RefrefRebuildSql.populateSource(connection, "referencevalue_import", null);
+                        RefrefRebuildSql.deleteOldLinks(connection, getSchema().getName());
 
                         // INSERT decoupe en batches. Au lieu d'1 INSERT massif
                         // qui tient des locks sur 280k+ rows + force la pending
@@ -336,24 +292,16 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         log.info("storeAll : INSERT phase upserted {} rows in {} batches ( batch size = {} ) in {} ms",
                                 totalUpserted, batchCount, BULK_INSERT_BATCH_SIZE, insertMs);
 
-                        // Etape 4 : reference_reference est maintenant valide
-                        // car les UUIDs existent dans referencevalue ( bulk
-                        // UPSERT vient de finir ) .
-                        // Sub-phase REFREF_REBUILD : sur de gros volumes ce
-                        // INSERT prend plusieurs minutes pendant que la bar
-                        // UPSERT staging -&gt; final affiche deja 100 % .
-                        // Sans cette emission , l'UI ne montre rien et
-                        // l'utilisateur croit que la cascade est figee .
-                        try { onPhaseChange.accept("REFREF_REBUILD"); } catch (RuntimeException ignored) { /* best effort */ }
+                        // Etapes 4-5 refacto B : refref_pending construit
+                        // POST-UPSERT via {@link RefrefRebuildSql} . rv.id
+                        // post-UPSERT = OLD pour existing , NEW pour fresh .
+                        try { onPhaseChange.accept(fr.inra.oresing.workflow.WorkflowPhase.REFREF_REBUILD); } catch (RuntimeException ignored) { /* best effort */ }
                         long refrefStart = System.nanoTime();
-                        try (Statement stmt = connection.createStatement()) {
-                            int refrefInserted = stmt.executeUpdate("""
-                                    INSERT INTO %1$s.reference_reference(referenceid, referencesby)
-                                    SELECT referenceid, referencesby FROM refref_pending
-                                    """.formatted(getSchema().getName()));
-                            log.info("storeAll : reference_reference rebuilt with {} link(s) in {} ms",
-                                    refrefInserted, (System.nanoTime() - refrefStart) / 1_000_000L);
-                        }
+                        RefrefRebuildSql.createPendingTable(connection);
+                        RefrefRebuildSql.populatePending(connection, getSchema().getName());
+                        int refrefInserted = RefrefRebuildSql.insertReferenceReference(connection, getSchema().getName());
+                        log.info("storeAll : reference_reference rebuilt with {} link(s) in {} ms",
+                                refrefInserted, (System.nanoTime() - refrefStart) / 1_000_000L);
 
                         connection.commit();
                         committed = true;
@@ -381,6 +329,27 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     }
 
     @Override
+
+    /**
+     * Counts referencevalue rows belonging to a given binaryfile . Used by
+     * the unpublish / delete-file flows to populate {@code recordsTotal}
+     * BEFORE the actual DELETE runs , so oa-live can display the expected
+     * row count immediately in the "Lignes" column ( bar passes from
+     * indeterminate to determinate ) .
+     *
+     * <p>Hits the {@code referencevalue_binaryfile_idx} btree index (V14) :
+     * O ( log N ) scan + index-only path for a single file . Negligible
+     * cost even on 100M+ row tables . Safe to call inline before DELETE .
+     */
+    public long countByFileId(final UUID fileId) {
+        final String query = String.format("""
+                        SELECT count(*) FROM %s WHERE binaryfile = :binaryFile
+                        """,
+                getTable().getSqlIdentifier());
+        Map<String, Object> params = Map.of("binaryFile", fileId);
+        Long n = getNamedParameterJdbcTemplate().queryForObject(query, params, Long.class);
+        return n == null ? 0L : n;
+    }
 
     public void removeByFileId(final UUID fileId) {
         // PERF : cast {@code binaryfile::text} eliminait l'usage de l'index sur

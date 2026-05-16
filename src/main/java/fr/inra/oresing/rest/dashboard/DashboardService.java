@@ -620,7 +620,7 @@ public class DashboardService {
         WorkflowSnapshot snap = aggregateChildIntoParent(rawSnap);
 
         // Side-map lookups ( stagingRows / finalRows / finalizePhase /
-        // binaryFileId / mergeFilePhase ) are keyed by the child cascade cid
+        // binaryFileId / subPhase ) are keyed by the child cascade cid
         // in WorkflowActiveRegistry ( cf CascadeImportPipeline lines
         // 318/624/651/681/786 ) . We resolve dataCid once and use it for ALL
         // side-map lookups , while correlationId stays the parent cid for
@@ -769,10 +769,10 @@ public class DashboardService {
         // ( chemin batche UPSERT TEMP -> finale lit le rowcount par batch via
         // {@link WorkflowActiveRegistry#addFinalRows} ) , donc on peut afficher
         // une bar determinate pendant la phase UPSERT_FINAL .
-        String mergeFilePhase = registry.findMergeFilePhase(dataCid).orElse(null);
+        String subPhase = registry.findSubPhase(dataCid).orElse(null);
         boolean mergeFileFinalObservable = strategy != null
                 && "MERGE_FILE".equals(strategy.sinkStrategy())
-                && "UPSERT_FINAL".equals(mergeFilePhase);
+                && "UPSERT_FINAL".equals(subPhase);
         boolean finalDeterminate = strategy != null
                 && ("SHARED_UNLOGGED".equals(strategy.stagingStrategy())
                   || "PER_WORKFLOW_TABLE".equals(strategy.stagingStrategy())
@@ -791,7 +791,7 @@ public class DashboardService {
                 phase != null ? phase.errorMessage() : null,
                 stagingRowsWritten, finalRowsWritten,
                 stagingDeterminate, finalDeterminate,
-                mergeFilePhase));
+                subPhase));
     }
 
     private static final class FinalizePhaseSnapshotConst {

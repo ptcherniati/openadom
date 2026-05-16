@@ -85,6 +85,16 @@ public interface DataRepository {
 
     void removeByFileId(UUID id);
 
+    /**
+     * Returns the number of {@code referencevalue} rows currently linked
+     * to {@code fileId} . Used to populate {@code workflow_log.records_total}
+     * BEFORE the DELETE during an unpublish / delete-file flow so oa-live
+     * can render the "Lignes" column and the progress bar immediately .
+     * Uses the {@code referencevalue_binaryfile_idx} btree index ; cost
+     * negligible even on 100M+ row tables .
+     */
+    long countByFileId(UUID fileId);
+
     Map<String, List<Ltree>> resolveRequiredAuthorizations(Map<String, List<Ltree>> stringLtreeMap);
 
     Map<String, String> findHierarchicalKeysByKeyForReferenceTypes(List<String> referenceType);

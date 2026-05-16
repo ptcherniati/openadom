@@ -704,7 +704,7 @@ class DashboardServiceTest {
             when(registry.findBinaryFileId(corrId)).thenReturn(Optional.empty());
             when(registry.finalRows(corrId)).thenReturn(50L);
             when(registry.stagingRows(corrId)).thenReturn(0L);
-            when(registry.findMergeFilePhase(corrId)).thenReturn(Optional.empty());
+            when(registry.findSubPhase(corrId)).thenReturn(Optional.empty());
 
             FinalizeAggregateDTO agg = service.finalizeAggregate();
 
@@ -767,7 +767,7 @@ class DashboardServiceTest {
             when(registry.findBinaryFileId(corrId)).thenReturn(Optional.empty());
             when(registry.finalRows(corrId)).thenReturn(150L);
             when(registry.stagingRows(corrId)).thenReturn(0L);
-            when(registry.findMergeFilePhase(corrId)).thenReturn(Optional.empty());
+            when(registry.findSubPhase(corrId)).thenReturn(Optional.empty());
 
             Optional<FinalizeProgressDTO> result = service.finalizeProgress(corrId);
 
@@ -791,7 +791,7 @@ class DashboardServiceTest {
             when(registry.findBinaryFileId(corrId)).thenReturn(Optional.empty());
             when(registry.finalRows(corrId)).thenReturn(0L);
             when(registry.stagingRows(corrId)).thenReturn(0L);
-            when(registry.findMergeFilePhase(corrId)).thenReturn(Optional.empty());
+            when(registry.findSubPhase(corrId)).thenReturn(Optional.empty());
             when(jdbc.queryForObject(anyString(), any(SqlParameterSource.class), eq(Long.class)))
                     .thenReturn(null);
 
@@ -813,7 +813,7 @@ class DashboardServiceTest {
             when(registry.findBinaryFileId(corrId)).thenReturn(Optional.empty());
             when(registry.finalRows(corrId)).thenReturn(0L);
             when(registry.stagingRows(corrId)).thenReturn(0L);
-            when(registry.findMergeFilePhase(corrId)).thenReturn(Optional.empty());
+            when(registry.findSubPhase(corrId)).thenReturn(Optional.empty());
             when(jdbc.queryForObject(anyString(), any(SqlParameterSource.class), eq(Long.class)))
                     .thenReturn(99L);
 
@@ -834,7 +834,7 @@ class DashboardServiceTest {
             when(registry.findBinaryFileId(corrId)).thenReturn(Optional.of(binId));
             when(registry.finalRows(corrId)).thenReturn(0L);
             when(registry.stagingRows(corrId)).thenReturn(0L);
-            when(registry.findMergeFilePhase(corrId)).thenReturn(Optional.empty());
+            when(registry.findSubPhase(corrId)).thenReturn(Optional.empty());
             // 1ère requête = final_count → null ; 2ème = COUNT(*) → 42
             when(jdbc.queryForObject(anyString(), any(SqlParameterSource.class), eq(Long.class)))
                     .thenReturn(null)
@@ -859,7 +859,7 @@ class DashboardServiceTest {
             when(registry.findBinaryFileId(corrId)).thenReturn(Optional.empty());
             when(registry.finalRows(corrId)).thenReturn(0L);
             when(registry.stagingRows(corrId)).thenReturn(0L);
-            when(registry.findMergeFilePhase(corrId)).thenReturn(Optional.empty());
+            when(registry.findSubPhase(corrId)).thenReturn(Optional.empty());
 
             Optional<FinalizeProgressDTO> result = service.finalizeProgress(corrId);
 
@@ -881,7 +881,7 @@ class DashboardServiceTest {
             when(registry.findBinaryFileId(corrId)).thenReturn(Optional.empty());
             when(registry.finalRows(corrId)).thenReturn(0L);
             when(registry.stagingRows(corrId)).thenReturn(0L);
-            when(registry.findMergeFilePhase(corrId)).thenReturn(Optional.empty());
+            when(registry.findSubPhase(corrId)).thenReturn(Optional.empty());
             when(jdbc.queryForObject(anyString(), any(SqlParameterSource.class), eq(Long.class)))
                     .thenThrow(new RuntimeException("DB unavailable"));
 

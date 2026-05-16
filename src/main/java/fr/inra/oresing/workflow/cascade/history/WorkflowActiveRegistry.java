@@ -143,12 +143,13 @@ public class WorkflowActiveRegistry implements WorkflowListener {
     /**
      * Sous-phase MERGE_FILE ( {@code MERGE_LOCAL} / {@code TEMP_LOAD} /
      * {@code UPSERT_FINAL} ) emise par {@link DataRepository#storeAll}
-     * via {@link StoreAllPathSink} . Permet a la live view d'afficher
-     * 3 progress bars distinctes au lieu de 2 ( bar A determinate ,
-     * bar B indeterminate pendant TEMP_LOAD , bar C determinate ) .
-     * Null pour les workflows DIRECT_COPY ( pas de sous-phase MERGE_FILE ) .
+     * via {@link StoreAllPathSink} . Egalement {@code REFREF_REBUILD} ,
+     * {@code SYNTHESIS_REBUILD} , {@code CACHE_CAPTURE} ( post-UPSERT
+     * phases pushed by {@link
+     * fr.inra.oresing.workflow.phase.WorkflowPhaseTracker} ) .
+     * Null pour les workflows sans sous-phase observable .
      */
-    private final ConcurrentMap<UUID, String> mergeFilePhaseByCid =
+    private final ConcurrentMap<UUID, String> subPhaseByCid =
             new ConcurrentHashMap<>();
 
     public void addStagingRows(UUID correlationId, long delta) {
@@ -192,20 +193,27 @@ public class WorkflowActiveRegistry implements WorkflowListener {
     }
 
     /**
-     * Marque la sous-phase MERGE_FILE en cours pour ce workflow . Appelle
-     * par {@link StoreAllPathSink#write} via le callback
-     * {@code onPhaseChange} expose par {@code DataRepository.storeAll} .
+     * Marque la sous-phase en cours pour ce workflow . Appelle :
+     * <ul>
+     *   <li>{@link StoreAllPathSink#write} via le callback
+     *       {@code onPhaseChange} de {@code DataRepository.storeAll}
+     *       pour {@code MERGE_LOCAL} / {@code TEMP_LOAD} /
+     *       {@code UPSERT_FINAL} / {@code REFREF_REBUILD} .</li>
+     *   <li>{@link fr.inra.oresing.workflow.phase.WorkflowPhaseTracker}
+     *       pour les phases post-UPSERT
+     *       ( {@code SYNTHESIS_REBUILD} , {@code CACHE_CAPTURE} ) .</li>
+     * </ul>
      *
-     * @param phase {@code MERGE_LOCAL} | {@code TEMP_LOAD} | {@code UPSERT_FINAL}
+     * @param phase voir {@link fr.inra.oresing.workflow.WorkflowPhase}
      */
-    public void setMergeFilePhase(UUID correlationId, String phase) {
+    public void setSubPhase(UUID correlationId, String phase) {
         if (correlationId == null || phase == null) return;
-        mergeFilePhaseByCid.put(correlationId, phase);
+        subPhaseByCid.put(correlationId, phase);
     }
 
-    /** @return sous-phase MERGE_FILE courante , ou empty pour DIRECT_COPY ou avant TEMP_LOAD . */
-    public Optional<String> findMergeFilePhase(UUID correlationId) {
-        return Optional.ofNullable(mergeFilePhaseByCid.get(correlationId));
+    /** @return sous-phase courante , ou empty si aucune publiee . */
+    public Optional<String> findSubPhase(UUID correlationId) {
+        return Optional.ofNullable(subPhaseByCid.get(correlationId));
     }
 
     public void initFinalizePhase(UUID correlationId, Instant startedAt) {
@@ -422,7 +430,7 @@ public class WorkflowActiveRegistry implements WorkflowListener {
         finalizePhaseByCid.remove(correlationId);
         stagingRowsByCid.remove(correlationId);
         finalRowsByCid.remove(correlationId);
-        mergeFilePhaseByCid.remove(correlationId);
+        subPhaseByCid.remove(correlationId);
         fastPathByCid.remove(correlationId);
         if (removed != null) {
             log.debug("Workflow unregistered : {} / {}",
