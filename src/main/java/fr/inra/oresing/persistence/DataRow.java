@@ -44,7 +44,7 @@ public record DataRow(
                                     .map(value -> value.get(componentKey))
                                     .map(MapType.class::cast)
                                     .forEach(listTypes::add);
-                            return new AbstractMap.SimpleEntry<String, ListType>(componentKey, listTypes);
+                            return new AbstractMap.SimpleEntry<String, ListType<? extends FieldType<?>>>(componentKey, listTypes);
                         }
                 )
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));

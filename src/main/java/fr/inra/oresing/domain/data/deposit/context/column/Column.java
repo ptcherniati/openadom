@@ -94,7 +94,7 @@ public abstract class Column implements Comparable<Column> {
         final TransformationConfiguration computation = referenceStaticComputedColumnDescription.computation();
         final Map<String, Object> contextForExpression = computeGroovyContext(referenceValueRepository, computation);
         final Expression<Set<String>> computationExpression = StringSetGroovyExpression.forExpression(computation.expression());
-        return new ManyValuesStaticColumn(referenceColumn, referenceColumn.column(), ComponentPresenceConstraint.ABSENT, ComputedValueUsage.USE_COMPUTED_VALUE, null) {
+        return new ManyValuesStaticColumn(referenceColumn, ComponentPresenceConstraint.ABSENT, ComputedValueUsage.USE_COMPUTED_VALUE, null) {
             @Override
             public String getExpectedHeader() {
                 throw new UnsupportedOperationException("la colonne " + referenceColumn + " est calculée, il n'y a pas d'entête spécifié car elle ne doit pas être dans le CSV");
@@ -120,7 +120,7 @@ public abstract class Column implements Comparable<Column> {
         final TransformationConfiguration computation = referenceStaticComputedColumnDescription.computation();
         final Map<String, Object> contextForExpression = computeGroovyContext(referenceValueRepository, computation);
         final Expression<String> computationExpression = StringGroovyExpression.forExpression(computation.expression(), computation.exceptionMessages());
-        return new OneValueStaticColumn(referenceColumn, referenceColumn.column(), ComponentPresenceConstraint.ABSENT, ComputedValueUsage.USE_COMPUTED_VALUE, null) {
+        return new OneValueStaticColumn(referenceColumn, ComponentPresenceConstraint.ABSENT, ComputedValueUsage.USE_COMPUTED_VALUE, null) {
             @Override
             public String getExpectedHeader() {
                 throw new UnsupportedOperationException("la colonne " + referenceColumn + " est calculée, il n'y a pas d'entête spécifié");
@@ -165,7 +165,6 @@ public abstract class Column implements Comparable<Column> {
         return switch (multiplicity) {
             case ONE -> new OneValueStaticColumn(
                     referenceColumn,
-                    headerForColumn,
                     presenceConstraint,
                     defaultValue != null ? ComputedValueUsage.USE_COMPUTED_AS_DEFAULT_VALUE : ComputedValueUsage.NOT_COMPUTED,
                     defaultValue
@@ -198,7 +197,6 @@ public abstract class Column implements Comparable<Column> {
             };
             case MANY -> new ManyValuesStaticColumn(
                     referenceColumn,
-                    headerForColumn,
                     presenceConstraint,
                     defaultValue != null ? ComputedValueUsage.USE_COMPUTED_AS_DEFAULT_VALUE : ComputedValueUsage.NOT_COMPUTED,
                     defaultValue
