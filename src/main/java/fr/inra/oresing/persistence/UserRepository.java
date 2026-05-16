@@ -158,7 +158,6 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
     }
 
     public CurrentUserRoles getRolesForRole(final String role) {
-        final String roleParam = role == null ? "\"current_user\"()" : String.format("\"%s\"", role);
         RowMapper<CurrentUserRoles> rowMapper = (rs, rowNum) -> {
             final String currentUser = rs.getString("currentUser");
             final List<String> memberOf = Arrays.stream((String[]) rs.getArray("memberOf").getArray())
@@ -298,9 +297,10 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
     public void invalidateCharte(final UUID applicationId) {
         final String sql = """
                 update %s
-                set chartes = chartes - '%s'
-                """.formatted(getTable().getSqlIdentifier(), applicationId.toString());
-        getNamedParameterJdbcTemplate().getJdbcTemplate().execute(sql);
+                set chartes = chartes - :applicationId::text
+                """.formatted(getTable().getSqlIdentifier());
+        getNamedParameterJdbcTemplate().update(sql,
+                new MapSqlParameterSource("applicationId", applicationId.toString()));
     }
 
 }

@@ -66,20 +66,28 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         String cond = params.entrySet().stream().flatMap(e -> {
                     final String k = e.getKey();
                     if (StringUtils.equalsAnyIgnoreCase(k, "_row_id_")) {
-                        final String collect = e.getValue().stream().map(v -> {
-                                    final String arg = ":arg" + i.getAndIncrement();
+                        final java.util.List<String> values = e.getValue();
+                        if (values.isEmpty()) {
+                            return Stream.empty();
+                        }
+                        // Bind each UUID as a named parameter to prevent SQL injection.
+                        // UUID.fromString validates the format before binding.
+                        final String collect = values.stream().map(v -> {
+                                    UUID.fromString(v); // validate UUID format
+                                    final String arg = "arg" + i.getAndIncrement();
                                     paramSource.addValue(arg, v);
-                                    return String.format("'%s'::uuid", v);
+                                    return ":" + arg + "::uuid";
                                 })
                                 .collect(Collectors.joining(", "));
-                        return Stream.ofNullable(String.format("array[id]::uuid[] <@ array[%s]::uuid[]", collect));
+                        return Stream.of("array[id]::uuid[] <@ array[" + collect + "]::uuid[]");
                     }
                     if (StringUtils.equalsAnyIgnoreCase(k, "_row_key_")) {
+                        // Bind each key value as a named parameter to prevent SQL injection.
                         final String collect = e.getValue().stream()
                                 .map(v -> {
-                                    final String arg = ":arg" + i.getAndIncrement();
+                                    final String arg = "arg" + i.getAndIncrement();
                                     paramSource.addValue(arg, v);
-                                    return String.format("'%s'", v);
+                                    return ":" + arg;
                                 })
                                 .collect(Collectors.joining(", "));
                         if (collect.isEmpty()) {
@@ -89,12 +97,20 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                     }
                     if (StringUtils.equalsAnyIgnoreCase(k, "any")) {
                         return e.getValue().stream().map(v -> {
-                            final String arg = ":arg" + i.getAndIncrement();
+                            final String arg = "arg" + i.getAndIncrement();
                             paramSource.addValue(arg, v);
-                            return "kv.value=" + arg;
+                            return "kv.value=:" + arg;
                         });
                     }
-                    return e.getValue().stream().map(v -> String.format("lower(t.refvalues ->> '%s') ~ lower('.*%s.*')", k, v));
+                    // Bind both the JSON field name (k) and the value (v) as named parameters
+                    // to prevent SQL injection from arbitrary HTTP query parameters.
+                    return e.getValue().stream().map(v -> {
+                        final String keyArg = "arg" + i.getAndIncrement();
+                        final String valArg = "arg" + i.getAndIncrement();
+                        paramSource.addValue(keyArg, k);
+                        paramSource.addValue(valArg, ".*" + v + ".*");
+                        return String.format("lower(t.refvalues ->> :%s) ~ lower(:%s)", keyArg, valArg);
+                    });
                 })
                 .filter(Objects::nonNull).
                 collect(Collectors.joining(" AND "));

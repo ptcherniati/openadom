@@ -326,8 +326,12 @@ public class CascadeImportPipeline {
                     : null;
             if (stagingMode != null && stagingMode.createTableSql() != null) {
                 try (java.sql.Connection c = referenceValueRepository.getDataSource().getConnection();
-                     java.sql.Statement st = c.createStatement()) {
-                    st.execute(stagingMode.createTableSql());
+                     java.sql.PreparedStatement ps = c.prepareStatement(stagingMode.createTableSql())) {
+                    java.util.UUID ddlParam = stagingMode.tableDdlParam();
+                    if (ddlParam != null) {
+                        ps.setObject(1, ddlParam);
+                    }
+                    ps.execute();
                     log.info("[{}] PER_WORKFLOW_TABLE : table dediee {} creee",
                             correlationId, stagingMode.tableName());
                 } catch (java.sql.SQLException e) {
@@ -656,8 +660,12 @@ public class CascadeImportPipeline {
                     // PER_WORKFLOW_TABLE : DROP table dediee post-succes .
                     if (finalStagingMode != null && finalStagingMode.dropTableSql() != null) {
                         try (java.sql.Connection c = referenceValueRepository.getDataSource().getConnection();
-                             java.sql.Statement st = c.createStatement()) {
-                            st.execute(finalStagingMode.dropTableSql());
+                             java.sql.PreparedStatement ps = c.prepareStatement(finalStagingMode.dropTableSql())) {
+                            java.util.UUID ddlParam = finalStagingMode.tableDdlParam();
+                            if (ddlParam != null) {
+                                ps.setObject(1, ddlParam);
+                            }
+                            ps.execute();
                             log.info("[{}] PER_WORKFLOW_TABLE : table {} droppee apres succes",
                                     correlationId, finalStagingMode.tableName());
                         } catch (java.sql.SQLException dropErr) {
