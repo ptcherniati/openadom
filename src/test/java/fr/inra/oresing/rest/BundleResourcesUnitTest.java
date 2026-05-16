@@ -7,13 +7,14 @@ import fr.inra.oresing.rest.usecases.data.SendZipLinkByMailUseCase;
 import fr.inra.oresing.rest.usecases.data.WriteUploadBundleUseCase;
 import fr.inra.oresing.rest.usecases.security.authentication.GetCurrentUserUseCase;
 import fr.inra.oresing.rest.usecases.storage.binaryfile.CreateDataUseCase;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.servlet.LocaleResolver;
 import reactor.core.publisher.Mono;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -34,7 +35,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @Tag("integration.bundle")
 @DisplayName("Tests unitaires — BundleResources")
 @ExtendWith(MockitoExtension.class)
-@Slf4j
 class BundleResourcesUnitTest {
 
     // ── Mocks pour le constructeur ───────────────────────────────────────────

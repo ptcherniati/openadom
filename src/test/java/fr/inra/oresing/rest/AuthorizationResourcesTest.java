@@ -10,7 +10,7 @@ import fr.inra.oresing.rest.fixtures.MonSoereFixture;
 import fr.inra.oresing.rest.services.AbstractIntegrationTest;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import lombok.extern.slf4j.Slf4j;
+
 import org.hamcrest.core.IsEqual;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -31,7 +31,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
-@Slf4j
 @Tag("core.auth")
 public class AuthorizationResourcesTest extends AbstractIntegrationTest {
 

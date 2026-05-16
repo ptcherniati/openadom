@@ -14,7 +14,7 @@ import fr.inra.oresing.rest.model.configuration.ValidationError;
 import fr.inra.oresing.rest.reactive.*;
 import fr.inra.oresing.rest.services.AbstractIntegrationTest;
 import fr.inra.oresing.rest.services.ApplicationConfigurationService;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.*;
 import reactor.core.publisher.Flux;
@@ -35,7 +35,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Slf4j
 @org.junit.jupiter.api.Tag("SUITE")
 @org.junit.jupiter.api.Tag("core.config")
 @org.junit.jupiter.api.Tag("GENERATE_CYPRESS_FIXTURES")

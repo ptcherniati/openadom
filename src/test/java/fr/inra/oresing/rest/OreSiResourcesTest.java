@@ -17,7 +17,7 @@ import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
 import fr.inra.oresing.rest.services.AbstractIntegrationTest;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.ServletException;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -63,7 +63,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
-@Slf4j
 @Tag("docker-required")
 public class OreSiResourcesTest extends AbstractIntegrationTest {
 

@@ -10,7 +10,7 @@ import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.rest.services.AbstractIntegrationTest;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import lombok.extern.slf4j.Slf4j;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -28,7 +28,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("core.auth")
-@Slf4j
 public class RightsTest extends AbstractIntegrationTest {
     // Aligne sur la valeur >= 32 octets injectee a JWTExtractor en mode test
     // ( cf. application-tests.properties / application-testmail.yml ).

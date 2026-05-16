@@ -161,4 +161,77 @@ class DatePatternTest {
             TypeOfDate typeOfDate) {
     }
 
+    @Test
+    @DisplayName("dateToStandardFormat — date format dd/MM/yyyy produces ISO-like output")
+    void dateToStandardFormatDate() {
+        DatePattern<LocalDate> dp = DatePattern.of("dd/MM/yyyy");
+        String result = dp.dateToStandardFormat("21/06/2004");
+        Assertions.assertNotNull(result);
+        // Standard format is yyyy-MM-dd HH:mm:ss
+        Assertions.assertTrue(result.startsWith("2004-06-21"), "Expected ISO-format date, got: " + result);
+    }
+
+    @Test
+    @DisplayName("dateToStandardFormat — null returns null")
+    void dateToStandardFormatNull() {
+        DatePattern<LocalDate> dp = DatePattern.of("dd/MM/yyyy");
+        Assertions.assertNull(dp.dateToStandardFormat(null));
+    }
+
+    @Test
+    @DisplayName("dateToStandardFormat — 'null' string returns null")
+    void dateToStandardFormatNullString() {
+        DatePattern<LocalDate> dp = DatePattern.of("dd/MM/yyyy");
+        Assertions.assertNull(dp.dateToStandardFormat("null"));
+    }
+
+    @Test
+    @DisplayName("dateToStandardFormat — already in standard format passes through")
+    void dateToStandardFormatAlreadyStandard() {
+        DatePattern<LocalDate> dp = DatePattern.of("dd/MM/yyyy");
+        // A string in the standard format should be returned as-is (DateTimeParseException path)
+        String standard = "2024-06-21 00:00:00";
+        String result = dp.dateToStandardFormat(standard);
+        Assertions.assertEquals(standard, result);
+    }
+
+    @Test
+    @DisplayName("dateFromStandardFormat — null returns null")
+    void dateFromStandardFormatNull() {
+        DatePattern<LocalDate> dp = DatePattern.of("dd/MM/yyyy");
+        Assertions.assertNull(dp.dateFromStandardFormat(null));
+    }
+
+    @Test
+    @DisplayName("dateFromStandardFormat — 'null' string returns null")
+    void dateFromStandardFormatNullString() {
+        DatePattern<LocalDate> dp = DatePattern.of("dd/MM/yyyy");
+        Assertions.assertNull(dp.dateFromStandardFormat("null"));
+    }
+
+    @Test
+    @DisplayName("dateFromStandardFormat — standard format converted to pattern format")
+    void dateFromStandardFormatConverts() {
+        DatePattern<LocalDate> dp = DatePattern.of("dd/MM/yyyy");
+        String result = dp.dateFromStandardFormat("2004-06-21 00:00:00");
+        Assertions.assertEquals("21/06/2004", result);
+    }
+
+    @Test
+    @DisplayName("dateFromStandardFormat — non-parseable string returned as-is")
+    void dateFromStandardFormatPassThrough() {
+        DatePattern<LocalDate> dp = DatePattern.of("dd/MM/yyyy");
+        String result = dp.dateFromStandardFormat("21/06/2004");
+        // not a standard format string, should be returned as-is
+        Assertions.assertEquals("21/06/2004", result);
+    }
+
+    @Test
+    @DisplayName("format(null) returns null for non-MM/YYYY and non-YYYY patterns")
+    void formatNullDateReturnsNull() {
+        DatePattern<LocalDate> dp = DatePattern.of("dd/MM/yyyy");
+        LocalDate result = dp.format(null);
+        Assertions.assertNull(result);
+    }
+
 }

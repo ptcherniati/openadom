@@ -5,8 +5,9 @@ import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.Fixtures;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -41,8 +42,9 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 @SpringBootTest(classes = {OreSiNg.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @Tag("docker-required")
-@Slf4j
 public abstract class AbstractIntegrationTest {
+
+    protected static final Logger log = LoggerFactory.getLogger(AbstractIntegrationTest.class);
 
     /** Identifiants du super-utilisateur créé par POSTGRES_USER dans le conteneur. */
     private static final String PG_SUPER_USER     = "test";

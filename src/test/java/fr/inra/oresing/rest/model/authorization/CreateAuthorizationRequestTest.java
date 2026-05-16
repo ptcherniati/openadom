@@ -15,7 +15,7 @@ import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.authorization.request.AuthorizationRequestBuilder;
 import fr.inra.oresing.rest.services.AbstractIntegrationTest;
-import lombok.extern.slf4j.Slf4j;
+
 import org.json.JSONException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -32,7 +32,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-@Slf4j
 class CreateAuthorizationRequestTest extends AbstractIntegrationTest {
     static String createAuthorization;
 

@@ -40,11 +40,11 @@ public record Submission(
             }
             for (int groupIndex = 1; groupIndex <= matcher.groupCount(); groupIndex++) {
                 String value = matcher.group(groupIndex);
-                if (groupIndex == fileNameParsing().startDate()) {
+                if (fileNameParsing().startDate() != null && groupIndex == fileNameParsing().startDate()) {
                     if (Strings.isNullOrEmpty(binaryFileDataset.getFrom())) {
                         parseStartDate(binaryFileDataset, value, timeScopePattern);
                     }
-                } else if (groupIndex == fileNameParsing().endDate()) {
+                } else if (fileNameParsing().endDate() != null && groupIndex == fileNameParsing().endDate()) {
                     if (Strings.isNullOrEmpty(binaryFileDataset.getTo())) {
                         parseEndDate(binaryFileDataset, value, timeScopePattern);
                     }
@@ -173,7 +173,7 @@ public record Submission(
             int groupCount = 0;
             while (m.find()) {
                 groupCount++;
-                if (groupCount == startDate || groupCount == endDate) {
+                if ((startDate != null && groupCount == startDate) || (endDate != null && groupCount == endDate)) {
                     m.appendReplacement(sb, DD_MM_YYYY_FOR_FILE);
                 } else {
                     if (scopeIndex < authorizationScopes.size()) {

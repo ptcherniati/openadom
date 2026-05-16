@@ -4,7 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -48,8 +49,8 @@ import java.util.regex.Pattern;
  * writer.writeAliases("ui/cypress/fixtures/applications/ore/aliases.json");
  * }</pre>
  */
-@Slf4j
 public class CypressFixtureWriter {
+    private static final Logger log = LoggerFactory.getLogger(CypressFixtureWriter.class);
 
     // ── UUID stables (fictifs) ────────────────────────────────────────────
     /** UUID stable de l'utilisateur {@code monsoresimple}. */

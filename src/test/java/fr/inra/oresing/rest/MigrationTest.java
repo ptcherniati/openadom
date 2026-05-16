@@ -1,7 +1,7 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.rest.services.AbstractIntegrationTest;
-import lombok.extern.slf4j.Slf4j;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
@@ -13,7 +13,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("integration.persistence")
-@Slf4j
 @SuppressWarnings("java:S2187") // testMigrate est volontairement désactivé (@Test commenté) — test d'intégration nécessitant un environnement complet
 public class MigrationTest extends AbstractIntegrationTest {
 

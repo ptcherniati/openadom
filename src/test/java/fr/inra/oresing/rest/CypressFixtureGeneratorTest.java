@@ -4,7 +4,7 @@ import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.rest.fixtures.CypressFixtureWriter;
 import fr.inra.oresing.rest.fixtures.MonSoereFixture;
 import fr.inra.oresing.rest.services.AbstractIntegrationTest;
-import lombok.extern.slf4j.Slf4j;
+
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -55,7 +55,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Tag(CypressFixtureGeneratorTest.TAG)
 @Tag("docker-required")
 @DisplayName("Génération des fixtures Cypress – ORE/MONSORE")
-@Slf4j
 public class CypressFixtureGeneratorTest extends AbstractIntegrationTest {
 
     /** Tag JUnit 5 permettant de sélectionner ce test dans Maven ({@code -Dgroups=GENERATE_CYPRESS_FIXTURES}). */

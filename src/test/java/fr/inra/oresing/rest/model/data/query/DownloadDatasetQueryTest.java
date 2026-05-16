@@ -10,7 +10,6 @@ import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.data.read.query.*;
 import fr.inra.oresing.domain.repository.data.DataRepository;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,11 +18,12 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.*;
 
-@Slf4j
 @org.junit.jupiter.api.Tag("domain.model")
 class DownloadDatasetQueryTest {
     public static final long OFFSET = 6L;

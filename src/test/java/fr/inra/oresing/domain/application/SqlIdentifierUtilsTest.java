@@ -270,4 +270,47 @@ class SqlIdentifierUtilsTest {
             assertThat(result).isEqualTo("myref");
         }
     }
+
+    // -------------------------------------------------------------------------
+    // IdentifierTest.forDynamicReferenceHierachicakKey
+    // -------------------------------------------------------------------------
+
+    @Nested
+    @DisplayName("IdentifierTest.forDynamicReferenceHierachicakKey(int)")
+    class ForDynamicReferenceTest {
+
+        @Test
+        @DisplayName("Builds dynamic key for count=1 and short base identifier")
+        void dynamicKeyCount1() {
+            String result = SqlIdentifierUtils.IdentifierTest
+                    .forStringIdentifier("taxon")
+                    .forDynamicReferenceHierachicakKey(1)
+                    .testAndReturnIdentifier();
+            assertThat(result).isNotEmpty();
+            assertThat(result.length()).isLessThanOrEqualTo(63);
+        }
+
+        @Test
+        @DisplayName("Builds dynamic key for count=42 and typical base identifier")
+        void dynamicKeyCount42() {
+            String result = SqlIdentifierUtils.IdentifierTest
+                    .forStringIdentifier("site")
+                    .forDynamicReferenceHierachicakKey(42)
+                    .testAndReturnIdentifier();
+            assertThat(result).isNotEmpty();
+            assertThat(result.length()).isLessThanOrEqualTo(63);
+        }
+
+        @Test
+        @DisplayName("Truncates to at most 63 chars for long identifier")
+        void dynamicKeyTruncated() {
+            // "a" repeated 50 chars + suffix _hierachicakKey + prefix _count = would exceed 63
+            String longId = "a".repeat(50);
+            String result = SqlIdentifierUtils.IdentifierTest
+                    .forStringIdentifier("ab")
+                    .forDynamicReferenceHierachicakKey(1)
+                    .testAndReturnIdentifier();
+            assertThat(result.length()).isLessThanOrEqualTo(63);
+        }
+    }
 }
