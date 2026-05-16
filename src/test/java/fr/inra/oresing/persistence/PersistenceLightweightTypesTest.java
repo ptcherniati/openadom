@@ -3,6 +3,7 @@ package fr.inra.oresing.persistence;
 import fr.inra.oresing.domain.additionalfiles.OperationAdditionalFileType;
 import fr.inra.oresing.domain.checker.type.SqlPrimitiveType;
 import fr.inra.oresing.domain.repository.data.DataRepository;
+import fr.inra.oresing.persistence.SqlSchemaForApplication;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -272,6 +273,28 @@ class PersistenceLightweightTypesTest {
         @DisplayName("mainSchema() retourne OreSiSqlSchema.MAIN")
         void mainSchema() {
             assertThat(SqlSchema.mainSchema()).isEqualTo(OreSiSqlSchema.MAIN);
+        }
+    }
+
+    // ---------------------------------------------------------
+    // SqlSchemaForApplication static methods
+    // ---------------------------------------------------------
+
+    @Nested
+    @DisplayName("SqlSchemaForApplication — constantes et méthodes statiques")
+    class SqlSchemaForApplicationTest {
+
+        @Test
+        @DisplayName("PUBLIC_UUID est un UUID valide non nul")
+        void publicUuidIsValid() {
+            assertThat(SqlSchemaForApplication.PUBLIC_UUID).isNotNull();
+        }
+
+        @Test
+        @DisplayName("publicRoleId() retourne la représentation String de PUBLIC_UUID")
+        void publicRoleId() {
+            assertThat(SqlSchemaForApplication.publicRoleId())
+                    .isEqualTo(SqlSchemaForApplication.PUBLIC_UUID.toString());
         }
     }
 }
