@@ -103,7 +103,7 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
         final CheckerValidationCheckResult<?> validationCheckResult;
         if (Strings.isNullOrEmpty(value)) {
             if (checkerDescription().required()) {
-                final DataColumn target = (DataColumn) target();
+                final DataColumn target = target();
                 validationCheckResult = DefaultCheckerValidationCheckResult.error(target.getInternationalizedKey("requiredValue"), ImmutableMap.of("component", target.column()), target);
             } else {
                 validationCheckResult = DefaultCheckerValidationCheckResult.success(target(), new StringType(value));

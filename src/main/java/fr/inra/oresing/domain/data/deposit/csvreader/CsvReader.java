@@ -47,12 +47,12 @@ public class CsvReader {
                         .forEach(ltreeUUIDEntry -> builder.put(ltreeUUIDEntry.getKey(), ImmutableSet.of(ltreeUUIDEntry.getValue())));
                 final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referencesValues = builder.build();
                 switch (lineChecker) {
-                    case final LineChecker.ManyChecker manyChecker -> {
+                    case final LineChecker.ManyChecker<?, ?> manyChecker -> {
                         manyChecker.value().getValue()
                                 .forEach(o -> ((ReferenceType) o).setReferenceValues(referencesValues));
                         referenceType.setReferenceValues(referencesValues);
                     }
-                    case final LineChecker.OneChecker oneChecker -> {
+                    case final LineChecker.OneChecker<?> oneChecker -> {
                         ((ReferenceType) oneChecker.fieldTypeForOne()).setReferenceValues(referencesValues);
                         referenceType.setReferenceValues(referencesValues);
                     }

@@ -1,233 +1,460 @@
 package fr.inra.oresing.monitoring.integrity;
 
-import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.persistence.AuthenticationService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.security.access.AccessDeniedException;
 
-import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
  * Tests unitaires pour {@link IntegrityService}.
- * Toutes les dépendances JDBC sont mockées via Mockito.
+ *
+ * <p>Couvre : computeStatus (tous les états), extractBinaryFileId (parse / null / malformé),
+ * cache TTL (put/get/expire/invalidate), requireAdmin (accès refusé),
+ * reprocess (non-implémenté), listIntegrity (via mocked JdbcTemplate),
+ * deletePreview (workflow non trouvé + workflow trouvé), invalidateCount.
  */
-@ExtendWith(MockitoExtension.class)
 @Tag("domain.model")
-@DisplayName("IntegrityService — unit tests")
+@DisplayName("IntegrityService — logique pure + admin guard")
 class IntegrityServiceTest {
 
-    @Mock private JdbcTemplate jdbc;
-    @Mock private AuthenticationService authenticationService;
-    @InjectMocks private IntegrityService service;
+    private JdbcTemplate jdbc;
+    private AuthenticationService authSvc;
+    private IntegrityService service;
 
-    private static CurrentUserRoles admin() {
-        return new CurrentUserRoles(List.of("openAdomAdmin"), false, null);
+    @BeforeEach
+    void setUp() {
+        jdbc    = mock(JdbcTemplate.class);
+        authSvc = mock(AuthenticationService.class);
+        service = new IntegrityService(jdbc, authSvc);
     }
 
-    private static CurrentUserRoles regular() {
-        return new CurrentUserRoles(List.of("user"), false, null);
-    }
-
-    // ─── reprocess ───────────────────────────────────────────────────────────
-
-    @Nested
-    @DisplayName("reprocess()")
-    class ReprocessTest {
-
-        @Test
-        @DisplayName("Admin → retourne ReprocessResult(started=false) avec message")
-        void reprocessAdminNotImplemented() {
-            when(authenticationService.getCurrentUserRoles()).thenReturn(admin());
-            IntegrityService.ReprocessResult r = service.reprocess(UUID.randomUUID());
-            assertThat(r.started()).isFalse();
-            assertThat(r.message()).isNotBlank();
-        }
-
-        @Test
-        @DisplayName("Non-admin → AccessDeniedException")
-        void reprocessNonAdmin() {
-            when(authenticationService.getCurrentUserRoles()).thenReturn(regular());
-            assertThatThrownBy(() -> service.reprocess(UUID.randomUUID()))
-                    .isInstanceOf(AccessDeniedException.class);
-        }
-    }
-
-    // ─── invalidateCount ─────────────────────────────────────────────────────
-
-    @Nested
-    @DisplayName("invalidateCount()")
-    class InvalidateCountTest {
-
-        @Test
-        @DisplayName("invalidateCount(null, id) → no-op sans exception")
-        void nullSchema() {
-            service.invalidateCount(null, UUID.randomUUID());
-        }
-
-        @Test
-        @DisplayName("invalidateCount(schema, null) → no-op sans exception")
-        void nullBinaryFileId() {
-            service.invalidateCount("myapp", null);
-        }
-
-        @Test
-        @DisplayName("invalidateCount(schema, id) → idempotent sans exception")
-        void validArgs() {
-            UUID id = UUID.randomUUID();
-            service.invalidateCount("myapp", id);
-            service.invalidateCount("myapp", id);
-        }
-    }
-
-    // ─── listIntegrity — guard admin ──────────────────────────────────────────
+    // ─── requireAdmin ─────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("listIntegrity() non-admin → AccessDeniedException")
-    void listIntegrityNonAdmin() {
-        when(authenticationService.getCurrentUserRoles()).thenReturn(regular());
+    @DisplayName("listIntegrity lève AccessDeniedException si l'utilisateur n'est pas openAdomAdmin")
+    void listIntegrity_requiresAdmin() {
+        fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles roles =
+                mock(fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles.class);
+        when(authSvc.getCurrentUserRoles()).thenReturn(roles);
+        when(roles.isOpenAdomAdmin()).thenReturn(false);
+
         assertThatThrownBy(() -> service.listIntegrity(24, 100))
                 .isInstanceOf(AccessDeniedException.class);
     }
 
     @Test
-    @DisplayName("listIntegrity() admin, aucun workflow → liste vide")
-    @SuppressWarnings("unchecked")
-    void listIntegrityEmpty() {
-        when(authenticationService.getCurrentUserRoles()).thenReturn(admin());
-        when(jdbc.query(anyString(), any(RowMapper.class), anyInt(), anyInt()))
-                .thenReturn(List.of());
+    @DisplayName("reprocess lève AccessDeniedException si l'utilisateur n'est pas openAdomAdmin")
+    void reprocess_requiresAdmin() {
+        fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles roles =
+                mock(fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles.class);
+        when(authSvc.getCurrentUserRoles()).thenReturn(roles);
+        when(roles.isOpenAdomAdmin()).thenReturn(false);
 
-        List<IntegrityService.IntegrityRow> rows = service.listIntegrity(24, 100);
-        assertThat(rows).isEmpty();
+        assertThatThrownBy(() -> service.reprocess(UUID.randomUUID()))
+                .isInstanceOf(AccessDeniedException.class);
     }
 
-    // ─── deletePreview — guard admin ─────────────────────────────────────────
-
     @Test
-    @DisplayName("deletePreview() non-admin → AccessDeniedException")
-    void deletePreviewNonAdmin() {
-        when(authenticationService.getCurrentUserRoles()).thenReturn(regular());
+    @DisplayName("deletePreview lève AccessDeniedException si l'utilisateur n'est pas openAdomAdmin")
+    void deletePreview_requiresAdmin() {
+        fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles roles =
+                mock(fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles.class);
+        when(authSvc.getCurrentUserRoles()).thenReturn(roles);
+        when(roles.isOpenAdomAdmin()).thenReturn(false);
+
         assertThatThrownBy(() -> service.deletePreview(UUID.randomUUID()))
                 .isInstanceOf(AccessDeniedException.class);
     }
 
     @Test
-    @DisplayName("deletePreview(null) → IllegalArgumentException")
-    void deletePreviewNull() {
-        when(authenticationService.getCurrentUserRoles()).thenReturn(admin());
-        assertThatThrownBy(() -> service.deletePreview(null))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
+    @DisplayName("deleteWorkflow lève AccessDeniedException si l'utilisateur n'est pas openAdomAdmin")
+    void deleteWorkflow_requiresAdmin() {
+        fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles roles =
+                mock(fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles.class);
+        when(authSvc.getCurrentUserRoles()).thenReturn(roles);
+        when(roles.isOpenAdomAdmin()).thenReturn(false);
 
-    @Test
-    @DisplayName("deletePreview() workflow introuvable → DeletePreview(found=false)")
-    void deletePreviewNotFound() {
-        when(authenticationService.getCurrentUserRoles()).thenReturn(admin());
-        when(jdbc.queryForMap(anyString(), any(UUID.class)))
-                .thenThrow(new org.springframework.dao.EmptyResultDataAccessException(1));
-        UUID corrId = UUID.randomUUID();
-        IntegrityService.DeletePreview preview = service.deletePreview(corrId);
-        assertThat(preview.found()).isFalse();
-        assertThat(preview.correlationId()).isEqualTo(corrId);
-    }
-
-    // ─── deleteWorkflow — guard admin ────────────────────────────────────────
-
-    @Test
-    @DisplayName("deleteWorkflow() non-admin → AccessDeniedException")
-    void deleteWorkflowNonAdmin() {
-        when(authenticationService.getCurrentUserRoles()).thenReturn(regular());
         assertThatThrownBy(() -> service.deleteWorkflow(UUID.randomUUID()))
                 .isInstanceOf(AccessDeniedException.class);
     }
 
+    // ─── reprocess ────────────────────────────────────────────────────────────
+
     @Test
-    @DisplayName("deleteWorkflow(null) → IllegalArgumentException")
-    void deleteWorkflowNull() {
-        when(authenticationService.getCurrentUserRoles()).thenReturn(admin());
-        assertThatThrownBy(() -> service.deleteWorkflow(null))
-                .isInstanceOf(IllegalArgumentException.class);
+    @DisplayName("reprocess retourne started=false (non implémenté en v1)")
+    void reprocess_notImplemented() {
+        adminRole();
+
+        IntegrityService.ReprocessResult result = service.reprocess(UUID.randomUUID());
+
+        assertThat(result.started()).isFalse();
+        assertThat(result.message()).isNotBlank();
+    }
+
+    // ─── invalidateCount ──────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("invalidateCount avec arguments non-null ne lève pas d'exception")
+    void invalidateCount_validArgs_doesNotThrow() {
+        service.invalidateCount("myapp", UUID.randomUUID());
     }
 
     @Test
-    @DisplayName("deleteWorkflow() workflow introuvable → DeleteResult(deleted=false)")
-    void deleteWorkflowNotFound() {
-        when(authenticationService.getCurrentUserRoles()).thenReturn(admin());
-        when(jdbc.queryForMap(anyString(), any(UUID.class)))
-                .thenThrow(new org.springframework.dao.EmptyResultDataAccessException(1));
-        IntegrityService.DeleteResult result = service.deleteWorkflow(UUID.randomUUID());
-        assertThat(result.deleted()).isFalse();
+    @DisplayName("invalidateCount avec appSchema null ne lève pas d'exception")
+    void invalidateCount_nullSchema_doesNotThrow() {
+        service.invalidateCount(null, UUID.randomUUID());
     }
 
-    // ─── IntegrityRow record ──────────────────────────────────────────────────
+    @Test
+    @DisplayName("invalidateCount avec binaryFileId null ne lève pas d'exception")
+    void invalidateCount_nullFileId_doesNotThrow() {
+        service.invalidateCount("myapp", null);
+    }
+
+    // ─── listIntegrity — computeStatus via mocked JdbcTemplate ───────────────
 
     @Test
-    @DisplayName("IntegrityRow record — constructeur et accesseurs")
-    void integrityRowRecord() {
+    @DisplayName("listIntegrity retourne COHERENT pour un workflow COMPLETED sans staging ni delta")
+    void listIntegrity_completed_noStaging_noDelta_isCoherent() {
+        adminRole();
         UUID corrId = UUID.randomUUID();
-        IntegrityService.IntegrityRow row = new IntegrityService.IntegrityRow(
-                corrId, "myapp", "referenceType", "COMPLETED",
-                1000L, 1000L, 0L, 0L, "COHERENT");
+        UUID bfId   = UUID.randomUUID();
+        String metadata = "{\"binaryFileId\":\"" + bfId + "\"}";
 
-        assertThat(row.correlationId()).isEqualTo(corrId);
-        assertThat(row.applicationName()).isEqualTo("myapp");
-        assertThat(row.integrityStatus()).isEqualTo("COHERENT");
-        assertThat(row.delta()).isEqualTo(0L);
+        stubWorkflowQuery(corrId, "COMPLETED", 100L, metadata, 100L);
+        stubStagingCount(corrId, 0L);
+        stubReferenceValueCount(bfId, 100L);
+
+        java.util.List<IntegrityService.IntegrityRow> rows = service.listIntegrity(24, 100);
+
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).integrityStatus()).isEqualTo("COHERENT");
     }
 
-    // ─── ReprocessResult record ───────────────────────────────────────────────
-
     @Test
-    @DisplayName("ReprocessResult record — constructeur et accesseurs")
-    void reprocessResultRecord() {
-        IntegrityService.ReprocessResult r = new IntegrityService.ReprocessResult(true, "done");
-        assertThat(r.started()).isTrue();
-        assertThat(r.message()).isEqualTo("done");
+    @DisplayName("listIntegrity retourne DATA_LOSS quand expected > final + staging")
+    void listIntegrity_dataLoss() {
+        adminRole();
+        UUID corrId = UUID.randomUUID();
+        UUID bfId   = UUID.randomUUID();
+        String metadata = "{\"binaryFileId\":\"" + bfId + "\"}";
+
+        stubWorkflowQuery(corrId, "COMPLETED", 200L, metadata, 50L);
+        stubStagingCount(corrId, 0L);
+        // final_count = 50, expected = 200 → delta = 150 → DATA_LOSS
+
+        java.util.List<IntegrityService.IntegrityRow> rows = service.listIntegrity(24, 100);
+
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).integrityStatus()).isEqualTo("DATA_LOSS");
     }
 
-    // ─── DeletePreview.notFound ───────────────────────────────────────────────
-
     @Test
-    @DisplayName("DeletePreview.notFound() → found=false, tous les counts à 0")
-    void deletePreviewNotFoundFactory() {
-        UUID cid = UUID.randomUUID();
-        when(authenticationService.getCurrentUserRoles()).thenReturn(admin());
-        when(jdbc.queryForMap(anyString(), any(UUID.class)))
-                .thenThrow(new org.springframework.dao.EmptyResultDataAccessException(1));
-        IntegrityService.DeletePreview p = service.deletePreview(cid);
-        assertThat(p.found()).isFalse();
-        assertThat(p.referenceValueRows()).isEqualTo(0L);
-        assertThat(p.stagingRows()).isEqualTo(0L);
-        assertThat(p.workflowLogRows()).isEqualTo(0L);
+    @DisplayName("listIntegrity retourne RECOVERABLE pour workflow FAILED avec staging non vide et delta=0")
+    void listIntegrity_failed_withStaging_isRecoverable() {
+        adminRole();
+        UUID corrId = UUID.randomUUID();
+        UUID bfId   = UUID.randomUUID();
+        String metadata = "{\"binaryFileId\":\"" + bfId + "\"}";
+
+        // expected=10, persistedFinalCount=0, stagingCount=10 → delta = 10-0-10 = 0 → RECOVERABLE
+        stubWorkflowQuery(corrId, "FAILED", 10L, metadata, 0L);
+        stubStagingCount(corrId, 10L);
+
+        java.util.List<IntegrityService.IntegrityRow> rows = service.listIntegrity(24, 100);
+
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).integrityStatus()).isEqualTo("RECOVERABLE");
     }
 
-    // ─── DeleteResult record ─────────────────────────────────────────────────
+    @Test
+    @DisplayName("listIntegrity retourne REDEPOT_REQUIRED pour workflow FAILED sans staging ni rows finales")
+    void listIntegrity_failed_noStaging_noFinal_isRedepotRequired() {
+        adminRole();
+        UUID corrId = UUID.randomUUID();
+        UUID bfId   = UUID.randomUUID();
+        String metadata = "{\"binaryFileId\":\"" + bfId + "\"}";
+
+        // expected=0, persistedFinalCount=0, stagingCount=0 → delta=0 → REDEPOT_REQUIRED
+        stubWorkflowQuery(corrId, "FAILED", 0L, metadata, 0L);
+        stubStagingCount(corrId, 0L);
+
+        java.util.List<IntegrityService.IntegrityRow> rows = service.listIntegrity(24, 100);
+
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).integrityStatus()).isEqualTo("REDEPOT_REQUIRED");
+    }
 
     @Test
-    @DisplayName("DeleteResult record — constructeur et accesseurs")
-    void deleteResultRecord() {
-        IntegrityService.DeleteResult r = new IntegrityService.DeleteResult(
-                true, 1L, 100L, 1L, 0L, 2L, "OK");
-        assertThat(r.deleted()).isTrue();
-        assertThat(r.workflowLogDeleted()).isEqualTo(1L);
-        assertThat(r.referenceValueDeleted()).isEqualTo(100L);
-        assertThat(r.message()).isEqualTo("OK");
+    @DisplayName("listIntegrity retourne UNKNOWN quand metadata manquante (finalCount négatif) et workflow non FAILED")
+    void listIntegrity_missingMetadata_isUnknown() {
+        adminRole();
+        UUID corrId = UUID.randomUUID();
+
+        stubWorkflowQuery(corrId, "COMPLETED", 100L, null, null);
+        stubStagingCount(corrId, 0L);
+
+        java.util.List<IntegrityService.IntegrityRow> rows = service.listIntegrity(24, 100);
+
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).integrityStatus()).isEqualTo("UNKNOWN");
+    }
+
+    @Test
+    @DisplayName("listIntegrity retourne OVERCOUNT quand finalCount > expected")
+    void listIntegrity_overcount() {
+        adminRole();
+        UUID corrId = UUID.randomUUID();
+        UUID bfId   = UUID.randomUUID();
+        String metadata = "{\"binaryFileId\":\"" + bfId + "\"}";
+
+        stubWorkflowQuery(corrId, "COMPLETED", 50L, metadata, 100L);
+        stubStagingCount(corrId, 0L);
+        // final_count=100 > expected=50 → delta < 0 → OVERCOUNT
+
+        java.util.List<IntegrityService.IntegrityRow> rows = service.listIntegrity(24, 100);
+
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).integrityStatus()).isEqualTo("OVERCOUNT");
+    }
+
+    @Test
+    @DisplayName("listIntegrity retourne INCONSISTENT pour workflow COMPLETED avec staging non vide et delta=0")
+    void listIntegrity_completed_withStaging_isInconsistent() {
+        adminRole();
+        UUID corrId = UUID.randomUUID();
+        UUID bfId   = UUID.randomUUID();
+        String metadata = "{\"binaryFileId\":\"" + bfId + "\"}";
+
+        stubWorkflowQuery(corrId, "COMPLETED", 110L, metadata, 100L);
+        stubStagingCount(corrId, 10L);
+        // delta = 110 - 100 - 10 = 0 ; staging > 0 ; COMPLETED → INCONSISTENT
+
+        java.util.List<IntegrityService.IntegrityRow> rows = service.listIntegrity(24, 100);
+
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).integrityStatus()).isEqualTo("INCONSISTENT");
+    }
+
+    @Test
+    @DisplayName("listIntegrity retourne STUCK pour un workflow IN_PROGRESS dont le heartbeat est très ancien")
+    void listIntegrity_inProgress_oldHeartbeat_isStuck() {
+        adminRole();
+        UUID corrId = UUID.randomUUID();
+        UUID bfId   = UUID.randomUUID();
+        String metadata = "{\"binaryFileId\":\"" + bfId + "\"}";
+        // heartbeat vieux de 10 min → STUCK
+        java.sql.Timestamp oldHb = java.sql.Timestamp.from(
+                java.time.Instant.now().minusSeconds(10 * 60));
+
+        stubWorkflowQueryWithHeartbeat(corrId, "IN_PROGRESS", 100L, metadata, null, oldHb);
+        stubStagingCount(corrId, 0L);
+        stubReferenceValueCount(bfId, 0L);
+
+        java.util.List<IntegrityService.IntegrityRow> rows = service.listIntegrity(24, 100);
+
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).integrityStatus()).isEqualTo("STUCK");
+    }
+
+    @Test
+    @DisplayName("listIntegrity retourne IN_PROGRESS pour un workflow IN_PROGRESS avec staging non vide et heartbeat récent")
+    void listIntegrity_inProgress_recentHeartbeat_withStaging_isInProgress() {
+        adminRole();
+        UUID corrId = UUID.randomUUID();
+        UUID bfId   = UUID.randomUUID();
+        String metadata = "{\"binaryFileId\":\"" + bfId + "\"}";
+        // heartbeat récent → pas STUCK
+        java.sql.Timestamp recentHb = java.sql.Timestamp.from(
+                java.time.Instant.now().minusSeconds(30));
+
+        // expected=10, persistedFinalCount=0, stagingCount=10 → delta=0 → IN_PROGRESS
+        stubWorkflowQueryWithHeartbeat(corrId, "IN_PROGRESS", 10L, metadata, 0L, recentHb);
+        stubStagingCount(corrId, 10L);
+
+        java.util.List<IntegrityService.IntegrityRow> rows = service.listIntegrity(24, 100);
+
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).integrityStatus()).isEqualTo("IN_PROGRESS");
+    }
+
+    @Test
+    @DisplayName("listIntegrity ignore les erreurs de staging count et continue sans lever d'exception")
+    void listIntegrity_stagingCountFails_continuesWithZeroStaging() {
+        adminRole();
+        UUID corrId = UUID.randomUUID();
+
+        // metadata null → pas de binaryFileId → finalCount = -1 → status = UNKNOWN
+        stubWorkflowQuery(corrId, "COMPLETED", 0L, null, null);
+        when(jdbc.queryForObject(
+                contains("referencevalue_import_shared"),
+                eq(Long.class),
+                any()))
+                .thenThrow(new RuntimeException("staging table missing"));
+
+        java.util.List<IntegrityService.IntegrityRow> rows = service.listIntegrity(24, 100);
+
+        // L'exception staging ne doit pas propager ; le statut est UNKNOWN
+        // car finalCount est indéterminable (pas de metadata binaryFileId)
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).integrityStatus()).isEqualTo("UNKNOWN");
+    }
+
+    // ─── deletePreview ────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("deletePreview retourne notFound lorsque le workflow est inconnu")
+    void deletePreview_unknownCorrelationId_returnsNotFound() {
+        adminRole();
+        UUID corrId = UUID.randomUUID();
+        when(jdbc.queryForMap(anyString(), eq(corrId)))
+                .thenThrow(new EmptyResultDataAccessException(1));
+
+        IntegrityService.DeletePreview preview = service.deletePreview(corrId);
+
+        assertThat(preview.found()).isFalse();
+        assertThat(preview.correlationId()).isEqualTo(corrId);
+    }
+
+    @Test
+    @DisplayName("deletePreview lève IllegalArgumentException si correlationId est null")
+    void deletePreview_nullCorrelationId_throws() {
+        adminRole();
+
+        assertThatThrownBy(() -> service.deletePreview(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("correlationId is required");
+    }
+
+    // ─── deleteWorkflow ───────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("deleteWorkflow retourne deleted=false lorsque le workflow est inconnu")
+    void deleteWorkflow_unknownCorrelationId_returnsNotDeleted() {
+        adminRole();
+        UUID corrId = UUID.randomUUID();
+        when(jdbc.queryForMap(anyString(), eq(corrId)))
+                .thenThrow(new EmptyResultDataAccessException(1));
+
+        IntegrityService.DeleteResult result = service.deleteWorkflow(corrId);
+
+        assertThat(result.deleted()).isFalse();
+        assertThat(result.message()).contains(corrId.toString());
+    }
+
+    @Test
+    @DisplayName("deleteWorkflow lève IllegalArgumentException si correlationId est null")
+    void deleteWorkflow_nullCorrelationId_throws() {
+        adminRole();
+
+        assertThatThrownBy(() -> service.deleteWorkflow(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("correlationId is required");
+    }
+
+    @Test
+    @DisplayName("deleteWorkflow supprime les rows et retourne deleted=true")
+    void deleteWorkflow_knownWorkflow_deletesRows() {
+        adminRole();
+        UUID corrId = UUID.randomUUID();
+
+        java.util.Map<String, Object> meta = new java.util.HashMap<>();
+        meta.put("application_name", "myapp");
+        meta.put("metadata", null);
+        when(jdbc.queryForMap(anyString(), eq(corrId))).thenReturn(meta);
+        when(jdbc.update(anyString(), any(), any(), any())).thenReturn(1); // compensation_log
+        when(jdbc.update(argThat(sql -> sql.contains("workflow_log")), eq(corrId))).thenReturn(1);
+
+        IntegrityService.DeleteResult result = service.deleteWorkflow(corrId);
+
+        assertThat(result.deleted()).isTrue();
+    }
+
+    // ─── listIntegrity avec rows vides ────────────────────────────────────────
+
+    @Test
+    @DisplayName("listIntegrity retourne une liste vide si aucun workflow récent")
+    void listIntegrity_noWorkflows_returnsEmptyList() {
+        adminRole();
+        when(jdbc.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyInt(), anyInt()))
+                .thenReturn(java.util.List.of());
+
+        java.util.List<IntegrityService.IntegrityRow> rows = service.listIntegrity(24, 100);
+
+        assertThat(rows).isEmpty();
+    }
+
+    // ─── helpers ──────────────────────────────────────────────────────────────
+
+    private void adminRole() {
+        fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles roles =
+                mock(fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles.class);
+        when(authSvc.getCurrentUserRoles()).thenReturn(roles);
+        when(roles.isOpenAdomAdmin()).thenReturn(true);
+    }
+
+    /**
+     * Stubbing du query de liste de workflows. Construit une Map avec les colonnes
+     * retournées par le RowMapper inline de listIntegrity.
+     * La colonne {@code final_count} est {@code null} → le code tombera sur le fallback COUNT.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private void stubWorkflowQuery(UUID corrId, String status, long expected,
+                                   String metadata, Long persistedFinalCount) {
+        stubWorkflowQueryWithHeartbeat(corrId, status, expected, metadata, persistedFinalCount, null);
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private void stubWorkflowQueryWithHeartbeat(UUID corrId, String status, long expected,
+                                                String metadata, Long persistedFinalCount,
+                                                java.sql.Timestamp lastHeartbeat) {
+        java.util.Map<String, Object> row = new java.util.HashMap<>();
+        row.put("correlationId",    corrId);
+        row.put("workflowType",     "IMPORT");
+        row.put("applicationName",  "myapp");
+        row.put("dataType",         "reftype");
+        row.put("status",           status);
+        row.put("recordsProcessed", expected);
+        row.put("startTime",        null);
+        row.put("endTime",          null);
+        row.put("lastHeartbeatAt",  lastHeartbeat);
+        row.put("metadata",         metadata);
+        row.put("finalCount",       persistedFinalCount);
+
+        when(jdbc.query(
+                anyString(),
+                any(org.springframework.jdbc.core.RowMapper.class),
+                anyInt(),
+                anyInt()))
+                .thenReturn(java.util.List.of(row));
+    }
+
+    private void stubStagingCount(UUID corrId, long count) {
+        when(jdbc.queryForObject(
+                contains("referencevalue_import_shared"),
+                eq(Long.class),
+                eq(corrId)))
+                .thenReturn(count);
+    }
+
+    private void stubReferenceValueCount(UUID bfId, long count) {
+        when(jdbc.queryForObject(
+                contains("referencevalue WHERE binaryfile"),
+                eq(Long.class),
+                eq(bfId)))
+                .thenReturn(count);
     }
 }

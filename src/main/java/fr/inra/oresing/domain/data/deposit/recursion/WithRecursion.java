@@ -172,7 +172,7 @@ public record WithRecursion(
             referenceValues.put(key, ImmutableSet.of(uuid));
             addReferenceValuesForSelfType(key, ImmutableSet.of(uuid));
         }
-        for (LineChecker<?> lineChecker : dataImporterContext().transformedLineCheckers()) {
+        for (LineChecker<? extends FieldType<?>> lineChecker : dataImporterContext().transformedLineCheckers()) {
             if (lineChecker.checkerDescription() instanceof ReferenceChecker referenceChecker && referenceChecker.refType().equals(dataImporterContext().contextConstants().refType())) {
                 ReferenceType fieldType = (ReferenceType) lineChecker.fieldTypeForOne();
                 fieldType.setReferenceValues(ImmutableMap.copyOf(referenceValues));

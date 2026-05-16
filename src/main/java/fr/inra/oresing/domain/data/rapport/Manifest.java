@@ -2,6 +2,8 @@ package fr.inra.oresing.domain.data.rapport;
 
 import fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent;
 
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -63,7 +65,7 @@ public record Manifest(
     private void visit(String node, List<String> sorted, Set<String> visited, Set<String> visiting) {
         if (visited.contains(node)) return;
         if (visiting.contains(node)) {
-            throw new RuntimeException("Cycle detected");
+            throw new OreSiTechnicalException("Cycle detected in reference dependency graph at node: " + node);
         }
         visiting.add(node);
 

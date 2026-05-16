@@ -41,65 +41,67 @@ public record Submission(
             for (int groupIndex = 1; groupIndex <= matcher.groupCount(); groupIndex++) {
                 String value = matcher.group(groupIndex);
                 if (fileNameParsing().startDate() != null && groupIndex == fileNameParsing().startDate()) {
-                    if (Strings.isNullOrEmpty(binaryFileDataset.getFrom())) {
-                        parseStartDate(binaryFileDataset, value, timeScopePattern);
-                    }
+                    parseStartDate(timeScopePattern, binaryFileDataset, value);
                 } else if (fileNameParsing().endDate() != null && groupIndex == fileNameParsing().endDate()) {
-                    if (Strings.isNullOrEmpty(binaryFileDataset.getTo())) {
-                        parseEndDate(binaryFileDataset, value, timeScopePattern);
-                    }
+                    parseEndDate(timeScopePattern, binaryFileDataset, value);
                 } else {
-                    String component = fileNameParsing().authorizationScopes.get(groupIndex - 1);
-                    String reference = submissionScope().referenceScopes().stream()
-                            .filter(referenceScope -> referenceScope.component.equals(component))
-                            .map(SubmissionScope.SubmissionReferenceScope::reference)
-                            .findFirst()
-                            .orElse(component);
-                    if (binaryFileDataset.getRequiredAuthorizations().get(reference) == null) {
-                        binaryFileDataset.getRequiredAuthorizations().put(reference, List.of(Ltree.fromSql(value)));
-                    }
+                    parseAuthorizationScope(groupIndex, value, binaryFileDataset);
                 }
             }
             return binaryFileDataset;
         } catch (SiOreAuthorizationRequestException e) {
             throw e;
-
         } catch (Exception e) {
             throw new SiOreAuthorizationRequestException(
                     AuthorizationRequestException.INVALID_FILE_NAME,
                     Map.of(FILE_NAME_FORMAT_KEY, fileNameParsing().createExampleSubmissionFileName())
             );
-
         }
     }
 
-    private void parseStartDate(BinaryFileDataset binaryFileDataset, String value, String timeScopePattern) {
-        try {
-            binaryFileDataset.setFrom(LocalDate.parse(value, DateTimeFormatter.ofPattern(timeScopePattern)).atStartOfDay().format(DataImporter.ISO_DATE_TIME_FORMATTER));
-        } catch (DateTimeParseException dtpe) {
-            throw new SiOreAuthorizationRequestException(
-                    AuthorizationRequestException.BAD_FILE_NAME_START_DATE,
-                    Map.of(
-                            "startDate", value,
-                            "dateformat", DD_MM_YYYY_FOR_FILE,
-                            FILE_NAME_FORMAT_KEY, fileNameParsing().createExampleSubmissionFileName()
-                    )
-            );
+    private void parseStartDate(String timeScopePattern, BinaryFileDataset binaryFileDataset, String value) {
+        if (Strings.isNullOrEmpty(binaryFileDataset.getFrom())) {
+            try {
+                binaryFileDataset.setFrom(LocalDate.parse(value, DateTimeFormatter.ofPattern(timeScopePattern)).atStartOfDay().format(DataImporter.ISO_DATE_TIME_FORMATTER));
+            } catch (DateTimeParseException dtpe) {
+                throw new SiOreAuthorizationRequestException(
+                        AuthorizationRequestException.BAD_FILE_NAME_START_DATE,
+                        Map.of(
+                                "startDate", value,
+                                "dateformat", DD_MM_YYYY_FOR_FILE,
+                                "fileNameFormat", fileNameParsing().createExampleSubmissionFileName()
+                        )
+                );
+            }
         }
     }
 
-    private void parseEndDate(BinaryFileDataset binaryFileDataset, String value, String timeScopePattern) {
-        try {
-            binaryFileDataset.setTo(LocalDate.parse(value, DateTimeFormatter.ofPattern(timeScopePattern)).atStartOfDay().format(DataImporter.ISO_DATE_TIME_FORMATTER));
-        } catch (DateTimeParseException dtpe) {
-            throw new SiOreAuthorizationRequestException(
-                    AuthorizationRequestException.BAD_FILE_NAME_END_DATE,
-                    Map.of(
-                            "endDate", value,
-                            "dateformat", DD_MM_YYYY_FOR_FILE,
-                            FILE_NAME_FORMAT_KEY, fileNameParsing().createExampleSubmissionFileName()
-                    )
-            );
+    private void parseEndDate(String timeScopePattern, BinaryFileDataset binaryFileDataset, String value) {
+        if (Strings.isNullOrEmpty(binaryFileDataset.getTo())) {
+            try {
+                binaryFileDataset.setTo(LocalDate.parse(value, DateTimeFormatter.ofPattern(timeScopePattern)).atStartOfDay().format(DataImporter.ISO_DATE_TIME_FORMATTER));
+            } catch (DateTimeParseException dtpe) {
+                throw new SiOreAuthorizationRequestException(
+                        AuthorizationRequestException.BAD_FILE_NAME_END_DATE,
+                        Map.of(
+                                "endDate", value,
+                                "dateformat", DD_MM_YYYY_FOR_FILE,
+                                "fileNameFormat", fileNameParsing().createExampleSubmissionFileName()
+                        )
+                );
+            }
+        }
+    }
+
+    private void parseAuthorizationScope(int groupIndex, String value, BinaryFileDataset binaryFileDataset) {
+        String component = fileNameParsing().authorizationScopes.get(groupIndex - 1);
+        String reference = submissionScope().referenceScopes().stream()
+                .filter(referenceScope -> referenceScope.component.equals(component))
+                .map(SubmissionScope.SubmissionReferenceScope::reference)
+                .findFirst()
+                .orElse(component);
+        if (binaryFileDataset.getRequiredAuthorizations().get(reference) == null) {
+            binaryFileDataset.getRequiredAuthorizations().put(reference, List.of(Ltree.fromSql(value)));
         }
     }
 

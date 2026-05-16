@@ -482,7 +482,7 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
         CurrentUserRoles rolesForCurrentUser = oreSiUser
                 .map(OreSiEntity::getId)
                 .map(UUID::toString)
-                .map(id->userRepository.getRolesForCurrentUser(id))
+                .map(userRepository::getRolesForCurrentUser)
                 .orElse(userRepository.getRolesForCurrentUser(userIdOrRoleName));
         return rolesForCurrentUser;
     }
