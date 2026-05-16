@@ -79,4 +79,16 @@ class GroovyCacheKeyTest {
         var key2 = new GroovyCacheKey(null, Map.of());
         assertEquals(key1, key2);
     }
+
+    @Test
+    void equalsAvecMêmeRéférenceRetourneVrai() {
+        var key = new GroovyCacheKey("expr", Map.of("a", "1"));
+        assertEquals(key, key);
+    }
+
+    @Test
+    void equalsAvecTypeIncompatibleRetourneFaux() {
+        var key = new GroovyCacheKey("expr", Map.of("a", "1"));
+        assertNotEquals(key, "not a GroovyCacheKey");
+    }
 }
