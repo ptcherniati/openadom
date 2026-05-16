@@ -124,6 +124,19 @@ public class PublishLifecyclePhase2Handler {
     private fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry workflowActiveRegistry;
 
     /**
+     * Async post-commit cache capture service . Once Phase 2 has flipped
+     * {@code binaryfile.published=true} and the workflow has reached
+     * COMPLETED / DONE , this service is invoked to capture the binary
+     * COPY of referencevalue rows into the binaryfile's processed_data
+     * Large Object . Running it async lets the workflow row appear
+     * terminated in oa-live ~30 s sooner ( gain on perceived publish
+     * duration ; the FAST path remains armed for the next republish
+     * once the async capture completes ) .
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private CacheCaptureService cacheCaptureService;
+
+    /**
      * Factory : new {@code TransactionTemplate} configured with
      * {@code PROPAGATION_REQUIRES_NEW} . All atomic SQL sequences in this
      * handler run in a fresh tx ( spawned from {@code @Async} handler , so
@@ -316,6 +329,17 @@ public class PublishLifecyclePhase2Handler {
                 committedAtomically = true;
                 logRepository.updatePhase(ev.correlationId(),
                         fr.inra.oresing.workflow.WorkflowPhase.DONE);
+                // Cache capture async post-DONE : on dispatche la capture
+                // binaire de referencevalue dans processed_data ( Large Object )
+                // sur un thread separe APRES que le workflow soit visible
+                // comme COMPLETED dans oa-live . L'utilisateur n'attend pas
+                // les ~30 s de capture ; le FAST path s'arme pour le prochain
+                // republish une fois la capture terminee en background .
+                // No-op silencieux si {@code openadom.publish.capture-processed-enabled=false}
+                // ou si le cache est deja a jour ( configHash match ) .
+                if (cacheCaptureService != null && ev.action() == PublishLifecycleAction.PUBLISH) {
+                    cacheCaptureService.captureCacheAsync(application, ev.fileId(), ev.dataName(), ev.correlationId());
+                }
             } finally {
                 lock.unlock();
             }
@@ -449,6 +473,34 @@ public class PublishLifecyclePhase2Handler {
         log.info("Phase 2 republish routing : fileId={} datatype={} hashKnown={} hashMatch={} processedSize={} tryFast={}",
                 ev.fileId(), ev.dataName(), hashKnown, hashMatch, processedSize, tryFast);
 
+        // ----- Idempotent skip : exact match no-op fast republish -----
+        // Si l'utilisateur republie un fichier deja publie ( wasPublished=true )
+        // alors que :
+        //   - la config datatype est INCHANGEE depuis le dernier publish
+        //     ( hashMatch=true ) ,
+        //   - le cache binaire est present et aligne avec cette config
+        //     ( processedSize > header ) ,
+        // alors la table finale referencevalue + reference_reference contient
+        // deja exactement les memes rows que ce que produirait un republish
+        // complet . Aucun changement de donnees a appliquer : Phase 2 est un
+        // no-op fonctionnel . On evite le DELETE + COPY binaire ( ~2-3 mn )
+        // du FAST path et la cascade complete ( ~13-15 mn ) , en retournant
+        // immediatement . Le caller flippera quand meme binaryfile.published
+        // ( idempotent : deja true ) et persistera workflow_log COMPLETED .
+        //
+        // Garde-fou : on n'applique le skip QUE si la binaryfile etait deja
+        // publiee ( wasPublished=true ) - sur un FIRST publish , wasPublished
+        // est false meme si un cache pre-existait , et on doit faire le full
+        // cycle pour pre-warmer la table finale et generer les rows .
+        if (ev.action() == PublishLifecycleAction.PUBLISH
+                && ev.wasPublished()
+                && hashMatch
+                && processedSize > fr.inra.oresing.workflow.cascade.cache.ReferencevalueCacheFormat.HEADER_SIZE_BYTES) {
+            log.info("Phase 2 SKIP republish iso-data : fileId={} ( no-op , data + cache + config deja alignes - economie ~2-15 min )",
+                    ev.fileId());
+            return 0L;
+        }
+
         // ----- FAST path attempt -----
         // INSERT direct depuis processed_data ( Large Object ) vers referencevalue
         // via lo_get + regexp_split_to_table + jsonb_populate_record en SQL pur .
@@ -507,46 +559,15 @@ public class PublishLifecyclePhase2Handler {
         // on ne committe PAS le cache .
         token.throwIfCancelled("post-addData capture");
 
-        // Cache capture conditionnelle : on regenere le cache seulement si
-        // ( a ) la feature flag global isCaptureProcessedEnabled est ON ,
-        // ( b ) le cache est absent OU le configHash est obsolete .
-        // Sinon le cache existant est deja aligne avec la config courante et
-        // sera utilise par le FAST path au prochain republish - ne pas le
-        // re-ecrire economise ~10-30s sur gros datasets ( bench 870k rows ) .
-        if (publishProperties.isCaptureProcessedEnabled()) {
-            String currentHash = configHashService.computeHash(application, ev.dataName()).orElse(null);
-            long existingCacheSize = 0L;
-            try { existingCacheSize = bfRepo.findProcessedSize(ev.fileId()); }
-            catch (RuntimeException ex) { log.debug("findProcessedSize failed : {}", ex.getMessage()); }
-            String storedHash = params != null ? params.configHash() : null;
-            boolean cacheUpToDate = existingCacheSize
-                    > fr.inra.oresing.workflow.cascade.cache.ReferencevalueCacheFormat.HEADER_SIZE_BYTES
-                    && currentHash != null
-                    && currentHash.equals(storedHash);
-            if (cacheUpToDate) {
-                log.info("Phase 2 cache capture skipped : cache present + hash up to date ( fileId={} )", ev.fileId());
-            } else {
-                logRepository.updatePhase(ev.correlationId(),
-                        fr.inra.oresing.workflow.WorkflowPhase.CACHE_CAPTURE);
-                try {
-                    final String schemaName = repository.getRepository(application).data().getSchemaName();
-                    bfRepo.storeProcessedDataDirectCopy(ev.fileId(), (captureConn, out) -> {
-                        out.write(fr.inra.oresing.workflow.cascade.cache.ReferencevalueCacheFormat.buildHeader());
-                        fr.inra.oresing.workflow.cascade.cache.ReferencevalueCacheWriter
-                                .writeCache(captureConn, schemaName, ev.fileId(), out);
-                    });
-                    log.info("Phase 2 cache captured ( direct COPY ) : fileId={} ( FAST path armed for next republish )",
-                            ev.fileId());
-                    if (currentHash != null && !currentHash.equals(storedHash)) {
-                        bfRepo.updateConfigHash(ev.fileId(), currentHash);
-                        log.info("Phase 2 capture configHash updated for fileId={}", ev.fileId());
-                    }
-                } catch (RuntimeException persistErr) {
-                    log.warn("Phase 2 cache capture failed for fileId={} : {} ( non-critical , FAST path will fall back )",
-                            ev.fileId(), persistErr.getMessage());
-                }
-            }
-        }
+        // Cache capture is dispatched ASYNC AFTER the workflow reaches
+        // COMPLETED / DONE state ( see caller of doPublishWithinScope :
+        // {@code cacheCaptureService.captureCacheAsync(...)} ) . Inlining
+        // it here used to block the workflow from flipping to DONE for
+        // ~30 s on large datasets ; running it post-commit lets oa-live
+        // show the workflow terminated as soon as data is visible , while
+        // the FAST path cache builds in background . The check for
+        // {@code openadom.publish.capture-processed-enabled} and for cache
+        // freshness is now inside {@link CacheCaptureService} .
 
         return 0L; // count authoritatif disponible apres synthesis recompute
     }

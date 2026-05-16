@@ -173,20 +173,17 @@ public class PublishFastPathDirectExecutor {
                 // ---- 1 . Resolve the cache LO oid for this binaryfile . ----
                 long oid = lookupProcessedDataOid(conn, schemaName, fileId);
 
-                // ---- 2 . DELETE existing reference_reference for these ids . ----
-                //   Reference_reference.referenceid is a non-deferred FK to
-                //   referencevalue.id ; we must remove these links before we wipe
-                //   the parent rows below .
-                final String deleteRefrefSql = ""
-                        + "DELETE FROM " + rrTable
-                        + " WHERE referenceid IN ("
-                        + "   SELECT id FROM " + schemaName + ".referencevalue WHERE binaryFile = ?::uuid )";
-                timeStage(correlationId, FastPathSnapshot.PHASE_DELETE_REFREF, () -> {
-                    try (PreparedStatement ps = conn.prepareStatement(deleteRefrefSql)) {
-                        ps.setString(1, fileId.toString());
-                        ps.executeUpdate();
-                    }
-                });
+                // ---- 2 . DELETE existing reference_reference for these ids
+                //          IS REDUNDANT with step 3 below . ----
+                //   The FK {@code reference_reference_referenceid_fkey
+                //   FOREIGN KEY (referenceid) REFERENCES referencevalue(id)
+                //   ON DELETE CASCADE} ensures that the DELETE on
+                //   referencevalue in step 3 auto-cascades to refref rows .
+                //   The legacy code did an explicit pre-DELETE on refref
+                //   ( ~30 s on 870k rows ) before the parent DELETE ; PG
+                //   does the same work via the FK cascade in step 3 anyway ,
+                //   so this explicit step was pure double work .
+                //   Removed ; step 3 cascade handles it .
 
                 // ---- 3 . DELETE existing referencevalue rows for this file . ----
                 //   We wipe and reload : the cache contains the authoritative row

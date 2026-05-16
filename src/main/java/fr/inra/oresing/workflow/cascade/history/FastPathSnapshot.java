@@ -48,6 +48,16 @@ public record FastPathSnapshot(
         /** Nom du fichier d'origine ( {@code BinaryFile.name} ) . Affiche tooltip oa-live . Null si non resolu . */
         String              filename) {
 
+    /**
+     * @deprecated The FAST path no longer emits a dedicated DELETE_REFREF
+     *             phase : the cascade DELETE on referencevalue auto-cleans
+     *             reference_reference via the {@code ON DELETE CASCADE}
+     *             foreign key on referenceid . Kept here ONLY for backwards
+     *             compatibility with historical workflow_log rows that may
+     *             still carry this phase string . New runs start with
+     *             {@link #PHASE_DELETE_EXISTING} .
+     */
+    @Deprecated
     public static final String PHASE_DELETE_REFREF   = "DELETE_REFREF";
     public static final String PHASE_DELETE_EXISTING = "DELETE_EXISTING";
     public static final String PHASE_COPY_IN         = "COPY_IN";
@@ -57,7 +67,7 @@ public record FastPathSnapshot(
 
     public static FastPathSnapshot starting(long cacheBytes, Instant at, UUID fileId, String filename) {
         return new FastPathSnapshot(
-                PHASE_DELETE_REFREF,
+                PHASE_DELETE_EXISTING,
                 cacheBytes,
                 0L,
                 0L,
