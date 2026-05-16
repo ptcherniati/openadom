@@ -321,6 +321,16 @@ public class CascadeImportPipeline {
             registerWorkflowStart(corrUuid, userUuid, userLogin, applicationName, dataType,
                     resourceName, startedAt, fileSizeBytes);
 
+            // Persist the parent linkage on the child IMPORT workflow_log row
+            // now that recordStart has inserted it ( previous call site at line
+            // 249 raced the INSERT and UPDATEd 0 rows ) . Reads the parentCid
+            // from CancellationContext which is set by PublishLifecyclePhase2Handler
+            // before invoking the cascade . Without this tag the history endpoint
+            // shows two rows per publish ( parent PUBLISH + cascade IMPORT child ) .
+            if (publishParent != null && workflowLogRepository != null) {
+                workflowLogRepository.setParentCorrelationId(corrUuid, publishParent);
+            }
+
             // Heartbeat lifecycle pipeline-wide ( cf doc pipelineHeartbeat
             // ci-dessus ) . Demarre apres recordStart pour que l UPDATE
             // beat_workflow trouve la row IN_PROGRESS deja persistee .

@@ -32,8 +32,10 @@ package fr.inra.oresing.workflow;
  * -&gt; {@link #SYNTHESIS_REBUILD} -&gt; {@link #DONE} .
  *
  * <p>UNPUBLISH :
- * {@link #DELETE_ROWS} -&gt; {@link #COMMIT_VISIBILITY}
- * -&gt; {@link #SYNTHESIS_REBUILD} -&gt; {@link #DONE} .
+ * {@link #DELETE_ROWS} -&gt; {@link #SYNTHESIS_REBUILD}
+ * ( inside the atomic tx that toggles {@code binaryfile.published=false} ;
+ *   commit visibility and synthesis rebuild are folded into the same step )
+ * -&gt; {@link #DONE} .
  *
  * <p>DELETE_FILE :
  * {@link #DELETE_ROWS} -&gt; {@link #DELETE_FILE_ROW}

@@ -194,6 +194,14 @@ public class DashboardService {
         StringBuilder where = new StringBuilder(" WHERE 1=1 ");
         MapSqlParameterSource p = new MapSqlParameterSource();
 
+        // Facade pattern aligne avec listInProgress : 1 operation utilisateur
+        // = 1 row UI . Les cascade child IMPORT rows sont tagged a register
+        // time par PublishLifecycleCoordinator.registerChildImport via
+        // metadata.parentCorrelationId ; on les masque ici pour qu'un publish
+        // / unpublish / delete_file ne surface pas en double dans l'audit page
+        // ( parent PUBLISH + cascade IMPORT pour la meme operation ) .
+        where.append(" AND (metadata->>'parentCorrelationId') IS NULL ");
+
         if (!me.isOpenAdomAdmin()) {
             where.append(" AND user_id = :userId ");
             p.addValue("userId", me.userId());

@@ -105,6 +105,27 @@ public class WorkflowLogRepository {
             """;
 
     /**
+     * Tags the child IMPORT row in workflow_log with its parent
+     * PUBLISH / UNPUBLISH / DELETE_FILE correlationId . Used by the history
+     * endpoint ( {@code DashboardService.listHistory} ) to hide cascade
+     * child IMPORT rows that exist only for accounting purposes ; without
+     * this tag , every publish would surface as 2 rows in the audit page
+     * ( parent PUBLISH + cascade IMPORT child for the same operation ) .
+     * Applied at register time ( see
+     * {@code PublishLifecycleCoordinator.registerChildImport} ) so the
+     * filter survives backend restart / unregister cleanup .
+     */
+    private static final String UPDATE_PARENT_CORRELATION_SQL = """
+            UPDATE oa_audit.workflow_log
+               SET metadata = jsonb_set(
+                       COALESCE(metadata, '{}'::jsonb),
+                       '{parentCorrelationId}',
+                       to_jsonb(?::text),
+                       true)
+             WHERE correlation_id = ?::uuid
+            """;
+
+    /**
      * P0 cancel-divergence fix : tente d'acquerir un lock {@code FOR UPDATE}
      * sur la row {@code workflow_log} du correlationId , uniquement si elle
      * est encore {@code IN_PROGRESS} . Retourne {@code true} si lock acquis
@@ -276,6 +297,40 @@ public class WorkflowLogRepository {
             return rows > 0;
         } catch (RuntimeException ex) {
             log.warn("updatePhase failed for {} ( phase={} ) : {}", correlationId, phase, ex.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Stamps {@code metadata.parentCorrelationId} on the child IMPORT row .
+     * Idempotent and safe to call before the child row is fully visible
+     * ( retried internally if the initial UPDATE matches no row , since the
+     * cascade pipeline pre-persists the IN_PROGRESS row before invoking
+     * {@code PublishLifecycleCoordinator.registerChildImport} ; if a slow
+     * commit means the row is not yet visible , the UPDATE returns 0 and we
+     * just log a warning ) .
+     *
+     * @param childCorrelationId  cid de la row workflow_log a tagger ; {@code null} = no-op
+     * @param parentCorrelationId cid du PUBLISH / UNPUBLISH / DELETE_FILE parent ;
+     *                            {@code null} = no-op
+     * @return {@code true} si une row a ete tagged
+     */
+    public boolean setParentCorrelationId(java.util.UUID childCorrelationId,
+                                          java.util.UUID parentCorrelationId) {
+        if (childCorrelationId == null || parentCorrelationId == null) {
+            return false;
+        }
+        try {
+            int rows = jdbcTemplate.update(UPDATE_PARENT_CORRELATION_SQL,
+                    parentCorrelationId.toString(), childCorrelationId.toString());
+            if (rows == 0) {
+                log.warn("setParentCorrelationId : no row matched for child {} ( parent {} ) - cascade row may not be visible yet",
+                        childCorrelationId, parentCorrelationId);
+            }
+            return rows > 0;
+        } catch (RuntimeException ex) {
+            log.warn("setParentCorrelationId failed for child {} ( parent {} ) : {}",
+                    childCorrelationId, parentCorrelationId, ex.getMessage());
             return false;
         }
     }

@@ -339,13 +339,20 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         // Etape 4 : reference_reference est maintenant valide
                         // car les UUIDs existent dans referencevalue ( bulk
                         // UPSERT vient de finir ) .
+                        // Sub-phase REFREF_REBUILD : sur de gros volumes ce
+                        // INSERT prend plusieurs minutes pendant que la bar
+                        // UPSERT staging -&gt; final affiche deja 100 % .
+                        // Sans cette emission , l'UI ne montre rien et
+                        // l'utilisateur croit que la cascade est figee .
+                        try { onPhaseChange.accept("REFREF_REBUILD"); } catch (RuntimeException ignored) { /* best effort */ }
+                        long refrefStart = System.nanoTime();
                         try (Statement stmt = connection.createStatement()) {
                             int refrefInserted = stmt.executeUpdate("""
                                     INSERT INTO %1$s.reference_reference(referenceid, referencesby)
                                     SELECT referenceid, referencesby FROM refref_pending
                                     """.formatted(getSchema().getName()));
                             log.info("storeAll : reference_reference rebuilt with {} link(s) in {} ms",
-                                    refrefInserted, (System.nanoTime() - insertStart) / 1_000_000L - insertMs);
+                                    refrefInserted, (System.nanoTime() - refrefStart) / 1_000_000L);
                         }
 
                         connection.commit();
@@ -694,17 +701,46 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 """.formatted(getTable().getSqlIdentifier());
         final MapSqlParameterSource params = new MapSqlParameterSource(APPLICATION_ID, getApplication().getId())
                 .addValue(REF_TYPE, ReferenceType);
+        // Instrumentation timing for diagnosis ( see step 1 of the prep-time
+        // investigation ) . Slices the call into measurable phases so we can
+        // identify whether the cost lives in PG ( query exec / network ) ,
+        // JDBC iteration ( ResultSet next ) , Java per-row parsing , or the
+        // final immutable copy . No business-logic change .
+        final long t0 = System.nanoTime();
+        final long[] firstRowAtNs = { 0L };
+        final long[] rowCount     = { 0L };
         Map<DataValue.LineIdentityColumnName, UUID> dataIdPerKeys = new HashMap<>();
         getNamedParameterJdbcTemplate().query(query, params, rs -> {
+            if (firstRowAtNs[0] == 0L) firstRowAtNs[0] = System.nanoTime();
             UUID id = UUID.fromString(rs.getString("id"));
-            Ltree naturalKey      = Ltree.fromSql(rs.getString("naturalkey"));
-            Ltree hierarchicalKey = Ltree.fromSql(rs.getString("hierarchicalkey"));
+            // Skip Ltree.checkSyntax on read : the values come straight from
+            // PostgreSQL where they were validated at write time . The legacy
+            // Ltree.fromSql ( ligne 56 ) runs Splitter + regex per label , which
+            // adds up to millions of regex matches per publish on a 1M-row
+            // referencevalue table ( 2 keys per row x N refTypes preloaded )
+            // and dominates the pre-cascade preparation time observed at
+            // ~2m30s wall-clock . fromSqlWithoutCheck does the same allocation
+            // without the per-row syntax validation .
+            Ltree naturalKey      = Ltree.fromSqlWithoutCheck(rs.getString("naturalkey"));
+            Ltree hierarchicalKey = Ltree.fromSqlWithoutCheck(rs.getString("hierarchicalkey"));
             String patternColName = rs.getString("patterncolumnname");
             dataIdPerKeys.put(
                     new DataValue.LineIdentityColumnName(naturalKey, hierarchicalKey, patternColName),
                     id);
+            rowCount[0]++;
         });
-        return ImmutableMap.copyOf(dataIdPerKeys);
+        final long t1 = System.nanoTime();
+        ImmutableMap<DataValue.LineIdentityColumnName, UUID> result = ImmutableMap.copyOf(dataIdPerKeys);
+        final long t2 = System.nanoTime();
+        final long firstRow = firstRowAtNs[0];
+        log.debug("[GDPK] ref={} rows={} sql_to_firstRow={}ms iter+parse={}ms immCopy={}ms total={}ms",
+                ReferenceType,
+                rowCount[0],
+                firstRow == 0L ? 0L : (firstRow - t0) / 1_000_000L,
+                firstRow == 0L ? 0L : (t1 - firstRow)  / 1_000_000L,
+                (t2 - t1) / 1_000_000L,
+                (t2 - t0) / 1_000_000L);
+        return result;
     }
 
     public List<ApplicationResult.DataSynthesis> buildReferenceSynthesis() {
