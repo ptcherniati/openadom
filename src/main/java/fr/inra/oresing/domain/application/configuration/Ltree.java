@@ -1,7 +1,6 @@
 package fr.inra.oresing.domain.application.configuration;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import lombok.Value;
@@ -105,9 +104,9 @@ public class Ltree implements Comparable<Ltree> {
     }
 
     public static void checkLabelSyntax(final String label) {
-        Preconditions.checkState(label.length() <= 256, ExceptionMessage.TOO_LONG_LABEL.toMessage());
-        Preconditions.checkState(!label.isEmpty(), ExceptionMessage.NULL_LABEL.toMessage());
-        Preconditions.checkState(VALID_LABEL_REGEX.matcher(label).matches(), ExceptionMessage.INAPPROPRIATE_LABEL.toMessage(), label);
+        if (label.length() > 256) throw new IllegalStateException(ExceptionMessage.TOO_LONG_LABEL.toMessage());
+        if (label.isEmpty()) throw new IllegalStateException(ExceptionMessage.NULL_LABEL.toMessage());
+        if (!VALID_LABEL_REGEX.matcher(label).matches()) throw new IllegalStateException(ExceptionMessage.INAPPROPRIATE_LABEL.toMessage());
     }
 
     private static String escapeSymbolFromKeyComponent(final Character aChar) {

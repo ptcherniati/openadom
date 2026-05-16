@@ -414,7 +414,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 queryForObject(
                         sql,
                         parameterSource,
-                        new JsonRowMapper<Map>()
+                        new JsonRowMapper<Map<String, List<Ltree>>>()
                 );
     }
 
