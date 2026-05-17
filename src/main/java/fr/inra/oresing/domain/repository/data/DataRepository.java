@@ -86,6 +86,26 @@ public interface DataRepository {
     void removeByFileId(UUID id);
 
     /**
+     * Chunked variant of {@link #removeByFileId} : DELETE the rows by
+     * id-batches with per-chunk progress + cooperative cancellation .
+     * Required at scale ( 1M+ rows ) to avoid {@code statement_timeout} ,
+     * WAL pressure and unobservable EN_ATTENTE periods .
+     *
+     * @param fileId      binaryfile uuid to wipe
+     * @param chunkSize   rows per batch ( typical 10_000 )
+     * @param onProgress  optional callback ( cumulative rows deleted ) ;
+     *                    fires after each chunk for live UI bar
+     * @param cancelCheck optional cooperative cancel between chunks ;
+     *                    throws {@link java.util.concurrent.CancellationException}
+     *                    if returns true ; partial DELETE remains committed
+     * @return total rows deleted from referencevalue
+     */
+    long removeByFileIdChunked(UUID fileId,
+                               int chunkSize,
+                               java.util.function.LongConsumer onProgress,
+                               java.util.function.BooleanSupplier cancelCheck);
+
+    /**
      * Returns the number of {@code referencevalue} rows currently linked
      * to {@code fileId} . Used to populate {@code workflow_log.records_total}
      * BEFORE the DELETE during an unpublish / delete-file flow so oa-live

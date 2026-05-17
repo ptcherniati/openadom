@@ -63,6 +63,15 @@ import java.util.concurrent.locks.ReentrantLock;
 @Component
 public class PublishLifecyclePhase2Handler {
 
+    /**
+     * Taille de chunk pour le DELETE chunked unpublish / delete-file .
+     * 10_000 rows = compromis lock duration ( ~1s sur gros volumes ) vs
+     * nombre d'iterations ( 100M / 10k = 10000 iterations , overhead
+     * negligeable ) . Permet progression live + cancel cooperative +
+     * WAL pressure bornee par chunk au lieu d'un DELETE atomique massif .
+     */
+    private static final int UNPUBLISH_DELETE_CHUNK_SIZE = 10_000;
+
 
     private final ServiceContainer              serviceContainer;
     private final OreSiRepository               repository;
@@ -665,14 +674,26 @@ public class PublishLifecyclePhase2Handler {
                 if (coordinator.isCancelled(ev.correlationId())) {
                     throw new java.util.concurrent.CancellationException("Cancelled before DELETE phase");
                 }
-                // DELETE dans une tx neuve . pg_cancel_backend possible via
-                // backendPidRegistry pour interrompre un DELETE long sur gros
-                // datasets ( ON DELETE CASCADE sur reference_reference peut
-                // ajouter ~50us / row ) .
-                var deleteTx = newRequiresNewTx();
-                deleteTx.executeWithoutResult(status ->
-                        backendPidRegistry.runWithRegistration(localJdbc, ev.correlationId(),
-                                () -> dataRepo.removeByFileId(ev.fileId())));
+                // DELETE chunked avec progression live + cancel cooperative
+                // entre chunks . Resout :
+                //  - statement_timeout sur fichiers > 1M rows ( ancien DELETE
+                //    unique pouvait depasser 1h sur 100M rows ) ;
+                //  - WAL pressure ( commit independant par chunk vs WAL massif
+                //    en une seule tx ) ;
+                //  - oa-live "EN ATTENTE" muet ( progressReporter.reportProgress
+                //    fire toutes 10k rows -> bar UI bouge en temps reel ) ;
+                //  - cancel SLA 5s ( coordinator.isCancelled consulte entre
+                //    chunks au lieu du DELETE atomique non-interruptible ) .
+                backendPidRegistry.runWithRegistration(localJdbc, ev.correlationId(), () ->
+                        dataRepo.removeByFileIdChunked(
+                                ev.fileId(),
+                                UNPUBLISH_DELETE_CHUNK_SIZE,
+                                deleted -> {
+                                    if (progressReporter != null) {
+                                        progressReporter.reportProgress(ev.correlationId(), deleted);
+                                    }
+                                },
+                                () -> coordinator.isCancelled(ev.correlationId())));
             });
         }
         // Marque le workflow comme 100 % done dans le registry pour que
@@ -764,11 +785,19 @@ public class PublishLifecyclePhase2Handler {
                     : 0L;
 
             scope.run(fr.inra.oresing.workflow.WorkflowPhase.DELETE_ROWS, () -> {
-                newRequiresNewTx().executeWithoutResult(status -> {
-                    if (ev.wasPublished()) {
-                        repository.getRepository(application).data().removeByFileId(ev.fileId());
-                    }
-                });
+                if (ev.wasPublished()) {
+                    // DELETE chunked avec progress live + cancel cooperative
+                    // ( cf doUnpublish pour la motivation detaillee ) .
+                    repository.getRepository(application).data().removeByFileIdChunked(
+                            ev.fileId(),
+                            UNPUBLISH_DELETE_CHUNK_SIZE,
+                            deleted -> {
+                                if (progressReporter != null) {
+                                    progressReporter.reportProgress(ev.correlationId(), deleted);
+                                }
+                            },
+                            () -> coordinator.isCancelled(ev.correlationId()));
+                }
             });
 
             scope.run(fr.inra.oresing.workflow.WorkflowPhase.DELETE_FILE_ROW, () -> {
