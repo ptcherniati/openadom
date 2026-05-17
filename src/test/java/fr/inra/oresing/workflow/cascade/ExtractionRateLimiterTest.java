@@ -21,7 +21,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 /**
@@ -158,7 +157,9 @@ class ExtractionRateLimiterTest {
             fillQuota();
             try {
                 rateLimiter.acquireOrThrow(VALID_UUID, "zip");
-            } catch (ExtractionRateLimitExceededException ignored) { }
+            } catch (ExtractionRateLimitExceededException ignored) {
+                // expected
+            }
             verify(metrics, atLeastOnce()).recordExtractionRateLimited(eq("zip"));
             drainQuota();
         }
@@ -169,7 +170,9 @@ class ExtractionRateLimiterTest {
             fillQuota();
             try {
                 rateLimiter.acquireOrThrow(VALID_UUID, "zip");
-            } catch (ExtractionRateLimitExceededException ignored) { }
+            } catch (ExtractionRateLimitExceededException ignored) {
+                // expected
+            }
             verify(logWriter).logAsync(argThat(e ->
                     WorkflowLogEntry.TYPE_EXTRACT_ZIP.equals(e.workflowType())));
             drainQuota();
@@ -181,7 +184,9 @@ class ExtractionRateLimiterTest {
             fillQuota();
             try {
                 rateLimiter.acquireOrThrow(VALID_UUID, "csv");
-            } catch (ExtractionRateLimitExceededException ignored) { }
+            } catch (ExtractionRateLimitExceededException ignored) {
+                // expected
+            }
             verify(logWriter).logAsync(argThat(e ->
                     WorkflowLogEntry.TYPE_EXTRACT_CSV.equals(e.workflowType())));
             drainQuota();
@@ -193,7 +198,9 @@ class ExtractionRateLimiterTest {
             fillQuota();
             try {
                 rateLimiter.acquireOrThrow(VALID_UUID, "charte");
-            } catch (ExtractionRateLimitExceededException ignored) { }
+            } catch (ExtractionRateLimitExceededException ignored) {
+                // expected
+            }
             verify(logWriter).logAsync(argThat(e ->
                     WorkflowLogEntry.TYPE_EXTRACT_CHARTE.equals(e.workflowType())));
             drainQuota();
@@ -205,7 +212,9 @@ class ExtractionRateLimiterTest {
             fillQuota();
             try {
                 rateLimiter.acquireOrThrow(VALID_UUID, "additional_files");
-            } catch (ExtractionRateLimitExceededException ignored) { }
+            } catch (ExtractionRateLimitExceededException ignored) {
+                // expected
+            }
             verify(logWriter).logAsync(argThat(e ->
                     WorkflowLogEntry.TYPE_EXTRACT_ADDITIONAL_FILES.equals(e.workflowType())));
             drainQuota();
@@ -217,7 +226,9 @@ class ExtractionRateLimiterTest {
             fillQuota();
             try {
                 rateLimiter.acquireOrThrow(VALID_UUID, "mytype");
-            } catch (ExtractionRateLimitExceededException ignored) { }
+            } catch (ExtractionRateLimitExceededException ignored) {
+                // expected
+            }
             verify(logWriter).logAsync(argThat(e ->
                     "EXTRACT_MYTYPE".equals(e.workflowType())));
             drainQuota();
@@ -231,7 +242,9 @@ class ExtractionRateLimiterTest {
             // Un deuxième acquire avec VALID_UUID dépasse le quota
             try {
                 rateLimiter.acquireOrThrow(VALID_UUID, "zip");
-            } catch (ExtractionRateLimitExceededException ignored) { }
+            } catch (ExtractionRateLimitExceededException ignored) {
+                // expected
+            }
             // logAsync n'est pas appelé pour le userId non-UUID (IAE interceptée)
             // Mais ici on a eu un VALID_UUID donc logAsync DOIT être appelé 1 fois
             verify(logWriter, atLeastOnce()).logAsync(any());

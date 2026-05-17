@@ -305,7 +305,6 @@ class SqlIdentifierUtilsTest {
         @DisplayName("Truncates to at most 63 chars for long identifier")
         void dynamicKeyTruncated() {
             // "a" repeated 50 chars + suffix _hierachicakKey + prefix _count = would exceed 63
-            String longId = "a".repeat(50);
             String result = SqlIdentifierUtils.IdentifierTest
                     .forStringIdentifier("ab")
                     .forDynamicReferenceHierachicakKey(1)

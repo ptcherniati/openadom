@@ -172,10 +172,6 @@ public class RightsRequestService {
                 .orElse(null);
         rightsRequest.setRightsRequest(authorizations);
         rightsRequest.setUser(rightsRequest.getUser() == null ? OreSiApiRequestContext.getRequestUserId() : rightsRequest.getUser());
-        // Le payload `rightsRequest` du DTO est optionnel : si absent, `authorizations`
-        // vaut null ( cf. `.orElse(null)` ci-dessus ) et la demande est purement
-        // declarative. Dans ce cas, pas de propagation `oreSiUsers` a faire ;
-        // sinon NPE 500 systematique sur POST /rightsRequest sans corps complet.
         if (authorizations != null) {
             authorizations.setOreSiUsers(Set.of(rightsRequest.getUser()));
         }

@@ -5,7 +5,6 @@ import fr.inra.oresing.domain.application.configuration.ApplicationDescription;
 import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
-import fr.inra.oresing.domain.data.read.query.ComponentOrderBy;
 import fr.inra.oresing.domain.data.read.query.DownloadDatasetQueryNoFilter;
 import fr.inra.oresing.domain.data.read.query.OutPut;
 import org.junit.jupiter.api.DisplayName;
@@ -117,10 +116,6 @@ class FileSenderInternationalisationForDownloadDatasetQueryTest {
             assertThat(sender.messagePattern()).contains("Result data");
         }
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    //  mailMessagefor()
-    // ─────────────────────────────────────────────────────────────────────────
 
     @Nested
     @DisplayName("mailMessagefor()")

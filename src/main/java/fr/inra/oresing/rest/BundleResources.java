@@ -65,7 +65,6 @@ import java.util.stream.Stream;
 public class BundleResources {
 
     // ── constantes ──────────────────────────────────────────────────────────
-    private static final String TMP = "/tmp";
     private static final String BUNDLE_NAME = "%s-%s-upload-bundle";
     private static final DateTimeFormatter TIMESTAMP_FORMATER = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private static final String FILE_ERROR = "error.txt";

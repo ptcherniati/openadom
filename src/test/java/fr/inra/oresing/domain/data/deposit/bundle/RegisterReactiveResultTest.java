@@ -136,7 +136,9 @@ class RegisterReactiveResultTest {
         ImportProgressEvent event = new DomainProgressEvent(0.5);
         try {
             rrr.add(event, false);
-        } catch (IllegalStateException ignored) { }
+        } catch (IllegalStateException ignored) {
+            // expected
+        }
         // finally block doit quand même ajouter l'événement au rapport
         assertThat(report.results()).containsExactly(event);
     }

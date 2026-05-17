@@ -6,8 +6,6 @@ import fr.inra.oresing.domain.checker.type.DateType;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.Tag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

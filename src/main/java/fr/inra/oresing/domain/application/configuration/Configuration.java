@@ -5,7 +5,6 @@ import fr.inra.oresing.domain.application.configuration.internationalization.Int
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationData;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
-import fr.inra.oresing.domain.data.read.query.ComponentType;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;

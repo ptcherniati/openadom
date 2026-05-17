@@ -37,7 +37,6 @@ import static org.mockito.Mockito.when;
 class CascadeSinkFactoryTest {
 
     private static final UUID CORR_ID = UUID.fromString("aaaaaaaa-0000-0000-0000-000000000001");
-    private static final String SHARED_TABLE = "oa_staging.referencevalue_import_shared";
 
     // ─── null DataSource guard ─────────────────────────────────────────────────
 

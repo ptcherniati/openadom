@@ -43,7 +43,6 @@ class StringTypeTest {
     @Test
     @DisplayName("serialize(gen) avec valeur null → writeNull")
     void serializeGenNullValue() throws IOException {
-        StringType st = new StringType(null);
         // valeur par défaut = "" ; forcer null par reflection-free hack :
         // on utilise getStringTypeFromStringValue("") pour avoir un StringType valide
         // puis on teste serialize via un ByteArrayOutputStream

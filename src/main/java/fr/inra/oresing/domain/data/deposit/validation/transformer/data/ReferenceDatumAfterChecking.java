@@ -1,10 +1,9 @@
 package fr.inra.oresing.domain.data.deposit.validation.transformer.data;
 
-import com.google.common.collect.ImmutableList;
 import fr.inra.oresing.domain.data.DataDatum;
 import fr.inra.oresing.domain.data.LinkedLines;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
-
+import java.util.List;
 import java.util.Map;
 
 public record ReferenceDatumAfterChecking(
@@ -13,6 +12,6 @@ public record ReferenceDatumAfterChecking(
         DataDatum referenceDatumBeforeChecking,
         DataDatum referenceDatumAfterChecking,
         Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo,
-        ImmutableList<CsvRowValidationCheckResult> errors
+        List<CsvRowValidationCheckResult> errors
 ) {
 }

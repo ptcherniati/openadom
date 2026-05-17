@@ -2,7 +2,6 @@ package fr.inra.oresing.domain.authorization.request;
 
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
-import fr.inra.oresing.domain.authorization.request.AuthorizationInput;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;

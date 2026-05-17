@@ -91,7 +91,7 @@ class UserSessionLogWriterTest {
     void stopWithoutStartIsNoop() {
         UserSessionLogRepository repo = mock(UserSessionLogRepository.class);
         UserSessionLogWriter writer = writer(repo, true);
-        assertThatCode(() -> writer.stop()).doesNotThrowAnyException();
+        assertThatCode(writer::stop).doesNotThrowAnyException();
     }
 
     @Test

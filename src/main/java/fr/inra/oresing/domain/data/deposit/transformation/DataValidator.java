@@ -66,7 +66,7 @@ public class DataValidator {
                                             lineChecker,
                                             referenceColumnRawValue,
                                             dataColumn,
-                                            (Map) refsLinkedTo);
+                                            refsLinkedTo);
                             List<DataColumn> patternOfColumn = Arrays.stream(dataColumn.column().split(Column.COLUMN_IN_COLUMN_SEPARATOR))
                                     .map(DataColumn::new)
                                     .toList();

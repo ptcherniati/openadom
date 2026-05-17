@@ -96,7 +96,7 @@ public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheck
         final Map<String, Object> messagesParams = new HashMap<>();
         for (final ValidationCheckResult validationCheckResult : this) {
             final Map<String, Object> map = validationCheckResult.messageParams();
-            map.forEach((key, value1) -> ((List) messagesParams
+            map.forEach((key, value1) -> ((List<Object>) messagesParams
                     .computeIfAbsent(key, k -> new LinkedList<>()))
                     .add(value1));
         }

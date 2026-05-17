@@ -10,7 +10,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.Instant;
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;

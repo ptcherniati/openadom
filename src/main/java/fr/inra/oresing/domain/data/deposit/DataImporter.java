@@ -70,7 +70,7 @@ public class DataImporter {
         }
     }
 
-    public DataImporter(final AsynchroneFileImporterContext dataImporterContext) throws IOException {
+    public DataImporter(final AsynchroneFileImporterContext dataImporterContext) {
         this(dataImporterContext, null);
     }
 
@@ -80,7 +80,7 @@ public class DataImporter {
      * @param dataImporterContext contexte de l'import
      * @param importProperties    configuration (peut être {@code null} → valeurs par défaut utilisées)
      */
-    public DataImporter(final AsynchroneFileImporterContext dataImporterContext, final ImportProperties importProperties) throws IOException {
+    public DataImporter(final AsynchroneFileImporterContext dataImporterContext, final ImportProperties importProperties) {
         super();
         this.dataImporterContext = dataImporterContext;
         this.importProperties = importProperties;

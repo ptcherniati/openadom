@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("ReportErrors – limite 15 erreurs / 1MB")
 class ReportErrorsTest {
 
-    private static final Mapper MAPPER = obj -> obj.toString();
+    private static final Mapper MAPPER = Object::toString;
 
     private CsvRowValidationCheckResult mockResult() {
         return Mockito.mock(CsvRowValidationCheckResult.class);

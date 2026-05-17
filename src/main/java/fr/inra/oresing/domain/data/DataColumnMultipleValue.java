@@ -57,7 +57,7 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType<Fiel
 
     @Override
     public DataColumnValue<ListType<FieldType<?>>, FieldType<?>> transform(UnaryOperator<FieldType<?>> transformation) {
-        final ListType<FieldType<?>> fieldType = Optional.ofNullable((FieldType<?>) values)
+        final ListType<FieldType<?>> fieldType = Optional.ofNullable(values)
                 .map(transformation)
                 .filter(ListType.class::isInstance)
                 .map(t -> (ListType<FieldType<?>>) t)

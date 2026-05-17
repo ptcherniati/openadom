@@ -3,7 +3,6 @@ package fr.inra.oresing.rest.dashboard;
 import fr.inra.oresing.workflow.cascade.config.ConfigChangeAudit;
 import fr.inra.oresing.workflow.cascade.config.ConfigEditService;
 import fr.inra.oresing.workflow.cascade.config.ConfigFieldRegistry;
-import fr.inra.oresing.workflow.cascade.config.SinkConcurrencyEstimator;
 import fr.inra.oresing.workflow.cascade.config.StrategyOptionsResolver;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;

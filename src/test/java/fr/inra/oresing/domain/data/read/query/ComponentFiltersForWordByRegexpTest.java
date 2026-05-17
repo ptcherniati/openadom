@@ -21,12 +21,12 @@ class ComponentFiltersForWordByRegexpTest {
     @Test
     @DisplayName("Cas nominal : componentKey non-null, filtres non-vides → OK")
     void validConstruction() {
-        ComponentFiltersForWordByRegexp record = new ComponentFiltersForWordByRegexp(
+        ComponentFiltersForWordByRegexp entry = new ComponentFiltersForWordByRegexp(
                 "myComponent",
                 List.of("pattern1", "pattern2"),
                 Multiplicity.ONE);
-        assertThat(record.componentKey()).isEqualTo("myComponent");
-        assertThat(record.filters()).hasSize(2);
+        assertThat(entry.componentKey()).isEqualTo("myComponent");
+        assertThat(entry.filters()).hasSize(2);
     }
 
     @Test
@@ -76,10 +76,10 @@ class ComponentFiltersForWordByRegexpTest {
         List<String> filtersWithNull = new java.util.ArrayList<>();
         filtersWithNull.add("valid");
         filtersWithNull.add(null);
-        ComponentFiltersForWordByRegexp record = new ComponentFiltersForWordByRegexp(
+        ComponentFiltersForWordByRegexp entry = new ComponentFiltersForWordByRegexp(
                 "key",
                 filtersWithNull,
                 Multiplicity.MANY);
-        assertThat(record.filters()).hasSize(2);
+        assertThat(entry.filters()).hasSize(2);
     }
 }
