@@ -21,7 +21,6 @@ import org.flywaydb.core.api.callback.Context;
 import org.flywaydb.core.api.callback.Event;
 import org.flywaydb.core.api.output.MigrateResult;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
@@ -36,18 +35,26 @@ import java.util.*;
 @Component
 @Slf4j
 public class MigrateService {
-    @Value("${SPRING_FLYWAY_PLACEHOLDERS_PUBLIC-ROLE-ID}")
-    private String publicRoleId;
-    @Autowired
-    ApplicationRepository applicationRepository;
-    @Autowired
-    private AuthenticationService authenticationService;
-    @Autowired
-    private DataSource dataSource;
+    private final String publicRoleId;
+    final ApplicationRepository applicationRepository;
+    private final AuthenticationService authenticationService;
+    private final DataSource dataSource;
     @Setter
     private Application application;
-    @Autowired
-    private BeanFactory beanFactory;
+    private final BeanFactory beanFactory;
+
+    public MigrateService(
+            @Value("${SPRING_FLYWAY_PLACEHOLDERS_PUBLIC-ROLE-ID}") String publicRoleId,
+            ApplicationRepository applicationRepository,
+            AuthenticationService authenticationService,
+            DataSource dataSource,
+            BeanFactory beanFactory) {
+        this.publicRoleId = publicRoleId;
+        this.applicationRepository = applicationRepository;
+        this.authenticationService = authenticationService;
+        this.dataSource = dataSource;
+        this.beanFactory = beanFactory;
+    }
 
     public void migrateAll() {
         List<Application> allSchemas;

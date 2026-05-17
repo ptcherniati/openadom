@@ -18,15 +18,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+// Les sous-classes (DataRepository, BinaryFileRepository, etc.) sont des beans prototype
+// créés via beanFactory.getBean(Class, application). La migration vers l'injection constructeur
+// nécessiterait de propager les dépendances dans toutes les sous-classes et leurs callers.
+// L'injection de champs est conservée ici intentionnellement. (Sonar S3306 supprimé)
 abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements InitializingBean {
-    @Autowired
+    @Autowired //NOSONAR S3306: classe template abstraite, migration constructeur trop risquée sans tests
     private TransactionTemplate transactionTemplate;
 
 
-    @Autowired
+    @Autowired //NOSONAR S3306: voir justification ci-dessus
     private JsonRowMapper<T> jsonRowMapper;
 
-    @Autowired
+    @Autowired //NOSONAR S3306: voir justification ci-dessus
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     @Override

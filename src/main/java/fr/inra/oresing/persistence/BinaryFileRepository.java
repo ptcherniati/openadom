@@ -28,7 +28,9 @@ import java.util.*;
 public class BinaryFileRepository extends JsonTableInApplicationSchemaRepositoryTemplate<BinaryFile> implements fr.inra.oresing.domain.repository.file.BinaryFileRepository {
 
 
-    @Autowired
+    // BinaryFileRepository est un bean prototype créé via beanFactory.getBean(BinaryFileRepository.class, application).
+    // L'injection constructeur pour JdbcTemplate est impossible sans changer les appelants.
+    @Autowired //NOSONAR S3306: prototype bean avec args constructeur explicites — injection setter nécessaire
     private JdbcTemplate jdbcTemplate;
 
     public BinaryFileRepository(final Application application) {
