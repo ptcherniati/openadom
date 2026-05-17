@@ -801,6 +801,88 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         return result;
     }
 
+    /**
+     * Variante lazy de {@link #getDataIdPerKeys(String)} : ne charge en
+     * RAM que les rows {@code referencevalue} dont la {@code naturalkey}
+     * appartient a {@code naturalKeysOfInterest} ( typiquement issu du
+     * pre-scan du CSV en cours de publication ) .
+     *
+     * <h2>Motivation</h2>
+     *
+     * <p>Le full preload via {@link #getDataIdPerKeys} materialise TOUTES
+     * les rows du refType ( 10 MB pour 100k rows , 1 GB pour 10M rows ,
+     * OOM au-dela ) . Sur des refs de 100M+ rows en BDD c'est inutilisable .
+     *
+     * <p>Cette variante charge uniquement le sous-ensemble effectivement
+     * reference dans le CSV soumis a publication ( typiquement 50-5000
+     * valeurs distinctes ) . Memoire : O(M_referenced) au lieu de
+     * O(N_ref_size) . Latence : O(M log N) via index btree
+     * {@code nk_patternColumnNam_type} .
+     *
+     * <h2>Strategie SQL</h2>
+     *
+     * <p>{@code WHERE naturalkey::text = ANY(?::text[])} avec array
+     * binding cote JDBC :
+     * <ul>
+     *   <li>Pas de limite parametres prepared statement ( contrairement
+     *       a {@code WHERE nk IN (?, ?, ...)} limite a 32 767 ) .</li>
+     *   <li>PG choisit hash join automatique sur gros arrays ; index
+     *       seek per value sur petits arrays .</li>
+     *   <li>Pour des sets > 1M nks , preferable d'utiliser une TEMP
+     *       TABLE + JOIN ( hors scope de cette methode ; le caller doit
+     *       splitter en batches ou utiliser une variante TEMP-TABLE ) .</li>
+     * </ul>
+     *
+     * @param referenceType        refType cible
+     * @param naturalKeysOfInterest set des naturalkeys ( format texte
+     *                              compatible ltree ) presentes dans le CSV
+     * @return mapping {@link DataValue.LineIdentityColumnName} -> UUID ,
+     *         bornee a {@code naturalKeysOfInterest.size()} entrees max .
+     *         Vide si le set est vide ou null .
+     */
+    @Override
+    public ImmutableMap<DataValue.LineIdentityColumnName, UUID> getDataIdPerKeysByNaturalKeys(
+            final String referenceType,
+            final java.util.Set<String> naturalKeysOfInterest) {
+        if (naturalKeysOfInterest == null || naturalKeysOfInterest.isEmpty()) {
+            return ImmutableMap.of();
+        }
+        // Cast text[] -> ltree[] cote PG ; respecte le type ltree natif de
+        // la colonne naturalkey + permet l'usage de l'index btree existant
+        // {@code nk_patternColumnNam_type} ( referencetype , naturalkey ,
+        // patterncolumnname ) .
+        final String query = """
+                SELECT id, naturalkey::text AS naturalkey,
+                       hierarchicalkey::text AS hierarchicalkey,
+                       patterncolumnname
+                  FROM %1$s
+                 WHERE application = :applicationId::uuid
+                   AND ReferenceType = :refType
+                   AND naturalkey = ANY(:nks::ltree[])
+                """.formatted(getTable().getSqlIdentifier());
+        String[] nksArray = naturalKeysOfInterest.toArray(new String[0]);
+        final MapSqlParameterSource params = new MapSqlParameterSource(APPLICATION_ID, getApplication().getId())
+                .addValue(REF_TYPE, referenceType)
+                .addValue("nks", nksArray);
+        final long t0 = System.nanoTime();
+        final long[] rowCount = { 0L };
+        Map<DataValue.LineIdentityColumnName, UUID> dataIdPerKeys = new HashMap<>(naturalKeysOfInterest.size() * 2);
+        getNamedParameterJdbcTemplate().query(query, params, rs -> {
+            UUID id = UUID.fromString(rs.getString("id"));
+            Ltree naturalKey      = Ltree.fromSqlWithoutCheck(rs.getString("naturalkey"));
+            Ltree hierarchicalKey = Ltree.fromSqlWithoutCheck(rs.getString("hierarchicalkey"));
+            String patternColName = rs.getString("patterncolumnname");
+            dataIdPerKeys.put(
+                    new DataValue.LineIdentityColumnName(naturalKey, hierarchicalKey, patternColName),
+                    id);
+            rowCount[0]++;
+        });
+        long elapsedMs = (System.nanoTime() - t0) / 1_000_000L;
+        log.debug("[GDPK-LAZY] ref={} nks_requested={} rows_loaded={} elapsed={}ms",
+                referenceType, naturalKeysOfInterest.size(), rowCount[0], elapsedMs);
+        return ImmutableMap.copyOf(dataIdPerKeys);
+    }
+
     public List<ApplicationResult.DataSynthesis> buildReferenceSynthesis() {
         if (useReferencevalueCountStatsTable) {
             try {

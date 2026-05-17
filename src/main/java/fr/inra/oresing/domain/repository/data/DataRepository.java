@@ -115,6 +115,23 @@ public interface DataRepository {
      */
     long countByFileId(UUID fileId);
 
+    /**
+     * Variante lazy de {@link #getDataIdPerKeys(String)} : ne charge que
+     * les naturalkeys donnees en parametre ( typiquement extraites du CSV
+     * en cours de publication via le pre-scan ) . Borne la memoire a
+     * O(M_referenced) au lieu de O(N_ref_size) ; permet de scaler aux
+     * referentiels 100M+ rows en BDD sans OOM cote Java .
+     *
+     * @param referenceType         refType cible
+     * @param naturalKeysOfInterest set des naturalkeys ( format texte
+     *                              compatible ltree ) ; vide / null = no-op
+     * @return mapping bornee a {@code naturalKeysOfInterest.size()} entrees
+     *         max ; vide si aucune nk ne matche
+     */
+    com.google.common.collect.ImmutableMap<fr.inra.oresing.domain.data.DataValue.LineIdentityColumnName, UUID>
+            getDataIdPerKeysByNaturalKeys(String referenceType,
+                                          java.util.Set<String> naturalKeysOfInterest);
+
     Map<String, List<Ltree>> resolveRequiredAuthorizations(Map<String, List<Ltree>> stringLtreeMap);
 
     Map<String, String> findHierarchicalKeysByKeyForReferenceTypes(List<String> referenceType);
