@@ -38,3 +38,4 @@ src/main/resources/docker/prometheus/prometheus.yml
 .failedTest.txt
 
 cascade-stubs/
+bundles/
