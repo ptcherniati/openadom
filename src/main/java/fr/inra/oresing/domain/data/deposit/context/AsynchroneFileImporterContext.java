@@ -97,6 +97,94 @@ public record AsynchroneFileImporterContext(
             Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey,
             Mapper jsonRowMapper,
             DataRepository referenceValueRepository) {
+        return ofInternal(constants, publishContextBuilder, lineCheckers,
+                displayNamesByReferenceAndNaturalKey, jsonRowMapper,
+                referenceValueRepository, /* naturalKeysHint */ null);
+    }
+
+    /**
+     * Variante du factory {@link #of(ContextConstants, PublishContext.PublishContextBuilder, ImmutableSet, Map, Mapper, DataRepository)}
+     * qui accepte un hint pre-scanne des naturalkeys reellement
+     * referencees par le CSV en cours d'import . Sur un refType recursif ,
+     * le hint declenche un chargement <i>lazy</i> de
+     * {@code storedReferences} via
+     * {@link DataRepository#getDataIdPerKeysByNaturalKeys} au lieu du
+     * full preload via {@link DataRepository#getDataIdPerKeys} , bornant
+     * la consommation memoire a {@code O(|naturalKeysHint|)} au lieu
+     * de {@code O(N_ref_size)} .
+     *
+     * <h2>Pourquoi</h2>
+     *
+     * <p>Le full preload materialise TOUTES les rows {@code referencevalue}
+     * du refType en RAM Java ( 10 MB pour 100k rows , 1 GB pour 10M rows ,
+     * OOM au-dela ) . Pour des refs recursifs de 10M+ rows c'est
+     * inutilisable . Cette variante charge uniquement le sous-ensemble
+     * effectivement reference par le CSV soumis a publication
+     * ( typiquement 50-5000 valeurs distinctes ) .
+     *
+     * <h2>Iso-resultat garanti</h2>
+     *
+     * <p>Sous l'invariant {@code naturalKeysHint contient toutes les
+     * naturalkeys lues par le caller au cours de l'import } , la map
+     * resultante est un sous-ensemble strict de celle retournee par le
+     * full preload limite aux rows reellement utilisees . Les indexes
+     * {@code hkIndex} / {@code nkIndex} sont construits sur ce
+     * sous-ensemble et restent semantiquement identiques pour les
+     * lookups effectivement effectues par {@code WithRecursion} et
+     * {@code DataTransformer} .
+     *
+     * <h2>Effet sur les non-recursifs</h2>
+     *
+     * <p>Identique a la variante legacy : {@code storedReferences =
+     * ImmutableMap.of()} ( refacto B ; les ids existants sont recuperes
+     * en SQL via JOIN post-UPSERT cote {@code DataRepository.storeAll} ) .
+     * Le hint est ignore .
+     *
+     * <h2>Fallback</h2>
+     *
+     * <p>Si {@code naturalKeysHint} est {@code null} ou vide , la
+     * methode retombe sur le chemin legacy ( full preload ) pour
+     * preserver la coherence : un hint absent signifie que le caller
+     * n'a pas pu pre-scanner ( CSV non disponible , prescan disable
+     * par config , erreur transient ) , donc on prefere un coup couteux
+     * mais sur a une perte silencieuse de rows .
+     *
+     * @param naturalKeysHint  set des naturalkeys composees pre-scannees
+     *                         depuis le CSV ; format texte compatible
+     *                         ltree . {@code null} ou vide -> fallback
+     *                         legacy ( full preload ) .
+     * @since openadom plan resilience Axe B
+     */
+    public static AsynchroneFileImporterContext ofWithNaturalKeysHint(
+            ContextConstants constants,
+            PublishContext.PublishContextBuilder publishContextBuilder,
+            ImmutableSet<LineChecker<? extends FieldType<?>>> lineCheckers,
+            Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey,
+            Mapper jsonRowMapper,
+            DataRepository referenceValueRepository,
+            Set<String> naturalKeysHint) {
+        return ofInternal(constants, publishContextBuilder, lineCheckers,
+                displayNamesByReferenceAndNaturalKey, jsonRowMapper,
+                referenceValueRepository, naturalKeysHint);
+    }
+
+    /**
+     * Construction effective partagee entre les deux factories publiques .
+     *
+     * @param naturalKeysHint  {@code null} pour le chemin legacy ( full
+     *                         preload sur recursif , {@code ImmutableMap.of()}
+     *                         sur non-recursif ) ; non-vide pour le chemin
+     *                         lazy ( charge uniquement les naturalkeys
+     *                         requestees ) .
+     */
+    private static AsynchroneFileImporterContext ofInternal(
+            ContextConstants constants,
+            PublishContext.PublishContextBuilder publishContextBuilder,
+            ImmutableSet<LineChecker<? extends FieldType<?>>> lineCheckers,
+            Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey,
+            Mapper jsonRowMapper,
+            DataRepository referenceValueRepository,
+            Set<String> naturalKeysHint) {
 
         final StandardDataDescription referenceDescription = constants.dataConfiguration();
         final Map<Class<? extends ComponentDescription>, List<Map.Entry<String, ComponentDescription>>> componentDescriptionEntryByComputedType = referenceDescription.componentDescriptions()
@@ -126,10 +214,22 @@ public record AsynchroneFileImporterContext(
                 .filter(HierarchicalNode::isRecursive)
                 .isPresent();
 
-        ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences =
-                isRecursive
-                        ? referenceValueRepository.getDataIdPerKeys(constants.refType())
-                        : ImmutableMap.of();
+        // Axe B : sur refType recursif , si le caller a fourni un hint
+        // pre-scanne des naturalkeys reellement referencees par le CSV ,
+        // utilise getDataIdPerKeysByNaturalKeys ( O(|hint|) RAM + index
+        // btree nk_patternColumnNam_type ) au lieu de getDataIdPerKeys
+        // ( O(N_ref_size) RAM ) . Sur des refs 10M+ rows cela evite l'OOM .
+        // Sans hint -> fallback legacy ( full preload ) pour preserver la
+        // coherence quand le pre-scan n'est pas disponible .
+        ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences;
+        if (!isRecursive) {
+            storedReferences = ImmutableMap.of();
+        } else if (naturalKeysHint != null && !naturalKeysHint.isEmpty()) {
+            storedReferences = referenceValueRepository.getDataIdPerKeysByNaturalKeys(
+                    constants.refType(), naturalKeysHint);
+        } else {
+            storedReferences = referenceValueRepository.getDataIdPerKeys(constants.refType());
+        }
 
         // B4 / #5 : index O(1) pour {@link #getIdForSameHierarchicalKeyInDatabase}.
         // Cette methode est appelee par ligne par DataTransformer ; sur un
