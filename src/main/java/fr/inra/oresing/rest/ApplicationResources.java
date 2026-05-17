@@ -192,7 +192,7 @@ public class ApplicationResources {
                     try {
                         SecurityContextHolder.setContext(context);
                         fluxSink.accept(sink);
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         // Without this log, any exception thrown inside the
                         // NDJSON producer is converted to a Flux error signal
                         // and the HTTP stream closes silently mid-way - the

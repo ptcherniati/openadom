@@ -1180,7 +1180,10 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         );
     }
 
-    @Deprecated(forRemoval = true) // migré vers domain.repository.data.DataRepository.Order
+    /**
+     * @deprecated Migré vers {@code fr.inra.oresing.domain.repository.data.DataRepository.Order}.
+     */
+    @Deprecated(forRemoval = true)
     public enum Order {
         ASC, DESC
     }

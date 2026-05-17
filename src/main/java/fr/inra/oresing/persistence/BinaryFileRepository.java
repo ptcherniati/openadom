@@ -227,8 +227,9 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
         if (Optional.ofNullable(binaryFileDataset)
                 .map(BinaryFileDataset::getRequiredAuthorizations)
                 .isPresent()) {
+            Map<String, List<Ltree>> requiredAuthorizations = binaryFileDataset.getRequiredAuthorizations();
             for (final Map.Entry<String, List<Ltree>> entry :
-                    binaryFileDataset.getRequiredAuthorizations().entrySet()) {
+                    requiredAuthorizations.entrySet()) {
                 final String t = String.format(
                         "params #> '{\"binaryfiledataset\", \"requiredauthorizations\", \"%1$s\"}' " +
                         "@@ ('$ == \"'||:%1$s||'\"')::jsonpath",
