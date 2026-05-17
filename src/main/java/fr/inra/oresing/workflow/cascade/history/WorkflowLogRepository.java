@@ -377,6 +377,91 @@ public class WorkflowLogRepository {
     }
 
     /**
+     * Sub-projection des workflows zombies fraichement marques FAILED par
+     * {@link #markZombies} . Sert au {@link WorkflowZombieSweeper} pour
+     * notifier l'admin par email apres detection ( seuls les workflows
+     * UNPUBLISH / DELETE_FILE sont marques FAILED par la fonction PG
+     * {@code oa_audit.mark_zombie_workflows} - voir migration V12 ) .
+     *
+     * @param withinSeconds fenetre de temps depuis end_time ( typiquement
+     *                      le cron interval du sweeper + marge )
+     * @return liste de {@link FailedZombieRow} - vide si rien a notifier
+     */
+    public java.util.List<FailedZombieRow> findRecentlyFailedZombies(int withinSeconds) {
+        String sql = """
+                SELECT correlation_id, workflow_type, user_login,
+                       application_name, data_type, resource_name,
+                       start_time, end_time, fatal_error
+                FROM oa_audit.workflow_log
+                WHERE status = 'FAILED'
+                  AND workflow_type IN ('UNPUBLISH', 'DELETE_FILE')
+                  AND end_time IS NOT NULL
+                  AND end_time > now() - (? || ' seconds')::interval
+                  AND fatal_error LIKE 'Operation interrompue%'
+                ORDER BY end_time DESC
+                """;
+        return jdbcTemplate.query(sql, (rs, i) -> new FailedZombieRow(
+                java.util.UUID.fromString(rs.getString("correlation_id")),
+                rs.getString("workflow_type"),
+                rs.getString("user_login"),
+                rs.getString("application_name"),
+                rs.getString("data_type"),
+                rs.getString("resource_name"),
+                rs.getTimestamp("start_time") != null ? rs.getTimestamp("start_time").toInstant() : null,
+                rs.getTimestamp("end_time")   != null ? rs.getTimestamp("end_time").toInstant()   : null,
+                rs.getString("fatal_error")
+        ), withinSeconds);
+    }
+
+    /** Projection minimale pour notification email zombie FAILED . */
+    public record FailedZombieRow(
+            java.util.UUID  correlationId,
+            String          workflowType,
+            String          userLogin,
+            String          applicationName,
+            String          dataType,
+            String          resourceName,
+            java.time.Instant startTime,
+            java.time.Instant endTime,
+            String          fatalError
+    ) {}
+
+    /**
+     * Detecte si un workflow UNPUBLISH ou DELETE_FILE recent sur le
+     * fileId donne s'est termine en FAILED ( typiquement marque par le
+     * sweeper zombie - cf migration V12 ) . Utilise par
+     * {@code Phase2Handler.doPublishWithinScope} pour court-circuiter
+     * la branche SKIP iso-data : si la depublication anterieure a
+     * laisse les donnees dans un etat partiel , un republish iso-data
+     * ne doit PAS declarer le workflow TERMINE immediatement mais
+     * forcer une cascade FULL qui reconstruira la coherence .
+     *
+     * @param fileId        binaryfile uuid ( metadata.fileId dans
+     *                      workflow_log )
+     * @param withinHours   fenetre de recherche ( e.g. 24h ) - au-dela
+     *                      on considere que le user a deja gere l'echec
+     * @return true si au moins un workflow UNPUBLISH/DELETE_FILE FAILED
+     *         existe dans cette fenetre pour ce fileId
+     */
+    public boolean hasRecentFailedUnpublish(java.util.UUID fileId, int withinHours) {
+        if (fileId == null || withinHours <= 0) {
+            return false;
+        }
+        final String sql = """
+                SELECT EXISTS (
+                    SELECT 1 FROM oa_audit.workflow_log
+                    WHERE status = 'FAILED'
+                      AND workflow_type IN ('UNPUBLISH', 'DELETE_FILE')
+                      AND metadata->>'fileId' = ?
+                      AND end_time > now() - (? || ' hours')::interval
+                )
+                """;
+        Boolean exists = jdbcTemplate.queryForObject(sql, Boolean.class,
+                fileId.toString(), withinHours);
+        return Boolean.TRUE.equals(exists);
+    }
+
+    /**
      * P0 cancel-divergence fix : voir doc de {@link #LOCK_IN_PROGRESS_FOR_UPDATE_SQL} .
      *
      * @param correlationId workflow a verrouiller

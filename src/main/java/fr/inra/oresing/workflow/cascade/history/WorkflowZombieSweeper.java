@@ -1,11 +1,17 @@
 package fr.inra.oresing.workflow.cascade.history;
 
+import fr.inra.oresing.mail.Email;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 /**
  * Detecte les workflows zombies dans {@code oa_audit.workflow_log} et
@@ -70,6 +76,35 @@ public class WorkflowZombieSweeper {
      * tuer les workflows legitimes des autres instances .
      */
     private final boolean cleanupOnBoot;
+
+    /**
+     * Email service via ObjectProvider ( lazy resolution ) pour notifier
+     * l'admin lors de la detection de zombies UNPUBLISH / DELETE_FILE
+     * marques FAILED par migration V12 .
+     *
+     * <p>Pourquoi ObjectProvider et pas {@code @Autowired Email} : un
+     * autowire direct sur {@link Email} declenche
+     * {@code MailSenderAutoConfiguration} de Spring Boot . Sur les
+     * profils de tests sans mail config ( ex : testmail in-memory ) ,
+     * cette autoconfig echoue et fait cascader la failure du contexte
+     * Spring entier ( MigrateService bean non-cree -> tous les tests
+     * d'integration cassent ) . ObjectProvider est une dependance
+     * differee : Spring ne touche pas a l'autoconfig mail tant que
+     * {@code getIfAvailable()} n'est pas appele a runtime .
+     */
+    @Autowired
+    private ObjectProvider<Email> emailProvider;
+
+    /** Adresse email destinataire des alertes zombies UNPUBLISH / DELETE_FILE .
+     *  Vide ( defaut ) -> notifications desactivees . Configurer via
+     *  {@code app.workflow.zombie-notify-email=admin@example.com} . */
+    @Value("${app.workflow.zombie-notify-email:}")
+    private String notifyEmail;
+
+    /** Base URL frontend pour generer le lien "Reprendre" dans l'email .
+     *  Defaut sur {@code openadom.front.base-url} ( cf Phase 1 #487 ) . */
+    @Value("${openadom.front.base-url:}")
+    private String frontBaseUrl;
 
     public WorkflowZombieSweeper(
             WorkflowLogRepository repository,
@@ -147,11 +182,99 @@ public class WorkflowZombieSweeper {
             if (n > 0) {
                 log.warn("Zombie sweeper : {} workflow(s) IN_PROGRESS plus vieux que {} min passes a CANCELLED en {} ms",
                         n, thresholdMinutes, durationMs);
+                notifyFailedUnpublishZombiesBestEffort();
             } else {
                 log.debug("Zombie sweeper : aucun zombie detecte ( seuil {} min )", thresholdMinutes);
             }
         } catch (Exception e) {
             log.error("Echec sweep zombies , on retentera au prochain tick", e);
         }
+    }
+
+    /**
+     * Notifie l'admin par email des zombies UNPUBLISH / DELETE_FILE
+     * fraichement marques FAILED ( cf migration V12 : ces types sont
+     * marques FAILED au lieu de CANCELLED pour signaler que l'utilisateur
+     * doit relancer l'operation pour terminer le nettoyage des donnees ) .
+     *
+     * <p>Best-effort : aucune exception ne remonte ; un echec d'envoi
+     * est logge en warn et le sweeper continue ( prochain tick reessayera
+     * sur les zombies suivants ) .
+     *
+     * <p>No-op si :
+     * <ul>
+     *   <li>{@code app.workflow.zombie-notify-email} est vide ;</li>
+     *   <li>{@code emailService} bean non-disponible ( profil test ) ;</li>
+     *   <li>aucun zombie FAILED dans la fenetre des 90 secondes
+     *       precedentes ( marge sur le cron 5 min ) .</li>
+     * </ul>
+     */
+    private void notifyFailedUnpublishZombiesBestEffort() {
+        if (notifyEmail == null || notifyEmail.isBlank()) {
+            return;
+        }
+        Email emailService = emailProvider != null ? emailProvider.getIfAvailable() : null;
+        if (emailService == null) {
+            log.debug("Notification zombie skip : Email bean non-disponible");
+            return;
+        }
+        try {
+            List<WorkflowLogRepository.FailedZombieRow> failed =
+                    repository.findRecentlyFailedZombies(90);
+            for (WorkflowLogRepository.FailedZombieRow row : failed) {
+                try {
+                    emailService.sendEmail(
+                            "openadom",
+                            notifyEmail,
+                            buildEmailSubject(row),
+                            buildEmailBody(row));
+                    log.info("Notification zombie envoyee a {} pour workflow {} ( type={} , fichier={} )",
+                            notifyEmail, row.correlationId(), row.workflowType(), row.resourceName());
+                } catch (RuntimeException ex) {
+                    log.warn("Echec envoi notification zombie pour workflow {} : {}",
+                            row.correlationId(), ex.getMessage());
+                }
+            }
+        } catch (RuntimeException ex) {
+            log.warn("Echec query failed zombies pour notification : {}", ex.getMessage());
+        }
+    }
+
+    private static String buildEmailSubject(WorkflowLogRepository.FailedZombieRow row) {
+        String action = "UNPUBLISH".equals(row.workflowType())
+                ? "Depublication" : "Suppression";
+        return "[OpenADOM] " + action + " interrompue : " + row.resourceName();
+    }
+
+    private String buildEmailBody(WorkflowLogRepository.FailedZombieRow row) {
+        String action = "UNPUBLISH".equals(row.workflowType())
+                ? "depublication" : "suppression";
+        StringBuilder b = new StringBuilder(512);
+        b.append("Une operation de ").append(action).append(" a ete interrompue ")
+                .append("et marquee FAILED par le sweeper zombie .\n\n");
+        b.append("Workflow id  : ").append(row.correlationId()).append('\n');
+        b.append("Type         : ").append(row.workflowType()).append('\n');
+        b.append("Utilisateur  : ").append(row.userLogin()).append('\n');
+        b.append("Application  : ").append(row.applicationName()).append('\n');
+        b.append("Datatype     : ").append(row.dataType()).append('\n');
+        b.append("Fichier      : ").append(row.resourceName()).append('\n');
+        if (row.startTime() != null) {
+            b.append("Demarre le   : ")
+                    .append(DateTimeFormatter.ISO_INSTANT.format(row.startTime())).append('\n');
+        }
+        if (row.endTime() != null) {
+            b.append("Termine le   : ")
+                    .append(DateTimeFormatter.ISO_INSTANT.format(row.endTime())).append('\n');
+        }
+        b.append("\nMotif :\n").append(row.fatalError()).append("\n\n");
+        b.append("Les donnees peuvent etre partiellement supprimees . ")
+                .append("Relancez la ").append(action).append(" depuis l'interface ")
+                .append("pour terminer le nettoyage ( operation idempotente ) .\n");
+        if (frontBaseUrl != null && !frontBaseUrl.isBlank()) {
+            b.append("\nLien historique : ")
+                    .append(frontBaseUrl).append("/oa-live/#/history?cid=")
+                    .append(row.correlationId()).append('\n');
+        }
+        return b.toString();
     }
 }

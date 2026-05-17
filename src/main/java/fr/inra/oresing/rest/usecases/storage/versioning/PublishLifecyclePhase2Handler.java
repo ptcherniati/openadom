@@ -540,13 +540,32 @@ public class PublishLifecyclePhase2Handler {
         // publiee ( wasPublished=true ) - sur un FIRST publish , wasPublished
         // est false meme si un cache pre-existait , et on doit faire le full
         // cycle pour pre-warmer la table finale et generer les rows .
+        // Garde-fou : si une depublication / suppression anterieure a echoue
+        // ( marquee FAILED par le sweeper zombie - cf migration V12 ) , les
+        // donnees peuvent etre dans un etat partiel ( DELETE chunked
+        // interrompu mid-flight ) . Dans ce cas , la branche SKIP iso-data
+        // declarerait TERMINE sans rien faire alors que des lignes manquent
+        // en referencevalue . Forcer une cascade FULL pour reconstruire la
+        // coherence ( UPSERT ON CONFLICT recouvrera l'etat partiel ) .
+        boolean recentFailedUnpublish = false;
+        try {
+            recentFailedUnpublish = logRepository.hasRecentFailedUnpublish(ev.fileId(), 24);
+        } catch (RuntimeException ex) {
+            log.warn("Phase 2 : hasRecentFailedUnpublish check failed ( non-critical , skip path autorisee ) : {}",
+                    ex.getMessage());
+        }
         if (ev.action() == PublishLifecycleAction.PUBLISH
                 && ev.wasPublished()
                 && hashMatch
-                && processedSize > fr.inra.oresing.workflow.cascade.cache.ReferencevalueCacheFormat.HEADER_SIZE_BYTES) {
+                && processedSize > fr.inra.oresing.workflow.cascade.cache.ReferencevalueCacheFormat.HEADER_SIZE_BYTES
+                && !recentFailedUnpublish) {
             log.info("Phase 2 SKIP republish iso-data : fileId={} ( no-op , data + cache + config deja alignes - economie ~2-15 min )",
                     ev.fileId());
             return 0L;
+        }
+        if (recentFailedUnpublish) {
+            log.warn("Phase 2 : SKIP iso-data desactive pour fileId={} : depublication / suppression anterieure FAILED detectee ( etat potentiellement partiel ) - cascade FULL forcee",
+                    ev.fileId());
         }
 
         // ----- FAST path attempt -----
