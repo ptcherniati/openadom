@@ -324,10 +324,89 @@ public class DataService {
                          final boolean lightweight) throws IOException {
         CancellationContext.checkpoint("addData entry");
         final DataRepository referenceValueRepository = getReferenceValueRepository(application);
+
+        // Axe B plan resilience : sur un refType recursif , on pre-scanne
+        // le CSV pour extraire l'ensemble des naturalkeys composites
+        // distinctes effectivement referencees . Ce hint permet ensuite
+        // de charger lazy uniquement ces rows depuis referencevalue via
+        // getDataIdPerKeysByNaturalKeys ( O(|hint|) RAM ) au lieu du full
+        // preload getDataIdPerKeys ( O(N_ref_size) RAM ) . Sur refs
+        // recursifs 10M+ rows c'est la difference entre un import qui
+        // passe et un OOM .
+        //
+        // Pre-requis : on doit lire le CSV deux fois ( prescan + body
+        // write par prepareContextForDataTreatment ) ; le buffer en
+        // temp file est libere en finally meme en cas d'erreur .
+        //
+        // Fallback graceful : si le prescan echoue ( CSV malforme ,
+        // colonnes manquantes , I/O ) , on retombe sur le chemin
+        // legacy ( hint=null = full preload ) - aucune regression .
+        //
+        // Non-recursif : skip , refacto B precedent a deja deplace ce
+        // chargement en SQL JOIN post-UPSERT cote storeAll .
+        final boolean isRecursive = application.getConfiguration()
+                .findCompositeReferencesUsing(refType)
+                .filter(HierarchicalNode::isRecursive)
+                .isPresent();
+
+        java.nio.file.Path csvBufferFile = null;
+        java.util.Set<String> naturalKeysHint = null;
+        InputStream effectiveInputStream = file;
+        if (isRecursive) {
+            try {
+                csvBufferFile = Files.createTempFile("axe-b-prescan-", ".csv");
+                csvBufferFile.toFile().deleteOnExit();
+                try (InputStream src = file) {
+                    Files.copy(src, csvBufferFile, StandardCopyOption.REPLACE_EXISTING);
+                }
+                // Extraction des columns naturalKey + separator depuis la config
+                fr.inra.oresing.domain.application.configuration.StandardDataDescription dataDescription =
+                        application.getConfiguration().dataDescription().get(refType);
+                if (dataDescription != null
+                        && dataDescription.naturalKey() != null
+                        && !dataDescription.naturalKey().isEmpty()) {
+                    java.util.List<String> nkColumns = new java.util.ArrayList<>(dataDescription.naturalKey());
+                    char sep = dataDescription.separator();
+                    org.apache.commons.csv.CSVFormat fmt = org.apache.commons.csv.CSVFormat.Builder
+                            .create(org.apache.commons.csv.CSVFormat.DEFAULT)
+                            .setDelimiter(sep)
+                            .get();
+                    try (java.io.Reader r = Files.newBufferedReader(csvBufferFile, StandardCharsets.UTF_8)) {
+                        naturalKeysHint = new fr.inra.oresing.domain.data.deposit.prescan.NaturalKeyPreScanService()
+                                .extractCompositeNaturalKeys(
+                                        r, fmt, nkColumns,
+                                        fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext
+                                                .COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR);
+                    }
+                    log.debug("[Axe B] prescan refType={} columns={} naturalkeys_distinctes={}",
+                            refType, nkColumns, naturalKeysHint.size());
+                } else {
+                    log.debug("[Axe B] prescan skip refType={} : config naturalKey absente/vide ( fallback legacy )", refType);
+                }
+                effectiveInputStream = Files.newInputStream(csvBufferFile);
+            } catch (RuntimeException | IOException ex) {
+                // Fallback graceful : nettoie le buffer si cree , retombe
+                // sur le chemin legacy ( hint=null ) . Le file reste a
+                // l'etat consomme partiellement ; un retry par
+                // l'utilisateur est necessaire pour qu'il fonctionne .
+                log.warn("[Axe B] prescan failed for refType={} ( fallback legacy full preload ) : {}",
+                        refType, ex.getMessage());
+                if (csvBufferFile != null) {
+                    try { Files.deleteIfExists(csvBufferFile); }
+                    catch (IOException ignored) { /* best-effort cleanup */ }
+                    csvBufferFile = null;
+                }
+                naturalKeysHint = null;
+                effectiveInputStream = file;
+            }
+        }
+
+        try {
         AsynchroneFileImporterContext referenceImporterContext = getAsynchroneImporterContext(
                 application,
                 refType,
-                fileOrUUID
+                fileOrUUID,
+                naturalKeysHint
         );
         CancellationContext.checkpoint("addData importer context built");
 
@@ -374,7 +453,7 @@ public class DataService {
                             }
                         }
                         : null;
-        Path path = referenceImporter.prepareContextForDataTreatment(FileBomResolver.of(file), skipReencoding, phaseEmitter);
+        Path path = referenceImporter.prepareContextForDataTreatment(FileBomResolver.of(effectiveInputStream), skipReencoding, phaseEmitter);
         CancellationContext.checkpoint("addData prepareContext done");
         cascadeImportPipeline.execute(
                 referenceImporter,
@@ -387,6 +466,17 @@ public class DataService {
                 override,
                 preGeneratedCidForCascade
         );
+        } finally {
+            // Cleanup du temp file de prescan ( Axe B ) . Le file est
+            // garde ouvert par effectiveInputStream qui a ete consume
+            // par prepareContextForDataTreatment ; ici on le supprime
+            // proprement . En cas d'exception en cours d'addData ,
+            // deleteOnExit garantit le cleanup au shutdown JVM .
+            if (csvBufferFile != null) {
+                try { Files.deleteIfExists(csvBufferFile); }
+                catch (IOException ignored) { /* best-effort cleanup */ }
+            }
+        }
     }
 
     /**
@@ -516,6 +606,32 @@ public class DataService {
     }
 
     public AsynchroneFileImporterContext getAsynchroneImporterContext(final Application application, final String dataName, final FileOrUUID fileOrUUID) {
+        return getAsynchroneImporterContext(application, dataName, fileOrUUID, /* naturalKeysHint */ null);
+    }
+
+    /**
+     * Variante du getAsynchroneImporterContext acceptant un hint
+     * pre-scanne des naturalkeys reellement referencees par le CSV
+     * en cours d'import . Sur un refType recursif , declenche le
+     * chargement lazy des refs via
+     * {@link AsynchroneFileImporterContext#ofWithNaturalKeysHint} au
+     * lieu du full preload via {@code getDataIdPerKeys} ( Axe B plan
+     * resilience ) . Bornee a O ( |hint| ) RAM au lieu de
+     * O ( N_ref_size ) . Sur refs recursifs 10M+ rows , evite l'OOM .
+     *
+     * <p>Fallback : si {@code naturalKeysHint} est {@code null} ou
+     * vide , behaviour identique a la variante legacy ( full preload
+     * pour recursif , {@code ImmutableMap.of()} pour non-recursif ) .
+     *
+     * @param naturalKeysHint set des naturalkeys composites pre-scannees
+     *                        depuis le CSV ; {@code null} -> fallback
+     *                        legacy
+     * @since openadom plan resilience Axe B
+     */
+    public AsynchroneFileImporterContext getAsynchroneImporterContext(final Application application,
+                                                                       final String dataName,
+                                                                       final FileOrUUID fileOrUUID,
+                                                                       final java.util.Set<String> naturalKeysHint) {
         final DataRepository referenceValueRepository = getReferenceValueRepository(application);
         final Configuration configuration = application.getConfiguration();
         final ContextConstants contextConstants = ContextConstants.with(
@@ -561,6 +677,17 @@ public class DataService {
                 getReferenceValueRepository(application).findDisplayByNaturalKey(ref);
         Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey =
                 new fr.inra.oresing.rest.data.LazyDisplayNamesMap(displayReferenceKeys, displayLoader);
+        if (naturalKeysHint != null && !naturalKeysHint.isEmpty()) {
+            return AsynchroneFileImporterContext.ofWithNaturalKeysHint(
+                    contextConstants,
+                    new PublishContext.PublishContextBuilder(application, dataName, fileOrUUID, getDatavaluesByReference),
+                    lineCheckers,
+                    displayNamesByReferenceAndNaturalKey,
+                    jsonRowMapper,
+                    referenceValueRepository,
+                    naturalKeysHint
+            );
+        }
         return AsynchroneFileImporterContext.of(
                 contextConstants,
                 new PublishContext.PublishContextBuilder(application, dataName, fileOrUUID, getDatavaluesByReference),
