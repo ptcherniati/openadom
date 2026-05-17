@@ -93,16 +93,15 @@ public class WorkflowLogRepository {
      * de {@code metadata} ( fileId , etc . ) . No-op si la row est deja
      * terminale ( WHERE status='IN_PROGRESS' ) .
      */
-    private static final String UPDATE_PHASE_SQL = """
-            UPDATE oa_audit.workflow_log
-               SET metadata = jsonb_set(
-                       COALESCE(metadata, '{}'::jsonb),
-                       '{phase}',
-                       to_jsonb(?::text),
-                       true)
-             WHERE correlation_id = ?::uuid
-               AND status = 'IN_PROGRESS'
-            """;
+    /** SECURITY DEFINER function call ( V14 ) . Necessaire car la table
+     *  workflow_log a seulement GRANT SELECT TO PUBLIC ; un UPDATE direct
+     *  echoue sur les roles applicatifs ( ex contexte HTTP CreateDataUseCase )
+     *  et abort la tx outer ( SQLState 25P02 ) , poisonnant tous les SQL
+     *  subsequents . La fonction GRANT EXECUTE TO PUBLIC contourne le
+     *  probleme de privileges tout en preservant la semantique
+     *  ( WHERE status='IN_PROGRESS' bloque l'ecrasement des terminaux ) . */
+    private static final String UPDATE_PHASE_SQL =
+            "SELECT oa_audit.update_workflow_phase(?::uuid, ?::varchar)";
 
     /**
      * Tags the child IMPORT row in workflow_log with its parent
@@ -293,8 +292,16 @@ public class WorkflowLogRepository {
             return false;
         }
         try {
-            int rows = jdbcTemplate.update(UPDATE_PHASE_SQL, phase, correlationId.toString());
-            return rows > 0;
+            // V14 : route via SECURITY DEFINER function oa_audit.update_workflow_phase
+            // pour contourner le manque de privilege UPDATE sur workflow_log
+            // dans les contextes HTTP applicatifs ( la table a seulement
+            // GRANT SELECT TO PUBLIC ; un UPDATE direct echouait avec
+            // SQLState 25P02 et poisonnait la tx outer ) . La fonction
+            // retourne le ROW_COUNT - signe-toi pour savoir si la row a
+            // ete touchee ( workflow encore IN_PROGRESS ) .
+            Integer rows = jdbcTemplate.queryForObject(
+                    UPDATE_PHASE_SQL, Integer.class, correlationId.toString(), phase);
+            return rows != null && rows > 0;
         } catch (RuntimeException ex) {
             log.warn("updatePhase failed for {} ( phase={} ) : {}", correlationId, phase, ex.getMessage());
             return false;

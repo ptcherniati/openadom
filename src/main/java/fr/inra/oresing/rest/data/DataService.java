@@ -170,6 +170,16 @@ public class DataService {
     @Autowired(required = false)
     private fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository workflowLogRepository;
 
+    /**
+     * Writer workflow_log pour pre-creer la row IMPORT en cas de depot
+     * frais ( Phase 2 cascade adoption ) . Permet d'emettre des
+     * sous-phases pendant prepareContext visibles immediatement dans
+     * le dashboard sans attendre que cascade demarre ( 1-3 min sur
+     * gros fichiers ) .
+     */
+    @Autowired(required = false)
+    private fr.inra.oresing.workflow.cascade.history.WorkflowLogWriter workflowLogWriter;
+
     public DataService(
             OreSiRepository repo,
             JsonRowMapper jsonRowMapper,
@@ -327,24 +337,45 @@ public class DataService {
                 lightweight);
         // Honour cascade.import.skip-csv-reencoding ( default false ) .
         boolean skipReencoding = cascadeImportPipeline.getImportProperties().isSkipCsvReencoding();
-        // PhaseEmitter : publie CSV_REENCODING / PREWARM_REFS sur le
-        // workflow parent quand un parentCid est actif ( republish via
-        // PublishLifecyclePhase2Handler ) . Pour un depot frais sans
-        // parentCid encore connu , no-op .
+        final String userId = serviceContainer.authenticationService().getCurrentUser().getId().toString();
+        // Phase 2 cascade adoption :
+        // - republish ( parentCid actif via PublishLifecyclePhase2Handler ) :
+        //   phaseEmitter ecrit sur la row PUBLISH parent ( comportement
+        //   existant Phase 1 preserve ) , cascade genere son propre cid IMPORT
+        // - depot frais ( pas de parentCid ) : pre-genere cid IMPORT +
+        //   pre-cree row workflow_log dans tx isolee REQUIRES_NEW ; le
+        //   phaseEmitter ecrit sur ce cid ; cascade reuse ce cid ( idempotent
+        //   via WorkflowLogWriter.recordStart skip silencieux sur duplicate )
+        //
+        // L'idempotence + l'isolation REQUIRES_NEW protegent la tx outer
+        // ( CreateDataUseCase.@Transactional ) d'un eventuel echec de
+        // pre-creation . En cas d'echec , phaseEmitter retombe sur null
+        // et le depot continue sans visibilite sous-phase pendant
+        // prepareContext ( comportement pre-Phase 2 preserve ) .
         final java.util.UUID parentCid = CancellationContext.currentParentCid();
+        final java.util.UUID phaseEmitterTargetCid;
+        final String preGeneratedCidForCascade;
+        if (parentCid != null) {
+            phaseEmitterTargetCid     = parentCid;
+            preGeneratedCidForCascade = null;
+        } else {
+            java.util.UUID freshCid   = java.util.UUID.randomUUID();
+            boolean preCreated        = preCreateImportWorkflowLog(freshCid, application, refType, userId);
+            phaseEmitterTargetCid     = preCreated ? freshCid : null;
+            preGeneratedCidForCascade = preCreated ? freshCid.toString() : null;
+        }
         final java.util.function.Consumer<String> phaseEmitter =
-                (parentCid != null && workflowLogRepository != null)
+                (phaseEmitterTargetCid != null && workflowLogRepository != null)
                         ? subPhase -> {
-                            try { workflowLogRepository.updatePhase(parentCid, subPhase); }
+                            try { workflowLogRepository.updatePhase(phaseEmitterTargetCid, subPhase); }
                             catch (RuntimeException ex) {
-                                log.debug("updatePhase {} on parent {} failed ( best effort ) : {}",
-                                        subPhase, parentCid, ex.getMessage());
+                                log.debug("updatePhase {} on cid {} failed ( best effort ) : {}",
+                                        subPhase, phaseEmitterTargetCid, ex.getMessage());
                             }
                         }
                         : null;
         Path path = referenceImporter.prepareContextForDataTreatment(FileBomResolver.of(file), skipReencoding, phaseEmitter);
         CancellationContext.checkpoint("addData prepareContext done");
-        final String userId = serviceContainer.authenticationService().getCurrentUser().getId().toString();
         cascadeImportPipeline.execute(
                 referenceImporter,
                 referenceValueRepository,
@@ -353,8 +384,95 @@ public class DataService {
                 application.getName(),
                 refType,
                 fileOrUUID == null ? null : fileOrUUID.fileid(),
-                override
+                override,
+                preGeneratedCidForCascade
         );
+    }
+
+    /**
+     * Pre-cree la row workflow_log IMPORT pour un depot frais ( Phase 2
+     * cascade adoption ) . Insertion dans une transaction isolee
+     * ( PROPAGATION_REQUIRES_NEW ) pour proteger la tx outer
+     * ( {@code CreateDataUseCase.@Transactional} ) en cas d'echec :
+     * si l'INSERT echoue ( BDD indispo , user non resolu , collision
+     * unique index , bean absent en contexte test ) , la tx outer reste
+     * intacte et le depot continue normalement sans visibilite
+     * sous-phase pendant prepareContext .
+     *
+     * @return {@code true} si la row a ete effectivement creee
+     *         ( phaseEmitter peut ecrire dessus + cascade reusera le
+     *         cid ) , {@code false} sinon ( fallback comportement
+     *         pre-Phase 2 : phaseEmitter null , cascade genere son
+     *         propre cid )
+     * @since openadom plan resilience Phase 2 cascade adoption
+     */
+    private boolean preCreateImportWorkflowLog(java.util.UUID cid,
+                                                Application application,
+                                                String refType,
+                                                String userId) {
+        if (workflowLogWriter == null) {
+            log.debug("WorkflowLogWriter absent ( contexte test ?) , pre-creation row workflow_log skip pour cid {}", cid);
+            return false;
+        }
+        // user_id est NOT NULL dans workflow_log ( cf V2 schema ) . Si on
+        // ne peut pas resoudre un userId valide on SKIP la pre-creation
+        // pour eviter une violation de contrainte qui marquerait la tx
+        // outer ( @Transactional CreateDataUseCase ) rollback-only .
+        // Le userId nous est deja fourni par le caller ( deja resolu via
+        // serviceContainer.authenticationService().getCurrentUser().getId() ) ,
+        // on le parse en UUID ; en cas d'echec on retombe sur le chemin
+        // legacy ( pas de visibilite sous-phase mais pas de regression ) .
+        final java.util.UUID userUuid;
+        try {
+            userUuid = java.util.UUID.fromString(userId);
+        } catch (RuntimeException ex) {
+            log.debug("[{}] userId non parseable en UUID , pre-creation row workflow_log skip ( fallback legacy ) : {}",
+                    cid, userId);
+            return false;
+        }
+        DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        def.setName("preCreateImportWorkflowLog");
+        TransactionStatus newTx = null;
+        try {
+            newTx = transactionManager.getTransaction(def);
+            String userLogin = null;
+            try {
+                fr.inra.oresing.domain.OreSiUser current =
+                        serviceContainer.authenticationService().getCurrentUser();
+                if (current != null) {
+                    userLogin = current.getLogin();
+                }
+            } catch (RuntimeException ex) {
+                log.debug("Cannot resolve current user login for pre-create workflow_log : {}", ex.getMessage());
+            }
+            String appName = application != null ? application.getName() : null;
+            String resourceName = "deferred-csv:" + cid;
+            workflowLogWriter.recordStart(
+                    fr.inra.oresing.workflow.cascade.history.WorkflowLogEntry.startMarker(
+                            cid,
+                            fr.inra.oresing.workflow.cascade.history.WorkflowLogEntry.TYPE_IMPORT,
+                            userUuid, userLogin, appName, refType,
+                            resourceName,
+                            java.time.Instant.now(),
+                            /* bytesTotal unknown at this point */ 0L));
+            transactionManager.commit(newTx);
+            log.debug("[{}] Pre-creation row workflow_log IMPORT pour depot frais ok", cid);
+            return true;
+        } catch (RuntimeException ex) {
+            if (newTx != null) {
+                try {
+                    if (!newTx.isCompleted()) {
+                        transactionManager.rollback(newTx);
+                    }
+                } catch (RuntimeException rbEx) {
+                    log.debug("[{}] Rollback pre-create tx failed : {}", cid, rbEx.getMessage());
+                }
+            }
+            log.warn("[{}] Pre-creation row workflow_log echec ( best-effort , cascade gerera son propre cid ) : {}",
+                    cid, ex.getMessage());
+            return false;
+        }
     }
 
     public HierarchicalReferenceAsTree getHierarchicalReferenceAsTree(final Application application, final String lowestLevelReference) {

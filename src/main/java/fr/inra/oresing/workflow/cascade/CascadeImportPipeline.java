@@ -215,6 +215,31 @@ public class CascadeImportPipeline {
             String         dataType,
             UUID           sourceBinaryFileId,
             fr.inra.oresing.workflow.cascade.config.CascadeRuntimeOverride override) {
+        execute(dataImporter, referenceValueRepository, headerlessCsv, userId,
+                applicationName, dataType, sourceBinaryFileId, override,
+                /* preGeneratedCid */ null);
+    }
+
+    /**
+     * Variante acceptant un correlation id pre-genere par le caller .
+     * Cas d'usage : {@code DataService.addData} pre-cree la row workflow_log
+     * pour visibilite du depot frais pendant prepareContext . Quand
+     * {@code preGeneratedCid} est non null , reuse au lieu de generer un
+     * nouveau . {@code logWriter.recordStart} interne reste appele mais
+     * il est idempotent ( skip silencieusement sur duplicate primary key ) .
+     *
+     * @since openadom plan resilience Phase 2 cascade adoption
+     */
+    public void execute(
+            DataImporter   dataImporter,
+            DataRepository referenceValueRepository,
+            Path           headerlessCsv,
+            String         userId,
+            String         applicationName,
+            String         dataType,
+            UUID           sourceBinaryFileId,
+            fr.inra.oresing.workflow.cascade.config.CascadeRuntimeOverride override,
+            String         preGeneratedCid) {
 
         if (!Files.exists(headerlessCsv)) {
             throw new IllegalArgumentException("Input file does not exist: " + headerlessCsv);
@@ -247,7 +272,13 @@ public class CascadeImportPipeline {
 
         // Identifiants safe ( UUID + parsing local ) declares avant le
         // try afin d'etre visibles dans le finally cleanup .
-        final String correlationId = UUID.randomUUID().toString();
+        // Phase 2 adoption : reuse preGeneratedCid si fourni par caller
+        // ( DataService.addData pre-creation row workflow_log ) , sinon
+        // generation legacy . Comportement identique quand preGeneratedCid
+        // est null .
+        final String correlationId = preGeneratedCid != null
+                ? preGeneratedCid
+                : UUID.randomUUID().toString();
         final UUID   corrUuid      = safeUuid(correlationId);
 
         // Fix BUG-1 : si on tourne en sub-IMPORT d'un PUBLISH parent ,
