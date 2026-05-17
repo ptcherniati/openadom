@@ -65,7 +65,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         // kv.value='LPF' OR t.refvalues @> '{"esp_nom":"ALO"}'::jsonb
         String cond = params.entrySet().stream().flatMap(e -> {
                     final String k = e.getKey();
-                    if (StringUtils.equalsAnyIgnoreCase(k, "_row_id_")) {
+                    if ("_row_id_".equalsIgnoreCase(k)) {
                         final java.util.List<String> values = e.getValue();
                         if (values.isEmpty()) {
                             return Stream.empty();
@@ -81,7 +81,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                 .collect(Collectors.joining(", "));
                         return Stream.of("array[id]::uuid[] <@ array[" + collect + "]::uuid[]");
                     }
-                    if (StringUtils.equalsAnyIgnoreCase(k, "_row_key_")) {
+                    if ("_row_key_".equalsIgnoreCase(k)) {
                         // Bind each key value as a named parameter to prevent SQL injection.
                         final String collect = e.getValue().stream()
                                 .map(v -> {
@@ -95,7 +95,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         }
                         return Stream.ofNullable(String.format(" (naturalKey in (%1$s) or hierarchicalKey in (%1$s)) ", collect));
                     }
-                    if (StringUtils.equalsAnyIgnoreCase(k, "any")) {
+                    if ("any".equalsIgnoreCase(k)) {
                         return e.getValue().stream().map(v -> {
                             final String arg = "arg" + i.getAndIncrement();
                             paramSource.addValue(arg, v);

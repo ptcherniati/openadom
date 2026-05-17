@@ -236,13 +236,13 @@ public class BundleResources {
 
             boolean completedSuccessfully = false;
             try {
-                ObjectMapper mapper = new ObjectMapper();
+                ObjectMapper objectMapper = new ObjectMapper();
                 File finalZipFile = zipFile;
                 AtomicReference<Map<String, List<String>>> manifest = new AtomicReference<>();
                 readEntryUseCase.execute(zipFile, DataService.MANIFEST_JSON,
                         manifestStream -> {
                             try {
-                                manifest.set(mapper.readValue(manifestStream,
+                                manifest.set(objectMapper.readValue(manifestStream,
                                         new TypeReference<Map<String, List<String>>>() {}));
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
@@ -255,7 +255,7 @@ public class BundleResources {
                 readEntryUseCase.execute(zipFile, DataService.REFERENCES_JSON,
                         referencesStream -> {
                             try {
-                                references.set(mapper.readValue(referencesStream,
+                                references.set(objectMapper.readValue(referencesStream,
                                         new TypeReference<Map<String, List<String>>>() {}));
                             } catch (IOException e) {
                                 throw new RuntimeException(e);

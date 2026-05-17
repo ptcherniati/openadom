@@ -20,10 +20,6 @@ class ReportErrorsTest {
 
     private static final Mapper MAPPER = Object::toString;
 
-    private CsvRowValidationCheckResult mockResult() {
-        return Mockito.mock(CsvRowValidationCheckResult.class);
-    }
-
     @Test
     @DisplayName("canRegisterErrors() est true sur une instance vide")
     void canRegisterErrorsWhenEmpty() {

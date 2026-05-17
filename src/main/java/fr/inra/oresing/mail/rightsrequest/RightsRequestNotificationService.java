@@ -7,7 +7,6 @@ import fr.inra.oresing.domain.rightsrequest.TreatmentDecision;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.UserRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -456,8 +455,7 @@ public class RightsRequestNotificationService {
      * slash dans l'URL générée.
      */
     private String buildTreatmentUrl(final Application application, final UUID requestId) {
-        final String base = StringUtils.removeEnd(frontBaseUrl, "/");
-        ;
+        final String base = frontBaseUrl.endsWith("/") ? frontBaseUrl.substring(0, frontBaseUrl.length() - 1) : frontBaseUrl;
         return "%s/applications/%s/authorizationsRequest/treatment/%s".formatted(
                 base,
                 application.getName(),

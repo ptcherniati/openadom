@@ -183,8 +183,7 @@ class CascadeSinkFactoryTest {
     }
 
     private ImportProperties defaultProps() {
-        ImportProperties props = new ImportProperties();
         // defaults : PER_CONNECTION_TEMP, no shared table
-        return props;
+        return new ImportProperties();
     }
 }

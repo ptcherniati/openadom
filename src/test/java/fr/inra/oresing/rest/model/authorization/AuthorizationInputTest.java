@@ -175,7 +175,7 @@ class AuthorizationInputTest {
                     LocalDateTimeRange.always(),
                     EnumSet.of(OperationType.extraction)
             );
-            AuthorizationInput result = input.withRestrictionWithDependants("myData", __ -> false);
+            AuthorizationInput result = input.withRestrictionWithDependants("myData", ignored -> false);
             assertThat(result.getOperationTypes()).contains(OperationType.extraction);
         }
 
@@ -187,7 +187,7 @@ class AuthorizationInputTest {
                     LocalDateTimeRange.always(),
                     EnumSet.of(OperationType.depot)
             );
-            AuthorizationInput result = input.withRestrictionWithDependants("myData", __ -> true);
+            AuthorizationInput result = input.withRestrictionWithDependants("myData", ignored -> true);
             assertThat(result.getOperationTypes())
                     .contains(OperationType.depot, OperationType.publication,
                               OperationType.delete, OperationType.extraction);
@@ -201,7 +201,7 @@ class AuthorizationInputTest {
                     LocalDateTimeRange.always(),
                     EnumSet.of(OperationType.depot)
             );
-            AuthorizationInput result = input.withRestrictionWithDependants("myData", __ -> false);
+            AuthorizationInput result = input.withRestrictionWithDependants("myData", ignored -> false);
             assertThat(result.getOperationTypes())
                     .contains(OperationType.depot, OperationType.publication, OperationType.extraction);
         }
@@ -216,7 +216,7 @@ class AuthorizationInputTest {
                     timeScope,
                     EnumSet.of(OperationType.extraction)
             );
-            AuthorizationInput result = input.withRestrictionWithDependants("myData", __ -> false);
+            AuthorizationInput result = input.withRestrictionWithDependants("myData", ignored -> false);
             assertThat(result.getRequiredAuthorizations()).isSameAs(requiredAuths);
             assertThat(result.getTimeScope()).isEqualTo(timeScope);
         }

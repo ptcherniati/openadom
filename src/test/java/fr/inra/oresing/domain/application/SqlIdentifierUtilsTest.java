@@ -174,8 +174,8 @@ class SqlIdentifierUtilsTest {
         @Test
         @DisplayName("Identifiant de 64 caractères → FieldNameTooLongForSqlFieldException")
         void tooLongThrows() {
-            String too_long = "a".repeat(64);
-            assertThatThrownBy(() -> SqlIdentifierUtils.IdentifierTest.forStringIdentifier(too_long))
+            String tooLong = "a".repeat(64);
+            assertThatThrownBy(() -> SqlIdentifierUtils.IdentifierTest.forStringIdentifier(tooLong))
                     .isInstanceOf(FieldNameTooLongForSqlFieldException.class);
         }
 
