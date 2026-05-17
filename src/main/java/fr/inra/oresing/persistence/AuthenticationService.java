@@ -554,7 +554,7 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
                     })
                     .toList();
         } else {
-            throw new NotOpenAdomAdminException();//TODO
+            throw new NotOpenAdomAdminException();
         }
     }
 

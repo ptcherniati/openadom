@@ -193,7 +193,7 @@ public class OreSiNg implements WebMvcConfigurer {
         @Bean
         public OpenAPI customOpenAPI() {
             log.info("demarrage de open api");
-            log.info("Allowed Origin: %1$s".formatted(allowedOrigin));
+            log.info("Allowed Origin: {}", allowedOrigin);
             return new OpenAPI()
                     .info(new Info()
                             .title("openadom-ng")

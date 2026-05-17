@@ -191,8 +191,7 @@ public class MigrationService {
     ) {
         final boolean bypass = migrationProperties.isBypassConfigurationCheck();
         if (bypass && log.isDebugEnabled()) {
-            log.debug("openadom.migration.bypass-configuration-check=true : " +
-                    "vérifications de compatibilité désactivées — la mise à jour s'effectue sans contrainte.");
+            log.debug("openadom.migration.bypass-configuration-check=true : vérifications de compatibilité désactivées — la mise à jour s'effectue sans contrainte.");
         }
 
         List<ConfigurationChange> changes = new LinkedList<>();

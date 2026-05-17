@@ -22,6 +22,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -91,12 +92,17 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
     }
 
     @Override
-    public String postTransfer(FileInfos fileInfos) throws Exception {
+    public String postTransfer(FileInfos fileInfos) throws IOException {
         // Obtenir l'URL de la ressource
         URL resource = fileInfos.fileName().toUri().toURL();
 
         // Convertir l'URL en Path
-        Path path = Paths.get(resource.toURI());
+        Path path;
+        try {
+            path = Paths.get(resource.toURI());
+        } catch (java.net.URISyntaxException e) {
+            throw new FileSenderException("URI invalide pour le fichier à transférer", e);
+        }
 
         // Récupérer la taille du fichier
         long fileSize = Files.size(path);
@@ -144,7 +150,7 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
         return uploadChunkSize;
     }
 
-    private JSONObject postTransfer(String userId, String from, JSONArray files, String recipient, String subject, String message, Long expires, JSONObject options) throws Exception {
+    private JSONObject postTransfer(String userId, String from, JSONArray files, String recipient, String subject, String message, Long expires, JSONObject options) throws IOException {
         if (expires == null) {
             expires = System.currentTimeMillis() / 1000 + (DEFAULT_TRANSFER_DAYS_VALID * 24 * 3600);
         }
@@ -176,7 +182,7 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
         return call("post", "/transfer", params, content, null, new HashMap<>());
     }
 
-    private void putChunk(JSONObject file, byte[] chunk, long offset) throws Exception {
+    private void putChunk(JSONObject file, byte[] chunk, long offset) throws IOException {
         Map<String, String> params = new HashMap<>();
         params.put("key", file.getString("uid"));
         int fileSize = file.getInt("size");
@@ -196,7 +202,7 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
 
     }
 
-    private void fileComplete(JSONObject file) throws Exception {
+    private void fileComplete(JSONObject file) throws IOException {
         Map<String, String> params = new HashMap<>();
         params.put("key", file.getString("uid"));
 
@@ -206,7 +212,7 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
         call("put", "/file/" + file.getInt("id"), params, content, null, new HashMap<>());
     }
 
-    private void transferComplete(JSONObject transfer) throws Exception {
+    private void transferComplete(JSONObject transfer) throws IOException {
         Map<String, String> params = new HashMap<>();
         params.put("key", transfer.getJSONArray("files").getJSONObject(0).getString("uid"));
 
@@ -216,16 +222,21 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
         call("put", "/transfer/" + transfer.getInt("id"), params, content, null, new HashMap<>());
     }
 
-    public JSONObject call(String method, String path, Map<String, String> params, JSONObject content, byte[] rawContent, Map<String, String> headers) throws Exception {
+    public JSONObject call(String method, String path, Map<String, String> params, JSONObject content, byte[] rawContent, Map<String, String> headers) throws IOException {
         params.put("remote_user", USERNAME);
         params.put("timestamp", String.valueOf(Math.round(System.currentTimeMillis() / 1000.0)));
 
-        String signature = generateSignature(method, path, params, content, rawContent);
+        String signature;
+        try {
+            signature = generateSignature(method, path, params, content, rawContent);
+        } catch (java.security.NoSuchAlgorithmException | java.security.InvalidKeyException e) {
+            throw new FileSenderException("Erreur de génération de la signature FileSender", e);
+        }
         params.put("signature", signature);
 
         String url = BASE_URL + path + "?" + flattenParams(params);
 
-        log.info("URL: %s%n Signature: %s".formatted(url, signature));
+        log.info("URL: " + url + "\n Signature: " + signature);
 
         try (CloseableHttpClient client = HttpClients.custom().setDefaultCookieStore(cookieStore).build()) {
             HttpUriRequest request;
@@ -257,15 +268,20 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
             // Exécution de la requête
             try (CloseableHttpResponse response = client.execute(request)) {
                 HttpEntity entity = response.getEntity();
-                String responseBody = EntityUtils.toString(entity);
+                String responseBody;
+                try {
+                    responseBody = EntityUtils.toString(entity);
+                } catch (org.apache.hc.core5.http.ParseException e) {
+                    throw new FileSenderException("Erreur de lecture de la réponse FileSender", e);
+                }
 
                 int statusCode = response.getCode();  // Utilise response.getCode() au lieu de getStatusLine().getStatusCode()
                 if (statusCode != 200 && (method.equals("post") && statusCode != 201)) {
-                    throw new Exception("Erreur HTTP " + statusCode + ": " + responseBody);
+                    throw new FileSenderException("Erreur HTTP " + statusCode + ": " + responseBody);
                 }
 
                 if (responseBody.isEmpty()) {
-                    throw new Exception("Erreur HTTP " + statusCode + " Réponse vide");
+                    throw new FileSenderException("Erreur HTTP " + statusCode + " Réponse vide");
                 }
 
                 return responseBody.startsWith("{") ? new JSONObject(responseBody) : new JSONObject(String.format("{\"success\": %s}", responseBody));

@@ -698,7 +698,7 @@ public class DataService {
                             subject.formatted(applicationName),
                             messageWithReport);
                     String downloadUrl = fileRepository.postTransfer(fileInfos);
-                    log.info("Adresse de téléchargement : %s".formatted(downloadUrl));
+                    log.info("Adresse de téléchargement : {}", downloadUrl);
                     /*sendUploadZipEmail(
                             currentUser.getEmail(),
                             subject.formatted(applicationName),
@@ -747,7 +747,7 @@ private PlatformTransactionManager transactionManager;
                             message
                     );
                     String downloadUrl = fileRepository.postTransfer(fileInfos);
-                    log.info("Adresse de téléchargement du ZIP pour dépôt en masse : %s".formatted(downloadUrl));
+                    log.info("Adresse de téléchargement du ZIP pour dépôt en masse : {}", downloadUrl);
 
                 } catch (Exception e) {
                     log.error("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
@@ -772,7 +772,7 @@ private PlatformTransactionManager transactionManager;
                             emailMessage
                     );
                     String downloadUrl = fileRepository.postTransfer(fileInfos);
-                    log.info("Adresse de téléchargement du ZIP pour dépôt en masse : %s".formatted(downloadUrl));
+                    log.info("Adresse de téléchargement du ZIP pour dépôt en masse : {}", downloadUrl);
 
                 } catch (Exception e) {
                     log.error("Erreur lors de la création ou de l'envoi du rapport pour dépôt en masse", e);

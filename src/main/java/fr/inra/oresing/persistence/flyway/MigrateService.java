@@ -281,7 +281,7 @@ public class MigrateService {
                         try {
                             actionToDoAfterMigration.execute(connection);
                         } catch (final SQLException e) {
-                            log.error(e.getMessage());
+                            log.error(ExceptionMessage.SQL_EXCEPTION.toMessage(), e);
                             throw new OreSiTechnicalException(ExceptionMessage.SQL_EXCEPTION.toMessage(), e);
                         }
                     });

@@ -4,4 +4,4 @@ import java.util.Map;
 
 public record MigrationDescription(Map<String, ComponentDescription> components,
                                    String dataGroup) {
-} //TODO
+}

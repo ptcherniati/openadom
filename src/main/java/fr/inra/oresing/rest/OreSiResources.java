@@ -1385,8 +1385,10 @@ public class OreSiResources {
             };
             writer.write(errorMessage);
             writer.newLine();
-            writer.write(e.getMessage());
-            writer.newLine();
+            if (e.getMessage() != null) {
+                writer.write(e.getMessage());
+                writer.newLine();
+            }
 
             writer.write(Throwables.getStackTraceAsString(e));
         }
