@@ -61,7 +61,18 @@ public record AsynchroneFileImporterContext(
         List<ReferenceScope.NodeDescription> nodesForMenu,
         BuildColumns buildColumns,
         ReportErrors allErrors,
-        DataHeaderReader dataHeaderReader) {
+        DataHeaderReader dataHeaderReader,
+        // Axe A.3 plan resilience : loader lazy + batch coalescing pour
+        // les parents recursifs non pre-charges par Axe B . Quand le
+        // context est construit via {@link #ofWithNaturalKeysHint} sur un
+        // refType recursif , le loader est pre-populated avec les rows
+        // chargees ; sur cache miss dans {@link #getKnownId} , le loader
+        // fait une query bulk SQL lazy ( par batch de naturalkeys ) au
+        // lieu d'echouer . Couvre le cas incremental imports ou un row
+        // CSV reference un parent qui existe deja en BDD mais n'etait
+        // pas dans le prescan . Null si non-recursif ou hint absent
+        // ( fallback legacy full preload ) .
+        fr.inra.oresing.domain.data.deposit.prescan.LazyParentLoader lazyParentLoader) {
 
     /**
      * Cle composite ( hierarchicalKey , patternColumnName ) pour le lookup
@@ -260,6 +271,23 @@ public record AsynchroneFileImporterContext(
                     entry.getValue());
         }
 
+        // Axe A.3 : si recursif + hint fourni , pre-populated lazy loader
+        // pour permettre fallback sur cache miss ( ex : import incremental
+        // ou un row CSV reference un parent deja en BDD non present dans
+        // le prescan ) . Le loader est pre-warmed avec les rows deja
+        // chargees ( storedReferences ) pour eviter de re-query celles-ci .
+        // Null pour non-recursif ou si hint absent ( comportement legacy ) .
+        final fr.inra.oresing.domain.data.deposit.prescan.LazyParentLoader lazyLoader;
+        if (isRecursive && naturalKeysHint != null && !naturalKeysHint.isEmpty()) {
+            lazyLoader = new fr.inra.oresing.domain.data.deposit.prescan.LazyParentLoader(
+                    referenceValueRepository, constants.refType());
+            for (Map.Entry<DataValue.LineIdentityColumnName, UUID> entry : storedReferences.entrySet()) {
+                lazyLoader.putKnown(entry.getKey().naturalKey(), entry.getValue());
+            }
+        } else {
+            lazyLoader = null;
+        }
+
         return new AsynchroneFileImporterContext(
                 constants,
                 publishContextBuilder,
@@ -277,7 +305,8 @@ public record AsynchroneFileImporterContext(
                 referenceValueRepository.getNodesForMenu(MenuType.authorization),
                 result,
                 new ReportErrors(jsonRowMapper),
-                new DataHeaderReader(result, publishContextBuilder, constants.dataConfiguration())
+                new DataHeaderReader(result, publishContextBuilder, constants.dataConfiguration()),
+                lazyLoader
         );
     }
 
@@ -334,12 +363,44 @@ public record AsynchroneFileImporterContext(
             UUID hit = idx.get(new NaturalKeyPattern(naturalKey, patternColumnName));
             if (hit != null) return Optional.of(hit);
         }
-        return afterPreloadReferenceUuids().entrySet().stream()
+        Optional<UUID> scanHit = afterPreloadReferenceUuids().entrySet().stream()
                 .filter(entry -> entry.getKey().naturalKey().equals(naturalKey) &&
                                  entry.getKey().patternColomnName().equals(patternColumnName)
                 )
                 .map(Map.Entry::getValue)
                 .findFirst();
+        if (scanHit.isPresent()) {
+            return scanHit;
+        }
+        // Axe A.3 : fallback lazy DB lookup pour le cas incremental
+        // import ou un parent existe deja en BDD mais n'etait pas dans
+        // le prescan ( hint Axe B ) . Si lazyParentLoader present
+        // ( recursif + hint ) , on declenche une query lazy bornee par
+        // negative cache pour ne pas re-query les naturalkeys deja
+        // confirmees absentes . Si null ( non-recursif ou full preload
+        // legacy ) , semantique inchangee .
+        if (lazyParentLoader != null && naturalKey != null) {
+            UUID cached = lazyParentLoader.getCachedId(naturalKey);
+            if (cached != null) {
+                // Promote dans l'index local pour eviter de retraverser
+                // le loader sur les acces ulterieurs ( WithRecursion
+                // peut iterer plusieurs fois sur la meme naturalkey ) .
+                if (idx != null) {
+                    idx.putIfAbsent(new NaturalKeyPattern(naturalKey, patternColumnName), cached);
+                }
+                return Optional.of(cached);
+            }
+            lazyParentLoader.request(naturalKey);
+            lazyParentLoader.flush();
+            UUID loaded = lazyParentLoader.getCachedId(naturalKey);
+            if (loaded != null) {
+                if (idx != null) {
+                    idx.putIfAbsent(new NaturalKeyPattern(naturalKey, patternColumnName), loaded);
+                }
+                return Optional.of(loaded);
+            }
+        }
+        return Optional.empty();
     }
 
     /**
