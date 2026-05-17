@@ -92,6 +92,19 @@ public class CascadeImportPipeline {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository workflowLogRepository;
 
+    /**
+     * Pont SPI cascade 3.3.0 -> workflow_log . Quand un futur preparator
+     * sera attache via {@code .withDataPreparator(...)} , ses emissions
+     * de sous-phases ( {@code CSV_REENCODING} , {@code PREWARM_REFS} ,
+     * etc . ) seront routees vers
+     * {@code workflowLogRepository.updatePhase(cid, phase)} par ce listener .
+     * En l'absence de preparator attache , l'interceptor reste silencieux
+     * ( zero overhead ) . Voir
+     * {@link fr.inra.oresing.workflow.cascade.preparation.PreparationPhaseListenerInterceptor} .
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private fr.inra.oresing.workflow.cascade.preparation.PreparationPhaseListenerInterceptor preparationPhaseListener;
+
     public CascadeImportPipeline(
             ImportProperties       importProperties,
             ImportProgressReporter progressReporter,
@@ -606,6 +619,16 @@ public class CascadeImportPipeline {
                             .withMaxErrors(maxErrors)
                             .withPipelineMode(effectivePipelineMode)
                             .withPipelineQueueCapacity(importProperties.getPipelineQueueCapacity());
+
+            // Cascade 3.3.0 : attache le listener PreparationInterceptor pour
+            // router les sous-phases emises par un futur DataPreparator vers
+            // workflow_log.metadata.phase . Sans preparator attache , aucune
+            // emission n'a lieu et l'interceptor reste silencieux . Le wiring
+            // ici est prospectif : il evite que chaque futur preparator ait
+            // a se soucier d'enregistrer son propre listener observability .
+            if (preparationPhaseListener != null) {
+                builder = builder.withInterceptor(preparationPhaseListener);
+            }
 
             // Sink parallelism wiring ( cascade 2.1.0 ) :
             //   - DIRECT_COPY + PER_CONNECTION_TEMP : sticky connection ,
