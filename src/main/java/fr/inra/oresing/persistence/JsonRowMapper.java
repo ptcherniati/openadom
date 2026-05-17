@@ -54,7 +54,6 @@ import java.util.stream.Collectors;
 @Primary
 public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
 
-    @Autowired
     private ServiceContainer serviceContainer;
     /**
      * Mapper json pour la persistence (dialogue avec la base de données)
@@ -62,8 +61,23 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
     @Getter
     private ObjectMapper jsonMapper;
 
+    /**
+     * Constructeur Spring : utiliser pour le bean géré par Spring (avec ServiceContainer).
+     * Le paramètre est injecté par le conteneur Spring (injection constructeur, Sonar S3306).
+     */
+    @Autowired
+    public JsonRowMapper(ServiceContainer serviceContainer) {
+        this.serviceContainer = serviceContainer;
+        buildMapper();
+    }
 
+    /**
+     * Constructeur local (sans serviceContainer) : réservé aux usages directs
+     * dans les repositories JDBC (new JsonRowMapper&lt;&gt;()) où le type cible
+     * ne nécessite pas la désérialisation de {@code BinaryFileDataset}.
+     */
     public JsonRowMapper() {
+        this.serviceContainer = null;
         buildMapper();
     }
 

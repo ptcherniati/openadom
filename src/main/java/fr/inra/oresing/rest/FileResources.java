@@ -3,6 +3,7 @@ package fr.inra.oresing.rest;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileInfos;
 import fr.inra.oresing.domain.ReferencedBinaryFiles;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.rest.model.data.BinaryFileResult;
 import fr.inra.oresing.rest.model.data.UserDescriptionResult;
 import fr.inra.oresing.rest.usecases.security.authorization.GetAllUsersUseCase;
@@ -69,7 +70,7 @@ public class FileResources {
                 filename = binaryFile.getName();
                 body = outputStream -> FileCopyUtils.copy(inputStream, outputStream);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new OreSiTechnicalException("Erreur d'entrée/sortie lors de la lecture du fichier binaire", e);
             }
 
             return ResponseEntity.ok()

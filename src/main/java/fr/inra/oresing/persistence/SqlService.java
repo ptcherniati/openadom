@@ -1,9 +1,9 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.domain.PolicyDescription;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.repository.authorization.role.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -18,8 +18,11 @@ import java.util.Optional;
 @Transactional()
 public class SqlService {
 
-    @Autowired
-    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+
+    public SqlService(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
+    }
 
 
     public void createSchema(final SqlSchema schema, final OreSiRole owner) {
@@ -179,7 +182,7 @@ public class SqlService {
             namedParameterJdbcTemplate.getJdbcTemplate().update(sqlTable);
             return true;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException("Erreur lors de la création de la table normalisée", e);
         }
     }
 

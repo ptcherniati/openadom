@@ -3,6 +3,7 @@ package fr.inra.oresing.rest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Range;
@@ -585,7 +586,7 @@ public class OreSiResources {
                 filename = binaryFile.getName();
                 body = outputStream -> FileCopyUtils.copy(inputStream, outputStream);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new OreSiTechnicalException("Erreur de lecture du fichier binaire", e);
             }
 
             return ResponseEntity.ok()
@@ -1346,9 +1347,7 @@ public class OreSiResources {
                     writer.write(cause.getMessage());
                     writer.write("\n\n");
                 }
-                StringWriter sw = new StringWriter();
-                cause.printStackTrace(new PrintWriter(sw));
-                writer.write(sw.toString());
+                writer.write(Throwables.getStackTraceAsString(cause));
             }
             zip.closeEntry();
         } catch (IOException ioe) {
@@ -1368,7 +1367,7 @@ public class OreSiResources {
                             }
                         });
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new OreSiTechnicalException("Erreur de nettoyage du répertoire temporaire", e);
             }
 
         }
@@ -1389,11 +1388,7 @@ public class OreSiResources {
             writer.write(e.getMessage());
             writer.newLine();
 
-            // Écrire la stack trace
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
-            writer.write(sw.toString());
+            writer.write(Throwables.getStackTraceAsString(e));
         }
     }
 

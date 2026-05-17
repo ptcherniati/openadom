@@ -1,6 +1,7 @@
 package fr.inra.oresing.rest.documentation;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
@@ -93,7 +94,7 @@ import java.util.Map;
                 loadExamplesFromJson().entrySet()
                         .forEach((entry) -> parameter.addExample(entry.getKey(), entry.getValue()));
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new OreSiTechnicalException("Erreur de chargement des exemples OpenAPI", e);
             }
         }
     }

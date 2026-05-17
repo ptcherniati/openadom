@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Throwables;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
@@ -246,7 +247,7 @@ public class BundleResources {
                                 manifest.set(mapper.readValue(manifestStream,
                                         new TypeReference<Map<String, List<String>>>() {}));
                             } catch (IOException e) {
-                                throw new RuntimeException(e);
+                                throw new OreSiTechnicalException("Erreur de lecture du manifeste du bundle", e);
                             }
                         });
 
@@ -259,7 +260,7 @@ public class BundleResources {
                                 references.set(mapper.readValue(referencesStream,
                                         new TypeReference<Map<String, List<String>>>() {}));
                             } catch (IOException e) {
-                                throw new RuntimeException(e);
+                                throw new OreSiTechnicalException("Erreur de lecture des références du bundle", e);
                             }
                         });
 
@@ -366,7 +367,7 @@ public class BundleResources {
                                 registerReactiveResult.bundleReport(),
                                 currentUser);
                     } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException("Erreur d'envoi du lien zip par mail", e);
                     } finally {
                         registerReactiveResult.add(new ReactiveTypeProgress(1), false);
                     }
@@ -402,7 +403,7 @@ public class BundleResources {
         if (ready.isEmpty()) {
             if (!remaining.isEmpty()) {
                 log.error("Cycle détecté ou dépendances non satisfaites pour: {}", remaining);
-                throw new RuntimeException("Cycle détecté dans les dépendances: " + remaining);
+                throw new OreSiTechnicalException("Cycle détecté dans les dépendances: " + remaining);
             }
             log.info("Toutes les références ont été traitées");
             return Mono.empty();
@@ -440,14 +441,14 @@ public class BundleResources {
                                 final String suffix = split.length > 1 ? "." + split[1] : null;
                                 tempFile = Files.createTempFile(BUNDLE_DIRECTORY, split[0], suffix).toFile();
                             } catch (IOException e) {
-                                throw new RuntimeException(e);
+                                throw new OreSiTechnicalException("Erreur de création du fichier temporaire pour le bundle", e);
                             }
                             tempFile.deleteOnExit();
                             try (OutputStream out = new FileOutputStream(tempFile);
                                  InputStream in = fileToUpload) {
                                 in.transferTo(out);
                             } catch (IOException e) {
-                                throw new RuntimeException(e);
+                                throw new OreSiTechnicalException("Erreur de copie du fichier dans le bundle", e);
                             }
                             try {
                                 // Bundle import : pas de mail individuel
@@ -465,7 +466,7 @@ public class BundleResources {
                                         false,
                                         false);
                             } catch (IOException e) {
-                                throw new RuntimeException(e);
+                                throw new OreSiTechnicalException("Erreur d'import des données du bundle", e);
                             }
                             final ReactiveResult reactiveResult = new ReactiveTypeInfo("LOADED_DATA",
                                     Map.of(PARAM_DATA_NAME, dataName, PARAM_FILE_NAME, fileName));
@@ -516,7 +517,7 @@ public class BundleResources {
                     }
                 });
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new OreSiTechnicalException("Erreur de nettoyage du répertoire temporaire du bundle", e);
             }
         }
     }
@@ -532,9 +533,7 @@ public class BundleResources {
                 writer.write(e.getMessage());
                 writer.newLine();
             }
-            StringWriter sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            writer.write(sw.toString());
+            writer.write(Throwables.getStackTraceAsString(e));
         }
     }
 }

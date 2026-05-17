@@ -4,14 +4,16 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.migration.context.DataInfo;
 import fr.inra.oresing.domain.application.configuration.migration.context.SchemaInfo;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class OreSiRepository {
 
-    @Autowired
-    private BeanFactory beanFactory;
+    private final BeanFactory beanFactory;
+
+    public OreSiRepository(BeanFactory beanFactory) {
+        this.beanFactory = beanFactory;
+    }
 
     public ApplicationRepository application() {
         return beanFactory.getBean(ApplicationRepository.class);

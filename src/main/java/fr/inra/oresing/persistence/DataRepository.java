@@ -14,6 +14,7 @@ import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
 import fr.inra.oresing.domain.data.read.query.DataRowIds;
 import fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.persistence.data.read.bundle.FileContent;
 import fr.inra.oresing.persistence.requestbuilder.data.DataRequestBuilder;
 import fr.inra.oresing.persistence.requestbuilder.data.SqlRequest;
@@ -350,7 +351,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         committed = true;
                         return totalUpserted;
                     } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException("Erreur d'entrée/sortie lors du stockage des données", e);
                     } finally {
                         if (!committed) {
                             try { connection.rollback(); } catch (SQLException ignored) { /* best effort */ }
