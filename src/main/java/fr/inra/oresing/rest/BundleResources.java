@@ -100,10 +100,10 @@ public class BundleResources {
     // ── executors ─────────────────────────────────────────────────────────────
     private final ExecutorService normalExecutorService;
     private final ExecutorService heavyExecutorService;
-    private static Path BUNDLE_DIRECTORY = Path.of("bundles");
+    private static Path bundleDirectory = Path.of("bundles");
     static {
         try {
-            Files.createDirectories(BUNDLE_DIRECTORY);
+            Files.createDirectories(bundleDirectory);
         } catch (IOException e) {
             log.error("Error creating bundle directory", e);
         }
@@ -162,7 +162,7 @@ public class BundleResources {
             Path tempZipDirectory = null;
             try {
                 SecurityContextHolder.setContext(securityContext);
-                tempZipDirectory = Files.createTempDirectory(BUNDLE_DIRECTORY, fileName);
+                tempZipDirectory = Files.createTempDirectory(bundleDirectory, fileName);
 
                 BuildBundleReport report = null;
                 try {
@@ -437,7 +437,7 @@ public class BundleResources {
                             File tempFile;
                             try {
                                 final String suffix = split.length > 1 ? "." + split[1] : null;
-                                tempFile = Files.createTempFile(BUNDLE_DIRECTORY, split[0], suffix).toFile();
+                                tempFile = Files.createTempFile(bundleDirectory, split[0], suffix).toFile();
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }

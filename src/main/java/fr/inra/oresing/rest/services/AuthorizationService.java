@@ -50,6 +50,7 @@ import org.springframework.util.MultiValueMap;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -760,7 +761,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
                 .map(Map::keySet)
                 .map(application::findDependentNodes)
                 .ifPresent(dependantsNodes::addAll);
-        Function<String, Boolean> isVersionningStrategy = application::strategyIsVersionning;
+        Predicate<String> isVersionningStrategy = application::strategyIsVersionning;
         return Objects.requireNonNull(createAuthorizationRequest)
                 .addRequiredOperationTypes(isVersionningStrategy)
                 .addDependantAuthorizations(dependantsNodes);

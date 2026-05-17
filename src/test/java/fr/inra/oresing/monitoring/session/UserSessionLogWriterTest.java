@@ -96,6 +96,7 @@ class UserSessionLogWriterTest {
 
     @Test
     @DisplayName("start() + logAsync() + stop() → flush flush via le thread daemon")
+    @SuppressWarnings("java:S2925")
     void startFlushesOnStop() throws Exception {
         UserSessionLogRepository repo = mock(UserSessionLogRepository.class);
         when(repo.insertBatch(any())).thenReturn(1);

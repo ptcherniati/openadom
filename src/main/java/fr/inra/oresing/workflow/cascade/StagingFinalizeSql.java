@@ -218,8 +218,8 @@ public final class StagingFinalizeSql {
 
         String deleteRefRefSql = "DELETE FROM " + schemaName + ".reference_reference"
                 + " WHERE referenceid IN ( SELECT referenceid FROM refref_pending )";
-        try (PreparedStatement ps = connection.prepareStatement(deleteRefRefSql)) {
-            ps.executeUpdate();
+        try (Statement stmt = connection.createStatement()) {
+            stmt.executeUpdate(deleteRefRefSql);
         }
 
         // 3) Batched UPSERT into target table : DELETE batch from staging RETURNING data ,

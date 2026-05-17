@@ -17,7 +17,6 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -160,7 +159,7 @@ class ExtractionRateLimiterTest {
             } catch (ExtractionRateLimitExceededException ignored) {
                 // expected
             }
-            verify(metrics, atLeastOnce()).recordExtractionRateLimited(eq("zip"));
+            verify(metrics, atLeastOnce()).recordExtractionRateLimited("zip");
             drainQuota();
         }
 

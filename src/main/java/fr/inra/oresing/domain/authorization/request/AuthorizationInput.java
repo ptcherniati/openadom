@@ -14,7 +14,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
-import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -96,13 +96,13 @@ public class AuthorizationInput {
                 .orElse(null);
     }
 
-    public AuthorizationInput withRestrictionWithDependants(String dataName, Function<String, Boolean> isVersionningStrategy) {
+    public AuthorizationInput withRestrictionWithDependants(String dataName, Predicate<String> isVersionningStrategy) {
         return new AuthorizationInput(
                 getRequiredAuthorizations(),
                 getTimeScope(),
                 getOperationTypes().stream()
                         .flatMap(operationType -> {
-                            final Boolean isVersionning = isVersionningStrategy.apply(dataName);
+                            final boolean isVersionning = isVersionningStrategy.test(dataName);
                             if(operationType==null){
                                 return Stream.of();
                             }
