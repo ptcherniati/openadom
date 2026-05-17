@@ -97,7 +97,7 @@ class DashboardWorkflowDtoTest {
                 .withChunks(List.of(chunk(0, "RUNNING"), chunk(1, "COMPLETED")));
         DashboardWorkflowDTO dto = DashboardWorkflowDTO.fromSnapshot(snap);
         assertThat(dto.chunks()).hasSize(2);
-        assertThat(dto.chunks().get(0).chunkIndex()).isEqualTo(0);
+        assertThat(dto.chunks().get(0).chunkIndex()).isZero();
         assertThat(dto.chunks().get(1).status()).isEqualTo("COMPLETED");
     }
 
@@ -153,7 +153,7 @@ class DashboardWorkflowDtoTest {
         WorkflowSnapshot snap = minimalSnapshot().withSinkChunks(List.of(sinkChunk()));
         DashboardWorkflowDTO dto = DashboardWorkflowDTO.fromSnapshot(snap);
         assertThat(dto.sinkChunks()).hasSize(1);
-        assertThat(dto.sinkChunks().get(0).chunkIndex()).isEqualTo(0);
+        assertThat(dto.sinkChunks().get(0).chunkIndex()).isZero();
         assertThat(dto.sinkChunks().get(0).workerName()).isEqualTo("sink-1");
     }
 
@@ -274,7 +274,7 @@ class DashboardWorkflowDtoTest {
         DashboardWorkflowDTO.Page page = new DashboardWorkflowDTO.Page(List.of(item), 42L, 10, 0);
         assertThat(page.total()).isEqualTo(42L);
         assertThat(page.limit()).isEqualTo(10);
-        assertThat(page.offset()).isEqualTo(0);
+        assertThat(page.offset()).isZero();
         assertThat(page.items()).hasSize(1);
     }
 }

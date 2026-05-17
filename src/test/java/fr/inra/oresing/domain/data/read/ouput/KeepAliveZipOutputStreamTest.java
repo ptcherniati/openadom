@@ -27,7 +27,7 @@ class KeepAliveZipOutputStreamTest {
         try (KeepAliveZipOutputStream zip = new KeepAliveZipOutputStream(baos)) {
             assertThat(zip).isNotNull();
         }
-        assertThat(baos.size()).isGreaterThan(0);
+        assertThat(baos.size()).isPositive();
     }
 
     @Test

@@ -75,7 +75,7 @@ class DashboardWorkflowDTOTest {
         DashboardWorkflowDTO dto = DashboardWorkflowDTO.fromSnapshot(snap);
 
         assertThat(dto.chunks()).hasSize(1);
-        assertThat(dto.chunks().get(0).chunkIndex()).isEqualTo(0);
+        assertThat(dto.chunks().get(0).chunkIndex()).isZero();
         assertThat(dto.chunks().get(0).status()).isEqualTo("RUNNING");
     }
 
@@ -124,7 +124,7 @@ class DashboardWorkflowDTOTest {
         assertThat(dto.importConfig()).isNotNull();
         assertThat(dto.importConfig().chunkSizeLines()).isEqualTo(1000);
         assertThat(dto.sinkChunks()).hasSize(1);
-        assertThat(dto.sinkChunks().get(0).chunkIndex()).isEqualTo(0);
+        assertThat(dto.sinkChunks().get(0).chunkIndex()).isZero();
     }
 
     // ─── inner records factory methods ──────────────────────────────────────────
@@ -232,6 +232,6 @@ class DashboardWorkflowDTOTest {
         assertThat(page.items()).hasSize(1);
         assertThat(page.total()).isEqualTo(42L);
         assertThat(page.limit()).isEqualTo(10);
-        assertThat(page.offset()).isEqualTo(0);
+        assertThat(page.offset()).isZero();
     }
 }

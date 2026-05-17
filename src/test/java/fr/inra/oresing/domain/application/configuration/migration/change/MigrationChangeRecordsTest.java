@@ -28,112 +28,112 @@ class MigrationChangeRecordsTest {
     @DisplayName("I18nImportHeaderChange – instanciation")
     void i18nImportHeaderChange() {
         I18nImportHeaderChange change = new I18nImportHeaderChange();
-        assertThat(change).isNotNull();
-        assertThat(change).isInstanceOf(ComponentChanged.class);
-        assertThat(change).isInstanceOf(I18nChange.class);
+        assertThat(change).isNotNull()
+                .isInstanceOf(ComponentChanged.class)
+                .isInstanceOf(I18nChange.class);
     }
 
     @Test
     @DisplayName("I18nSimpleChange – instanciation")
     void i18nSimpleChange() {
         I18nSimpleChange change = new I18nSimpleChange();
-        assertThat(change).isNotNull();
-        assertThat(change).isInstanceOf(I18nChange.class);
+        assertThat(change).isNotNull()
+                .isInstanceOf(I18nChange.class);
     }
 
     @Test
     @DisplayName("NaturalKeyChanged – instanciation")
     void naturalKeyChanged() {
         NaturalKeyChanged change = new NaturalKeyChanged();
-        assertThat(change).isNotNull();
-        assertThat(change).isInstanceOf(ComponentChanged.class);
+        assertThat(change).isNotNull()
+                .isInstanceOf(ComponentChanged.class);
     }
 
     @Test
     @DisplayName("SubmissionChanged – instanciation")
     void submissionChanged() {
         SubmissionChanged change = new SubmissionChanged();
-        assertThat(change).isNotNull();
-        assertThat(change).isInstanceOf(ComponentChanged.class);
+        assertThat(change).isNotNull()
+                .isInstanceOf(ComponentChanged.class);
     }
 
     @Test
     @DisplayName("IgnorableChange – instanciation et interface ConfigurationChange")
     void ignorableChange() {
         IgnorableChange change = new IgnorableChange();
-        assertThat(change).isNotNull();
-        assertThat(change).isInstanceOf(ConfigurationChange.class);
+        assertThat(change).isNotNull()
+                .isInstanceOf(ConfigurationChange.class);
     }
 
     @Test
     @DisplayName("AuthorizationChanged – instanciation et interfaces")
     void authorizationChanged() {
         AuthorizationChanged change = new AuthorizationChanged();
-        assertThat(change).isNotNull();
-        assertThat(change).isInstanceOf(ComponentChanged.class);
-        assertThat(change).isInstanceOf(ComponentChange.class);
+        assertThat(change).isNotNull()
+                .isInstanceOf(ComponentChanged.class)
+                .isInstanceOf(ComponentChange.class);
     }
 
     @Test
     @DisplayName("CheckerAdded – instanciation et CheckerChange")
     void checkerAdded() {
         CheckerAdded change = new CheckerAdded();
-        assertThat(change).isNotNull();
-        assertThat(change).isInstanceOf(CheckerChange.class);
-        assertThat(change).isInstanceOf(ComponentChanged.class);
+        assertThat(change).isNotNull()
+                .isInstanceOf(CheckerChange.class)
+                .isInstanceOf(ComponentChanged.class);
     }
 
     @Test
     @DisplayName("CheckerRemoved – instanciation et CheckerChange")
     void checkerRemoved() {
         CheckerRemoved change = new CheckerRemoved();
-        assertThat(change).isNotNull();
-        assertThat(change).isInstanceOf(CheckerChange.class);
-        assertThat(change).isInstanceOf(ComponentChanged.class);
+        assertThat(change).isNotNull()
+                .isInstanceOf(CheckerChange.class)
+                .isInstanceOf(ComponentChanged.class);
     }
 
     @Test
     @DisplayName("CheckerTypeChanged – instanciation et CheckerModified")
     void checkerTypeChanged() {
         CheckerTypeChanged change = new CheckerTypeChanged();
-        assertThat(change).isNotNull();
-        assertThat(change).isInstanceOf(CheckerModified.class);
-        assertThat(change).isInstanceOf(CheckerChange.class);
+        assertThat(change).isNotNull()
+                .isInstanceOf(CheckerModified.class)
+                .isInstanceOf(CheckerChange.class);
     }
 
     @Test
     @DisplayName("CheckerDefinitionChanged – instanciation et CheckerModified")
     void checkerDefinitionChanged() {
         CheckerDefinitionChanged change = new CheckerDefinitionChanged();
-        assertThat(change).isNotNull();
-        assertThat(change).isInstanceOf(CheckerModified.class);
-        assertThat(change).isInstanceOf(CheckerChange.class);
+        assertThat(change).isNotNull()
+                .isInstanceOf(CheckerModified.class)
+                .isInstanceOf(CheckerChange.class);
     }
 
     @Test
     @DisplayName("ComponentAdded – instanciation et ComponentChange")
     void componentAdded() {
         ComponentAdded change = new ComponentAdded();
-        assertThat(change).isNotNull();
-        assertThat(change).isInstanceOf(ComponentChange.class);
-        assertThat(change).isInstanceOf(DataChange.class);
+        assertThat(change).isNotNull()
+                .isInstanceOf(ComponentChange.class)
+                .isInstanceOf(DataChange.class);
     }
 
     @Test
     @DisplayName("ComponenRemoved – instanciation et ComponentChange")
     void componenRemoved() {
         ComponenRemoved change = new ComponenRemoved();
-        assertThat(change).isNotNull();
-        assertThat(change).isInstanceOf(ComponentChange.class);
-        assertThat(change).isInstanceOf(DataChange.class);
+        assertThat(change).isNotNull()
+                .isInstanceOf(ComponentChange.class)
+                .isInstanceOf(DataChange.class);
     }
 
     @Test
     @DisplayName("HierarchieChanged – instanciation et ComponentChanged")
     void hierarchieChanged() {
         HierarchieChanged change = new HierarchieChanged();
-        assertThat(change).isNotNull();
-        assertThat(change).isInstanceOf(ComponentChanged.class);
+        assertThat(change).isNotNull()
+                .isInstanceOf(ComponentChanged.class);
     }
 
     @Test
@@ -151,9 +151,9 @@ class MigrationChangeRecordsTest {
     @DisplayName("I18nDisplayPattenChanged – instanciation ComponentChanged et I18nChange")
     void i18nDisplayPattenChanged() {
         I18nDisplayPattenChanged change = new I18nDisplayPattenChanged();
-        assertThat(change).isNotNull();
-        assertThat(change).isInstanceOf(ComponentChanged.class);
-        assertThat(change).isInstanceOf(I18nChange.class);
+        assertThat(change).isNotNull()
+                .isInstanceOf(ComponentChanged.class)
+                .isInstanceOf(I18nChange.class);
     }
 
     @Test

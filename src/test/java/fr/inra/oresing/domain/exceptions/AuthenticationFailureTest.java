@@ -33,7 +33,7 @@ class AuthenticationFailureTest {
         assertThat(f.getParams()).containsKeys(
                 AuthenticationFailure.CONSTANT_LOGIN,
                 AuthenticationFailure.CONSTANT_EMAIL);
-        assertThat(f.getParams().get(AuthenticationFailure.CONSTANT_LOGIN)).isEqualTo("jdoe");
+        assertThat(f.getParams()).containsEntry(AuthenticationFailure.CONSTANT_LOGIN, "jdoe");
     }
 
     @Test
@@ -59,7 +59,7 @@ class AuthenticationFailureTest {
                 AuthenticationFailure.CONSTANT_LOGIN,
                 AuthenticationFailure.CONSTANT_EMAIL,
                 AuthenticationFailure.CONSTANT_ID);
-        assertThat(f.getParams().get(AuthenticationFailure.CONSTANT_LOGIN)).isEqualTo("alice");
+        assertThat(f.getParams()).containsEntry(AuthenticationFailure.CONSTANT_LOGIN, "alice");
     }
 
     @Test
@@ -91,8 +91,8 @@ class AuthenticationFailureTest {
                 AuthenticationFailure.CONSTANT_EMAIL,
                 AuthenticationFailure.CONSTANT_ID,
                 AuthenticationFailure.CONSTANT_STATE);
-        assertThat(f.getParams().get(AuthenticationFailure.CONSTANT_LOGIN)).isEqualTo("bob");
-        assertThat(f.getParams().get(AuthenticationFailure.CONSTANT_ID)).isEqualTo(id.toString());
+        assertThat(f.getParams()).containsEntry(AuthenticationFailure.CONSTANT_LOGIN, "bob");
+        assertThat(f.getParams()).containsEntry(AuthenticationFailure.CONSTANT_ID, id.toString());
     }
 
     @Test
@@ -108,8 +108,8 @@ class AuthenticationFailureTest {
         // null fields: login, email, id, state, authorizations
         LoginAdminResult result = new LoginAdminResult(null, null, null, null, false, false, null, null, null);
         AuthenticationFailure f = new AuthenticationFailure("MSG", result);
-        assertThat(f.getParams().get(AuthenticationFailure.CONSTANT_LOGIN)).isEqualTo("");
-        assertThat(f.getParams().get(AuthenticationFailure.CONSTANT_ID)).isEqualTo("");
-        assertThat(f.getParams().get(AuthenticationFailure.CONSTANT_SUBMISSION_SCOPE)).isEqualTo("");
+        assertThat(f.getParams()).containsEntry(AuthenticationFailure.CONSTANT_LOGIN, "");
+        assertThat(f.getParams()).containsEntry(AuthenticationFailure.CONSTANT_ID, "");
+        assertThat(f.getParams()).containsEntry(AuthenticationFailure.CONSTANT_SUBMISSION_SCOPE, "");
     }
 }

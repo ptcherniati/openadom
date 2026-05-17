@@ -36,7 +36,8 @@ class ComponentOrderByTest {
         @Test
         @DisplayName("null componentKey lève une exception")
         void nullComponentKeyThrows() {
-            assertThatThrownBy(() -> new ComponentOrderBy(null, DataRepository.Order.ASC, new ComponentTextType()))
+            ComponentTextType textType = new ComponentTextType();
+            assertThatThrownBy(() -> new ComponentOrderBy(null, DataRepository.Order.ASC, textType))
                     .isInstanceOf(RuntimeException.class);
         }
 

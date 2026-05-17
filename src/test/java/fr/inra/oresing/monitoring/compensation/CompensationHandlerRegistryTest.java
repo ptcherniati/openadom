@@ -52,7 +52,7 @@ class CompensationHandlerRegistryTest {
     @DisplayName("constructeur avec liste vide est valide (size = 0)")
     void emptyHandlers() {
         CompensationHandlerRegistry registry = new CompensationHandlerRegistry(List.of());
-        assertThat(registry.size()).isEqualTo(0);
+        assertThat(registry.size()).isZero();
     }
 
     @Test

@@ -65,14 +65,14 @@ class ReactiveProgressionTest {
         @DisplayName("constante PROGRESSION_FOR_READING_CONFIGURATION dans CreateApplicationProgression")
         void createProgressionConstant() {
             ReactiveProgression.DefaultCounter constant = ReactiveProgression.CreateApplicationProgression.PROGRESSION_FOR_READING_CONFIGURATION;
-            assertThat(constant.progress()).isGreaterThanOrEqualTo(0).isLessThanOrEqualTo(100);
+            assertThat(constant.progress()).isNotNegative().isLessThanOrEqualTo(100);
         }
 
         @Test
         @DisplayName("constante PROGRESSION_FOR_READING_CONFIGURATION dans ChangeApplicationProgression")
         void changeProgressionConstant() {
             ReactiveProgression.DefaultCounter constant = ReactiveProgression.ChangeApplicationProgression.PROGRESSION_FOR_READING_CONFIGURATION;
-            assertThat(constant.progress()).isGreaterThanOrEqualTo(0).isLessThanOrEqualTo(100);
+            assertThat(constant.progress()).isNotNegative().isLessThanOrEqualTo(100);
         }
     }
 

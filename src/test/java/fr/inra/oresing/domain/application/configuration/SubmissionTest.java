@@ -209,8 +209,9 @@ class SubmissionTest {
                 .submissionScope(scope)
                 .build();
 
+        Map<String, ComponentDescription> emptyParams = Map.of();
         Assertions.assertThrows(SiOreAuthorizationRequestException.class,
-                () -> submission.parseFileName(Map.of(), "data_notadate.csv", null));
+                () -> submission.parseFileName(emptyParams, "data_notadate.csv", null));
     }
 
     @Test

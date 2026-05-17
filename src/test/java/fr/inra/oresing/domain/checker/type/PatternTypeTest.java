@@ -28,8 +28,8 @@ class PatternTypeTest {
 
         @SuppressWarnings("unchecked")
         PatternType<String, FieldType<?>> copy = (PatternType<String, FieldType<?>>) pt.copy();
-        assertThat(copy).isNotSameAs(pt);
-        assertThat(copy).isNotNull();
+        assertThat(copy).isNotSameAs(pt)
+                .isNotNull();
     }
 
     @Test

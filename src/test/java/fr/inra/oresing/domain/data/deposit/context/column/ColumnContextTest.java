@@ -53,7 +53,7 @@ class ColumnContextTest {
         void secondaryConstructorFirstElement() {
             List<String> headers = List.of("alpha", "beta");
             ContextHeader h = new ContextHeader("alpha", headers);
-            assertThat(h.columnIndex()).isEqualTo(0);
+            assertThat(h.columnIndex()).isZero();
         }
 
         @Test

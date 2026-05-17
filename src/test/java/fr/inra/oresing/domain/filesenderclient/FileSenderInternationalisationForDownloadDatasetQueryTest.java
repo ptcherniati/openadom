@@ -127,9 +127,9 @@ class FileSenderInternationalisationForDownloadDatasetQueryTest {
             FileSenderInternationalisationForDownloadDatasetQuery sender =
                     senderFor(mockAppWithDefaultLang(Locale.FRENCH), Locale.FRENCH);
             String mail = sender.mailMessagefor("http://example.com", 7);
-            assertThat(mail).contains("http://example.com");
-            assertThat(mail).contains("7");
-            assertThat(mail).contains("Vous pourrez");
+            assertThat(mail).contains("http://example.com")
+                    .contains("7")
+                    .contains("Vous pourrez");
         }
 
         @Test
@@ -138,9 +138,9 @@ class FileSenderInternationalisationForDownloadDatasetQueryTest {
             FileSenderInternationalisationForDownloadDatasetQuery sender =
                     senderFor(mockAppWithDefaultLang(Locale.FRENCH), Locale.ENGLISH);
             String mail = sender.mailMessagefor("http://link.com", 14);
-            assertThat(mail).contains("http://link.com");
-            assertThat(mail).contains("14");
-            assertThat(mail).contains("You can");
+            assertThat(mail).contains("http://link.com")
+                    .contains("14")
+                    .contains("You can");
         }
     }
 

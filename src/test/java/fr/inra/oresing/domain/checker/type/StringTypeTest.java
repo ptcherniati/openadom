@@ -87,10 +87,10 @@ class StringTypeTest {
         gen.writeEndObject();
         gen.close();
         String json = baos.toString();
-        assertThat(json).contains("myKey");
-        // Jackson échappe les caractères de contrôle dans la sortie JSON
-        // (ex: newline → la séquence JSON \n, tab → \t, etc.)
-        assertThat(json).isNotEmpty();
+        assertThat(json).contains("myKey")
+                // Jackson échappe les caractères de contrôle dans la sortie JSON
+                // (ex: newline → la séquence JSON \n, tab → \t, etc.)
+                .isNotEmpty();
     }
 
     @Test
@@ -213,7 +213,7 @@ class StringTypeTest {
         ObjectMapper mapper = new ObjectMapper();
         com.fasterxml.jackson.databind.node.ArrayNode arr = mapper.createArrayNode();
         st.serializeAddArray(arr);
-        assertThat(arr.size()).isEqualTo(1);
+        assertThat(arr).hasSize(1);
         assertThat(arr.get(0).asText()).isEqualTo("item");
     }
 

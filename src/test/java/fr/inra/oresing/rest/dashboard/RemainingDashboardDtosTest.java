@@ -90,7 +90,7 @@ class RemainingDashboardDtosTest {
 
         assertThat(page.total()).isEqualTo(1L);
         assertThat(page.limit()).isEqualTo(10);
-        assertThat(page.offset()).isEqualTo(0);
+        assertThat(page.offset()).isZero();
         assertThat(page.items()).hasSize(1);
     }
 
@@ -125,7 +125,7 @@ class RemainingDashboardDtosTest {
 
         assertThat(dto.nbActive()).isEqualTo(3);
         assertThat(dto.nbFinalize()).isEqualTo(1);
-        assertThat(dto.nbRollback()).isEqualTo(0);
+        assertThat(dto.nbRollback()).isZero();
         assertThat(dto.nbCompleted()).isEqualTo(2);
         assertThat(dto.expectedTotalSum()).isEqualTo(9000L);
         assertThat(dto.finalCountSum()).isEqualTo(7000L);
