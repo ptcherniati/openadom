@@ -93,6 +93,20 @@ public final class WorkflowPhase {
     /** Reconstruction reference_reference apres bulk UPSERT ( shared SQL flow ) . */
     public static final String REFREF_REBUILD     = "REFREF_REBUILD";
 
+    /** Re-encodage CSV ( sous-phase de {@link #CASCADE_PREPARING} ) :
+     *  {@code DataImporter.prepareContextForDataTreatment} reecrit le body
+     *  CSV vers un fichier temp via CSVPrinter ( ou fast-path skip-reencoding )
+     *  pour que le chunker downstream puisse splitter les lignes en toute
+     *  securite ( quotes / newlines embarques ) . Peut prendre 30s-3min
+     *  sur 1M+ lignes . */
+    public static final String CSV_REENCODING     = "CSV_REENCODING";
+
+    /** Pre-warm du cache reference ( sous-phase de {@link #CASCADE_PREPARING} ) :
+     *  scan du fichier temp pour pre-calculer les valeurs de reference
+     *  vues >= 2 fois , evite N appels DB par chunk transform . Peut
+     *  prendre 30s-2min selon le nombre de references distinctes . */
+    public static final String PREWARM_REFS       = "PREWARM_REFS";
+
     /** Pre-DELETE counting via {@code SELECT count(*) ... WHERE binaryfile=?}
      *  pour annoncer recordsTotal au UI avant le DELETE potentiellement long . */
     public static final String COUNTING_ROWS      = "COUNTING_ROWS";

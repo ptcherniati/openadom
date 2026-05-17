@@ -45,8 +45,11 @@ import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.model.data.DefaultLineCheckerResult;
 import fr.inra.oresing.rest.model.data.LineCheckerResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
+import fr.inra.oresing.workflow.guard.BackendOverloadedException;
+import fr.inra.oresing.workflow.guard.HeapGuardService;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -134,6 +137,39 @@ public class DataService {
     private final org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate streamingNamedJdbcTemplate;
     private final org.springframework.jdbc.core.JdbcTemplate streamingJdbcTemplate;
 
+    /**
+     * Garde-fou heap JVM : refuse les nouveaux depots quand la pression
+     * memoire approche la limite . Symetrique a {@code PublishLifecycleService.startPhase1} .
+     *
+     * <p>Pourquoi sur le depot : le chargement CSV + referentiels en RAM
+     * pour checkers + parsing typage + staging est le plus gros consommateur
+     * RAM du backend . Refuser avant d'allouer evite le crash OOM brutal .
+     *
+     * <p>Optionnel ( {@code @Autowired(required=false)} ) : si le bean est
+     * desactive via {@code app.workflow.heap-guard.enabled=false} , aucun
+     * check n'est effectue . Voir {@link HeapGuardService} .
+     *
+     * @since openadom v25.05.17 - garde-fou depot symetrique publish
+     */
+    @Autowired(required = false)
+    private HeapGuardService heapGuard;
+
+    /**
+     * Repository workflow_log pour publier les sous-phases du dépôt
+     * ( {@code CSV_REENCODING} , {@code PREWARM_REFS} ) sur le workflow
+     * parent quand un cid est disponible via {@link CancellationContext} .
+     *
+     * <p>Pour le flux republish ( {@code PublishLifecyclePhase2Handler}
+     * appelle {@code addData} avec un parentCid actif ) , l'UI passe de
+     * "CASCADE_PREPARING" opaque a une vraie progression CSV_REENCODING
+     * -> PREWARM_REFS -> CASCADE_RUNNING . Pour le dépôt frais
+     * ( pas de parentCid avant cascade.execute ) , no-op .
+     *
+     * @since openadom v25.05.17 - sous-phases visibles dépôt
+     */
+    @Autowired(required = false)
+    private fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository workflowLogRepository;
+
     public DataService(
             OreSiRepository repo,
             JsonRowMapper jsonRowMapper,
@@ -191,6 +227,23 @@ public class DataService {
     public UUID addData(final Application application,
                         final String dataName,
                         final DataFile file) throws IOException {
+        // Garde-fou heap : refuse les nouveaux depots entrants quand la
+        // JVM est sous pression . Symetrique au check fait par
+        // PublishLifecycleService.startPhase1 sur le flux publish .
+        // Ne s'applique QU'a cette variante ( appelee par VersioningService
+        // au depot utilisateur ) - les variantes avec override ( appelees
+        // depuis Phase2Handler ) sont deja protegees en amont .
+        if (heapGuard != null && heapGuard.isUnderPressure()) {
+            HeapGuardService.HeapStats stats = heapGuard.currentStats();
+            log.warn("Depot REFUSE : heap pressure ( {} % >= seuil {} % ) - application={} datatype={}",
+                    String.format("%.1f", stats.smoothedUsagePct()),
+                    stats.refusePublishThresholdPct(),
+                    application != null ? application.getName() : null,
+                    dataName);
+            throw new BackendOverloadedException(
+                    stats.smoothedUsagePct(),
+                    stats.refusePublishThresholdPct());
+        }
         return addData(application, dataName, file,
                 fr.inra.oresing.workflow.cascade.config.CascadeRuntimeOverride.EMPTY);
     }
@@ -274,7 +327,22 @@ public class DataService {
                 lightweight);
         // Honour cascade.import.skip-csv-reencoding ( default false ) .
         boolean skipReencoding = cascadeImportPipeline.getImportProperties().isSkipCsvReencoding();
-        Path path = referenceImporter.prepareContextForDataTreatment(FileBomResolver.of(file), skipReencoding);
+        // PhaseEmitter : publie CSV_REENCODING / PREWARM_REFS sur le
+        // workflow parent quand un parentCid est actif ( republish via
+        // PublishLifecyclePhase2Handler ) . Pour un depot frais sans
+        // parentCid encore connu , no-op .
+        final java.util.UUID parentCid = CancellationContext.currentParentCid();
+        final java.util.function.Consumer<String> phaseEmitter =
+                (parentCid != null && workflowLogRepository != null)
+                        ? subPhase -> {
+                            try { workflowLogRepository.updatePhase(parentCid, subPhase); }
+                            catch (RuntimeException ex) {
+                                log.debug("updatePhase {} on parent {} failed ( best effort ) : {}",
+                                        subPhase, parentCid, ex.getMessage());
+                            }
+                        }
+                        : null;
+        Path path = referenceImporter.prepareContextForDataTreatment(FileBomResolver.of(file), skipReencoding, phaseEmitter);
         CancellationContext.checkpoint("addData prepareContext done");
         final String userId = serviceContainer.authenticationService().getCurrentUser().getId().toString();
         cascadeImportPipeline.execute(

@@ -118,6 +118,19 @@ public class PublishLifecycleService {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry workflowActiveRegistry;
 
+    /**
+     * Optional : garde-fou heap JVM . Si la pression heap depasse le
+     * seuil configure ( defaut 80% ) , les nouvelles demandes
+     * publish / unpublish / delete-file sont refusees avec un
+     * {@link fr.inra.oresing.workflow.guard.BackendOverloadedException}
+     * ( mappable HTTP 503 par le handler global ) pour eviter d'aggraver
+     * un OOM imminent .
+     * Required=false pour preserver tests unitaires + permettre la
+     * desactivation via {@code app.workflow.heap-guard.enabled=false} .
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private fr.inra.oresing.workflow.guard.HeapGuardService heapGuard;
+
     public PublishLifecycleService(
             ServiceContainer            serviceContainer,
             OreSiRepository             repository,
@@ -160,6 +173,25 @@ public class PublishLifecycleService {
 
     private UUID startPhase1(String applicationName, UUID fileId, Locale locale,
                              PublishLifecycleAction action) {
+        // ----------------------------------------------------------------
+        // Garde-fou heap : refuse toute nouvelle demande publish / unpublish /
+        // delete-file si le heap JVM est au-dessus du seuil configure
+        // ( defaut 80% ) . Cette decision arrive AVANT meme l'audit log car
+        // l'objectif est de proteger le backend d'un OOM imminent ; loguer
+        // une tentative supplementaire dans workflow_log ne ferait
+        // qu'aggraver la pression . Le client retry apres ~1 min , le temps
+        // que les workflows en cours liberent du heap .
+        if (heapGuard != null && heapGuard.isUnderPressure()) {
+            fr.inra.oresing.workflow.guard.HeapGuardService.HeapStats stats =
+                    heapGuard.currentStats();
+            log.warn("Phase 1 REFUSE : heap pressure ({}%/{}%) for {} on file {} ( application={} )",
+                    String.format("%.1f", stats.smoothedUsagePct()),
+                    stats.refusePublishThresholdPct(),
+                    action, fileId, applicationName);
+            throw new fr.inra.oresing.workflow.guard.BackendOverloadedException(
+                    stats.smoothedUsagePct(),
+                    stats.refusePublishThresholdPct());
+        }
         // ----------------------------------------------------------------
         // Audit invariant ( oa-live history visibility ) : TOUTE demande
         // publish / unpublish / delete-file doit apparaitre dans workflow_log ,

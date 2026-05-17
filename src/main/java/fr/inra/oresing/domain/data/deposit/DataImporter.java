@@ -40,6 +40,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -152,7 +153,15 @@ public class DataImporter {
      * CSVPrinter ) .
      */
     public Path prepareContextForDataTreatment(final FileBomResolver csv) throws IOException {
-        return prepareContextForDataTreatment(csv, false);
+        return prepareContextForDataTreatment(csv, false, null);
+    }
+
+    /**
+     * Backward-compatible overload sans emitter de phase ( pour tests
+     * existants et callers historiques qui ne tracent pas la phase ) .
+     */
+    public Path prepareContextForDataTreatment(final FileBomResolver csv, final boolean skipCsvReencoding) throws IOException {
+        return prepareContextForDataTreatment(csv, skipCsvReencoding, null);
     }
 
     /**
@@ -180,9 +189,16 @@ public class DataImporter {
      *
      * @param csv                input CSV ( header + data rows )
      * @param skipCsvReencoding  see above
+     * @param phaseEmitter       optional ; called with sous-phase names
+     *                           ( {@code CSV_REENCODING} , {@code PREWARM_REFS} )
+     *                           pour publier la progression de la phase
+     *                           {@code CASCADE_PREPARING} a l'UI . {@code null}
+     *                           -> no-op ( tests , appels historiques ) .
      * @return path to the headerless data temp file consumed by cascade
      */
-    public Path prepareContextForDataTreatment(final FileBomResolver csv, final boolean skipCsvReencoding) throws IOException {
+    public Path prepareContextForDataTreatment(final FileBomResolver csv,
+                                                final boolean skipCsvReencoding,
+                                                final Consumer<String> phaseEmitter) throws IOException {
         CancellationContext.checkpoint("prepareContextForDataTreatment entry");
         final String dataForChunkedTreatment = getDataImporterContext().isRecursive() ? "notSplitableDataForChunkedTreatment_" : "dataForChunkedTreatment_";
         Path tempFile = Files.createTempFile(dataForChunkedTreatment, ".tmp");
@@ -219,6 +235,13 @@ public class DataImporter {
         });
 
         // === Body write ===
+        // Emet la sous-phase CSV_REENCODING avant de demarrer l'ecriture .
+        // L'UI affiche "Re-encodage CSV" au lieu d'un opaque "CASCADE_PREPARING"
+        // pendant les 30s-3min que peut prendre cette etape sur 1M+ lignes .
+        if (phaseEmitter != null) {
+            try { phaseEmitter.accept(fr.inra.oresing.workflow.WorkflowPhase.CSV_REENCODING); }
+            catch (RuntimeException ignored) { /* best effort */ }
+        }
         // Cancellation : poll every CANCEL_POLL_ROWS rows so SLA 5s holds on
         // 1.1M-row files ( body write phase alone takes ~10 s without checkpoints ) .
         // Poll cost negligible ( atomic read on volatile flag ) .
@@ -265,6 +288,13 @@ public class DataImporter {
         // Un seul passage sur le fichier temp (déjà en cache OS ou SSD).
         // Mode lite : data deja validee , skip second-pass file scan .
         if (!lightweight && !refTypeByColumnName.isEmpty()) {
+            // Emet la sous-phase PREWARM_REFS pour que l'UI distingue ce
+            // segment ( 30s-2min selon le nombre de references distinctes )
+            // du CSV_REENCODING precedent .
+            if (phaseEmitter != null) {
+                try { phaseEmitter.accept(fr.inra.oresing.workflow.WorkflowPhase.PREWARM_REFS); }
+                catch (RuntimeException ignored) { /* best effort */ }
+            }
             prewarmReferenceCache(tempFile, refTypeByColumnName);
         }
 

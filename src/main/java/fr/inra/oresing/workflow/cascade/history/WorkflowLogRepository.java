@@ -379,9 +379,9 @@ public class WorkflowLogRepository {
     /**
      * Sub-projection des workflows zombies fraichement marques FAILED par
      * {@link #markZombies} . Sert au {@link WorkflowZombieSweeper} pour
-     * notifier l'admin par email apres detection ( seuls les workflows
-     * UNPUBLISH / DELETE_FILE sont marques FAILED par la fonction PG
-     * {@code oa_audit.mark_zombie_workflows} - voir migration V12 ) .
+     * notifier l'admin par email apres detection ( workflows
+     * IMPORT / UNPUBLISH / DELETE_FILE sont marques FAILED par la fonction
+     * PG {@code oa_audit.mark_zombie_workflows} - voir migration V13 ) .
      *
      * @param withinSeconds fenetre de temps depuis end_time ( typiquement
      *                      le cron interval du sweeper + marge )
@@ -394,10 +394,11 @@ public class WorkflowLogRepository {
                        start_time, end_time, fatal_error
                 FROM oa_audit.workflow_log
                 WHERE status = 'FAILED'
-                  AND workflow_type IN ('UNPUBLISH', 'DELETE_FILE')
+                  AND workflow_type IN ('IMPORT', 'UNPUBLISH', 'DELETE_FILE')
                   AND end_time IS NOT NULL
                   AND end_time > now() - (? || ' seconds')::interval
-                  AND fatal_error LIKE 'Operation interrompue%'
+                  AND ( fatal_error LIKE 'Operation interrompue%'
+                        OR fatal_error LIKE 'Depot interrompu%' )
                 ORDER BY end_time DESC
                 """;
         return jdbcTemplate.query(sql, (rs, i) -> new FailedZombieRow(

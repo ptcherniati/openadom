@@ -79,8 +79,8 @@ public class WorkflowZombieSweeper {
 
     /**
      * Email service via ObjectProvider ( lazy resolution ) pour notifier
-     * l'admin lors de la detection de zombies UNPUBLISH / DELETE_FILE
-     * marques FAILED par migration V12 .
+     * l'admin lors de la detection de zombies IMPORT / UNPUBLISH / DELETE_FILE
+     * marques FAILED par migration V13 ( V12 ne couvrait pas IMPORT ) .
      *
      * <p>Pourquoi ObjectProvider et pas {@code @Autowired Email} : un
      * autowire direct sur {@link Email} declenche
@@ -95,8 +95,9 @@ public class WorkflowZombieSweeper {
     @Autowired
     private ObjectProvider<Email> emailProvider;
 
-    /** Adresse email destinataire des alertes zombies UNPUBLISH / DELETE_FILE .
-     *  Vide ( defaut ) -> notifications desactivees . Configurer via
+    /** Adresse email destinataire des alertes zombies
+     *  IMPORT / UNPUBLISH / DELETE_FILE . Vide ( defaut ) -> notifications
+     *  desactivees . Configurer via
      *  {@code app.workflow.zombie-notify-email=admin@example.com} . */
     @Value("${app.workflow.zombie-notify-email:}")
     private String notifyEmail;
@@ -192,10 +193,11 @@ public class WorkflowZombieSweeper {
     }
 
     /**
-     * Notifie l'admin par email des zombies UNPUBLISH / DELETE_FILE
-     * fraichement marques FAILED ( cf migration V12 : ces types sont
+     * Notifie l'admin par email des zombies IMPORT / UNPUBLISH / DELETE_FILE
+     * fraichement marques FAILED ( cf migration V13 : ces types sont
      * marques FAILED au lieu de CANCELLED pour signaler que l'utilisateur
-     * doit relancer l'operation pour terminer le nettoyage des donnees ) .
+     * doit relancer l'operation - depot , depublication , ou suppression -
+     * pour reprendre l'operation ) .
      *
      * <p>Best-effort : aucune exception ne remonte ; un echec d'envoi
      * est logge en warn et le sweeper continue ( prochain tick reessayera
@@ -241,16 +243,46 @@ public class WorkflowZombieSweeper {
     }
 
     private static String buildEmailSubject(WorkflowLogRepository.FailedZombieRow row) {
-        String action = "UNPUBLISH".equals(row.workflowType())
-                ? "Depublication" : "Suppression";
-        return "[OpenADOM] " + action + " interrompue : " + row.resourceName();
+        String action = switch (row.workflowType()) {
+            case "IMPORT"      -> "Depot";
+            case "UNPUBLISH"   -> "Depublication";
+            case "DELETE_FILE" -> "Suppression";
+            default             -> row.workflowType();
+        };
+        return "[OpenADOM] " + action + " interrompu : " + row.resourceName();
     }
 
     private String buildEmailBody(WorkflowLogRepository.FailedZombieRow row) {
-        String action = "UNPUBLISH".equals(row.workflowType())
-                ? "depublication" : "suppression";
+        // Vocabulaire metier + consigne de relance par type de workflow .
+        String operation;
+        String recoveryHint;
+        String recoveryAction;
+        switch (row.workflowType()) {
+            case "IMPORT" -> {
+                operation       = "depot";
+                // Pour IMPORT : la tx UPSERT roll back , aucune donnee
+                // referencevalue partielle . User doit juste re-deposer .
+                recoveryHint    = "Aucune donnee n'a ete ingeree ( transaction rollback ) . ";
+                recoveryAction  = "Relancez le depot du fichier";
+            }
+            case "UNPUBLISH" -> {
+                operation       = "depublication";
+                recoveryHint    = "Les donnees peuvent etre partiellement supprimees . ";
+                recoveryAction  = "Relancez la depublication";
+            }
+            case "DELETE_FILE" -> {
+                operation       = "suppression";
+                recoveryHint    = "Les donnees peuvent etre partiellement supprimees . ";
+                recoveryAction  = "Relancez la suppression";
+            }
+            default -> {
+                operation       = row.workflowType().toLowerCase();
+                recoveryHint    = "";
+                recoveryAction  = "Verifiez l'etat de la ressource";
+            }
+        }
         StringBuilder b = new StringBuilder(512);
-        b.append("Une operation de ").append(action).append(" a ete interrompue ")
+        b.append("Une operation de ").append(operation).append(" a ete interrompue ")
                 .append("et marquee FAILED par le sweeper zombie .\n\n");
         b.append("Workflow id  : ").append(row.correlationId()).append('\n');
         b.append("Type         : ").append(row.workflowType()).append('\n');
@@ -267,9 +299,9 @@ public class WorkflowZombieSweeper {
                     .append(DateTimeFormatter.ISO_INSTANT.format(row.endTime())).append('\n');
         }
         b.append("\nMotif :\n").append(row.fatalError()).append("\n\n");
-        b.append("Les donnees peuvent etre partiellement supprimees . ")
-                .append("Relancez la ").append(action).append(" depuis l'interface ")
-                .append("pour terminer le nettoyage ( operation idempotente ) .\n");
+        b.append(recoveryHint)
+                .append(recoveryAction).append(" depuis l'interface ")
+                .append("pour reprendre l'operation ( operation idempotente ) .\n");
         if (frontBaseUrl != null && !frontBaseUrl.isBlank()) {
             b.append("\nLien historique : ")
                     .append(frontBaseUrl).append("/oa-live/#/history?cid=")
