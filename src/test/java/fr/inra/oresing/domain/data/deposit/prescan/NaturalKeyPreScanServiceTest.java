@@ -225,4 +225,113 @@ class NaturalKeyPreScanServiceTest {
         }
         assertThat(count.get()).isEqualTo(3);
     }
+
+    @Test
+    void extractCompositeNaturalKeys_composes_single_column() throws IOException {
+        String csv = """
+                site;treatment;date
+                S1;T1;2024-01-01
+                S2;T2;2024-02-01
+                S1;T3;2024-03-01
+                """;
+        try (Reader r = new StringReader(csv)) {
+            Set<String> nks = service.extractCompositeNaturalKeys(
+                    r, format, List.of("site"), "__");
+            assertThat(nks).containsExactlyInAnyOrder("S1", "S2");
+        }
+    }
+
+    @Test
+    void extractCompositeNaturalKeys_composes_multi_column_with_separator() throws IOException {
+        String csv = """
+                site;treatment;date
+                S1;T1;2024-01-01
+                S2;T2;2024-02-01
+                S1;T1;2024-03-01
+                S3;T1;2024-04-01
+                """;
+        try (Reader r = new StringReader(csv)) {
+            Set<String> nks = service.extractCompositeNaturalKeys(
+                    r, format, List.of("site", "treatment"), "__");
+            // S1__T1 ( dup ) , S2__T2 , S3__T1
+            assertThat(nks).containsExactlyInAnyOrder("S1__T1", "S2__T2", "S3__T1");
+        }
+    }
+
+    @Test
+    void extractCompositeNaturalKeys_skips_entirely_empty_rows() throws IOException {
+        String csv = """
+                site;treatment
+                S1;T1
+                ;
+                S2;T2
+                """;
+        try (Reader r = new StringReader(csv)) {
+            Set<String> nks = service.extractCompositeNaturalKeys(
+                    r, format, List.of("site", "treatment"), "__");
+            assertThat(nks).containsExactlyInAnyOrder("S1__T1", "S2__T2");
+        }
+    }
+
+    @Test
+    void extractCompositeNaturalKeys_keeps_rows_with_one_filled_component() throws IOException {
+        String csv = """
+                site;treatment
+                S1;
+                ;T2
+                """;
+        try (Reader r = new StringReader(csv)) {
+            Set<String> nks = service.extractCompositeNaturalKeys(
+                    r, format, List.of("site", "treatment"), "__");
+            // "S1__" et "__T2" sont conserves : ils ont au moins une composante
+            // non-vide ( la coherence avec downstream ingestion est garantie
+            // tant que le composing applique la meme regle ) .
+            assertThat(nks).containsExactlyInAnyOrder("S1__", "__T2");
+        }
+    }
+
+    @Test
+    void extractCompositeNaturalKeys_returns_empty_for_null_or_empty_columns() throws IOException {
+        String csv = "site;treatment\nS1;T1\n";
+        try (Reader r = new StringReader(csv)) {
+            Set<String> nks = service.extractCompositeNaturalKeys(
+                    r, format, null, "__");
+            assertThat(nks).isEmpty();
+        }
+        try (Reader r = new StringReader(csv)) {
+            Set<String> nks = service.extractCompositeNaturalKeys(
+                    r, format, List.of(), "__");
+            assertThat(nks).isEmpty();
+        }
+    }
+
+    @Test
+    void extractCompositeNaturalKeys_null_separator_treated_as_empty() throws IOException {
+        String csv = """
+                a;b
+                X;Y
+                A;B
+                """;
+        try (Reader r = new StringReader(csv)) {
+            Set<String> nks = service.extractCompositeNaturalKeys(
+                    r, format, List.of("a", "b"), null);
+            // separator null -> ""  => "XY" , "AB"
+            assertThat(nks).containsExactlyInAnyOrder("XY", "AB");
+        }
+    }
+
+    @Test
+    void extractCompositeNaturalKeys_missing_column_treated_as_empty() throws IOException {
+        String csv = """
+                site
+                S1
+                S2
+                """;
+        try (Reader r = new StringReader(csv)) {
+            // 'treatment' is absent ; composantes vide ; resultats "S1__" , "S2__"
+            Set<String> nks = service.extractCompositeNaturalKeys(
+                    r, format, List.of("site", "treatment"), "__");
+            assertThat(nks).containsExactlyInAnyOrder("S1__", "S2__");
+        }
+    }
 }

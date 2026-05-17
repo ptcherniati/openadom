@@ -178,4 +178,96 @@ public final class NaturalKeyPreScanService {
             StreamSupport.stream(parser.spliterator(), false).forEach(recordConsumer);
         }
     }
+
+    /**
+     * Extrait l'ensemble des naturalkeys composites distinctes du CSV ,
+     * une par ligne , en concatenant les valeurs des colonnes ordonnees
+     * dans {@code naturalKeyColumns} avec {@code separator} entre chaque
+     * composante . Brique pour l'Axe B ( wiring NaturalKeyPreScan dans
+     * DataImporter checker path ) : permet de pre-scanner un CSV de
+     * datatype recursif pour determiner quelles naturalkeys ( = identite
+     * de ligne ) seront utilisees par {@code WithRecursion} , afin de
+     * charger lazy uniquement ces rows depuis {@code referencevalue} via
+     * {@code DataRepository.getDataIdPerKeysByNaturalKeys} au lieu du
+     * full preload via {@code getDataIdPerKeys} .
+     *
+     * <h2>Streaming + bornee</h2>
+     *
+     * <p>Parse le CSV au fil de l'eau ( pas de materialisation complete ) .
+     * Sortie : {@code Set<String>} bornee au nombre de naturalkeys
+     * distinctes ( typiquement << taille du fichier ; sur les imports
+     * recursifs reels , borne par le nombre de noeuds dans la hierarchie ) .
+     *
+     * <h2>Lignes vides ignorees</h2>
+     *
+     * <p>Si TOUTES les composantes d'une ligne sont vides apres
+     * {@code strip()} , la ligne est ignoree ( aucune naturalkey valide
+     * possible ) . Sinon les composantes vides individuelles sont
+     * conservees ( ex : "a__" pour 2 columns ou seul col1 a une valeur ) ;
+     * la composition reste deterministe et reproductible cote ingestion
+     * downstream qui applique la meme regle .
+     *
+     * <h2>Limitations</h2>
+     *
+     * <ul>
+     *   <li>Pas de normalisation Ltree-friendly ( whitespace -> underscore ,
+     *       lowercase , etc . ) appliquee a la composition ici . Si la
+     *       config du datatype applique une normalisation , le caller doit
+     *       la reproduire avant lookup BDD pour matcher les rows
+     *       referencevalue .</li>
+     *   <li>Les colonnes absentes du CSV sont silencieusement traitees
+     *       comme valeurs vides ( pas d'exception ) .</li>
+     * </ul>
+     *
+     * @param csvReader            lecteur CSV ( ferme par le caller )
+     * @param format               format CSV ( delimiter , etc . )
+     * @param naturalKeyColumns    colonnes ordonnees formant la natural
+     *                             key composite ( cf {@code StandardDataDescription.naturalKey()} )
+     * @param separator            separateur entre composantes ( typiquement
+     *                             {@code "__"} ; cf
+     *                             {@code AsynchroneFileImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR} )
+     * @return set des naturalkeys composites distinctes ; vide si les
+     *         colonnes sont absentes du CSV ou si toutes les lignes sont
+     *         entierement vides
+     * @throws IOException si erreur lecture I/O
+     * @since openadom plan resilience Axe B
+     */
+    public Set<String> extractCompositeNaturalKeys(Reader csvReader,
+                                                    CSVFormat format,
+                                                    java.util.List<String> naturalKeyColumns,
+                                                    String separator) throws IOException {
+        if (naturalKeyColumns == null || naturalKeyColumns.isEmpty()) {
+            return Collections.emptySet();
+        }
+        if (separator == null) {
+            separator = "";
+        }
+        long t0 = System.nanoTime();
+        long rowsScanned = 0L;
+        Set<String> result = new HashSet<>();
+        CSVFormat withHeader = format.builder().setHeader().setSkipHeaderRecord(true).get();
+        try (CSVParser parser = CSVParser.parse(csvReader, withHeader)) {
+            for (CSVRecord record : parser) {
+                rowsScanned++;
+                String composed = composeCompositeNaturalKey(record, naturalKeyColumns, separator);
+                if (composed == null) {
+                    continue;
+                }
+                // Skip lignes entierement vides ( separateur uniquement ) .
+                // Une seule composante vide est gardee si une autre est non-vide
+                // ( la valeur composee finale n'est pas constituee que de
+                // separateurs ) .
+                if (composed.isEmpty() || composed.replace(separator, "").isEmpty()) {
+                    continue;
+                }
+                result.add(composed);
+            }
+        }
+        long elapsedMs = (System.nanoTime() - t0) / 1_000_000L;
+        if (log.isDebugEnabled()) {
+            log.debug("extractCompositeNaturalKeys : {} rows scanned in {} ms ; {} distinct composites for columns {}",
+                    rowsScanned, elapsedMs, result.size(), naturalKeyColumns);
+        }
+        return result;
+    }
 }
