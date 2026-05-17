@@ -57,10 +57,6 @@ public class RightsRequestService {
         RightsRequestRepository rightsRequestRepository = repository.getRepository(app).rightsRequestRepository();
     }
 
-    /**
-     *
-     */
-    //TODO use params
     List<RightsRequest> findRightsRequests(final Application application, final RightsRequestInfos rightsRequestInfos) {
         RightsRequestSearchHelper rightsRequestSearchHelper = new RightsRequestSearchHelper(application, rightsRequestInfos);
         String where = rightsRequestSearchHelper.buildWhereRequest();
