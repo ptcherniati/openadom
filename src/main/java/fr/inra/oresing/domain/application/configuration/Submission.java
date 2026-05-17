@@ -69,7 +69,7 @@ public record Submission(
                         Map.of(
                                 "startDate", value,
                                 "dateformat", DD_MM_YYYY_FOR_FILE,
-                                "fileNameFormat", fileNameParsing().createExampleSubmissionFileName()
+                                FILE_NAME_FORMAT_KEY, fileNameParsing().createExampleSubmissionFileName()
                         )
                 );
             }
@@ -86,7 +86,7 @@ public record Submission(
                         Map.of(
                                 "endDate", value,
                                 "dateformat", DD_MM_YYYY_FOR_FILE,
-                                "fileNameFormat", fileNameParsing().createExampleSubmissionFileName()
+                                FILE_NAME_FORMAT_KEY, fileNameParsing().createExampleSubmissionFileName()
                         )
                 );
             }

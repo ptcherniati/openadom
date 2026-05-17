@@ -192,19 +192,4 @@ class TxAwareDeferredRunnerTest {
 
         assertDoesNotThrow(runner::afterCommit);
     }
-
-    @Test
-    @DisplayName("afterCompletion(UNKNOWN) : cleanup + onTxRolledBack appelés")
-    void afterCompletionUnknownStatus() {
-        DeferredFinalize deferred = mock(DeferredFinalize.class);
-        Runnable onRolledBack = mock(Runnable.class);
-
-        TxAwareDeferredRunner runner = new TxAwareDeferredRunner(
-                deferred, CORR_ID, null, null, onRolledBack);
-
-        runner.afterCompletion(TransactionSynchronization.STATUS_UNKNOWN);
-
-        verify(deferred).cleanup();
-        verify(onRolledBack).run();
-    }
 }

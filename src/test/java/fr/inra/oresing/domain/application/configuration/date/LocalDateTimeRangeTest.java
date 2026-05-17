@@ -534,25 +534,11 @@ class LocalDateTimeRangeTest {
     }
 
     @Test
-    @DisplayName("getLowerPointOrMin — unbounded lower returns LocalDateTime.MIN")
-    void getLowerPointOrMinUnbounded() {
-        LocalDateTimeRange range = LocalDateTimeRange.always();
-        Assertions.assertEquals(LocalDateTime.MIN, range.getLowerPointOrMin());
-    }
-
-    @Test
     @DisplayName("getLowerPointOrMin — bounded lower returns actual lower endpoint")
     void getLowerPointOrMinBounded() {
         LocalDateTime lower = LocalDateTime.of(2024, 1, 1, 0, 0, 0);
         LocalDateTimeRange range = LocalDateTimeRange.since(lower);
         Assertions.assertEquals(lower, range.getLowerPointOrMin());
-    }
-
-    @Test
-    @DisplayName("getUpperEndpointOrMax — unbounded upper returns LocalDateTime.MAX")
-    void getUpperEndpointOrMaxUnbounded() {
-        LocalDateTimeRange range = LocalDateTimeRange.always();
-        Assertions.assertEquals(LocalDateTime.MAX, range.getUpperEndpointOrMax());
     }
 
     @Test

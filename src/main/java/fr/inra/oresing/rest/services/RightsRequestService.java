@@ -17,6 +17,7 @@ import fr.inra.oresing.persistence.RightsRequestRepository;
 import fr.inra.oresing.persistence.RightsRequestSearchHelper;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
+import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.rightsrequest.*;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -155,7 +156,7 @@ public class RightsRequestService {
         OreSiAuthorization authorizations = Optional.of(createRightsRequestRequest)
                 .map(CreateRightsRequestRequest::rightsRequest)
                 .map(authorization -> {
-                    List errors = new ArrayList<>();
+                    List<AuthorizationRequestError> errors = new ArrayList<>();
                     AuthorizationRequest authorizationRequestToAuthorizationRequest = serviceContainer.authorizationService().createAuthorizationRequestToAuthorizationRequest(
                             authorization,
                             application,

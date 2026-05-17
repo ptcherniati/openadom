@@ -386,9 +386,9 @@ public class IntegrityService {
         } catch (org.springframework.dao.EmptyResultDataAccessException e) {
             return DeletePreview.notFound(correlationId);
         }
-        String appName       = (String) meta.get("application_name");
+        String appName       = (String) meta.get(COL_APPLICATION_NAME);
         String dataType      = (String) meta.get("data_type");
-        String status        = (String) meta.get("status");
+        String status        = (String) meta.get(COL_STATUS);
         String resourceName  = (String) meta.get("resource_name");
         java.sql.Timestamp startTs = (java.sql.Timestamp) meta.get("start_time");
         java.time.Instant startTime = startTs != null ? startTs.toInstant() : null;
@@ -496,8 +496,8 @@ public class IntegrityService {
         // 1) Lecture metadata du workflow_log : besoin de application_name
         // ( pour resoudre le schema ) et de binaryFileId ( pour cibler les
         // referencevalue rows ) .
-        String metaSql = "SELECT application_name, metadata FROM oa_audit.workflow_log "
-                + " WHERE correlation_id = ?";
+        String metaSql = "SELECT " + COL_APPLICATION_NAME + ", metadata FROM oa_audit.workflow_log "
+                + SQL_WHERE_CORRELATION_ID;
         Map<String, Object> meta;
         try {
             meta = jdbc.queryForMap(metaSql, correlationId);
@@ -505,7 +505,7 @@ public class IntegrityService {
             return new DeleteResult(false, 0, 0, 0, 0, 0,
                     "Workflow inconnu : aucun row workflow_log pour " + correlationId);
         }
-        String appName = (String) meta.get("application_name");
+        String appName = (String) meta.get(COL_APPLICATION_NAME);
         UUID binaryFileId = extractBinaryFileId((String) meta.get(COL_METADATA));
 
         // 2) Suppression staging rows ( oa_staging schema partage ) .
