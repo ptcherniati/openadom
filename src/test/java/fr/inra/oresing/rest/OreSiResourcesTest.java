@@ -244,9 +244,20 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
             }
         }
 
-        mockMvc.perform(get("/api/v1/applications/multiplicity/data/reference1/json")
+        final String reference1Data = mockMvc.perform(get("/api/v1/applications/multiplicity/data/reference1/json")
                         .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
-                .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[0].values.projets", hasItems(4, 5, 9))).andExpect(jsonPath("$.rows[0].values.names", hasItems("toto1.1", "toto1.2", "toto1.3"))).andExpect(jsonPath("$.rows[*].values[?(@.names==['toto1.1','toto1.2','toto1.3'])]", hasSize(1))).andExpect(jsonPath("$.rows[0].values.durations", hasItems(-4.5, 5.6, 3.2))).andExpect(jsonPath("$.rows[0].values.dates", hasItems("date:2014-01-20T00:00:00:dd/MM/yyyy", "date:2014-06-23T00:00:00:dd/MM/yyyy")));
+                .andExpect(status().is2xxSuccessful())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        final List<Map<String, Object>> reference1Rows = JsonPath.parse(reference1Data).read("$.rows");
+        assertThat(reference1Rows).anySatisfy(row -> {
+            final Map<String, Object> values = (Map<String, Object>) row.get("values");
+            assertThat((List<Integer>) values.get("projets")).containsExactlyInAnyOrder(4, 5, 9);
+            assertThat((List<String>) values.get("names")).containsExactlyInAnyOrder("toto1.1", "toto1.2", "toto1.3");
+            assertThat((List<Double>) values.get("durations")).containsExactlyInAnyOrder(-4.5, 5.6, 3.2);
+            assertThat((List<String>) values.get("dates")).containsExactlyInAnyOrder("date:2014-01-20T00:00:00:dd/MM/yyyy", "date:2014-06-23T00:00:00:dd/MM/yyyy");
+        });
         mockMvc.perform(get("/api/v1/applications/multiplicity/data/reference2/json")
                         .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
                 .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[*].values.reference1[*]", hasItems("toto__toto1", "toto__toto2", "tutu__tutu1", "tutu__tutu2")));
