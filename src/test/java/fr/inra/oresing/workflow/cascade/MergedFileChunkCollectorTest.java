@@ -58,7 +58,7 @@ class MergedFileChunkCollectorTest {
     @DisplayName("initialize ( ) cree un fichier merged.csv vide")
     void initialize_creates_empty_merged_file() {
         assertThat(Files.exists(mergedPath)).isTrue();
-        assertThat(mergedPath).isEmpty();
+        assertThat(mergedPath).isEmptyFile();
     }
 
     @Test
@@ -196,7 +196,7 @@ class MergedFileChunkCollectorTest {
         MergedFileChunkCollector c = new MergedFileChunkCollector(target);
         c.initialize(new CollectorContext("cid", -1, null, null, null, tempDir));
 
-        assertThat(target).isEmpty();
+        assertThat(target).isEmptyFile();
     }
 
     @Test
@@ -211,7 +211,7 @@ class MergedFileChunkCollectorTest {
         Optional<Chunk<Path>> out = collector.finish().get();
         // Le merged file reste vide car le ghost-file n'a rien a apporter
         assertThat(out).isPresent(); // chunk enregistre → Optional presente mais file vide
-        assertThat(mergedPath).isEmpty();
+        assertThat(mergedPath).isEmptyFile();
     }
 
     @Test

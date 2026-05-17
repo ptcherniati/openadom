@@ -44,9 +44,9 @@ class PipelineContextRecordsTest {
 
         assertThat(entry.getLineNumber()).isEqualTo(42L);
         assertThat(entry.referenceDatumAfterChecking()).isSameAs(refDatum);
-        assertThat(record.naturalKey()).isEqualTo(naturalKey);
-        assertThat(record.hierarchicalKey()).isEqualTo(hierarchicalKey);
-        assertThat(record.patternColumnName()).isEqualTo("col");
+        assertThat(entry.naturalKey()).isEqualTo(naturalKey);
+        assertThat(entry.hierarchicalKey()).isEqualTo(hierarchicalKey);
+        assertThat(entry.patternColumnName()).isEqualTo("col");
     }
 
     @Test
@@ -72,8 +72,8 @@ class PipelineContextRecordsTest {
 
         assertThat(entry.lineNumber()).isEqualTo(99L);
         assertThat(entry.patternColumnName()).isEqualTo("col");
-        assertThat(record.referenceDatumBeforeChecking()).isSameAs(before);
-        assertThat(record.referenceDatumAfterChecking()).isSameAs(after);
-        assertThat(record.errors()).isEmpty();
+        assertThat(entry.referenceDatumBeforeChecking()).isSameAs(before);
+        assertThat(entry.referenceDatumAfterChecking()).isSameAs(after);
+        assertThat(entry.errors()).isEmpty();
     }
 }
