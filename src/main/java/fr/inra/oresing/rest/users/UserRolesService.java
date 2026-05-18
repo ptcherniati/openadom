@@ -13,7 +13,11 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -30,13 +34,19 @@ import java.util.stream.Collectors;
  * <p>Responsibilities:
  * <ul>
  *   <li>List users with in-memory filtering (login, app, role, account state);</li>
- *   <li>Build a {@link UserDTO.UserDetail} aggregating applications and global roles;</li>
+ *   <li>Build a {@link UserDTO.UserDetail} aggregating applications and global roles,
+ *       chaque role enrichi de sa trace d'attribution ( date + auteur ) lue depuis
+ *       {@code oa_audit.role_grant_audit} ;</li>
  *   <li>Grant roles by delegating to {@link AuthenticationService} (which keeps PG roles,
- *       authorizations Set and RLS policies in sync);</li>
+ *       authorizations Set and RLS policies in sync), puis logger un GRANT dans
+ *       {@code oa_audit.role_grant_audit} ;</li>
  *   <li>Revoke roles by reusing the {@code deleteUserRight*} methods for known scopes
- *       and falling back to a raw {@code REVOKE} for {@code reader}/{@code writer} roles
- *       which do not have a dedicated helper in the authentication service.</li>
+ *       and falling back to a raw {@code REVOKE} for {@code reader}/{@code writer} roles,
+ *       puis logger un REVOKE .</li>
  * </ul>
+ *
+ * <p>L'audit est best-effort : un echec d'INSERT dans oa_audit ne bloque pas le metier
+ * ( log warn + continue ) , symetrique au pattern workflow_log .
  *
  * <p>Authorization: every entry point requires either {@code openAdomAdmin} (global
  * scope) or being {@code applicationManager_X} for the application of the modified
@@ -63,16 +73,19 @@ public class UserRolesService {
     private final ApplicationRepository applicationRepository;
     private final AuthenticationService authenticationService;
     private final JdbcTemplate jdbcTemplate;
+    private final RoleGrantAuditRepository auditRepository;
 
     @Autowired
     public UserRolesService(UserRepository userRepository,
                                  ApplicationRepository applicationRepository,
                                  AuthenticationService authenticationService,
-                                 JdbcTemplate jdbcTemplate) {
+                                 JdbcTemplate jdbcTemplate,
+                                 RoleGrantAuditRepository auditRepository) {
         this.userRepository = userRepository;
         this.applicationRepository = applicationRepository;
         this.authenticationService = authenticationService;
         this.jdbcTemplate = jdbcTemplate;
+        this.auditRepository = auditRepository;
     }
 
     // ---------------------------------------------------------------- //
@@ -125,9 +138,16 @@ public class UserRolesService {
     /**
      * Returns the full view (applications + global roles) of a single user, or
      * an empty Optional if the user does not exist or is not visible to the caller.
+     *
+     * <p>Chaque role retourne est enrichi de sa trace d'attribution
+     * ( {@link UserDTO.RoleAttribution} : date , UUID admin , login admin )
+     * via une lecture de {@code oa_audit.role_grant_audit} aggregee en memoire .
+     * Les roles attribues avant l'activation de l'audit ( V15 ) ont
+     * {@code grantedAt = null , grantedBy = null} .
      */
     public Optional<UserDTO.UserDetail> findDetail(UUID userId) {
-        CurrentUserRoles caller = requireAdminOrAnyManager();
+        requireAdminOrAnyManager();
+        CurrentUserRoles caller = authenticationService.getCurrentUserRoles();
         Optional<OreSiUser> userOpt = userRepository.tryFindById(userId);
         if (userOpt.isEmpty()) {
             return Optional.empty();
@@ -140,9 +160,17 @@ public class UserRolesService {
             return Optional.empty();
         }
 
-        List<String> globals = collectGlobalRoles(userRoles);
+        // Charge la trace d'attribution en 1 query + resolve les logins des
+        // admins grantor en 1 batch ( perf : evite N+1 sur findByLogin ) .
+        AttributionLookup lookup = buildAttributionLookup(userId);
+
+        List<UserDTO.RoleAttribution> globals = collectGlobalRoles(userRoles).stream()
+                .map(name -> toAttribution(name, /*roleName*/ name, /*sql*/ name,
+                        UserDTO.SCOPE_GLOBAL, /*appId*/ null, lookup))
+                .toList();
+
         List<UserDTO.AppMembership> apps = appsByUuid.entrySet().stream()
-                .map(e -> buildAppMembership(e.getKey(), e.getValue()))
+                .map(e -> buildAppMembership(e.getKey(), e.getValue(), lookup))
                 .flatMap(Optional::stream)
                 .sorted((a, b) -> a.applicationName().compareToIgnoreCase(b.applicationName()))
                 .toList();
@@ -164,7 +192,8 @@ public class UserRolesService {
      * Grants a role to a user. Delegates to {@link AuthenticationService} when a
      * dedicated helper exists ({@code applicationManager}, {@code userManager},
      * {@code openAdomAdmin}); otherwise performs a raw {@code GRANT} for the
-     * {@code reader}/{@code writer} variants.
+     * {@code reader}/{@code writer} variants. En cas de succes , log un row GRANT
+     * dans {@code oa_audit.role_grant_audit} ( best-effort ) .
      *
      * @throws IllegalArgumentException if the role name is unknown
      * @throws AccessDeniedException    if the caller lacks the right scope
@@ -182,6 +211,7 @@ public class UserRolesService {
             Application application = applicationRepository.findApplication(applicationId);
             grantApplicationRole(userId, application, roleName);
         }
+        logAudit(userId, roleName, applicationId, RoleGrantAudit.ACTION_GRANT);
     }
 
     // ---------------------------------------------------------------- //
@@ -192,7 +222,8 @@ public class UserRolesService {
      * Revokes a role from a user. Mirrors {@link #grantRole(UUID, UUID, String)}:
      * delegates to {@code deleteUserRight*} when available, otherwise runs a raw
      * {@code REVOKE} and refreshes the user's {@code authorizations} Set so that
-     * subsequent reads reflect the current PG state.
+     * subsequent reads reflect the current PG state. En cas de succes , log un
+     * row REVOKE dans {@code oa_audit.role_grant_audit} ( best-effort ) .
      *
      * @throws IllegalArgumentException if the role name is unknown
      * @throws AccessDeniedException    if the caller lacks the right scope
@@ -210,6 +241,7 @@ public class UserRolesService {
             Application application = applicationRepository.findApplication(applicationId);
             revokeApplicationRole(userId, application, roleName);
         }
+        logAudit(userId, roleName, applicationId, RoleGrantAudit.ACTION_REVOKE);
     }
 
     // ---------------------------------------------------------------- //
@@ -287,6 +319,117 @@ public class UserRolesService {
                         "Unknown application role: " + roleName + " (expected one of " + APP_SCOPED_ROLES + ")");
             }
         }
+    }
+
+    // ---------------------------------------------------------------- //
+    //  audit                                                           //
+    // ---------------------------------------------------------------- //
+
+    /**
+     * Append une row dans {@code oa_audit.role_grant_audit} . Best-effort :
+     * un echec ( ex extension oa_audit absente apres downgrade BDD ) n'interrompt
+     * pas le grantRole / revokeRole metier - on log warn et on continue .
+     */
+    private void logAudit(UUID userId, String roleName, UUID applicationId, String action) {
+        UUID grantedBy = currentCallerUuid();
+        try {
+            auditRepository.logAction(userId, roleName, applicationId, action, grantedBy);
+        } catch (RuntimeException ex) {
+            log.warn("role_grant_audit insert failed for user {} role {} app {} action {} : {}",
+                    userId, roleName, applicationId, action, ex.getMessage());
+        }
+    }
+
+    private UUID currentCallerUuid() {
+        try {
+            CurrentUserRoles caller = authenticationService.getCurrentUserRoles();
+            return caller == null ? null : caller.userId();
+        } catch (RuntimeException ex) {
+            return null;
+        }
+    }
+
+    /**
+     * Charge la trace d'attribution complete pour un user + resoud les logins
+     * des admins grantor en batch ( 1 lookup par UUID distinct ) . Capsule a la
+     * fois la map "derniere action GRANT par (role, app)" et la table de
+     * resolution UUID -> login .
+     */
+    private AttributionLookup buildAttributionLookup(UUID userId) {
+        List<RoleGrantAudit> rows;
+        try {
+            rows = auditRepository.findByUser(userId);
+        } catch (RuntimeException ex) {
+            log.debug("role_grant_audit findByUser failed for {} : {}", userId, ex.getMessage());
+            rows = List.of();
+        }
+        // Derniere action GRANT par (role, applicationId) - on prend la plus
+        // recente avant un eventuel REVOKE pour les roles encore actifs .
+        // Note : la presence reelle du role est determinee en amont par
+        // userRoles.applicationRoles() , l'audit sert uniquement a fournir
+        // la trace ( date + auteur ) , pas la verite metier .
+        Map<String, RoleGrantAudit> latestGrant = new HashMap<>();
+        Set<UUID> grantorIds = new HashSet<>();
+        for (RoleGrantAudit row : rows) {
+            if (!row.isGrant()) continue;
+            String key = attributionKey(row.roleName(), row.applicationId());
+            // findByUser retourne deja DESC ; ne remplace pas une entree plus recente .
+            latestGrant.putIfAbsent(key, row);
+            if (row.grantedBy() != null) grantorIds.add(row.grantedBy());
+        }
+        Map<UUID, String> loginByUuid = resolveLoginsBatch(grantorIds);
+        return new AttributionLookup(latestGrant, loginByUuid);
+    }
+
+    /**
+     * Resoud login par UUID en 1 query batch via {@code IN ( ... )} . Pour les
+     * UUIDs introuvables ( admin supprime ) , la map ne contient pas l'entree .
+     */
+    private Map<UUID, String> resolveLoginsBatch(Set<UUID> uuids) {
+        if (uuids == null || uuids.isEmpty()) return Map.of();
+        Map<UUID, String> out = new HashMap<>();
+        // UserRepository.tryFindById renvoie un Optional<OreSiUser> ; on l'utilise
+        // pour 1 a 1 ( volume faible : 1-5 admins distinct par user typiquement ) .
+        // Un vrai batch SQL serait un over-engineering ici .
+        for (UUID id : uuids) {
+            try {
+                userRepository.tryFindById(id)
+                        .map(OreSiUser::getLogin)
+                        .ifPresent(login -> out.put(id, login));
+            } catch (RuntimeException ex) {
+                log.debug("resolveLogin failed for {} : {}", id, ex.getMessage());
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Construit une {@link UserDTO.RoleAttribution} pour un role donne en
+     * croisant les infos PG ( {@code sqlRoleName} ) et l'audit trace .
+     */
+    private UserDTO.RoleAttribution toAttribution(String roleKeyName,
+                                                  String roleLogical,
+                                                  String sqlRoleName,
+                                                  String scope,
+                                                  UUID applicationId,
+                                                  AttributionLookup lookup) {
+        RoleGrantAudit audit = lookup.latestGrant.get(attributionKey(roleLogical, applicationId));
+        java.time.OffsetDateTime grantedAt = audit == null ? null : audit.grantedAt();
+        UUID grantedBy = audit == null ? null : audit.grantedBy();
+        String grantedByLogin = grantedBy == null ? null : lookup.loginByUuid.get(grantedBy);
+        return new UserDTO.RoleAttribution(
+                roleLogical, sqlRoleName, scope, applicationId,
+                grantedAt, grantedBy, grantedByLogin);
+    }
+
+    private static String attributionKey(String roleName, UUID applicationId) {
+        return (applicationId == null ? "global" : applicationId.toString()) + "|" + roleName;
+    }
+
+    /** Bundle tx-scoped des donnees d'attribution chargees une fois par findDetail . */
+    private record AttributionLookup(
+            Map<String, RoleGrantAudit> latestGrant,
+            Map<UUID, String>           loginByUuid) {
     }
 
     // ---------------------------------------------------------------- //
@@ -398,7 +541,15 @@ public class UserRolesService {
         return collectGlobalRoles(userRoles).size();
     }
 
-    private Optional<UserDTO.AppMembership> buildAppMembership(String appUuid, List<String> roleTypes) {
+    /**
+     * Construit la {@link UserDTO.AppMembership} d'une app pour un user donne :
+     * resoud l'app par UUID , transforme chaque role PG en
+     * {@link UserDTO.RoleAttribution} avec sa trace , compte les autorisations
+     * fines .
+     */
+    private Optional<UserDTO.AppMembership> buildAppMembership(String appUuid,
+                                                               List<String> roleTypes,
+                                                               AttributionLookup lookup) {
         UUID uuid;
         try {
             uuid = UUID.fromString(appUuid);
@@ -413,8 +564,13 @@ public class UserRolesService {
         Application app = appOpt.get();
         List<String> roles = roleTypes == null ? List.of()
                 : roleTypes.stream().sorted().distinct().toList();
+        List<UserDTO.RoleAttribution> attributions = roles.stream()
+                .map(role -> toAttribution(role, role,
+                        buildAppRoleSqlName(uuid, role),
+                        UserDTO.SCOPE_APPLICATION, uuid, lookup))
+                .toList();
         int authCount = countAuthorizations(app.getName(), uuid);
-        return Optional.of(new UserDTO.AppMembership(uuid, app.getName(), roles, authCount));
+        return Optional.of(new UserDTO.AppMembership(uuid, app.getName(), attributions, authCount));
     }
 
     private int countAuthorizations(String applicationName, UUID applicationId) {

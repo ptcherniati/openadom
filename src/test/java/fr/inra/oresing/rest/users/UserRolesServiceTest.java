@@ -65,13 +65,15 @@ class UserRolesServiceTest {
     @Mock private ApplicationRepository applicationRepository;
     @Mock private AuthenticationService authenticationService;
     @Mock private JdbcTemplate jdbcTemplate;
+    @Mock private RoleGrantAuditRepository auditRepository;
 
     private UserRolesService service;
 
     @BeforeEach
     void setUp() {
         service = new UserRolesService(
-                userRepository, applicationRepository, authenticationService, jdbcTemplate);
+                userRepository, applicationRepository, authenticationService,
+                jdbcTemplate, auditRepository);
     }
 
     // ---------------------------------------------------------------- //
@@ -299,7 +301,13 @@ class UserRolesServiceTest {
         assertEquals("alice", detail.login());
         assertEquals(1, detail.applications().size());
         assertEquals("appA", detail.applications().get(0).applicationName());
-        assertTrue(detail.globalRoles().contains("openAdomAdmin"));
+        assertTrue(detail.globalRoles().stream()
+                .anyMatch(r -> "openAdomAdmin".equals(r.roleName())
+                        && UserDTO.SCOPE_GLOBAL.equals(r.scope())));
+        // Application reader attribution carries the SQL identifier .
+        assertTrue(detail.applications().get(0).roles().stream()
+                .anyMatch(r -> "reader".equals(r.roleName())
+                        && r.sqlRoleName().startsWith(APP_ID_A.toString())));
     }
 
     @Test
@@ -556,5 +564,57 @@ class UserRolesServiceTest {
                 () -> service.revokeRole(USER_ALICE, APP_ID_A, "reader"));
         verify(jdbcTemplate, never()).execute(anyString());
         verify(authenticationService, never()).deleteUserRightApplicationManager(any(), any());
+    }
+
+    // ---------------------------------------------------------------- //
+    //  audit logging                                                   //
+    // ---------------------------------------------------------------- //
+
+    @Test
+    @DisplayName("grantRole appends a GRANT row in oa_audit.role_grant_audit")
+    void grantLogsAuditEntry() {
+        asAdmin();
+        OreSiUser alice = user(USER_ALICE, "alice", "alice@x", OreSiUser.OreSiUserStates.active);
+        when(userRepository.tryFindById(USER_ALICE)).thenReturn(Optional.of(alice));
+        when(applicationRepository.findApplication(APP_ID_A))
+                .thenReturn(app(APP_ID_A, "appA"));
+
+        service.grantRole(USER_ALICE, APP_ID_A, "applicationManager");
+
+        verify(auditRepository).logAction(
+                eq(USER_ALICE), eq("applicationManager"), eq(APP_ID_A),
+                eq(RoleGrantAudit.ACTION_GRANT), any());
+    }
+
+    @Test
+    @DisplayName("revokeRole appends a REVOKE row in oa_audit.role_grant_audit")
+    void revokeLogsAuditEntry() {
+        asAdmin();
+        OreSiUser alice = user(USER_ALICE, "alice", "alice@x", OreSiUser.OreSiUserStates.active);
+        when(userRepository.tryFindById(USER_ALICE)).thenReturn(Optional.of(alice));
+        when(applicationRepository.findApplication(APP_ID_A))
+                .thenReturn(app(APP_ID_A, "appA"));
+
+        service.revokeRole(USER_ALICE, APP_ID_A, "applicationManager");
+
+        verify(auditRepository).logAction(
+                eq(USER_ALICE), eq("applicationManager"), eq(APP_ID_A),
+                eq(RoleGrantAudit.ACTION_REVOKE), any());
+    }
+
+    @Test
+    @DisplayName("audit failure does not block the underlying grant operation")
+    void grantContinuesOnAuditFailure() {
+        asAdmin();
+        OreSiUser alice = user(USER_ALICE, "alice", "alice@x", OreSiUser.OreSiUserStates.active);
+        when(userRepository.tryFindById(USER_ALICE)).thenReturn(Optional.of(alice));
+        when(applicationRepository.findApplication(APP_ID_A))
+                .thenReturn(app(APP_ID_A, "appA"));
+        org.mockito.Mockito.doThrow(new RuntimeException("oa_audit down"))
+                .when(auditRepository).logAction(any(), anyString(), any(), anyString(), any());
+
+        // No exception thrown to the caller .
+        service.grantRole(USER_ALICE, APP_ID_A, "applicationManager");
+        verify(authenticationService).addUserRightApplicationManager(eq(USER_ALICE), any());
     }
 }
