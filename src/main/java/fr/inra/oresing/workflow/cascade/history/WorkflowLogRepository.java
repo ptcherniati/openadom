@@ -124,29 +124,6 @@ public class WorkflowLogRepository {
              WHERE correlation_id = ?::uuid
             """;
 
-    /**
-     * P0 cancel-divergence fix : tente d'acquerir un lock {@code FOR UPDATE}
-     * sur la row {@code workflow_log} du correlationId , uniquement si elle
-     * est encore {@code IN_PROGRESS} . Retourne {@code true} si lock acquis
-     * et row encore in-progress . Retourne {@code false} si row terminale
-     * ( COMPLETED / CANCELLED / FAILED ) - dans ce cas , le caller doit
-     * refuser la finalisation pour eviter une divergence avec
-     * {@code binaryfile.published} ( cf scenario "presumed dead vs published"
-     * observe en prod ) .
-     *
-     * <p>Doit imperativement etre appele dans une transaction Spring active
-     * ( {@code PROPAGATION_REQUIRES_NEW} ) . Le lock {@code FOR UPDATE}
-     * empeche le {@code WorkflowZombieSweeper} de marquer la row CANCELLED
-     * pendant que Phase 2 finalise ( cooperation par lock DB , pas par flag
-     * in-process ) .
-     */
-    private static final String LOCK_IN_PROGRESS_FOR_UPDATE_SQL = """
-            SELECT 1 FROM oa_audit.workflow_log
-            WHERE correlation_id = ?::uuid
-              AND status = 'IN_PROGRESS'
-            FOR UPDATE
-            """;
-
     private final JdbcTemplate  jdbcTemplate;
     private final ObjectMapper  objectMapper = new ObjectMapper();
 
@@ -467,61 +444,6 @@ public class WorkflowLogRepository {
         Boolean exists = jdbcTemplate.queryForObject(sql, Boolean.class,
                 fileId.toString(), withinHours);
         return Boolean.TRUE.equals(exists);
-    }
-
-    /**
-     * P0 cancel-divergence fix : voir doc de {@link #LOCK_IN_PROGRESS_FOR_UPDATE_SQL} .
-     *
-     * @param correlationId workflow a verrouiller
-     * @return {@code true} si lock acquis et row {@code IN_PROGRESS} , {@code false}
-     *         si la row est terminale ( ou absente )
-     */
-    public boolean tryLockInProgress(java.util.UUID correlationId) {
-        if (correlationId == null) {
-            return false;
-        }
-        java.util.List<Integer> rows = jdbcTemplate.queryForList(
-                LOCK_IN_PROGRESS_FOR_UPDATE_SQL, Integer.class, correlationId.toString());
-        return !rows.isEmpty();
-    }
-
-    /**
-     * P0 cancel-divergence fix : variante de {@link #insertBatch} qui s'execute
-     * dans la transaction Spring courante au lieu d'ouvrir sa propre connexion
-     * avec BEGIN / COMMIT explicite . Indispensable pour le commit atomique
-     * Phase 2 publish ( {@code PublishLifecyclePhase2Handler.commitVisibleFlagAndSynthesis} )
-     * qui doit grouper dans UNE seule tx :
-     * <ol>
-     *   <li>SELECT FOR UPDATE sur workflow_log ( {@link #tryLockInProgress} ) ;</li>
-     *   <li>UPDATE binaryfile.published ;</li>
-     *   <li>buildSynthesis ( UPSERT oresisynthesis ) ;</li>
-     *   <li>UPDATE workflow_log SET status='COMPLETED' ( via cette methode ) .</li>
-     * </ol>
-     *
-     * <p>Sans cette atomicite , un cancel arrivant entre les etapes 3 et 4
-     * pouvait marquer la row CANCELLED en BDD tandis que binaryfile.published
-     * etait deja true ( divergence "Cancelled by admin vs publie le ..." ) .
-     * En groupant tout dans une tx avec lock FOR UPDATE des l'etape 1 , le
-     * cancel SQL ( {@code cancel_workflow} ) bloque sur le lock jusqu'au
-     * COMMIT de l'etape 4 ; il voit alors status='COMPLETED' , son WHERE
-     * NOT IN (terminal) rejette et le cancel devient no-op ( idempotent ) .
-     *
-     * <p>Utilise jdbcTemplate.queryForObject ( Spring-managed ) qui partage
-     * la connexion de la TransactionTemplate active . L'auto-commit issue
-     * documentee dans {@link #insertBatch} ne s'applique pas ici : Spring
-     * controle autoCommit=false sur toute la duree de la tx .
-     *
-     * @return {@code true} si la row a ete passee en terminal ( 1 row updated ) ,
-     *         {@code false} si la row n'etait plus {@code IN_PROGRESS}
-     *         ( filtree par le WHERE de record_workflow )
-     */
-    public boolean recordEndInCurrentTx(WorkflowLogEntry entry) {
-        if (entry == null) {
-            return false;
-        }
-        Boolean applied = jdbcTemplate.queryForObject(
-                INSERT_SQL, Boolean.class, extractEntryArgs(entry));
-        return Boolean.TRUE.equals(applied);
     }
 
     /**

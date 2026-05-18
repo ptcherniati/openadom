@@ -87,7 +87,10 @@ public class CacheCaptureService {
      */
     @Async
     public void captureCacheAsync(Application application, UUID fileId, String dataName, UUID correlationId) {
+        log.info("[cache-capture-async] entry : fileId={} dataName={} correlationId={} captureEnabled={}",
+                fileId, dataName, correlationId, publishProperties.isCaptureProcessedEnabled());
         if (!publishProperties.isCaptureProcessedEnabled()) {
+            log.warn("[cache-capture-async] skip - captureProcessedEnabled=false for fileId={}", fileId);
             return;
         }
         try {

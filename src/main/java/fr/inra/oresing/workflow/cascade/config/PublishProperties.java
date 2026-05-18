@@ -164,6 +164,7 @@ public class PublishProperties {
      */
     private volatile int synthesisLockTimeoutMinutes = 5;
 
+
     /**
      * Strategie de pipeline publication . Cf {@link #publishMode} doc .
      */

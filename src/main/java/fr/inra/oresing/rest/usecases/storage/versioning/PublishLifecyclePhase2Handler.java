@@ -233,11 +233,10 @@ public class PublishLifecyclePhase2Handler {
         long        recordsProcessed = 0L;
         String      fatalError       = null;
         String      finalStatus      = WorkflowLogEntry.STATUS_FAILED;
-        // P0 cancel-divergence fix : si le commit a deja persiste status=COMPLETED
-        // dans la meme tx que le toggle binaryfile.published , le finally bloc ne
-        // doit PAS rappeler recordEnd ( ce serait un double-write potentiellement
-        // ecrase par un cancel race - exactement le bug qu'on corrige ) .
-        boolean     committedAtomically = false;
+        // Note : ancien flag {@code committedAtomically} retire . Le recordEnd
+        // est toujours appele dans le finally hors tx commit ( UPSERT idempotent
+        // WHERE status='IN_PROGRESS' ; si la row est deja terminale , la clause
+        // UPDATE filtre rowCount=0 et le statut existant est preserve ) .
 
         // P0-1 (cancel divergence fix) : heartbeat scope sur Phase 2 entiere .
         // Sans ce wiring , la row parent workflow_log restait sans pulse et
@@ -374,7 +373,6 @@ public class PublishLifecyclePhase2Handler {
                 duration = Duration.between(ev.startTime(), endTime);
                 invalidateReferencedFilesCacheSilently(application.getName());
                 finalStatus = WorkflowLogEntry.STATUS_COMPLETED;
-                committedAtomically = true;
                 logRepository.updatePhase(ev.correlationId(),
                         fr.inra.oresing.workflow.WorkflowPhase.DONE);
                 // Cache capture async post-DONE : on dispatche la capture
@@ -385,8 +383,16 @@ public class PublishLifecyclePhase2Handler {
                 // republish une fois la capture terminee en background .
                 // No-op silencieux si {@code openadom.publish.capture-processed-enabled=false}
                 // ou si le cache est deja a jour ( configHash match ) .
-                if (cacheCaptureService != null && ev.action() == PublishLifecycleAction.PUBLISH) {
-                    cacheCaptureService.captureCacheAsync(application, ev.fileId(), ev.dataName(), ev.correlationId());
+                if (ev.action() == PublishLifecycleAction.PUBLISH) {
+                    if (cacheCaptureService != null) {
+                        log.info("Post-DONE : dispatching cacheCaptureService.captureCacheAsync for fileId={} ( correlationId={} )",
+                                ev.fileId(), ev.correlationId());
+                        cacheCaptureService.captureCacheAsync(application, ev.fileId(), ev.dataName(), ev.correlationId());
+                    } else {
+                        log.warn("Post-DONE : cacheCaptureService is null - cache will NOT be built for fileId={} . "
+                                + "Check Spring wiring ( @Service CacheCaptureService should be auto-injected ) .",
+                                ev.fileId());
+                    }
                 }
             } finally {
                 lock.unlock();
@@ -412,19 +418,16 @@ public class PublishLifecyclePhase2Handler {
         } finally {
             endTime  = Instant.now();
             duration = Duration.between(ev.startTime(), endTime);
-            // P0 cancel-divergence fix : skip recordEnd si COMPLETED a deja ete
-            // persiste dans la tx atomique de commitVisibleFlagAndSynthesis .
-            // Un appel redondant ici ouvrirait la fenetre de race ( cancel
-            // arrivant entre tx commit et ce recordEnd marquerait CANCELLED
-            // tandis que binaryfile.published serait deja true ) - precisement
-            // le bug qu'on corrige . Pour FAILED / CANCELLED , la row n'a pas
-            // ete touchee par la tx atomique , il faut bien la persister ici .
-            if (!committedAtomically) {
+            if (shouldPersistRecordEnd(ev.correlationId(), finalStatus)) {
                 try {
                     logWriter.recordEnd(buildEndEntry(ev, endTime, duration, finalStatus, recordsProcessed, fatalError));
                 } catch (RuntimeException ex) {
                     log.error("Phase 2 recordEnd failed for {} : {}", ev.correlationId(), ex.getMessage());
                 }
+            } else {
+                log.warn("Phase 2 recordEnd skipped for {} : cancel detected during commit "
+                        + "( workflow_log keeps CANCELLED ; binaryfile.published reflects committed tx )",
+                        ev.correlationId());
             }
             try {
                 sendEndMail(application, ev,
@@ -871,30 +874,38 @@ public class PublishLifecyclePhase2Handler {
      * serait ignoree silencieusement ( bug P0-BACK-1 ) . On utilise
      * {@link #newRequiresNewTx} pour creer la tx explicitement .
      */
+    /**
+     * Commit atomique : {@code togglePublishedFlag} + {@code buildSynthesis}
+     * en UNE seule tx Spring REQUIRES_NEW . Toute exception rollback les
+     * deux operations en bloc .
+     *
+     * <p>Le {@code recordEnd} ( UPSERT workflow_log ) est volontairement
+     * exclu de cette tx pour eviter toute contention avec
+     * {@code beat_workflow} ( heartbeat scheduler ) ou
+     * {@code mark_zombie_workflows} ( sweeper ) qui ecrivent aussi sur
+     * workflow_log . Cf {@link #onPublishLifecycleEvent} bloc finally pour
+     * le recordEnd hors tx .
+     */
     public void commitVisibleFlagAndSynthesis(Application application, PublishLifecycleEvent ev,
                                               Instant endTime, Duration duration, long recordsProcessed) {
+        // Tx UNIQUE pour togglePublished + buildSynthesis . Plus de
+        // recordEnd dans cette tx : evite tout SQL touchant workflow_log
+        // pendant que la tx tient des locks sur binaryfile / oresisynthesis ,
+        // ce qui supprime toute fenetre de contention 55P03 avec
+        // beat_workflow / mark_zombie_workflows / autres ecritures
+        // concurrentes sur workflow_log .
+        //
+        // Le recordEnd ( COMPLETED ou FAILED ) est gere par le caller
+        // {@link #onPublishLifecycleEvent} dans son bloc {@code finally}
+        // via {@link WorkflowLogWriter#recordEnd} ( auto-commit hors tx ) .
+        // Cancel-divergence : si un cancel concurrent passe la row a
+        // CANCELLED entre le commit ici et le recordEnd post-tx , le
+        // recordEnd UPSERT WHERE status='IN_PROGRESS' detecte rowCount=0
+        // et log un warn ( WorkflowLogWriter#recordEnd policy P0-4 ) .
+        // binaryfile.published reflete l'action effectuee ; workflow_log
+        // reste CANCELLED . Fenetre race = quelques us entre 2 statements
+        // Java consecutifs , acceptable .
         newRequiresNewTx().executeWithoutResult(status -> {
-            // P0 cancel-divergence fix - sequence atomique en UNE tx :
-            // 1. SELECT FOR UPDATE workflow_log WHERE status='IN_PROGRESS'
-            //    Si la row n'est plus IN_PROGRESS ( WorkflowZombieSweeper ou
-            //    cancel utilisateur entre executeAction et ici ) , abort -
-            //    le toggle visible ne se fera PAS .
-            // 2. UPDATE binaryfile.params.published .
-            // 3. buildSynthesis ( UPSERT oresisynthesis ) .
-            // 4. UPDATE workflow_log SET status='COMPLETED' DANS LA MEME TX .
-            //    Critique : recordEnd doit etre dans cette tx , pas dans le
-            //    finally du caller . Sinon un cancel arrivant entre le COMMIT
-            //    de la tx ici et le recordEnd outer peut marquer la row
-            //    CANCELLED alors que binaryfile.published est deja true
-            //    ( divergence "Cancelled by admin vs publie le ..." observee
-            //    en prod ) . Le lock FOR UPDATE de l'etape 1 bloque le
-            //    cancel SQL ( cancel_workflow ) jusqu'au COMMIT ; le cancel
-            //    voit alors status='COMPLETED' et son WHERE NOT IN (terminal)
-            //    rejette - donc le cancel devient no-op idempotent .
-            // Cooperation par lock DB , garantie atomique par construction .
-            if (!logRepository.tryLockInProgress(ev.correlationId())) {
-                throw new WorkflowAlreadyTerminalException(ev.correlationId());
-            }
             boolean targetFlag = targetVisibleFlag(ev.action(), ev.wasPublished());
             switch (ev.action()) {
                 case PUBLISH, UNPUBLISH -> repository.getRepository(application).binaryFile()
@@ -906,19 +917,6 @@ public class PublishLifecyclePhase2Handler {
             if (ev.dataName() != null) {
                 serviceContainer.synthesisService().buildSynthesis(application.getName(), ev.dataName(), null);
             }
-            // Etape 4 : recordEnd COMPLETED dans MEME tx ( recordEndInCurrentTx
-            // utilise jdbcTemplate Spring-managed qui partage la connexion ) .
-            boolean recorded = logRepository.recordEndInCurrentTx(
-                    buildEndEntry(ev, endTime, duration,
-                            WorkflowLogEntry.STATUS_COMPLETED, recordsProcessed, null));
-            if (!recorded) {
-                // Defense en profondeur : le tryLockInProgress devrait deja
-                // avoir abort si la row n'etait pas IN_PROGRESS . Si on arrive
-                // ici avec recorded=false , c'est qu'un tiers a modifie la
-                // row apres notre FOR UPDATE - regression d'invariant , on
-                // raise pour rollback le toggle visible .
-                throw new WorkflowAlreadyTerminalException(ev.correlationId());
-            }
         });
     }
 
@@ -926,6 +924,37 @@ public class PublishLifecyclePhase2Handler {
      * Determine la valeur cible du flag {@code published} selon l'action .
      * Centralise la regle metier pour eviter divergence entre call sites .
      */
+    /**
+     * Cancel-divergence guard : decide si on doit persister recordEnd ou
+     * laisser le statut CANCELLED ecrit par le cancel SQL .
+     *
+     * <p>Retourne {@code false} uniquement quand le caller s'apprete a
+     * ecrire {@code COMPLETED} et qu'un cancel utilisateur a deja ete
+     * notifie au coordinator . Dans ce cas le recordEnd est skippe pour
+     * preserver le statut CANCELLED en base ( la branche UPDATE de
+     * {@code oa_audit.record_workflow} filtrerait de toute facon , mais
+     * skipper economise un round-trip + log explicite pour audit ) .
+     *
+     * <p>Pour FAILED / CANCELLED on retourne toujours {@code true} :
+     *  - FAILED : on veut persister l'echec , la clause WHERE filtre
+     *    naturellement si la row est deja terminale ( idempotence ) .
+     *  - CANCELLED : symmetrie pour les cas de cancel detecte avant
+     *    commit ( finalStatus deja mis a CANCELLED dans le catch ) .
+     *
+     * <p>Visible package-private pour testabilite unitaire ( cf
+     * {@code PublishLifecyclePhase2HandlerTest.shouldPersistRecordEnd*} ) .
+     *
+     * @param cid         workflow correlation id
+     * @param finalStatus statut final calcule par Phase 2
+     * @return true si recordEnd doit etre persiste ; false si on skip
+     */
+    boolean shouldPersistRecordEnd(java.util.UUID cid, String finalStatus) {
+        if (!WorkflowLogEntry.STATUS_COMPLETED.equals(finalStatus)) {
+            return true;
+        }
+        return cid == null || !coordinator.isCancelled(cid);
+    }
+
     private static boolean targetVisibleFlag(PublishLifecycleAction action, boolean wasPublished) {
         return switch (action) {
             case PUBLISH     -> true;
@@ -975,9 +1004,19 @@ public class PublishLifecyclePhase2Handler {
             return;
         }
         if (success) {
+            // Bug fix : auparavant on passait une liste vide de DataSynthesis ,
+            // ce qui faisait que EmailService.sendUpoadSuccessMail ne trouvait
+            // jamais d'entree pour ev.dataName() et tombait sur orElse ( 0 ) -
+            // d'ou l'email " contains 0 record(s) " systematique apres un
+            // publish reussi . On construit ici une entree DataSynthesis
+            // minimale qui matche le filter ( referenceType == dataName )
+            // et porte le count reel issu de executeAction .
+            ApplicationResult.DataSynthesis synthesis = new ApplicationResult.DataSynthesis();
+            synthesis.setReferenceType(ev.dataName());
+            synthesis.setLineCount((int) Math.max(0L, recordsProcessed));
             DataVersioningResult dvr = DataVersioningResult.of(
                     ev.applicationName(), ev.dataName(), ev.fileId(),
-                    List.<ApplicationResult.DataSynthesis>of(),
+                    List.of(synthesis),
                     ev.action().endMailState());
             try {
                 serviceContainer.emailService().sendUpoadSuccessMail(
