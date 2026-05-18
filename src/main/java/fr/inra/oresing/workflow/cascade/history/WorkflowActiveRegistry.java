@@ -180,6 +180,20 @@ public class WorkflowActiveRegistry implements WorkflowListener {
         if (correlationId == null || count < 0) return;
         finalRowsByCid.computeIfAbsent(correlationId,
                 k -> new java.util.concurrent.atomic.AtomicLong()).set(count);
+
+        // Propage AUSSI au snapshot in-memory pour que DashboardWorkflowDTO.recordsProcessed
+        // ( lu par oa-live WorkflowDeleteProgress / WorkflowFinalizeBadge via le polling
+        // /api/v1/dashboard/active ) reflete la progression live . Sans ce propagate ,
+        // setFinalRowsAuthoritative ne mettait a jour qu'une side-map ignoree par les DTO
+        // de la vue active -> bar UNPUBLISH restait a 0 % toute la duree du DELETE chunked .
+        byCorrelationId.computeIfPresent(correlationId, (id, cur) -> {
+            // Calcule progressPercentage si recordsTotal connu , sinon null ( bar indeterminee ) .
+            Double pct = cur.recordsTotal() > 0
+                    ? (count * 100.0 / cur.recordsTotal())
+                    : null;
+            return cur.withProgress(count, cur.recordsFailed(), cur.chunksProcessed(),
+                                    pct, cur.bytesTotal());
+        });
     }
 
     public long stagingRows(UUID correlationId) {
