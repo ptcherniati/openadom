@@ -54,6 +54,11 @@ import java.util.Map;
 @SecurityRequirement(name = "Bearer Authentication")
 public class CacheAdminResources {
 
+    private static final String KEY_TTL_MINUTES = "ttlMinutes";
+    private static final String KEY_ENABLED = "enabled";
+    private static final String KEY_MAX_ENTRIES = "maxEntries";
+    private static final String KEY_ENTRIES = "entries";
+
     private final ServiceContainer serviceContainer;
     private final fr.inra.oresing.cache.CacheSizeEstimator cacheSizeEstimator;
     private final fr.inra.oresing.cache.CachePreloader cachePreloader;
@@ -109,7 +114,7 @@ public class CacheAdminResources {
         body.put("bytesByCache", report.bytesByCache());
         body.put("computedAt", report.computedAt().toString());
         body.put("durationMs", report.durationMs());
-        body.put("ttlMinutes", cacheSizeEstimator.ttlMinutes());
+        body.put(KEY_TTL_MINUTES, cacheSizeEstimator.ttlMinutes());
         body.put("totalBytes", report.bytesByCache().values().stream().mapToLong(Long::longValue).sum());
         return ResponseEntity.ok(body);
     }
@@ -243,25 +248,25 @@ public class CacheAdminResources {
         AuthorizationService authorizationService = serviceContainer.authorizationService();
         return ResponseEntity.ok(Map.of(
                 "filterList", Map.of(
-                        "enabled", dataService.isFilterListCacheEnabled(),
-                        "maxEntries", dataService.getFilterListCacheMaxEntries(),
-                        "ttlMinutes", 0,
-                        "entries", dataService.getFilterListCacheSize()
+                        KEY_ENABLED, dataService.isFilterListCacheEnabled(),
+                        KEY_MAX_ENTRIES, dataService.getFilterListCacheMaxEntries(),
+                        KEY_TTL_MINUTES, 0,
+                        KEY_ENTRIES, dataService.getFilterListCacheSize()
                 ),
                 "authorizationScopes", Map.of(
-                        "enabled", authorizationService.isAuthorizationScopesCacheEnabled(),
-                        "maxEntries", authorizationService.getAuthorizationScopesCacheMaxEntries(),
-                        "ttlMinutes", authorizationService.getAuthorizationScopesCacheTtlMinutes(),
-                        "entries", authorizationService.getAuthorizationScopesCacheSize()
+                        KEY_ENABLED, authorizationService.isAuthorizationScopesCacheEnabled(),
+                        KEY_MAX_ENTRIES, authorizationService.getAuthorizationScopesCacheMaxEntries(),
+                        KEY_TTL_MINUTES, authorizationService.getAuthorizationScopesCacheTtlMinutes(),
+                        KEY_ENTRIES, authorizationService.getAuthorizationScopesCacheSize()
                 ),
                 "checkedFormatComponents", Map.of(
-                        "enabled", dataService.isCheckedFormatComponentsCacheEnabled(),
-                        "maxEntries", dataService.getCheckedFormatComponentsCacheMaxEntries(),
-                        "ttlMinutes", dataService.getCheckedFormatComponentsCacheTtlMinutes(),
-                        "entries", dataService.getCheckedFormatComponentsCacheSize()
+                        KEY_ENABLED, dataService.isCheckedFormatComponentsCacheEnabled(),
+                        KEY_MAX_ENTRIES, dataService.getCheckedFormatComponentsCacheMaxEntries(),
+                        KEY_TTL_MINUTES, dataService.getCheckedFormatComponentsCacheTtlMinutes(),
+                        KEY_ENTRIES, dataService.getCheckedFormatComponentsCacheSize()
                 ),
                 "frontEtagDefaults", Map.of(
-                        "maxEntries", dataService.getFrontEtagCacheMaxEntries(),
+                        KEY_MAX_ENTRIES, dataService.getFrontEtagCacheMaxEntries(),
                         "maxBytesMb", dataService.getFrontEtagCacheMaxBytesMb()
                 )
         ));

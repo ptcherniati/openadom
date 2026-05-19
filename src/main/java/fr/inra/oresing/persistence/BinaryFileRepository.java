@@ -27,6 +27,9 @@ import java.util.*;
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BinaryFileRepository extends JsonTableInApplicationSchemaRepositoryTemplate<BinaryFile> implements fr.inra.oresing.domain.repository.file.BinaryFileRepository {
 
+    private static final String PARAM_DATATYPE = "datatype";
+    private static final String SQL_SELECT_PROCESSED_DATA = "SELECT processed_data FROM %s WHERE id = ?::uuid";
+
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -97,7 +100,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
         return new java.util.HashSet<>(getNamedParameterJdbcTemplate().queryForList(
                 query,
                 new MapSqlParameterSource()
-                        .addValue("datatype", dataType)
+                        .addValue(PARAM_DATATYPE, dataType)
                         .addValue("binaryfileIds", binaryfileIds),
                 String.class
         )).stream().map(UUID::fromString).collect(java.util.stream.Collectors.toSet());
@@ -156,7 +159,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
         return getNamedParameterJdbcTemplate().query(
                 query,
                 new MapSqlParameterSource()
-                        .addValue("datatype",dataType)
+                        .addValue(PARAM_DATATYPE,dataType)
                         .addValue("binaryfileIds", binaryfileIds),
                 new JsonRowMapper<ReferencedBinaryFiles>()
         );
@@ -187,7 +190,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
                 query,
                 new MapSqlParameterSource()
                         .addValue("application", getApplication().getId())
-                        .addValue("datatype", binaryFileDataset.getDatatype())
+                        .addValue(PARAM_DATATYPE, binaryFileDataset.getDatatype())
                         .addValue("from", binaryFileDataset.getFrom())
                         .addValue("to", binaryFileDataset.getTo())
                         .addValue("requiredAuthorizations", getJsonRowMapper().toJson(binaryFileDataset.getRequiredAuthorizations())),
@@ -469,7 +472,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
      * avant d'invoquer pour eviter un stream inutile .
      */
     public InputStream streamProcessedData(UUID fileId) {
-        String query = "SELECT processed_data FROM %s WHERE id = ?::uuid"
+        String query = SQL_SELECT_PROCESSED_DATA
                 .formatted(getTable().getSqlIdentifier());
         Long oid = jdbcTemplate.queryForObject(query, Long.class, fileId.toString());
         if (oid == null) {
@@ -588,7 +591,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
                 org.postgresql.largeobject.LargeObjectManager lom = pgConn.getLargeObjectAPI();
 
                 // 1 . unlink previous oid if any ( avoid orphan )
-                String selectOld = "SELECT processed_data FROM %s WHERE id = ?::uuid"
+                String selectOld = SQL_SELECT_PROCESSED_DATA
                         .formatted(getTable().getSqlIdentifier());
                 Long oldOid = jdbcTemplate.queryForObject(selectOld, Long.class, fileId.toString());
                 if (oldOid != null && oldOid > 0) {
@@ -699,7 +702,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
         tx.setPropagationBehavior(
                 org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         tx.executeWithoutResult(status -> {
-            String selectOid = "SELECT processed_data FROM %s WHERE id = ?::uuid"
+            String selectOid = SQL_SELECT_PROCESSED_DATA
                     .formatted(getTable().getSqlIdentifier());
             Long oid = jdbcTemplate.queryForObject(selectOid, Long.class, fileId.toString());
             if (oid != null && oid > 0) {

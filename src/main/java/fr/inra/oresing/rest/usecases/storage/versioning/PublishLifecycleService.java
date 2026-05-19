@@ -77,6 +77,9 @@ import java.util.UUID;
 @Service
 public class PublishLifecycleService {
 
+    private static final String KEY_FILE_ID = "fileId";
+    private static final String KEY_WAS_PUBLISHED = "wasPublished";
+
     /**
      * Types workflow_log eligibles a la supersedure ( un seul actif a la
      * fois sur un meme fileId ) . On exclut IMPORT car le cascade pipeline
@@ -350,7 +353,7 @@ public class PublishLifecycleService {
                     startTime, endTime, duration, WorkflowLogEntry.STATUS_FAILED,
                     0L, 0L, 0, 0L, List.of(),
                     "Phase 1 rejected : " + safeMessage(ex),
-                    Map.of("fileId", fileId.toString(), "wasPublished", wasPublished, "phase", "PHASE_1"),
+                    Map.of(KEY_FILE_ID, fileId.toString(), KEY_WAS_PUBLISHED, wasPublished, "phase", "PHASE_1"),
                     null, null));
         } catch (RuntimeException endEx) {
             log.error("Phase 1 audit recordEnd failed for {} : {}", correlationId, endEx.getMessage());
@@ -451,12 +454,12 @@ public class PublishLifecycleService {
                 : null;
         Map<String, Object> metadata = currentConfigHash != null
                 ? Map.of(
-                        "fileId",            fileId.toString(),
-                        "wasPublished",      wasPublished,
+                        KEY_FILE_ID,            fileId.toString(),
+                        KEY_WAS_PUBLISHED,      wasPublished,
                         "currentConfigHash", currentConfigHash)
                 : Map.of(
-                        "fileId",       fileId.toString(),
-                        "wasPublished", wasPublished);
+                        KEY_FILE_ID,       fileId.toString(),
+                        KEY_WAS_PUBLISHED, wasPublished);
         return new WorkflowLogEntry(
                 correlationId, type.name(), userId, userLogin,
                 applicationName, dataName, fileName,

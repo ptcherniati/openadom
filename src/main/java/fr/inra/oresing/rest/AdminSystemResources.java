@@ -75,6 +75,18 @@ public class AdminSystemResources {
     /** Cap maximum pour eviter de remonter trop de rows en un seul appel . */
     private static final int MAX_LIMIT = 500;
 
+    private static final String KEY_APPLICATION_NAME = "applicationName";
+    private static final String KEY_LAST_UPDATE = "lastUpdate";
+    private static final String KEY_ERROR = "error";
+    private static final String KEY_FILE_ID = "fileId";
+    private static final String TBL_COUNT_STATS = ".referencevalue_count_stats";
+    private static final String TBL_VERSIONING_SCOPE = ".data_versioning_scope_cache";
+    private static final String TBL_SYNTHESIS = ".oresisynthesis";
+    private static final String TBL_BINARYFILE = ".\"binaryfile\"";
+    private static final String SQL_SELECT_COUNT = "SELECT count(*) FROM ";
+    private static final String SQL_WHERE = " WHERE ";
+    private static final String SQL_AND = " AND ";
+
     private final ServiceContainer serviceContainer;
     private final JdbcTemplate jdbc;
     private final fr.inra.oresing.rest.usecases.admin.BuildCacheService buildCacheService;
@@ -126,7 +138,7 @@ public class AdminSystemResources {
         String schema = quoteIdent(application.getName());
 
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("applicationName", application.getName());
+        body.put(KEY_APPLICATION_NAME, application.getName());
         body.put("countStats", countStatsSummary(schema));
         body.put("dataVersioningScope", dataVersioningScopeSummary(schema));
         body.put("synthesis", synthesisSummary(schema));
@@ -137,17 +149,17 @@ public class AdminSystemResources {
         Map<String, Object> m = new LinkedHashMap<>();
         try {
             Long rows = jdbc.queryForObject(
-                    "SELECT count(*) FROM " + schema + ".referencevalue_count_stats",
+                    SQL_SELECT_COUNT + schema + TBL_COUNT_STATS,
                     Long.class);
             Timestamp lastUpdate = jdbc.queryForObject(
-                    "SELECT max(updated_at) FROM " + schema + ".referencevalue_count_stats",
+                    "SELECT max(updated_at) FROM " + schema + TBL_COUNT_STATS,
                     Timestamp.class);
             m.put("rows", rows == null ? 0L : rows);
-            m.put("lastUpdate", lastUpdate == null ? null : lastUpdate.toInstant().toString());
+            m.put(KEY_LAST_UPDATE, lastUpdate == null ? null : lastUpdate.toInstant().toString());
         } catch (RuntimeException e) {
             log.warn("countStats summary failed for {} : {}", schema, e.getMessage());
             m.put("rows", 0L);
-            m.put("error", e.getMessage());
+            m.put(KEY_ERROR, e.getMessage());
         }
         return m;
     }
@@ -156,21 +168,21 @@ public class AdminSystemResources {
         Map<String, Object> m = new LinkedHashMap<>();
         try {
             Long rows = jdbc.queryForObject(
-                    "SELECT count(*) FROM " + schema + ".data_versioning_scope_cache",
+                    SQL_SELECT_COUNT + schema + TBL_VERSIONING_SCOPE,
                     Long.class);
             Timestamp lastUpdate = jdbc.queryForObject(
-                    "SELECT max(computed_at) FROM " + schema + ".data_versioning_scope_cache",
+                    "SELECT max(computed_at) FROM " + schema + TBL_VERSIONING_SCOPE,
                     Timestamp.class);
             Long sizeBytes = jdbc.queryForObject(
                     "SELECT pg_total_relation_size('" + schema + ".data_versioning_scope_cache')",
                     Long.class);
             m.put("rows", rows == null ? 0L : rows);
-            m.put("lastUpdate", lastUpdate == null ? null : lastUpdate.toInstant().toString());
+            m.put(KEY_LAST_UPDATE, lastUpdate == null ? null : lastUpdate.toInstant().toString());
             m.put("sizeBytes", sizeBytes == null ? 0L : sizeBytes);
         } catch (RuntimeException e) {
             log.warn("dataVersioningScope summary failed for {} : {}", schema, e.getMessage());
             m.put("rows", 0L);
-            m.put("error", e.getMessage());
+            m.put(KEY_ERROR, e.getMessage());
         }
         return m;
     }
@@ -179,17 +191,17 @@ public class AdminSystemResources {
         Map<String, Object> m = new LinkedHashMap<>();
         try {
             Long rows = jdbc.queryForObject(
-                    "SELECT count(*) FROM " + schema + ".oresisynthesis",
+                    SQL_SELECT_COUNT + schema + TBL_SYNTHESIS,
                     Long.class);
             Timestamp lastUpdate = jdbc.queryForObject(
-                    "SELECT max(updatedate) FROM " + schema + ".oresisynthesis",
+                    "SELECT max(updatedate) FROM " + schema + TBL_SYNTHESIS,
                     Timestamp.class);
             m.put("rows", rows == null ? 0L : rows);
-            m.put("lastUpdate", lastUpdate == null ? null : lastUpdate.toInstant().toString());
+            m.put(KEY_LAST_UPDATE, lastUpdate == null ? null : lastUpdate.toInstant().toString());
         } catch (RuntimeException e) {
             log.warn("synthesis summary failed for {} : {}", schema, e.getMessage());
             m.put("rows", 0L);
-            m.put("error", e.getMessage());
+            m.put(KEY_ERROR, e.getMessage());
         }
         return m;
     }
@@ -229,27 +241,27 @@ public class AdminSystemResources {
         StringBuilder where = new StringBuilder();
         List<Object> params = new ArrayList<>();
         if (refType != null && !refType.isBlank()) {
-            where.append(where.length() == 0 ? " WHERE " : " AND ");
+            where.append(where.length() == 0 ? SQL_WHERE : SQL_AND);
             where.append(" referencetype = ? ");
             params.add(refType);
         }
         if ("references".equalsIgnoreCase(kind)) {
-            where.append(where.length() == 0 ? " WHERE " : " AND ");
+            where.append(where.length() == 0 ? SQL_WHERE : SQL_AND);
             where.append(" referencetype LIKE 'tr\\_%' ESCAPE '\\' ");
         } else if ("data".equalsIgnoreCase(kind)) {
-            where.append(where.length() == 0 ? " WHERE " : " AND ");
+            where.append(where.length() == 0 ? SQL_WHERE : SQL_AND);
             where.append(" referencetype LIKE 't\\_%' ESCAPE '\\' AND referencetype NOT LIKE 'tr\\_%' ESCAPE '\\' ");
         }
 
         Long total = jdbc.queryForObject(
-                "SELECT count(*) FROM " + schema + ".referencevalue_count_stats" + where,
+                SQL_SELECT_COUNT + schema + TBL_COUNT_STATS + where,
                 params.toArray(), Long.class);
 
         params.add(l);
         params.add(o);
         List<Map<String, Object>> items = jdbc.query(
                 "SELECT referencetype, line_count, updated_at "
-                + "FROM " + schema + ".referencevalue_count_stats"
+                + "FROM " + schema + TBL_COUNT_STATS
                 + where
                 + " ORDER BY referencetype ASC LIMIT ? OFFSET ?",
                 params.toArray(),
@@ -305,14 +317,14 @@ public class AdminSystemResources {
                 UUID.fromString(userId);
             } catch (IllegalArgumentException ex) {
                 return ResponseEntity.badRequest().body(Map.of(
-                        "error", "userId must be a valid UUID : " + userId));
+                        KEY_ERROR, "userId must be a valid UUID : " + userId));
             }
             where.append(" AND user_id = ?::uuid ");
             params.add(userId);
         }
 
         Long total = jdbc.queryForObject(
-                "SELECT count(*) FROM " + schema + ".data_versioning_scope_cache" + where,
+                SQL_SELECT_COUNT + schema + TBL_VERSIONING_SCOPE + where,
                 params.toArray(), Long.class);
 
         params.add(l);
@@ -320,7 +332,7 @@ public class AdminSystemResources {
         List<Map<String, Object>> items = jdbc.query(
                 "SELECT application::text, reference_type, column_name, user_id::text, "
                 + "       visible_values::text AS visible_values_json, computed_at "
-                + "FROM " + schema + ".data_versioning_scope_cache"
+                + "FROM " + schema + TBL_VERSIONING_SCOPE
                 + where
                 + " ORDER BY reference_type, column_name, user_id LIMIT ? OFFSET ?",
                 params.toArray(),
@@ -366,7 +378,7 @@ public class AdminSystemResources {
         }
 
         Long total = jdbc.queryForObject(
-                "SELECT count(*) FROM " + schema + ".oresisynthesis" + where,
+                SQL_SELECT_COUNT + schema + TBL_SYNTHESIS + where,
                 params.toArray(), Long.class);
 
         params.add(l);
@@ -374,7 +386,7 @@ public class AdminSystemResources {
         List<Map<String, Object>> items = jdbc.query(
                 "SELECT id::text, datatype, variable, aggregation, "
                 + "       ranges::text AS ranges_text, updatedate "
-                + "FROM " + schema + ".oresisynthesis"
+                + "FROM " + schema + TBL_SYNTHESIS
                 + where
                 + " ORDER BY datatype, variable LIMIT ? OFFSET ?",
                 params.toArray(),
@@ -434,7 +446,7 @@ public class AdminSystemResources {
         StringBuilder where = new StringBuilder();
         List<Object> params = new ArrayList<>();
         if (dataName != null && !dataName.isBlank()) {
-            where.append(where.length() == 0 ? " WHERE " : " AND ");
+            where.append(where.length() == 0 ? SQL_WHERE : SQL_AND);
             where.append(" (params -> 'binaryfiledataset' ->> 'datatype') = ? ");
             params.add(dataName);
         }
@@ -442,15 +454,15 @@ public class AdminSystemResources {
         // ( corrupt write / abandoned BUILD ) is technically NOT NULL but
         // useless for FAST path : we exclude it to avoid misleading admins .
         if (Boolean.TRUE.equals(onlyWithCache)) {
-            where.append(where.length() == 0 ? " WHERE " : " AND ");
+            where.append(where.length() == 0 ? SQL_WHERE : SQL_AND);
             where.append(" processed_data IS NOT NULL AND COALESCE(processed_size, 0) > 0 ");
         } else if (Boolean.TRUE.equals(onlyWithoutCache)) {
-            where.append(where.length() == 0 ? " WHERE " : " AND ");
+            where.append(where.length() == 0 ? SQL_WHERE : SQL_AND);
             where.append(" ( processed_data IS NULL OR COALESCE(processed_size, 0) = 0 ) ");
         }
 
         Long total = jdbc.queryForObject(
-                "SELECT count(*) FROM " + table + where,
+                SQL_SELECT_COUNT + table + where,
                 params.toArray(), Long.class);
 
         params.add(l);
@@ -473,7 +485,7 @@ public class AdminSystemResources {
                 params.toArray(),
                 (rs, n) -> {
                     Map<String, Object> row = new LinkedHashMap<>();
-                    row.put("fileId",        rs.getString("id"));
+                    row.put(KEY_FILE_ID,        rs.getString("id"));
                     row.put("fileName",      rs.getString("name"));
                     row.put("dataName",      rs.getString("data_name"));
                     row.put("configHash",    rs.getString("config_hash"));
@@ -503,7 +515,7 @@ public class AdminSystemResources {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> clearBinaryFileCache(
             @PathVariable("nameOrId") String nameOrId,
-            @PathVariable("fileId") UUID fileId) {
+            @PathVariable(KEY_FILE_ID) UUID fileId) {
 
         Application application = serviceContainer.applicationService()
                 .getApplicationOrApplicationAccordingToRights(nameOrId);
@@ -522,8 +534,8 @@ public class AdminSystemResources {
                 fileId.toString());
 
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("applicationName", application.getName());
-        body.put("fileId",          fileId.toString());
+        body.put(KEY_APPLICATION_NAME, application.getName());
+        body.put(KEY_FILE_ID,          fileId.toString());
         body.put("cleared",         updated > 0);
         body.put("alreadyEmpty",    updated == 0);
         body.put("at",              Instant.now().toString());
@@ -563,7 +575,7 @@ public class AdminSystemResources {
                 params.toArray());
 
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("applicationName", application.getName());
+        body.put(KEY_APPLICATION_NAME, application.getName());
         body.put("dataName",        dataName);
         body.put("clearedCount",    updated);
         body.put("at",              Instant.now().toString());
@@ -586,15 +598,15 @@ public class AdminSystemResources {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> buildBinaryFileCache(
             @PathVariable("nameOrId") String nameOrId,
-            @PathVariable("fileId") UUID fileId) {
+            @PathVariable(KEY_FILE_ID) UUID fileId) {
 
         Application application = serviceContainer.applicationService()
                 .getApplicationOrApplicationAccordingToRights(nameOrId);
         UUID correlationId = buildCacheService.startBuildCache(application.getName(), fileId);
 
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("applicationName", application.getName());
-        body.put("fileId",          fileId.toString());
+        body.put(KEY_APPLICATION_NAME, application.getName());
+        body.put(KEY_FILE_ID,          fileId.toString());
         body.put("correlationId",   correlationId.toString());
         body.put("status",          "IN_PROGRESS");
         body.put("at",              Instant.now().toString());
@@ -625,7 +637,7 @@ public class AdminSystemResources {
     private static ResponseEntity<Map<String, Object>> paged(
             String appName, Long total, int limit, int offset, List<Map<String, Object>> items) {
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("applicationName", appName);
+        body.put(KEY_APPLICATION_NAME, appName);
         body.put("total", total == null ? 0L : total);
         body.put("limit", limit);
         body.put("offset", offset);

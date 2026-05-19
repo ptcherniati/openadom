@@ -56,6 +56,9 @@ import java.util.concurrent.CancellationException;
 @Service
 public class BuildCacheService {
 
+    private static final String KEY_DATA_NAME = "dataName";
+    private static final String KEY_FILE_NAME = "fileName";
+
     private final ServiceContainer        serviceContainer;
     private final OreSiRepository         repository;
     private final WorkflowLogWriter       logWriter;
@@ -138,15 +141,15 @@ public class BuildCacheService {
                       + "       (params -> 'binaryfiledataset' ->> 'datatype') AS data_name "
                       + "  FROM " + schemaIdent + " WHERE id = ?::uuid",
                         (rs, n) -> Map.of(
-                                "fileName", rs.getString("file_name") == null ? "" : rs.getString("file_name"),
-                                "dataName", rs.getString("data_name") == null ? "" : rs.getString("data_name")),
+                                KEY_FILE_NAME, rs.getString("file_name") == null ? "" : rs.getString("file_name"),
+                                KEY_DATA_NAME, rs.getString("data_name") == null ? "" : rs.getString("data_name")),
                         fileId.toString());
             } catch (org.springframework.dao.EmptyResultDataAccessException e) {
                 throw new IllegalArgumentException(
                         "Binary file %s not found in application %s".formatted(fileId, applicationName), e);
             }
-            fileName = meta.get("fileName");
-            dataName = meta.get("dataName").isEmpty() ? null : meta.get("dataName");
+            fileName = meta.get(KEY_FILE_NAME);
+            dataName = meta.get(KEY_DATA_NAME).isEmpty() ? null : meta.get(KEY_DATA_NAME);
             if (dataName == null) {
                 throw new IllegalArgumentException(
                         "Binary file %s in application %s has no datatype ( params.binaryfiledataset.datatype null ) , cannot build cache"

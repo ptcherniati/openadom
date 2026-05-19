@@ -60,6 +60,10 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     public static final String[] ORDERED_COLUMNS = new String[]{"id", "patternColumnName", "application", "ReferenceType", "hierarchicalKey", "naturalKey", "refsLinkedTo", "refValues", "binaryFile", "\"authorization\""};
     public static final int PIPE_SIZE = 65536;
 
+    private static final String PARAM_BINARY_FILE = "binaryFile";
+    private static final String COL_NATURALKEY = "naturalkey";
+    private static final String COL_HIERARCHICALKEY = "hierarchicalkey";
+
     /**
      * Lecture du compteur via la table de stats {@code referencevalue_count_stats}
      * ( maintenue par triggers AFTER INSERT/DELETE statement-level , cf.
@@ -346,7 +350,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         SELECT count(*) FROM %s WHERE binaryfile = :binaryFile
                         """,
                 getTable().getSqlIdentifier());
-        Map<String, Object> params = Map.of("binaryFile", fileId);
+        Map<String, Object> params = Map.of(PARAM_BINARY_FILE, fileId);
         Long n = getNamedParameterJdbcTemplate().queryForObject(query, params, Long.class);
         return n == null ? 0L : n;
     }
@@ -445,7 +449,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
             }
             java.util.List<UUID> ids = getNamedParameterJdbcTemplate().queryForList(
                     selectIdsSql,
-                    Map.of("binaryFile", fileId, "chunkSize", chunkSize),
+                    Map.of(PARAM_BINARY_FILE, fileId, "chunkSize", chunkSize),
                     UUID.class);
             batch = ids.size();
             if (batch == 0) break;
@@ -779,8 +783,8 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
             // and dominates the pre-cascade preparation time observed at
             // ~2m30s wall-clock . fromSqlWithoutCheck does the same allocation
             // without the per-row syntax validation .
-            Ltree naturalKey      = Ltree.fromSqlWithoutCheck(rs.getString("naturalkey"));
-            Ltree hierarchicalKey = Ltree.fromSqlWithoutCheck(rs.getString("hierarchicalkey"));
+            Ltree naturalKey      = Ltree.fromSqlWithoutCheck(rs.getString(COL_NATURALKEY));
+            Ltree hierarchicalKey = Ltree.fromSqlWithoutCheck(rs.getString(COL_HIERARCHICALKEY));
             String patternColName = rs.getString("patterncolumnname");
             dataIdPerKeys.put(
                     new DataValue.LineIdentityColumnName(naturalKey, hierarchicalKey, patternColName),
@@ -869,8 +873,8 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         Map<DataValue.LineIdentityColumnName, UUID> dataIdPerKeys = new HashMap<>(naturalKeysOfInterest.size() * 2);
         getNamedParameterJdbcTemplate().query(query, params, rs -> {
             UUID id = UUID.fromString(rs.getString("id"));
-            Ltree naturalKey      = Ltree.fromSqlWithoutCheck(rs.getString("naturalkey"));
-            Ltree hierarchicalKey = Ltree.fromSqlWithoutCheck(rs.getString("hierarchicalkey"));
+            Ltree naturalKey      = Ltree.fromSqlWithoutCheck(rs.getString(COL_NATURALKEY));
+            Ltree hierarchicalKey = Ltree.fromSqlWithoutCheck(rs.getString(COL_HIERARCHICALKEY));
             String patternColName = rs.getString("patterncolumnname");
             dataIdPerKeys.put(
                     new DataValue.LineIdentityColumnName(naturalKey, hierarchicalKey, patternColName),
@@ -1074,7 +1078,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 rs -> {
                     Map<String, String> result = new HashMap<>();
                     while (rs.next()) {
-                        result.put(rs.getString("naturalkey"), rs.getString("hierarchicalkey"));
+                        result.put(rs.getString(COL_NATURALKEY), rs.getString(COL_HIERARCHICALKEY));
                     }
                     return result;
                 }

@@ -48,6 +48,7 @@ public class DashboardService {
 
     private static final int MAX_LIMIT = 500;
     private static final int DEFAULT_LIMIT = 100;
+    private static final String MSG_WORKFLOW_NOT_FOUND = "Workflow not found : ";
 
     private final WorkflowActiveRegistry registry;
     private final fr.inra.oresing.workflow.cascade.pipeline.PipelineRegistry pipelineRegistry;
@@ -1019,12 +1020,12 @@ public class DashboardService {
                 boolean isOwner = me.userId() != null && me.userId().equals(owner);
                 if (!me.isOpenAdomAdmin() && !isOwner) {
                     throw new java.util.NoSuchElementException(
-                            "Workflow not found : " + correlationId);
+                            MSG_WORKFLOW_NOT_FOUND + correlationId);
                 }
                 return new CancelResult(false);
             }
             throw new java.util.NoSuchElementException(
-                    "Workflow not found : " + correlationId);
+                    MSG_WORKFLOW_NOT_FOUND + correlationId);
         }
 
         UUID ownerUserId = liveOwner.get();
@@ -1033,7 +1034,7 @@ public class DashboardService {
             // Same response shape as "not found" to avoid leaking which
             // workflows exist to non-owner non-admin users.
             throw new java.util.NoSuchElementException(
-                    "Workflow not found : " + correlationId);
+                    MSG_WORKFLOW_NOT_FOUND + correlationId);
         }
         String reason = "Cancelled by " + (me.userLogin() != null ? me.userLogin() : me.userId());
 

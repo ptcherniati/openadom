@@ -35,6 +35,11 @@ public class OpenadomCacheMetrics {
 
     private static final String CACHE_PREFIX = "oa_cache";
     private static final String TAG_NAME = "name";
+    private static final String SUFFIX_SIZE = "_size";
+    private static final String SUFFIX_MAX_ENTRIES = "_max_entries";
+    private static final String SUFFIX_HIT_TOTAL = "_hit_total";
+    private static final String SUFFIX_MISS_TOTAL = "_miss_total";
+    private static final String SUFFIX_INVALIDATE_TOTAL = "_invalidate_total";
 
     private static final String FILTER_LIST = "filter_list";
     private static final String SCOPES = "authorization_scopes";
@@ -67,42 +72,42 @@ public class OpenadomCacheMetrics {
     void register() {
         try {
             // Gauges : taille courante des caches.
-            registry.gauge(CACHE_PREFIX + "_size", Tags.of(TAG_NAME, FILTER_LIST),
+            registry.gauge(CACHE_PREFIX + SUFFIX_SIZE, Tags.of(TAG_NAME, FILTER_LIST),
                     dataService, DataService::getFilterListCacheSize);
-            registry.gauge(CACHE_PREFIX + "_size", Tags.of(TAG_NAME, SCOPES),
+            registry.gauge(CACHE_PREFIX + SUFFIX_SIZE, Tags.of(TAG_NAME, SCOPES),
                     authorizationService, AuthorizationService::getAuthorizationScopesCacheSize);
-            registry.gauge(CACHE_PREFIX + "_size", Tags.of(TAG_NAME, CHECKED_FORMAT),
+            registry.gauge(CACHE_PREFIX + SUFFIX_SIZE, Tags.of(TAG_NAME, CHECKED_FORMAT),
                     dataService, DataService::getCheckedFormatComponentsCacheSize);
 
             // Gauges : capacité max ( valeur statique mais utile dans le
             // dashboard pour calculer un % d'occupation ).
-            registry.gauge(CACHE_PREFIX + "_max_entries", Tags.of(TAG_NAME, FILTER_LIST),
+            registry.gauge(CACHE_PREFIX + SUFFIX_MAX_ENTRIES, Tags.of(TAG_NAME, FILTER_LIST),
                     dataService, DataService::getFilterListCacheMaxEntries);
-            registry.gauge(CACHE_PREFIX + "_max_entries", Tags.of(TAG_NAME, SCOPES),
+            registry.gauge(CACHE_PREFIX + SUFFIX_MAX_ENTRIES, Tags.of(TAG_NAME, SCOPES),
                     authorizationService, AuthorizationService::getAuthorizationScopesCacheMaxEntries);
-            registry.gauge(CACHE_PREFIX + "_max_entries", Tags.of(TAG_NAME, CHECKED_FORMAT),
+            registry.gauge(CACHE_PREFIX + SUFFIX_MAX_ENTRIES, Tags.of(TAG_NAME, CHECKED_FORMAT),
                     dataService, DataService::getCheckedFormatComponentsCacheMaxEntries);
 
             // Counters : hits / miss / invalidations cumulés.
-            filterListHit = Counter.builder(CACHE_PREFIX + "_hit_total")
+            filterListHit = Counter.builder(CACHE_PREFIX + SUFFIX_HIT_TOTAL)
                     .tag(TAG_NAME, FILTER_LIST).register(registry);
-            filterListMiss = Counter.builder(CACHE_PREFIX + "_miss_total")
+            filterListMiss = Counter.builder(CACHE_PREFIX + SUFFIX_MISS_TOTAL)
                     .tag(TAG_NAME, FILTER_LIST).register(registry);
-            filterListInvalidate = Counter.builder(CACHE_PREFIX + "_invalidate_total")
+            filterListInvalidate = Counter.builder(CACHE_PREFIX + SUFFIX_INVALIDATE_TOTAL)
                     .tag(TAG_NAME, FILTER_LIST).register(registry);
 
-            scopesHit = Counter.builder(CACHE_PREFIX + "_hit_total")
+            scopesHit = Counter.builder(CACHE_PREFIX + SUFFIX_HIT_TOTAL)
                     .tag(TAG_NAME, SCOPES).register(registry);
-            scopesMiss = Counter.builder(CACHE_PREFIX + "_miss_total")
+            scopesMiss = Counter.builder(CACHE_PREFIX + SUFFIX_MISS_TOTAL)
                     .tag(TAG_NAME, SCOPES).register(registry);
-            scopesInvalidate = Counter.builder(CACHE_PREFIX + "_invalidate_total")
+            scopesInvalidate = Counter.builder(CACHE_PREFIX + SUFFIX_INVALIDATE_TOTAL)
                     .tag(TAG_NAME, SCOPES).register(registry);
 
-            checkedFormatHit = Counter.builder(CACHE_PREFIX + "_hit_total")
+            checkedFormatHit = Counter.builder(CACHE_PREFIX + SUFFIX_HIT_TOTAL)
                     .tag(TAG_NAME, CHECKED_FORMAT).register(registry);
-            checkedFormatMiss = Counter.builder(CACHE_PREFIX + "_miss_total")
+            checkedFormatMiss = Counter.builder(CACHE_PREFIX + SUFFIX_MISS_TOTAL)
                     .tag(TAG_NAME, CHECKED_FORMAT).register(registry);
-            checkedFormatInvalidate = Counter.builder(CACHE_PREFIX + "_invalidate_total")
+            checkedFormatInvalidate = Counter.builder(CACHE_PREFIX + SUFFIX_INVALIDATE_TOTAL)
                     .tag(TAG_NAME, CHECKED_FORMAT).register(registry);
 
             log.info("OpenadomCacheMetrics ready : 3 gauges de taille + 3 gauges de cap + 9 counters hit/miss/invalidate");
