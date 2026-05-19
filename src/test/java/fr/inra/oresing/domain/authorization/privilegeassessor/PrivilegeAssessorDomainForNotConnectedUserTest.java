@@ -2,6 +2,7 @@ package fr.inra.oresing.domain.authorization.privilegeassessor;
 
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.authorization.AuthenticationServiceImpl;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedAuthentifiedMissingPasswordUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedAuthentifiedPendingUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedUnauthentifiedUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedUser;
@@ -70,6 +71,17 @@ class PrivilegeAssessorDomainForNotConnectedUserTest {
         return req;
     }
 
+    /** Payload du step 2 du flow forgot-password : email + cle + nouveau mdp . */
+    private static CreateUserRequest passwordResetCommit(String email, String key,
+                                                         String newPwd, String newPwdConfirm) {
+        CreateUserRequest req = new CreateUserRequest();
+        req.setEmail(email);
+        req.setVerificationKey(key);
+        req.setNewPassword(newPwd);
+        req.setNewPasswordConfirm(newPwdConfirm);
+        return req;
+    }
+
     // ============================================================
     //  Forgot password step 1 ( email-only )
     // ============================================================
@@ -122,6 +134,52 @@ class PrivilegeAssessorDomainForNotConnectedUserTest {
         assertThat(r1).isInstanceOf(NotConnectedUnauthentifiedUser.class);
         assertThat(r2).isInstanceOf(NotConnectedUnauthentifiedUser.class);
         verifyNoInteractions(userRepository);
+    }
+
+    // ============================================================
+    //  Forgot password step 2 ( email + verificationKey + newPwd )
+    // ============================================================
+
+    @Test
+    @DisplayName("step 2 : email + key + newPwd + user found -> MissingPasswordUser ( valide cle + change mdp )")
+    void step2_userFoundWithKey_returnsMissingPasswordUser() throws Exception {
+        OreSiUser alice = userWithEmail("alice@example.com");
+        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(alice));
+
+        CreateUserRequest req = passwordResetCommit("alice@example.com", "ABC123DEF456", "n3w", "n3w");
+        NotConnectedUser result = assessor.forUpdateUser(req);
+
+        assertThat(result).isInstanceOf(NotConnectedAuthentifiedMissingPasswordUser.class);
+        NotConnectedAuthentifiedMissingPasswordUser typed = (NotConnectedAuthentifiedMissingPasswordUser) result;
+        assertThat(typed.oreSiUser()).isSameAs(alice);
+        // Le payload original ( newPassword , verificationKey ) est propage
+        // a updatePasswordLost downstream qui consomme ces 2 champs .
+        assertThat(typed.createUserRequest()).isSameAs(req);
+    }
+
+    @Test
+    @DisplayName("step 2 : email + key + user introuvable -> Unauthentified ( pas de change mdp silencieux )")
+    void step2_userNotFoundWithKey_returnsUnauthentified() throws Exception {
+        when(userRepository.findByEmail("ghost@example.com")).thenReturn(Optional.empty());
+
+        NotConnectedUser result = assessor.forUpdateUser(
+                passwordResetCommit("ghost@example.com", "ABC123DEF456", "n3w", "n3w"));
+
+        assertThat(result).isInstanceOf(NotConnectedUnauthentifiedUser.class);
+    }
+
+    @Test
+    @DisplayName("step 1 vs step 2 distingues par presence de la cle , user identique")
+    void step1AndStep2_routeDifferentlyOnSameEmail() throws Exception {
+        OreSiUser alice = userWithEmail("alice@example.com");
+        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(alice));
+
+        NotConnectedUser step1 = assessor.forUpdateUser(emailOnly("alice@example.com"));
+        NotConnectedUser step2 = assessor.forUpdateUser(
+                passwordResetCommit("alice@example.com", "KEY", "n3w", "n3w"));
+
+        assertThat(step1).isInstanceOf(NotConnectedAuthentifiedPendingUser.class);
+        assertThat(step2).isInstanceOf(NotConnectedAuthentifiedMissingPasswordUser.class);
     }
 
     // ============================================================
