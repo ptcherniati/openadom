@@ -79,6 +79,10 @@ public class CascadeImportPipeline {
      * preserver les tests qui n'ont pas le coordinator dans leur context .
      */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setPublishLifecycleCoordinator(fr.inra.oresing.rest.usecases.storage.versioning.PublishLifecycleCoordinator publishLifecycleCoordinator) {
+        this.publishLifecycleCoordinator = publishLifecycleCoordinator;
+    }
+
     private fr.inra.oresing.rest.usecases.storage.versioning.PublishLifecycleCoordinator publishLifecycleCoordinator;
 
     /**
@@ -90,6 +94,10 @@ public class CascadeImportPipeline {
      * Field injection required=false pour preserver les tests sans repository .
      */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setWorkflowLogRepository(fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository workflowLogRepository) {
+        this.workflowLogRepository = workflowLogRepository;
+    }
+
     private fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository workflowLogRepository;
 
     /**
@@ -103,6 +111,10 @@ public class CascadeImportPipeline {
      * {@link fr.inra.oresing.workflow.cascade.preparation.PreparationPhaseListenerInterceptor} .
      */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setPreparationPhaseListener(fr.inra.oresing.workflow.cascade.preparation.PreparationPhaseListenerInterceptor preparationPhaseListener) {
+        this.preparationPhaseListener = preparationPhaseListener;
+    }
+
     private fr.inra.oresing.workflow.cascade.preparation.PreparationPhaseListenerInterceptor preparationPhaseListener;
 
     public CascadeImportPipeline(

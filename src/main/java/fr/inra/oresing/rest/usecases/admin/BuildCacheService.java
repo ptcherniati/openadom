@@ -131,17 +131,19 @@ public class BuildCacheService {
             org.springframework.jdbc.core.JdbcTemplate metaJdbc =
                     new org.springframework.jdbc.core.JdbcTemplate(
                             repository.getRepository(application).data().getDataSource());
-            Map<String, String> meta = metaJdbc.queryForObject(
-                    "SELECT name AS file_name , "
-                  + "       (params -> 'binaryfiledataset' ->> 'datatype') AS data_name "
-                  + "  FROM " + schemaIdent + " WHERE id = ?::uuid",
-                    (rs, n) -> Map.of(
-                            "fileName", rs.getString("file_name") == null ? "" : rs.getString("file_name"),
-                            "dataName", rs.getString("data_name") == null ? "" : rs.getString("data_name")),
-                    fileId.toString());
-            if (meta == null) {
+            Map<String, String> meta;
+            try {
+                meta = metaJdbc.queryForObject(
+                        "SELECT name AS file_name , "
+                      + "       (params -> 'binaryfiledataset' ->> 'datatype') AS data_name "
+                      + "  FROM " + schemaIdent + " WHERE id = ?::uuid",
+                        (rs, n) -> Map.of(
+                                "fileName", rs.getString("file_name") == null ? "" : rs.getString("file_name"),
+                                "dataName", rs.getString("data_name") == null ? "" : rs.getString("data_name")),
+                        fileId.toString());
+            } catch (org.springframework.dao.EmptyResultDataAccessException e) {
                 throw new IllegalArgumentException(
-                        "Binary file %s not found in application %s".formatted(fileId, applicationName));
+                        "Binary file %s not found in application %s".formatted(fileId, applicationName), e);
             }
             fileName = meta.get("fileName");
             dataName = meta.get("dataName").isEmpty() ? null : meta.get("dataName");

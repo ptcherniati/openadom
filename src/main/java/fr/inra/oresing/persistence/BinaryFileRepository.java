@@ -496,17 +496,22 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
             org.postgresql.PGConnection pgConn = conn.unwrap(org.postgresql.PGConnection.class);
             org.postgresql.largeobject.LargeObjectManager lom = pgConn.getLargeObjectAPI();
             org.postgresql.largeobject.LargeObject lo = lom.open(oid, org.postgresql.largeobject.LargeObjectManager.READ);
-            // Wrap the LO InputStream to also close the LO + release the
-            // connection back to the pool when the caller closes the stream .
-            return new java.io.FilterInputStream(lo.getInputStream()) {
-                @Override
-                public void close() throws java.io.IOException {
-                    try { super.close(); } finally {
-                        try { lo.close(); } catch (java.sql.SQLException ignored) { /* best-effort */ }
-                        org.springframework.jdbc.datasource.DataSourceUtils.releaseConnection(conn, jdbcTemplate.getDataSource());
+            try {
+                // Wrap the LO InputStream to also close the LO + release the
+                // connection back to the pool when the caller closes the stream .
+                return new java.io.FilterInputStream(lo.getInputStream()) {
+                    @Override
+                    public void close() throws java.io.IOException {
+                        try { super.close(); } finally {
+                            try { lo.close(); } catch (java.sql.SQLException ignored) { /* best-effort */ }
+                            org.springframework.jdbc.datasource.DataSourceUtils.releaseConnection(conn, jdbcTemplate.getDataSource());
+                        }
                     }
-                }
-            };
+                };
+            } catch (Exception e) {
+                try { lo.close(); } catch (java.sql.SQLException ignored) { /* best-effort */ }
+                throw e;
+            }
         } catch (java.sql.SQLException e) {
             throw new RuntimeException("Failed to open Large Object oid=" + oid + " : " + e.getMessage(), e);
         }

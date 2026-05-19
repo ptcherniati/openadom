@@ -77,8 +77,7 @@ class WorkflowZombieSweeperTest {
     @DisplayName("constructor stocke le seuil ( log info au boot )")
     void constructor_logs_config() {
         WorkflowLogRepository repo = mock(WorkflowLogRepository.class);
-        sweeper(repo, 15, false);
-        // Pas d'assertion logging ; juste valider que le ctor ne plante pas
-        // avec un seuil legitime ( valide en SQL avec p_minutes > 0 ) .
+        WorkflowZombieSweeper s = sweeper(repo, 15, false);
+        assertThatCode(s::sweepZombies).doesNotThrowAnyException();
     }
 }

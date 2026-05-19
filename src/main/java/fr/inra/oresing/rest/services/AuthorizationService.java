@@ -489,6 +489,10 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     @org.springframework.context.annotation.Lazy
+    public void setCacheMetrics(fr.inra.oresing.workflow.cascade.metrics.OpenadomCacheMetrics cacheMetrics) {
+        this.cacheMetrics = cacheMetrics;
+    }
+
     private fr.inra.oresing.workflow.cascade.metrics.OpenadomCacheMetrics cacheMetrics;
 
     public Map<String, List<GetGrantableResult.ReferenceScope>> getAuthorizationScopes(final Application application, final MenuType menuType) {

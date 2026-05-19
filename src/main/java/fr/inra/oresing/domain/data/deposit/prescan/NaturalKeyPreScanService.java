@@ -382,7 +382,7 @@ public class NaturalKeyPreScanService {
                 firstRead = false;
                 int c = delegate.read();
                 if (c == -1) return -1;
-                if (c != '﻿') {
+                if (c != '\uFEFF') {
                     buffered = c;
                 }
             }

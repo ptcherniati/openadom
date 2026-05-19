@@ -112,16 +112,21 @@ public final class RefrefRebuildSql {
                                       String stagingTable,
                                       UUID correlationIdFilter) throws SQLException {
         boolean filtered = correlationIdFilter != null;
-        String sql = "INSERT INTO refref_source(rt, hk, pc, rsl)"
+        String sqlBase = "INSERT INTO refref_source(rt, hk, pc, rsl)"
                 + " SELECT s.data->>'referencetype',"
                 + "        (s.data->>'hierarchicalkey')::ltree,"
                 + "        s.data->>'patterncolumnname',"
                 + "        s.data->'refslinkedto'"
-                + " FROM " + stagingTable + " s"
-                + (filtered ? " WHERE s.correlation_id = ?" : "");
-        try (PreparedStatement ps = cn.prepareStatement(sql)) {
-            if (filtered) ps.setObject(1, correlationIdFilter);
-            ps.executeUpdate();
+                + " FROM " + stagingTable + " s";
+        if (filtered) {
+            try (PreparedStatement ps = cn.prepareStatement(sqlBase + " WHERE s.correlation_id = ?")) {
+                ps.setObject(1, correlationIdFilter);
+                ps.executeUpdate();
+            }
+        } else {
+            try (java.sql.Statement stmt = cn.createStatement()) {
+                stmt.executeUpdate(sqlBase);
+            }
         }
     }
 

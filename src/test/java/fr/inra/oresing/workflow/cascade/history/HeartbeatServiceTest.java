@@ -96,7 +96,7 @@ class HeartbeatServiceTest {
         UUID corrId = UUID.randomUUID();
         HeartbeatService.Heartbeat hb = service.start(corrId);
         hb.close();
-        hb.close();   // doit etre no-op , pas d'exception
+        org.assertj.core.api.Assertions.assertThatCode(hb::close).doesNotThrowAnyException();
     }
 
     @Test

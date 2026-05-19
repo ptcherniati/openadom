@@ -75,8 +75,8 @@ class ImportRateLimiterTest {
         @Test
         @DisplayName("acquisition réussit si slot disponible")
         void acquireSucceedsWhenSlotAvailable() {
-            // Ne doit pas lancer
             rateLimiter.acquireOrThrow("user-1");
+            assertThat(rateLimiter.snapshotUsedSlots()).containsKey("user-1");
             rateLimiter.release("user-1");
         }
 
@@ -85,7 +85,7 @@ class ImportRateLimiterTest {
         void twoAcquisitionsForSameUser() {
             rateLimiter.acquireOrThrow("user-2");
             rateLimiter.acquireOrThrow("user-2");
-            // Pas d'exception
+            assertThat(rateLimiter.snapshotUsedSlots().get("user-2")).isEqualTo(2);
             rateLimiter.release("user-2");
             rateLimiter.release("user-2");
         }
@@ -99,6 +99,7 @@ class ImportRateLimiterTest {
             // userB ne doit pas être affecté par les slots de userA
             rateLimiter.acquireOrThrow("userB");
             rateLimiter.acquireOrThrow("userB");
+            assertThat(rateLimiter.snapshotUsedSlots()).containsKey("userA").containsKey("userB");
             rateLimiter.release("userA");
             rateLimiter.release("userA");
             rateLimiter.release("userB");
@@ -171,8 +172,8 @@ class ImportRateLimiterTest {
             rateLimiter.acquireOrThrow("user-r");
             rateLimiter.acquireOrThrow("user-r");
             rateLimiter.release("user-r");
-            // Après release, un slot est disponible
-            rateLimiter.acquireOrThrow("user-r"); // ne doit pas throw
+            assertThat(rateLimiter.snapshotUsedSlots().get("user-r")).isEqualTo(1);
+            rateLimiter.acquireOrThrow("user-r");
             rateLimiter.release("user-r");
             rateLimiter.release("user-r");
         }
@@ -180,8 +181,8 @@ class ImportRateLimiterTest {
         @Test
         @DisplayName("release() d'un userId inconnu est sans effet")
         void releaseUnknownUserIsNoOp() {
-            // Ne doit pas lancer NPE
             rateLimiter.release("unknown-user");
+            assertThat(rateLimiter.snapshotUsedSlots()).doesNotContainKey("unknown-user");
         }
     }
 

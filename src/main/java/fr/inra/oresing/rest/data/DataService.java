@@ -152,6 +152,10 @@ public class DataService {
      * @since openadom v25.05.17 - garde-fou depot symetrique publish
      */
     @Autowired(required = false)
+    public void setHeapGuard(HeapGuardService heapGuard) {
+        this.heapGuard = heapGuard;
+    }
+
     private HeapGuardService heapGuard;
 
     /**
@@ -168,6 +172,10 @@ public class DataService {
      * @since openadom v25.05.17 - sous-phases visibles dépôt
      */
     @Autowired(required = false)
+    public void setWorkflowLogRepository(fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository workflowLogRepository) {
+        this.workflowLogRepository = workflowLogRepository;
+    }
+
     private fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository workflowLogRepository;
 
     /**
@@ -178,6 +186,10 @@ public class DataService {
      * gros fichiers ) .
      */
     @Autowired(required = false)
+    public void setWorkflowLogWriter(fr.inra.oresing.workflow.cascade.history.WorkflowLogWriter workflowLogWriter) {
+        this.workflowLogWriter = workflowLogWriter;
+    }
+
     private fr.inra.oresing.workflow.cascade.history.WorkflowLogWriter workflowLogWriter;
 
     /**
@@ -187,6 +199,10 @@ public class DataService {
      * Spring resout ces 3 problemes en 1 .
      */
     @Autowired
+    public void setNaturalKeyPreScanService(fr.inra.oresing.domain.data.deposit.prescan.NaturalKeyPreScanService naturalKeyPreScanService) {
+        this.naturalKeyPreScanService = naturalKeyPreScanService;
+    }
+
     private fr.inra.oresing.domain.data.deposit.prescan.NaturalKeyPreScanService naturalKeyPreScanService;
 
     public DataService(
@@ -316,14 +332,6 @@ public class DataService {
         return file.params().fileid();
     }
 
-    private void addData(final Application application,
-                         final String refType,
-                         final InputStream file,
-                         final FileOrUUID fileOrUUID) throws IOException {
-        addData(application, refType, file, fileOrUUID,
-                fr.inra.oresing.workflow.cascade.config.CascadeRuntimeOverride.EMPTY,
-                false);
-    }
 
     private void addData(final Application application,
                          final String refType,
@@ -1410,6 +1418,10 @@ private PlatformTransactionManager transactionManager;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     @org.springframework.context.annotation.Lazy
+    public void setCacheMetricsForDataService(fr.inra.oresing.workflow.cascade.metrics.OpenadomCacheMetrics cacheMetrics) {
+        this.cacheMetrics = cacheMetrics;
+    }
+
     private fr.inra.oresing.workflow.cascade.metrics.OpenadomCacheMetrics cacheMetrics;
 
     public Map<String, Map<String, LineCheckerResult>> getCheckedFormatComponents(final String nameOrId, final String dataName) {

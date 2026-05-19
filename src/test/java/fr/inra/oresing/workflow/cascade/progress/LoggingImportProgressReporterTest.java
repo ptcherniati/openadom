@@ -66,7 +66,7 @@ class LoggingImportProgressReporterTest {
         @DisplayName("onTotalLinesKnown enregistre le total sans lever d'exception")
         void totalLinesKnownDoesNotThrow() {
             reporter.onTotalLinesKnown("id-1", 1000L);
-            // pas d'exception → test OK
+            assertThat(reporter.trackedCount()).isZero();
         }
 
         @Test
@@ -76,7 +76,7 @@ class LoggingImportProgressReporterTest {
             reporter.onLinesProcessed("id-1", 250);
             reporter.onLinesProcessed("id-1", 250);
             reporter.onLinesProcessed("id-1", 500);
-            // 1000/1000 = 100% — ne doit pas lever d'exception (filled >= BAR_WIDTH)
+            assertThat(reporter.trackedCount()).isEqualTo(1);
         }
 
         @Test
@@ -84,7 +84,7 @@ class LoggingImportProgressReporterTest {
         void zeroTotalLinesNoDivisionByZero() {
             reporter.onTotalLinesKnown("id-zero", 0L);
             reporter.onLinesProcessed("id-zero", 10);
-            // pas d'exception
+            assertThat(reporter.trackedCount()).isEqualTo(1);
         }
     }
 
@@ -112,7 +112,7 @@ class LoggingImportProgressReporterTest {
             reporter.onTotalLinesKnown("id-1", 500L);
             reporter.onLinesProcessed("id-1", 250);
             reporter.release("id-1");
-
+            assertThat(reporter.trackedCount()).isZero();
             // après release, onLinesProcessed ne doit plus voir le grandTotal
             // (pas de NullPointerException, barre absente)
             reporter.onLinesProcessed("id-1", 50);
@@ -143,7 +143,8 @@ class LoggingImportProgressReporterTest {
         @DisplayName("L'implémentation no-op de onTotalLinesKnown ne lève pas d'exception")
         void defaultOnTotalLinesKnownIsNoOp() {
             ImportProgressReporter noop = (cid, delta) -> { /* no-op */ };
-            noop.onTotalLinesKnown("id-1", 100L); // méthode default
+            org.assertj.core.api.Assertions.assertThatCode(() -> noop.onTotalLinesKnown("id-1", 100L))
+                    .doesNotThrowAnyException();
         }
     }
 }

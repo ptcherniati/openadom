@@ -43,7 +43,6 @@ class ConfigEditServiceTest {
     private ConfigFieldRegistry  registry;
     private ConfigChangeAudit    audit;
     private ConfigEditService    service;
-    private ThreadPoolExecutor   tpe;
 
     @BeforeEach
     void setUp() {

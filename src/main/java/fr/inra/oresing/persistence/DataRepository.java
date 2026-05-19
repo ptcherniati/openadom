@@ -319,7 +319,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         }
                     }
                 });
-        return upserted == null ? 0L : upserted;
+        return upserted != null ? upserted : 0L;
     }
 
 

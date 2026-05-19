@@ -20,14 +20,14 @@ class PublishLifecycleCoordinatorTest {
 
     @Test
     void getRelatedWorkflows_standalone_returnsSelfOnly() {
-        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator(null);
+        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator();
         UUID cid = UUID.randomUUID();
         assertEquals(Set.of(cid), coordinator.getRelatedWorkflows(cid));
     }
 
     @Test
     void getRelatedWorkflows_fromParent_returnsParentAndChild() {
-        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator(null);
+        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator();
         UUID parent = UUID.randomUUID();
         UUID child  = UUID.randomUUID();
         coordinator.registerChildImport(parent, child);
@@ -38,7 +38,7 @@ class PublishLifecycleCoordinatorTest {
 
     @Test
     void getRelatedWorkflows_fromChild_returnsParentAndChild() {
-        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator(null);
+        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator();
         UUID parent = UUID.randomUUID();
         UUID child  = UUID.randomUUID();
         coordinator.registerChildImport(parent, child);
@@ -53,13 +53,13 @@ class PublishLifecycleCoordinatorTest {
 
     @Test
     void getRelatedWorkflows_nullCid_returnsEmpty() {
-        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator(null);
+        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator();
         assertTrue(coordinator.getRelatedWorkflows(null).isEmpty());
     }
 
     @Test
     void unregisterChildImport_cleansBothMaps() {
-        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator(null);
+        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator();
         UUID parent = UUID.randomUUID();
         UUID child  = UUID.randomUUID();
         coordinator.registerChildImport(parent, child);
@@ -72,7 +72,7 @@ class PublishLifecycleCoordinatorTest {
 
     @Test
     void releaseCancellation_onParent_cleansBothMaps() {
-        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator(null);
+        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator();
         UUID parent = UUID.randomUUID();
         UUID child  = UUID.randomUUID();
         coordinator.registerChildImport(parent, child);
@@ -87,7 +87,7 @@ class PublishLifecycleCoordinatorTest {
 
     @Test
     void markCancelled_thenIsCancelled_isTrue() {
-        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator(null);
+        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator();
         UUID cid = UUID.randomUUID();
         assertFalse(coordinator.isCancelled(cid));
         coordinator.markCancelled(cid);
@@ -96,7 +96,7 @@ class PublishLifecycleCoordinatorTest {
 
     @Test
     void registerChildImport_thenChildToParentResolution() {
-        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator(null);
+        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator();
         UUID parent = UUID.randomUUID();
         UUID child  = UUID.randomUUID();
         coordinator.registerChildImport(parent, child);
@@ -117,13 +117,13 @@ class PublishLifecycleCoordinatorTest {
 
     @Test
     void isKnownChild_unregistered_isFalse() {
-        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator(null);
+        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator();
         assertFalse(coordinator.isKnownChild(UUID.randomUUID()));
     }
 
     @Test
     void isKnownChild_registeredChild_isTrue() {
-        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator(null);
+        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator();
         UUID parent = UUID.randomUUID();
         UUID child  = UUID.randomUUID();
         coordinator.registerChildImport(parent, child);
@@ -133,7 +133,7 @@ class PublishLifecycleCoordinatorTest {
     @Test
     void isKnownChild_parent_isFalse() {
         // Le parent n'est pas un child : il doit rester visible en UI .
-        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator(null);
+        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator();
         UUID parent = UUID.randomUUID();
         UUID child  = UUID.randomUUID();
         coordinator.registerChildImport(parent, child);
@@ -142,7 +142,7 @@ class PublishLifecycleCoordinatorTest {
 
     @Test
     void isKnownChild_afterUnregister_isFalse() {
-        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator(null);
+        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator();
         UUID parent = UUID.randomUUID();
         UUID child  = UUID.randomUUID();
         coordinator.registerChildImport(parent, child);
@@ -155,7 +155,7 @@ class PublishLifecycleCoordinatorTest {
 
     @Test
     void isKnownChild_nullCid_isFalse() {
-        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator(null);
+        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator();
         assertFalse(coordinator.isKnownChild(null));
     }
 
@@ -163,7 +163,7 @@ class PublishLifecycleCoordinatorTest {
 
     @Test
     void getChildImport_returnsChildForKnownParent() {
-        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator(null);
+        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator();
         UUID parent = UUID.randomUUID();
         UUID child  = UUID.randomUUID();
         coordinator.registerChildImport(parent, child);
@@ -172,7 +172,7 @@ class PublishLifecycleCoordinatorTest {
 
     @Test
     void getChildImport_emptyForStandalone() {
-        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator(null);
+        PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator();
         assertTrue(coordinator.getChildImport(UUID.randomUUID()).isEmpty());
     }
 }

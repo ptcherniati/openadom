@@ -101,6 +101,10 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
      * passent sans this bean wired .
      */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setConfigHashService(fr.inra.oresing.rest.usecases.storage.versioning.ConfigHashService configHashService) {
+        this.configHashService = configHashService;
+    }
+
     private fr.inra.oresing.rest.usecases.storage.versioning.ConfigHashService configHashService;
 
     public BinaryFileService(OreSiRepository repository, ServiceContainer serviceContainer, AuthenticationService authenticationService, JsonRowMapper jsonRowMapper) {

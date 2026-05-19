@@ -60,7 +60,6 @@ import java.util.UUID;
 @Component
 public class ExtractionLifecycle {
 
-    private final WorkflowLogRepository    repository;
     private final WorkflowLogWriter        logWriter;
     private final WorkflowActiveRegistry   activeRegistry;
     private final HeartbeatService         heartbeatService;
@@ -72,7 +71,6 @@ public class ExtractionLifecycle {
             WorkflowActiveRegistry activeRegistry,
             HeartbeatService heartbeatService,
             OpenadomMetrics metrics) {
-        this.repository       = repository;
         this.logWriter        = logWriter;
         this.activeRegistry   = activeRegistry;
         this.heartbeatService = heartbeatService;
@@ -181,7 +179,6 @@ public class ExtractionLifecycle {
         private final String  applicationName;
         private final String  dataType;
         private final String  resourceName;
-        private final long    bytesTotal;
         private final Instant startedAt;
         private final HeartbeatService.Heartbeat heartbeat;
 
@@ -200,7 +197,6 @@ public class ExtractionLifecycle {
             this.applicationName = applicationName;
             this.dataType        = dataType;
             this.resourceName    = resourceName;
-            this.bytesTotal      = bytesTotal;
             this.startedAt       = startedAt;
             this.heartbeat       = heartbeat;
         }

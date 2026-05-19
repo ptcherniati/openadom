@@ -93,7 +93,6 @@ public class PublishLifecycleService {
     private final WorkflowLogWriter             logWriter;
     private final WorkflowLogRepository         logRepository;
     private final ApplicationEventPublisher     events;
-    private final PublishLifecycleCoordinator   coordinator;
     private final ConfigHashService             configHashService;
 
     /**
@@ -102,8 +101,17 @@ public class PublishLifecycleService {
      * Required=false pour preserver les tests unitaires existants .
      */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setBackendPidRegistry(fr.inra.oresing.workflow.cascade.BackendPidRegistry backendPidRegistry) {
+        this.backendPidRegistry = backendPidRegistry;
+    }
+
     private fr.inra.oresing.workflow.cascade.BackendPidRegistry backendPidRegistry;
+
     @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setJdbcTemplate(org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
     private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     /**
@@ -116,6 +124,10 @@ public class PublishLifecycleService {
      * Required=false pour preserver tests unitaires .
      */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setWorkflowActiveRegistry(fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry workflowActiveRegistry) {
+        this.workflowActiveRegistry = workflowActiveRegistry;
+    }
+
     private fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry workflowActiveRegistry;
 
     /**
@@ -129,6 +141,10 @@ public class PublishLifecycleService {
      * desactivation via {@code app.workflow.heap-guard.enabled=false} .
      */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setHeapGuard(fr.inra.oresing.workflow.guard.HeapGuardService heapGuard) {
+        this.heapGuard = heapGuard;
+    }
+
     private fr.inra.oresing.workflow.guard.HeapGuardService heapGuard;
 
     public PublishLifecycleService(
@@ -137,14 +153,12 @@ public class PublishLifecycleService {
             WorkflowLogWriter           logWriter,
             WorkflowLogRepository       logRepository,
             ApplicationEventPublisher   events,
-            PublishLifecycleCoordinator coordinator,
             ConfigHashService           configHashService) {
         this.serviceContainer  = serviceContainer;
         this.repository        = repository;
         this.logWriter         = logWriter;
         this.logRepository     = logRepository;
         this.events            = events;
-        this.coordinator       = coordinator;
         this.configHashService = configHashService;
     }
 

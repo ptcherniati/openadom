@@ -89,6 +89,10 @@ public class DashboardService {
      * CANCELLED dans {@code workflow_log} .
      */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setPublishLifecycleCoordinator(fr.inra.oresing.rest.usecases.storage.versioning.PublishLifecycleCoordinator publishLifecycleCoordinator) {
+        this.publishLifecycleCoordinator = publishLifecycleCoordinator;
+    }
+
     private fr.inra.oresing.rest.usecases.storage.versioning.PublishLifecycleCoordinator publishLifecycleCoordinator;
 
     /**
@@ -100,14 +104,17 @@ public class DashboardService {
      * que les chunks cascade et le SQL UPSERT continue jusqu'a son terme .
      */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setBackendPidRegistry(fr.inra.oresing.workflow.cascade.BackendPidRegistry backendPidRegistry) {
+        this.backendPidRegistry = backendPidRegistry;
+    }
+
     private fr.inra.oresing.workflow.cascade.BackendPidRegistry backendPidRegistry;
 
-    /**
-     * JdbcTemplate dedie pour le cancel statement-level ( pg_cancel_backend ) .
-     * Doit utiliser une connection differente de celle qui execute l'UPSERT
-     * pour pouvoir envoyer le signal pendant que l'UPSERT bloque sur le statement .
-     */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setJdbcTemplate(org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
     private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 

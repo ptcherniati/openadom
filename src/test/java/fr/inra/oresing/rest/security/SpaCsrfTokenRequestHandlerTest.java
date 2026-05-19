@@ -12,6 +12,7 @@ import org.springframework.security.web.csrf.CsrfToken;
 
 import java.util.function.Supplier;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.*;
 
 /**
@@ -39,10 +40,8 @@ class SpaCsrfTokenRequestHandlerTest {
         CsrfToken token = mock(CsrfToken.class, org.mockito.Answers.RETURNS_DEFAULTS);
         Supplier<CsrfToken> tokenSupplier = () -> token;
 
-        handler.handle(request, response, tokenSupplier);
-
-        // The key behavior: no NPE and the supplier was consumed
-        // (no assertion needed — if we reach here without exception, the handler worked)
+        assertThat(handler).isInstanceOf(org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler.class);
+        assertThatCode(() -> handler.handle(request, response, tokenSupplier)).doesNotThrowAnyException();
     }
 
     @Test

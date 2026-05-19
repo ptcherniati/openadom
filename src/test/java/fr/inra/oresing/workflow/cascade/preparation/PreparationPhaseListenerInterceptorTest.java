@@ -74,8 +74,10 @@ class PreparationPhaseListenerInterceptorTest {
         // silently no-op without throwing , so the preparator workflow
         // is never broken by an observability misconfiguration .
         PreparationPhaseListenerInterceptor empty = new PreparationPhaseListenerInterceptor(null);
-        empty.onSubPhase(UUID.randomUUID().toString(), "PHASE_Y", Instant.now());
-        // No exception , no verify needed
+        UUID cid = UUID.randomUUID();
+        org.assertj.core.api.Assertions.assertThatCode(
+                () -> empty.onSubPhase(cid.toString(), "PHASE_Y", Instant.now()))
+                .doesNotThrowAnyException();
     }
 
     @Test

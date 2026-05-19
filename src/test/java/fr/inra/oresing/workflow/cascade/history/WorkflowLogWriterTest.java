@@ -50,8 +50,8 @@ class WorkflowLogWriterTest {
     void logAsyncNull() {
         WorkflowLogRepository repo = mock(WorkflowLogRepository.class);
         WorkflowLogWriter writer = writerNotStarted(repo);
-        // Ne doit pas lever d'exception
         writer.logAsync(null);
+        verify(repo, never()).insertBatch(any());
     }
 
     // ─── recordStart ─────────────────────────────────────────────────────────

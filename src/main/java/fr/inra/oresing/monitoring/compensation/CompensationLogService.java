@@ -56,6 +56,7 @@ public class CompensationLogService {
     }
 
     /** Default TTL ( 240 min ) . */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public UUID record(String operationType,
                        String targetSchema, String targetTable, String targetId,
                        UUID correlationId, UUID userId, String userLogin,
