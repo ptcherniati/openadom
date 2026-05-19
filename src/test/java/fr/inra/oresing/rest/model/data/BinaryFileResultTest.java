@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -78,6 +79,22 @@ class BinaryFileResultTest {
         ReferencedBinaryFiles ref = new ReferencedBinaryFiles(UUID.randomUUID(), "dt", null);
         BinaryFileResult result = BinaryFileResult.of(binaryFile, null, null, List.of(ref));
         assertFalse(result.hasLinks());
+    }
+
+    @Test
+    void of_nullParams_returnsDefaultInfosWithPublishedFalse() {
+        // BinaryFile sans params (cas legacy ou import partiel)
+        BinaryFile bf = new BinaryFile();
+        bf.setId(UUID.randomUUID());
+        bf.setName("orphan.csv");
+        bf.setSize(0L);
+        // params intentionnellement null
+
+        BinaryFileResult result = BinaryFileResult.of(bf, null, null, false, null);
+
+        assertNotNull(result.params(), "params ne doit pas être null");
+        assertFalse(result.params().published(), "published doit être false quand params est null");
+        assertNull(result.params().binaryFileDataset());
     }
 
     private static BinaryFile newBinaryFile() {

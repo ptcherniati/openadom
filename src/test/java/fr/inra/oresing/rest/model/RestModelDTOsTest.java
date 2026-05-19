@@ -234,6 +234,19 @@ class RestModelDTOsTest {
             assertThat(result.publisheduser()).isNull();
             assertThat(result.binaryFileDataset()).isNotNull();
         }
+
+        @Test
+        @DisplayName("of(null) retourne un objet vide avec published=false (pas de NPE)")
+        void ofNull_returnsDefaultWithPublishedFalse() {
+            BinaryFileInfosResult result = BinaryFileInfosResult.of(null, null, null);
+            assertThat(result).isNotNull();
+            assertThat(result.published()).isFalse();
+            assertThat(result.comment()).isNull();
+            assertThat(result.createdate()).isNull();
+            assertThat(result.createuser()).isNull();
+            assertThat(result.publisheduser()).isNull();
+            assertThat(result.binaryFileDataset()).isNull();
+        }
     }
 
     // ---------------------------------------------------------
