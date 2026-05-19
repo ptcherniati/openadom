@@ -367,6 +367,17 @@ public class DataService {
                         && !dataDescription.naturalKey().isEmpty()) {
                     java.util.List<String> nkColumns = new java.util.ArrayList<>(dataDescription.naturalKey());
                     char sep = dataDescription.separator();
+                    // Header / first-data line numbers ( 1-indexed ) extraits de la
+                    // config YAML ( OA_dataHeaderLine / OA_dataFirstLine ) . Si
+                    // null = defaut legacy ( header ligne 1 ) ; sinon le prescan
+                    // skippe les lignes de metadata humain en tete et lit le
+                    // vrai header technique a la ligne configuree . Fix
+                    // ISSUE_GITLAB_PRESCAN_AXE_B_IGNORE_DATAHEADERLINE_2026-05-18
+                    // ( prescan plantait sur les datatypes Excel-style ACBB
+                    // recursifs car parsait la ligne 1 - metadata humain - comme
+                    // header CSV ) .
+                    Integer dataHeaderLine = dataDescription.headerLine();
+                    Integer dataFirstLine  = dataDescription.firstRowLine();
                     org.apache.commons.csv.CSVFormat fmt = org.apache.commons.csv.CSVFormat.Builder
                             .create(org.apache.commons.csv.CSVFormat.DEFAULT)
                             .setDelimiter(sep)
@@ -376,28 +387,33 @@ public class DataService {
                                 .extractCompositeNaturalKeys(
                                         r, fmt, nkColumns,
                                         fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext
-                                                .COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR);
+                                                .COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR,
+                                        dataHeaderLine, dataFirstLine);
                     }
-                    log.debug("[Axe B] prescan refType={} columns={} naturalkeys_distinctes={}",
-                            refType, nkColumns, naturalKeysHint.size());
+                    log.debug("[Axe B] prescan refType={} columns={} headerLine={} firstLine={} naturalkeys_distinctes={}",
+                            refType, nkColumns, dataHeaderLine, dataFirstLine, naturalKeysHint.size());
                 } else {
                     log.debug("[Axe B] prescan skip refType={} : config naturalKey absente/vide ( fallback legacy )", refType);
                 }
                 effectiveInputStream = Files.newInputStream(csvBufferFile);
             } catch (RuntimeException | IOException ex) {
-                // Fallback graceful : nettoie le buffer si cree , retombe
-                // sur le chemin legacy ( hint=null ) . Le file reste a
-                // l'etat consomme partiellement ; un retry par
-                // l'utilisateur est necessaire pour qu'il fonctionne .
+                // Fallback graceful : retombe sur le chemin legacy ( hint=null ) .
+                // CRUCIAL : on conserve le csvBufferFile pour fournir un
+                // InputStream FRAIS au cascade ; l'original {@code file} a deja
+                // ete consume par Files.copy(...) ci-dessus , l'utiliser
+                // provoquerait NoSuchElementException dans CSVParser downstream .
+                // Fix ISSUE_GITLAB_PRESCAN_AXE_B_IGNORE_DATAHEADERLINE_2026-05-18
+                // ( cascade au 500 apres prescan failed parce que le legacy
+                // preload heritait d'un InputStream vide ) . Le file est
+                // supprime dans le finally en fin de methode .
                 log.warn("[Axe B] prescan failed for refType={} ( fallback legacy full preload ) : {}",
                         refType, ex.getMessage());
-                if (csvBufferFile != null) {
-                    try { Files.deleteIfExists(csvBufferFile); }
-                    catch (IOException ignored) { /* best-effort cleanup */ }
-                    csvBufferFile = null;
-                }
                 naturalKeysHint = null;
-                effectiveInputStream = file;
+                if (csvBufferFile != null) {
+                    effectiveInputStream = Files.newInputStream(csvBufferFile);
+                } else {
+                    effectiveInputStream = file;
+                }
             }
         }
 

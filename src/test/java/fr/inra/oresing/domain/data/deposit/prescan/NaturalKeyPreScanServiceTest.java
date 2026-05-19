@@ -334,4 +334,197 @@ class NaturalKeyPreScanServiceTest {
             assertThat(nks).containsExactlyInAnyOrder("S1__", "S2__");
         }
     }
+
+    // ============================================================
+    // Regression : OA_dataHeaderLine / OA_dataFirstLine respect
+    // ( ISSUE_GITLAB_PRESCAN_AXE_B_IGNORE_DATAHEADERLINE_2026-05-18 )
+    // ============================================================
+
+    /**
+     * CSV "Excel-style" ACBB : 7 lignes metadata humain , header technique a
+     * la ligne 8 , data a partir de la ligne 15 ( lignes 9-14 sont
+     * description / type / obligatoire ) . Le prescan doit retourner les
+     * naturalkeys composites des lignes data uniquement .
+     */
+    @Test
+    void extractCompositeNaturalKeys_skips_metadata_lines_when_dataHeaderLine_set() throws IOException {
+        String csv = ""
+                + "Type de données :;localisation;;;\n"               // line 1
+                + "Site d'étude :;theix;;;\n"                          // line 2
+                + ";;;;\n"                                             // line 3
+                + ";;;;\n"                                             // line 4
+                + "commentaire :;;;;\n"                                // line 5
+                + ";;;;\n"                                             // line 6
+                + ";;;;\n"                                             // line 7
+                + "type_zone;id_zone;zone_label_fr;parent_zone;area\n" // line 8 : real header
+                + "Identifiant;Identifiant;Label;Parent;Area\n"        // line 9 : description
+                + "Ref;texte;texte;Ref;numeric\n"                      // line 10 : type
+                + "Obligatoire;Obligatoire;Facultatif;Facultatif;Facultatif\n" // line 11
+                + ";;;;\n"                                             // line 12
+                + ";;;;\n"                                             // line 13
+                + ";;;;\n"                                             // line 14
+                + "sit;acbb_theix;ACBB_THEIX;;100\n"                   // line 15 : data
+                + "ilo;annexe;ANNEXE;acbb_theix;50\n"                  // line 16
+                + "pex;p30;p30;annexe;10\n";                           // line 17
+        try (Reader r = new StringReader(csv)) {
+            Set<String> nks = service.extractCompositeNaturalKeys(
+                    r, format, List.of("type_zone", "id_zone"), "__",
+                    /* dataHeaderLine */ 8, /* dataFirstLine */ 15);
+            // Only the 3 data lines should yield naturalkeys ;
+            // description / type / obligatoire lines ( 9-11 ) are skipped .
+            assertThat(nks).containsExactlyInAnyOrder(
+                    "sit__acbb_theix",
+                    "ilo__annexe",
+                    "pex__p30");
+        }
+    }
+
+    /**
+     * BOM UTF-8 en tete du CSV : doit etre transparent pour la lecture
+     * du header ( sans strip , la 1ere colonne s'appellerait
+     * "﻿type_zone" et record.get("type_zone") retournerait null ) .
+     */
+    @Test
+    void extractCompositeNaturalKeys_strips_utf8_bom_in_header() throws IOException {
+        String csv = "﻿"
+                + "type_zone;id_zone\n"
+                + "sit;acbb_theix\n"
+                + "ilo;annexe\n";
+        try (Reader r = new StringReader(csv)) {
+            Set<String> nks = service.extractCompositeNaturalKeys(
+                    r, format, List.of("type_zone", "id_zone"), "__",
+                    /* dataHeaderLine */ 1, /* dataFirstLine */ 2);
+            assertThat(nks).containsExactlyInAnyOrder("sit__acbb_theix", "ilo__annexe");
+        }
+    }
+
+    /**
+     * BOM + metadata Excel-style : combinaison du test ACBB reel . Le BOM
+     * est sur la ligne 1 ( metadata , skippee ) ; la ligne 8 ( header )
+     * elle ne porte pas de BOM mais le strip doit etre idempotent .
+     */
+    @Test
+    void extractCompositeNaturalKeys_bom_on_skipped_metadata_does_not_break_header() throws IOException {
+        String csv = "﻿"
+                + "Type de données :;localisation;\n"  // line 1 : BOM + metadata
+                + ";;\n"
+                + ";;\n"
+                + ";;\n"
+                + ";;\n"
+                + ";;\n"
+                + ";;\n"
+                + "type_zone;id_zone\n"                 // line 8 : header
+                + "Description;Description\n"           // line 9 : description ( skipped )
+                + "sit;theix\n"                         // line 10 : data
+                + "ilo;annexe\n";                       // line 11 : data
+        try (Reader r = new StringReader(csv)) {
+            Set<String> nks = service.extractCompositeNaturalKeys(
+                    r, format, List.of("type_zone", "id_zone"), "__",
+                    /* dataHeaderLine */ 8, /* dataFirstLine */ 10);
+            assertThat(nks).containsExactlyInAnyOrder("sit__theix", "ilo__annexe");
+        }
+    }
+
+    /**
+     * Backward-compat : dataHeaderLine null ou 1 doit produire le meme
+     * resultat que l'overload sans dataHeaderLine ( header sur ligne 1 ,
+     * pas de skip ) .
+     */
+    @Test
+    void extractCompositeNaturalKeys_null_dataHeaderLine_is_legacy() throws IOException {
+        String csv = """
+                site;treatment
+                S1;T1
+                S2;T2
+                """;
+        Set<String> legacy;
+        try (Reader r = new StringReader(csv)) {
+            legacy = service.extractCompositeNaturalKeys(
+                    r, format, List.of("site", "treatment"), "__");
+        }
+        Set<String> nullHeaderLine;
+        try (Reader r = new StringReader(csv)) {
+            nullHeaderLine = service.extractCompositeNaturalKeys(
+                    r, format, List.of("site", "treatment"), "__",
+                    null, null);
+        }
+        Set<String> oneHeaderLine;
+        try (Reader r = new StringReader(csv)) {
+            oneHeaderLine = service.extractCompositeNaturalKeys(
+                    r, format, List.of("site", "treatment"), "__",
+                    1, 2);
+        }
+        assertThat(legacy).containsExactlyInAnyOrder("S1__T1", "S2__T2");
+        assertThat(nullHeaderLine).isEqualTo(legacy);
+        assertThat(oneHeaderLine).isEqualTo(legacy);
+    }
+
+    /**
+     * Edge case : CSV plus court que dataHeaderLine ( fichier vide ou
+     * tronque ) -> empty set retourne , pas d'exception .
+     */
+    @Test
+    void extractCompositeNaturalKeys_csv_shorter_than_dataHeaderLine_returns_empty() throws IOException {
+        String csv = "line1\nline2\nline3\n";
+        try (Reader r = new StringReader(csv)) {
+            Set<String> nks = service.extractCompositeNaturalKeys(
+                    r, format, List.of("site", "treatment"), "__",
+                    /* dataHeaderLine */ 8, /* dataFirstLine */ 15);
+            assertThat(nks).isEmpty();
+        }
+    }
+
+    /**
+     * dataFirstLine egal a dataHeaderLine+1 ( cas standard sans lignes
+     * description ) : aucune ligne data perdue .
+     */
+    @Test
+    void extractCompositeNaturalKeys_dataFirstLine_immediately_after_header() throws IOException {
+        String csv = ""
+                + "skipme\n"
+                + "site;treatment\n"   // line 2 : header
+                + "S1;T1\n"            // line 3 : data
+                + "S2;T2\n";
+        try (Reader r = new StringReader(csv)) {
+            Set<String> nks = service.extractCompositeNaturalKeys(
+                    r, format, List.of("site", "treatment"), "__",
+                    /* dataHeaderLine */ 2, /* dataFirstLine */ 3);
+            assertThat(nks).containsExactlyInAnyOrder("S1__T1", "S2__T2");
+        }
+    }
+
+    /**
+     * Verifie que le decorator {@link NaturalKeyPreScanService.BomStrippingReader}
+     * laisse passer le contenu intact quand il n'y a PAS de BOM en tete
+     * ( idempotent ) .
+     */
+    @Test
+    void bomStrippingReader_passes_content_unchanged_without_bom() throws IOException {
+        String content = "header1;header2\nfoo;bar\n";
+        try (Reader r = new NaturalKeyPreScanService.BomStrippingReader(new StringReader(content))) {
+            char[] buf = new char[content.length() + 4];
+            int read = r.read(buf, 0, buf.length);
+            assertThat(read).isEqualTo(content.length());
+            assertThat(new String(buf, 0, read)).isEqualTo(content);
+        }
+    }
+
+    /**
+     * Verifie que le decorator strip le BOM UTF-8 ( ﻿ ) en tete et
+     * laisse passer le reste intact .
+     */
+    @Test
+    void bomStrippingReader_strips_leading_bom() throws IOException {
+        String content = "header1;header2\nfoo;bar\n";
+        try (Reader r = new NaturalKeyPreScanService.BomStrippingReader(
+                new StringReader("﻿" + content))) {
+            char[] buf = new char[content.length() + 8];
+            int total = 0;
+            int n;
+            while ((n = r.read(buf, total, buf.length - total)) > 0) {
+                total += n;
+            }
+            assertThat(new String(buf, 0, total)).isEqualTo(content);
+        }
+    }
 }
