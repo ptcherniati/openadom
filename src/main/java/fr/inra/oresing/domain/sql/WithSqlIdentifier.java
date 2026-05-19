@@ -2,14 +2,26 @@ package fr.inra.oresing.domain.sql;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.regex.Pattern;
+
 public interface WithSqlIdentifier {
 
+    Pattern SAFE_IDENTIFIER = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
+    Pattern SAFE_QUOTED_IDENTIFIER = Pattern.compile("[A-Za-z0-9_\\- ]+");
+
     static String escapeSqlIdentifier(final String sqlIdentifier) {
-        final String escaped;
-        if (StringUtils.containsAny(sqlIdentifier, " ", "-")) {
-            escaped = "\"" + sqlIdentifier + "\"";
-        } else {
-            escaped = sqlIdentifier;
+        if (StringUtils.isBlank(sqlIdentifier)) {
+            throw new IllegalArgumentException("SQL identifier cannot be blank");
+        }
+        final String escaped = sqlIdentifier.trim();
+        if (StringUtils.containsAny(escaped, " ", "-")) {
+            if (!SAFE_QUOTED_IDENTIFIER.matcher(escaped).matches()) {
+                throw new IllegalArgumentException("Unsafe SQL identifier: " + sqlIdentifier);
+            }
+            return "\"" + escaped + "\"";
+        }
+        if (!SAFE_IDENTIFIER.matcher(escaped).matches()) {
+            throw new IllegalArgumentException("Unsafe SQL identifier: " + sqlIdentifier);
         }
         return escaped;
     }
