@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.inra.oresing.domain.application.Application;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -40,13 +39,13 @@ public class DataVersioningScopeCacheRepository {
 
     private final Application application;
     private final SqlSchemaForApplication schema;
+    private final NamedParameterJdbcTemplate jdbc;
 
-    @Autowired
-    private NamedParameterJdbcTemplate jdbc;
-
-    public DataVersioningScopeCacheRepository(final Application application) {
+    public DataVersioningScopeCacheRepository(Application application,
+                                              NamedParameterJdbcTemplate jdbc) {
         this.application = application;
         this.schema = SqlSchema.forApplication(application);
+        this.jdbc = jdbc;
     }
 
     /**

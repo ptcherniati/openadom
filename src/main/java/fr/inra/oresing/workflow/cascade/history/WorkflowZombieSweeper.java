@@ -4,7 +4,6 @@ import fr.inra.oresing.mail.Email;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -82,7 +81,7 @@ public class WorkflowZombieSweeper {
      * l'admin lors de la detection de zombies IMPORT / UNPUBLISH / DELETE_FILE
      * marques FAILED par migration V13 ( V12 ne couvrait pas IMPORT ) .
      *
-     * <p>Pourquoi ObjectProvider et pas {@code @Autowired Email} : un
+     * <p>Pourquoi ObjectProvider et pas injection directe d'Email : un
      * autowire direct sur {@link Email} declenche
      * {@code MailSenderAutoConfiguration} de Spring Boot . Sur les
      * profils de tests sans mail config ( ex : testmail in-memory ) ,
@@ -92,28 +91,31 @@ public class WorkflowZombieSweeper {
      * differee : Spring ne touche pas a l'autoconfig mail tant que
      * {@code getIfAvailable()} n'est pas appele a runtime .
      */
-    @Autowired
-    private ObjectProvider<Email> emailProvider;
+    private final ObjectProvider<Email> emailProvider;
 
     /** Adresse email destinataire des alertes zombies
      *  IMPORT / UNPUBLISH / DELETE_FILE . Vide ( defaut ) -> notifications
      *  desactivees . Configurer via
      *  {@code app.workflow.zombie-notify-email=admin@example.com} . */
-    @Value("${app.workflow.zombie-notify-email:}")
-    private String notifyEmail;
+    private final String notifyEmail;
 
     /** Base URL frontend pour generer le lien "Reprendre" dans l'email .
      *  Defaut sur {@code openadom.front.base-url} ( cf Phase 1 #487 ) . */
-    @Value("${openadom.front.base-url:}")
-    private String frontBaseUrl;
+    private final String frontBaseUrl;
 
     public WorkflowZombieSweeper(
             WorkflowLogRepository repository,
             @Value("${app.workflow.zombie-threshold-minutes:10}") int thresholdMinutes,
-            @Value("${app.workflow.zombie-cleanup-on-boot:true}") boolean cleanupOnBoot) {
+            @Value("${app.workflow.zombie-cleanup-on-boot:true}") boolean cleanupOnBoot,
+            ObjectProvider<Email> emailProvider,
+            @Value("${app.workflow.zombie-notify-email:}") String notifyEmail,
+            @Value("${openadom.front.base-url:}") String frontBaseUrl) {
         this.repository       = repository;
         this.thresholdMinutes = thresholdMinutes;
         this.cleanupOnBoot    = cleanupOnBoot;
+        this.emailProvider    = emailProvider;
+        this.notifyEmail      = notifyEmail;
+        this.frontBaseUrl     = frontBaseUrl;
         log.info("WorkflowZombieSweeper configure : seuil={} min , cleanupOnBoot={} ( IN_PROGRESS plus vieux que ca = presumes morts )",
                 thresholdMinutes, cleanupOnBoot);
     }

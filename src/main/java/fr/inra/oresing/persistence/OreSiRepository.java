@@ -4,14 +4,20 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.migration.context.DataInfo;
 import fr.inra.oresing.domain.application.configuration.migration.context.SchemaInfo;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 public class OreSiRepository {
 
-    @Autowired
-    private BeanFactory beanFactory;
+    private final BeanFactory beanFactory;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+
+    public OreSiRepository(BeanFactory beanFactory,
+                           NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+        this.beanFactory = beanFactory;
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
+    }
 
     public ApplicationRepository application() {
         return beanFactory.getBean(ApplicationRepository.class);
@@ -65,7 +71,8 @@ public class OreSiRepository {
         }
 
         public DataVersioningScopeCacheRepository dataVersioningScopeCache() {
-            return beanFactory.getBean(DataVersioningScopeCacheRepository.class, application);
+            return beanFactory.getBean(DataVersioningScopeCacheRepository.class,
+                    application, namedParameterJdbcTemplate);
         }
 
         public RightsRequestRepository rightsRequestRepository() {

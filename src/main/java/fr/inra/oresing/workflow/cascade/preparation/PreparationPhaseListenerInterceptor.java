@@ -5,6 +5,7 @@ import fr.inrae.ore.cascade.model.interceptor.preparation.PreparationInterceptor
 import fr.inrae.ore.cascade.model.interceptor.preparation.PreparationInterceptorContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -67,12 +68,16 @@ public class PreparationPhaseListenerInterceptor implements PreparationIntercept
 
     /**
      * Repository workflow_log pour persister la phase emise . Optionnel
-     * via {@code @Autowired(required=false)} pour ne pas casser les
-     * profils de test qui chargent cascade sans la stack persistence
-     * openADOM ( ex : tests unitaires WorkflowBuilder isoles ) .
+     * pour ne pas casser les profils de test qui chargent cascade sans
+     * la stack persistence openADOM ( ex : tests unitaires WorkflowBuilder
+     * isoles ) .
      */
-    @Autowired(required = false)
-    private WorkflowLogRepository workflowLogRepository;
+    private final WorkflowLogRepository workflowLogRepository;
+
+    @Autowired
+    public PreparationPhaseListenerInterceptor(@Nullable WorkflowLogRepository workflowLogRepository) {
+        this.workflowLogRepository = workflowLogRepository;
+    }
 
     @Override
     public void onSubPhase(String correlationId, String subPhase, Instant emittedAt) {

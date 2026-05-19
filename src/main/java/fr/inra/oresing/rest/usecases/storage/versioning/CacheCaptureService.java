@@ -10,6 +10,7 @@ import fr.inra.oresing.workflow.cascade.config.PublishProperties;
 import fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -56,16 +57,17 @@ public class CacheCaptureService {
     private final OreSiRepository repository;
     private final ConfigHashService configHashService;
     private final PublishProperties publishProperties;
+    private final WorkflowLogRepository workflowLogRepository;
 
-    @Autowired(required = false)
-    private WorkflowLogRepository workflowLogRepository;
-
+    @Autowired
     public CacheCaptureService(OreSiRepository repository,
                                 ConfigHashService configHashService,
-                                PublishProperties publishProperties) {
+                                PublishProperties publishProperties,
+                                @Nullable WorkflowLogRepository workflowLogRepository) {
         this.repository = repository;
         this.configHashService = configHashService;
         this.publishProperties = publishProperties;
+        this.workflowLogRepository = workflowLogRepository;
     }
 
     /**

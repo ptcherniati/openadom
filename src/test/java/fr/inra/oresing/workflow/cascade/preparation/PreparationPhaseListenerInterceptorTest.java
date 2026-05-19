@@ -5,8 +5,6 @@ import fr.inrae.ore.cascade.model.interceptor.preparation.PreparationInterceptor
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-
-import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
@@ -34,10 +32,9 @@ class PreparationPhaseListenerInterceptorTest {
     private WorkflowLogRepository                repo;
 
     @BeforeEach
-    void setUp() throws Exception {
-        listener = new PreparationPhaseListenerInterceptor();
+    void setUp() {
         repo     = mock(WorkflowLogRepository.class);
-        injectRepository(listener, repo);
+        listener = new PreparationPhaseListenerInterceptor(repo);
     }
 
     @Test
@@ -71,12 +68,12 @@ class PreparationPhaseListenerInterceptorTest {
     }
 
     @Test
-    void missing_repository_bean_makes_listener_a_noop() throws Exception {
+    void missing_repository_bean_makes_listener_a_noop() {
         // Simulate a context without WorkflowLogRepository ( unit tests of
         // cascade isolees , profil sans persistence ) . The listener must
         // silently no-op without throwing , so the preparator workflow
         // is never broken by an observability misconfiguration .
-        PreparationPhaseListenerInterceptor empty = new PreparationPhaseListenerInterceptor();
+        PreparationPhaseListenerInterceptor empty = new PreparationPhaseListenerInterceptor(null);
         empty.onSubPhase(UUID.randomUUID().toString(), "PHASE_Y", Instant.now());
         // No exception , no verify needed
     }
@@ -104,12 +101,5 @@ class PreparationPhaseListenerInterceptorTest {
         listener.afterPreparation(ctx);
         listener.onPreparationError(new RuntimeException("boom"), ctx);
         verify(repo, never()).updatePhase(any(), any());
-    }
-
-    private static void injectRepository(PreparationPhaseListenerInterceptor target,
-                                          WorkflowLogRepository repo) throws Exception {
-        Field f = PreparationPhaseListenerInterceptor.class.getDeclaredField("workflowLogRepository");
-        f.setAccessible(true);
-        f.set(target, repo);
     }
 }

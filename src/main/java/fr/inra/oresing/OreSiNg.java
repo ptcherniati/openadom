@@ -102,7 +102,7 @@ public class OreSiNg implements WebMvcConfigurer {
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         log.info("=== Adding JsonRequestParamArgumentResolver ===");
         resolvers.addFirst(jsonRequestParamArgumentResolver);
-        log.info("=== Total resolvers: " + resolvers.size() + " ===");
+        log.info("=== Total resolvers: {} ===", resolvers.size());
     }
     @Override
     public void addResourceHandlers(final ResourceHandlerRegistry registry) {

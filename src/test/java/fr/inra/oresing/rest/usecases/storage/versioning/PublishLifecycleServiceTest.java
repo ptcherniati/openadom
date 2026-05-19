@@ -74,7 +74,7 @@ class PublishLifecycleServiceTest {
     @Mock private AuthenticationService     authenticationService;
     @Mock private Application               application;
 
-    private final PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator();
+    private final PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator(null);
     private final ConfigHashService configHashService = new ConfigHashService();
     private PublishLifecycleService service;
 

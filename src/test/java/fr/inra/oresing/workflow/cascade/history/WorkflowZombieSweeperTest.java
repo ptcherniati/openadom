@@ -2,6 +2,7 @@ package fr.inra.oresing.workflow.cascade.history;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.doThrow;
@@ -24,13 +25,22 @@ import static org.mockito.Mockito.when;
 @DisplayName("WorkflowZombieSweeper")
 class WorkflowZombieSweeperTest {
 
+    /** Factory helper pour instancier le sweeper sans mail ni base URL . */
+    @SuppressWarnings("unchecked")
+    private static WorkflowZombieSweeper sweeper(WorkflowLogRepository repo,
+                                                  int threshold, boolean cleanupOnBoot) {
+        ObjectProvider emailProvider = mock(ObjectProvider.class);
+        return new WorkflowZombieSweeper(repo, threshold, cleanupOnBoot,
+                emailProvider, "", "");
+    }
+
     @Test
     @DisplayName("sweepZombies ( ) appelle markZombies avec le seuil configure")
     void sweep_invokes_repository_with_threshold() {
         WorkflowLogRepository repo = mock(WorkflowLogRepository.class);
         when(repo.markZombies(45)).thenReturn(2);
 
-        WorkflowZombieSweeper sweeper = new WorkflowZombieSweeper(repo, 45, false);
+        WorkflowZombieSweeper sweeper = sweeper(repo, 45, false);
         sweeper.sweepZombies();
 
         verify(repo, times(1)).markZombies(45);
@@ -42,7 +52,7 @@ class WorkflowZombieSweeperTest {
         WorkflowLogRepository repo = mock(WorkflowLogRepository.class);
         doThrow(new RuntimeException("DB down")).when(repo).markZombies(30);
 
-        WorkflowZombieSweeper sweeper = new WorkflowZombieSweeper(repo, 30, false);
+        WorkflowZombieSweeper sweeper = sweeper(repo, 30, false);
 
         // Sweeper ne doit JAMAIS propager l'exception ( sinon le scheduler
         // Spring suspend la tache jusqu'au prochain redemarrage ) .
@@ -56,7 +66,7 @@ class WorkflowZombieSweeperTest {
         WorkflowLogRepository repo = mock(WorkflowLogRepository.class);
         when(repo.markZombies(60)).thenReturn(0);
 
-        WorkflowZombieSweeper sweeper = new WorkflowZombieSweeper(repo, 60, false);
+        WorkflowZombieSweeper sweeper = sweeper(repo, 60, false);
         sweeper.sweepZombies();
 
         verify(repo, times(1)).markZombies(60);
@@ -67,7 +77,7 @@ class WorkflowZombieSweeperTest {
     @DisplayName("constructor stocke le seuil ( log info au boot )")
     void constructor_logs_config() {
         WorkflowLogRepository repo = mock(WorkflowLogRepository.class);
-        new WorkflowZombieSweeper(repo, 15, false);
+        sweeper(repo, 15, false);
         // Pas d'assertion logging ; juste valider que le ctor ne plante pas
         // avec un seuil legitime ( valide en SQL avec p_minutes > 0 ) .
     }
