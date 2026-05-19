@@ -121,6 +121,9 @@ public record WorkflowLogEntry(
     public static final String TYPE_EXTRACT_CSV               = "EXTRACT_CSV";
     public static final String TYPE_EXTRACT_ADDITIONAL_FILES  = "EXTRACT_ADDITIONAL_FILES";
     public static final String TYPE_EXTRACT_CHARTE            = "EXTRACT_CHARTE";
+    public static final String TYPE_PUBLISH                   = "PUBLISH";
+    public static final String TYPE_UNPUBLISH                 = "UNPUBLISH";
+    public static final String TYPE_DELETE_FILE               = "DELETE_FILE";
 
     public static final String STATUS_IN_PROGRESS   = "IN_PROGRESS";
     public static final String STATUS_COMPLETED     = "COMPLETED";

@@ -1,0 +1,5 @@
+FROM amazoncorretto:25
+WORKDIR /app
+COPY target/si-ore-ng-1.0.1.jar ./si-ore-jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "si-ore-jar"]

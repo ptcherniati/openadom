@@ -28,7 +28,8 @@ public record DashboardWorkflowDTO(
 
         @Schema(description = "Workflow type",
                 allowableValues = {"IMPORT", "EXTRACT_ZIP", "EXTRACT_CSV",
-                        "EXTRACT_ADDITIONAL_FILES", "EXTRACT_CHARTE"})
+                        "EXTRACT_ADDITIONAL_FILES", "EXTRACT_CHARTE",
+                        "PUBLISH", "UNPUBLISH", "DELETE_FILE"})
         String workflowType,
 
         @Schema(description = "Owner of the workflow")
@@ -116,7 +117,21 @@ public record DashboardWorkflowDTO(
                 + "'workflow vivant mais lent' de 'workflow mort' via un pill vert/orange/"
                 + "rouge selon l'age . Null si jamais beat ( workflow trop court , phase "
                 + "non heartbeat-ee , workflow termine ) .")
-        Instant lastHeartbeatAt) {
+        Instant lastHeartbeatAt,
+
+        @Schema(description = "Metadata jsonb du workflow ( champs libres encodes par le "
+                + "use case proprietaire ; ex. PUBLISH / UNPUBLISH / DELETE_FILE encodent "
+                + "{ fileId, wasPublished } pour la supersedure et l'audit ) . Null pour "
+                + "les workflows in-memory ( snapshot ) ou si la metadata est absente .")
+        Map<String, Object> metadata,
+
+        @Schema(description = "Snapshot live d'un workflow publish execute via le FAST "
+                + "path ( cache processed_data projete en SQL pur vers referencevalue , "
+                + "sans cascade DataImporter ) . Quand present , oa-live affiche un panel "
+                + "dedie avec les phases STREAM_CACHE / BUILD_REFREF / UPSERT_FINAL / "
+                + "INSERT_REFREF / CACHE_CLEAR au lieu de la grille cascade ( workers ) . "
+                + "Null pour les workflows cascade FULL/LITE ou non-PUBLISH .")
+        FastPathDTO fastPath) {
 
     public static DashboardWorkflowDTO fromSnapshot(fr.inra.oresing.workflow.cascade.history.WorkflowSnapshot s) {
         List<ChunkDTO> chunkDtos = s.chunks() == null
@@ -146,7 +161,76 @@ public record DashboardWorkflowDTO(
                 s.progressPercentage(), s.bytesTotal(), s.recordsTotal(),
                 chunkDtos, workerDtos, parallelism, strategy, sinkChunkDtos,
                 importConfig,
-                s.lastHeartbeatAt());
+                s.lastHeartbeatAt(),
+                null,
+                null);
+    }
+
+    /**
+     * Copie d'une DTO existante en re-assignant uniquement {@link #fastPath} .
+     * Pattern "with" - les records Java ne supportent pas nativement la mutation
+     * partielle , et la DTO a 25 champs ; cette helper isole la liste positionnelle
+     * pour eviter sa duplication a chaque endroit qui doit injecter fastPath .
+     */
+    public static DashboardWorkflowDTO withFastPath(DashboardWorkflowDTO base, FastPathDTO fp) {
+        return new DashboardWorkflowDTO(
+                base.correlationId(), base.workflowType(), base.userId(), base.userLogin(),
+                base.applicationName(), base.dataType(), base.resourceName(),
+                base.startTime(), base.endTime(), base.durationMs(),
+                base.status(),
+                base.recordsProcessed(), base.recordsFailed(), base.chunksProcessed(),
+                base.progressPercentage(), base.bytesTotal(), base.recordsTotal(),
+                base.chunks(), base.workers(), base.parallelism(), base.strategy(),
+                base.sinkChunks(), base.importConfig(),
+                base.lastHeartbeatAt(), base.metadata(),
+                fp);
+    }
+
+    /**
+     * DTO d'un workflow publish execute via le FAST path ( cache rotation ) .
+     * Cf {@link fr.inra.oresing.workflow.cascade.history.FastPathSnapshot} .
+     */
+    @Schema(name = "DashboardFastPath",
+            description = "Snapshot live d'un workflow PUBLISH execute via FAST path")
+    public record FastPathDTO(
+            @Schema(description = "Phase courante",
+                    allowableValues = {"STREAM_CACHE", "BUILD_REFREF", "DELETE_REFREF",
+                            "UPSERT_FINAL", "INSERT_REFREF", "CACHE_CLEAR", "DONE"})
+            String phase,
+            @Schema(description = "Taille du cache processed_data en octets")
+            long cacheSizeBytes,
+            @Schema(description = "Nombre de lignes JSON streamees depuis le Large Object "
+                    + "vers la temp table parsed_lines ( ticks live tous les 5000 ) .")
+            long streamedRows,
+            @Schema(description = "Nombre de rows finalement INSERT/UPDATE dans "
+                    + "referencevalue . 0 pendant l'UPSERT ( 1 seul statement SQL , pas "
+                    + "de progression intermediaire ) , peuple au commit .")
+            long upsertedRows,
+            @Schema(description = "Instant de demarrage du FAST path .")
+            Instant startedAt,
+            @Schema(description = "Duree par phase en millisecondes ( cumulatif phase "
+                    + "terminees ) . Permet d'afficher 39s sur STREAM_CACHE , 485s sur "
+                    + "UPSERT_FINAL , etc . dans le panel oa-live .")
+            Map<String, Long> phaseDurations,
+            @Schema(description = "UUID du binaryfile cible . Affiche tronque ( 8 chars ) "
+                    + "dans le panel FAST path , full uuid au tooltip survol .")
+            String fileId,
+            @Schema(description = "Nom du fichier d'origine ( BinaryFile.name ) . Affiche "
+                    + "ellipse si trop long , full filename au tooltip survol .")
+            String filename) {
+
+        public static FastPathDTO fromSnapshot(fr.inra.oresing.workflow.cascade.history.FastPathSnapshot s) {
+            if (s == null) return null;
+            return new FastPathDTO(
+                    s.phase(),
+                    s.cacheSizeBytes(),
+                    s.streamedRows(),
+                    s.upsertedRows(),
+                    s.startedAt(),
+                    s.phaseDurations(),
+                    s.fileId() == null ? null : s.fileId().toString(),
+                    s.filename());
+        }
     }
 
     /** Per-chunk DTO mirroring {@link fr.inra.oresing.workflow.cascade.history.ChunkSnapshot}. */

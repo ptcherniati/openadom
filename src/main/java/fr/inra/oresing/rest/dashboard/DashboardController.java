@@ -36,7 +36,11 @@ import java.util.UUID;
  * <p>Phase 3 dashboard ( issue #62 ).
  */
 @RestController
-@RequestMapping("/api/dashboard/workflows")
+// Double prefix : oa-live admin appelle /api/dashboard/workflows ( apiBase = '' ) ,
+// le frontend OpenADOM principal passe par Fetcher qui prefixe automatiquement
+// /api/v1/ ( cf config.ts API_URL ) . On expose les deux pour eviter de toucher
+// le client : meme controller , meme code , aliases multiples .
+@RequestMapping({"/api/dashboard/workflows", "/api/v1/dashboard/workflows"})
 @RequiredArgsConstructor
 @Tag(name = "Dashboard",
      description = "Endpoints consumed by the oa-live real-time workflow dashboard")
@@ -81,9 +85,55 @@ public class DashboardController {
             @Parameter(description = "Partial match on application_name ( ILIKE %..% )")
             @RequestParam(required = false) String app,
             @Parameter(description = "Partial match on user_login OR user_id ( ILIKE %..% )")
-            @RequestParam(required = false) String user) {
+            @RequestParam(required = false) String user,
+            @Parameter(description = "Exclude active statuses ( IN_PROGRESS / UPLOADING / "
+                    + "CHUNKING / PROCESSING / LOADING_DB ) - default true . Active workflows "
+                    + "are visible in the Live tab , the History view should only show terminal "
+                    + "outcomes ( COMPLETED / FAILED / CANCELLED / RATE_LIMITED ) .")
+            @RequestParam(required = false, defaultValue = "true") boolean terminalOnly) {
         return ResponseEntity.ok(
-                service.listHistory(limit, offset, type, status, app, user));
+                service.listHistory(limit, offset, type, status, app, user, terminalOnly));
+    }
+
+    @Operation(
+        summary = "Supprimer une entree d'historique",
+        description = "DELETE d'une seule ligne workflow_log par correlation_id . "
+                + "Operation irreversible reservee aux admins . Cote oa-live , "
+                + "le bouton corbeille declenche une modale de confirmation .")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Entree supprimee"),
+        @ApiResponse(responseCode = "401", description = "JWT absent ou invalide"),
+        @ApiResponse(responseCode = "403", description = "Reserve aux admins"),
+        @ApiResponse(responseCode = "404", description = "correlation_id inconnu")
+    })
+    @org.springframework.security.access.prepost.PreAuthorize(
+            "hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
+    @DeleteMapping("/history/{correlationId}")
+    public ResponseEntity<Void> deleteHistoryEntry(
+            @Parameter(description = "correlation_id ( UUID )", required = true)
+            @PathVariable java.util.UUID correlationId) {
+        return service.deleteWorkflowLog(correlationId)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
+    }
+
+    @Operation(
+        summary = "Purger tout l'historique workflow_log",
+        description = "DELETE FROM oa_audit.workflow_log . Operation irreversible "
+                + "reservee aux admins . Cote oa-live , doit etre precedee d'une "
+                + "confirmation textuelle ( saisie du nom de l'application ou d'un "
+                + "mot-cle , a la GitLab ) .")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lignes supprimees ( count )"),
+        @ApiResponse(responseCode = "401", description = "JWT absent ou invalide"),
+        @ApiResponse(responseCode = "403", description = "Reserve aux admins")
+    })
+    @org.springframework.security.access.prepost.PreAuthorize(
+            "hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
+    @DeleteMapping("/history")
+    public ResponseEntity<java.util.Map<String, Integer>> deleteAllHistory() {
+        int deleted = service.deleteAllWorkflowLogs();
+        return ResponseEntity.ok(java.util.Map.of("deleted", deleted));
     }
 
     @Operation(

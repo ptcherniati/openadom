@@ -32,7 +32,8 @@ class ConfigFieldRegistryTest {
         fr.inra.oresing.workflow.cascade.ExtractionRateLimiter extractionRl =
                 new fr.inra.oresing.workflow.cascade.ExtractionRateLimiter(
                         5, 0L, null, null, null);
-        registry = new ConfigFieldRegistry(props, fakeReloader, importRl, extractionRl,
+        PublishProperties publishProps = new PublishProperties();
+        registry = new ConfigFieldRegistry(props, publishProps, fakeReloader, importRl, extractionRl,
                 java.util.Optional.empty());
         registry.registerAll();
     }

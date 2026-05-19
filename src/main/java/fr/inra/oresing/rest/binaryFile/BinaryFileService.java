@@ -17,6 +17,7 @@ import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
+import fr.inra.oresing.cache.MemoryCache;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.OreSiRepository;
@@ -43,11 +44,97 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     private final AuthenticationService authenticationService;
     private final JsonRowMapper<?> jsonRowMapper;
 
+    /**
+     * Cache memoire des resultats de getReferencedBinaryFiles : la query
+     * sous-jacente est tres couteuse ( 3-5s sur si_acbb 9.9M rows car
+     * le JOIN reference_reference traverse des millions de tuples meme
+     * avec l'index composite V6 ) , et le resultat ne depend QUE des
+     * relations data ( referencevalue + reference_reference ). Toggle
+     * publish ne change pas ces relations donc le cache reste valide.
+     *
+     * Configuration ( meme pattern que filterListCache /
+     * checkedFormatComponentsCache ) :
+     * <ul>
+     *   <li>{@code openadom.cache.referenced-files.enabled} : si {@code false} ,
+     *       chaque appel re-execute la SQL ( bypass complet ) ;</li>
+     *   <li>{@code openadom.cache.referenced-files.max-entries} : capacite LRU ;</li>
+     *   <li>{@code openadom.cache.referenced-files.ttl-minutes} : TTL ;
+     *       si {@code <= 0} l'auto-rebuild est desactive ( pas de TTL , les
+     *       entrees vivent jusqu'a invalidation explicite ) .</li>
+     * </ul>
+     *
+     * Invalidation : sur toute mutation reelle ( import , delete ,
+     * unpublish-with-delete ) via {@link #invalidateReferencedFilesCache} .
+     *
+     * Cle : applicationId + "::" + dataType + "::" + singleFileId .
+     * Valeur : List<ReferencedBinaryFiles> immutable .
+     */
+    @org.springframework.beans.factory.annotation.Value(
+            "${openadom.cache.referenced-files.enabled:true}")
+    private boolean referencedFilesCacheEnabled;
+
+    @org.springframework.beans.factory.annotation.Value(
+            "${openadom.cache.referenced-files.max-entries:200}")
+    private int referencedFilesCacheMaxEntries;
+
+    @org.springframework.beans.factory.annotation.Value(
+            "${openadom.cache.referenced-files.ttl-minutes:30}")
+    private long referencedFilesCacheTtlMinutes;
+
+    private MemoryCache<String, List<ReferencedBinaryFiles>> referencedFilesCache;
+
+    @jakarta.annotation.PostConstruct
+    void initReferencedFilesCache() {
+        this.referencedFilesCache = new MemoryCache<>(
+                "referencedFiles",
+                referencedFilesCacheMaxEntries,
+                referencedFilesCacheTtlMinutes);
+        log.info("referencedFilesCache initialised : enabled={} maxEntries={} ttlMinutes={}",
+                referencedFilesCacheEnabled,
+                referencedFilesCacheMaxEntries,
+                referencedFilesCacheTtlMinutes);
+    }
+
+    /**
+     * LiteImporter : capture du hash de config datatype au moment du upload .
+     * Optionnel ( {@code @Autowired(required = false)} ) : test unitaires
+     * passent sans this bean wired .
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private fr.inra.oresing.rest.usecases.storage.versioning.ConfigHashService configHashService;
+
     public BinaryFileService(OreSiRepository repository, ServiceContainer serviceContainer, AuthenticationService authenticationService, JsonRowMapper jsonRowMapper) {
         this.repository = repository;
         this.serviceContainer = serviceContainer;
         this.authenticationService = authenticationService;
         this.jsonRowMapper = jsonRowMapper;
+    }
+
+    /**
+     * Invalide les entrees cache referencedFiles pour une application
+     * donnee. A appeler depuis tout chemin qui mute referencevalue /
+     * reference_reference ( import , delete , unpublish-with-delete ) .
+     *
+     * @param applicationName  application qui a vu sa data muter
+     */
+    public void invalidateReferencedFilesCache(String applicationName) {
+        if (applicationName == null) return;
+        String prefix = applicationName + "::";
+        referencedFilesCache.invalidateMatching(k -> k.startsWith(prefix));
+    }
+
+    /** Observabilité : taille courante du cache referencedFiles . */
+    public int getReferencedFilesCacheSize() {
+        return referencedFilesCache == null ? 0 : referencedFilesCache.size();
+    }
+
+    /**
+     * Observabilité : taille mémoire approximative du cache
+     * referencedFiles via sérialisation Jackson . Appelée uniquement
+     * par CacheSizeEstimator , pas en hot path .
+     */
+    public long estimateReferencedFilesCacheSizeBytes(com.fasterxml.jackson.databind.ObjectMapper mapper) {
+        return referencedFilesCache == null ? 0L : referencedFilesCache.estimateSizeBytes(mapper);
     }
 
     @Override
@@ -65,7 +152,20 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
         binaryFile.setName(file.fileName() != null ? file.fileName() : "charte.pdf");
         binaryFile.setSize(file.fileSize());
         binaryFile.setFileData(file.inputStream());
-        final BinaryFileInfos binaryFileInfos = BinaryFileInfos.forPublish(false, OreSiApiRequestContext.getRequestUserId(), LocalDateTime.now().toString(), binaryFileDataset);
+        BinaryFileInfos binaryFileInfos = BinaryFileInfos.forPublish(false, OreSiApiRequestContext.getRequestUserId(), LocalDateTime.now().toString(), binaryFileDataset);
+        // LiteImporter : capturer le hash de config du datatype au moment du
+        // upload . Utilise plus tard au republish par
+        // PublishLifecyclePhase2Handler pour decider lite vs FULL ( si le
+        // datatype n'est pas resolu , on garde null = forcer FULL ) .
+        String datatype = Optional.ofNullable(binaryFileDataset)
+                .map(BinaryFileDataset::getDatatype)
+                .orElse(null);
+        if (datatype != null && configHashService != null) {
+            String hash = configHashService.computeHash(application, datatype).orElse(null);
+            if (hash != null) {
+                binaryFileInfos = binaryFileInfos.withConfigHash(hash);
+            }
+        }
         binaryFile.setParams(binaryFileInfos);
         return getBinaryFileRepository(application).store(binaryFile);
     }
@@ -155,8 +255,63 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     }
 
     @Override
+    public Set<UUID> findBinaryFileIdsWithLinks(UUID applicationId, String datatype, Set<UUID> ids) {
+        if (ids == null || ids.isEmpty()) return Set.of();
+        // Reutilise le cache JVM existant ( referencedFilesCache ) via le
+        // chemin {@link #getReferencedBinaryFiles} ; on extrait juste les
+        // ids distincts qui ont au moins une entree . Hit cache = sub-ms ,
+        // miss = unique query SQL (3s 1ere fois) cachee ensuite .
+        return getReferencedBinaryFiles(applicationId, datatype, ids).stream()
+                .map(ReferencedBinaryFiles::binaryFileId)
+                .collect(Collectors.toSet());
+    }
+
+    @Override
     public List<ReferencedBinaryFiles> getReferencedBinaryFiles(UUID applicationId, String datatype, Set<UUID> binaryFileIds) {
-        return getBinaryFileRepository(applicationId.toString())
-                .getReferencedBinaryFiles(datatype, binaryFileIds);
+        if (binaryFileIds == null || binaryFileIds.isEmpty()) return List.of();
+
+        // Bypass complet si cache desactive : query SQL directe pour le set
+        // entier , pas de write cache . Permet de mesurer la latence "naked"
+        // ou de desactiver le cache temporairement en prod sans rebuild .
+        if (!referencedFilesCacheEnabled) {
+            log.debug("referencedFiles cache disabled , querying directly for {} ids", binaryFileIds.size());
+            return getBinaryFileRepository(applicationId.toString())
+                    .getReferencedBinaryFiles(datatype, binaryFileIds);
+        }
+
+        // Cache PER binaryFileId ( pas sur le set complet ) : sinon la
+        // cle change a chaque toggle publish/depublie ( liste publishedIds
+        // mute ) et le cache est systematiquement miss . Ici chaque file id
+        // a sa propre cle ; un toggle qui ajoute / retire un id N+1 garde
+        // les N hits valides .
+        Set<UUID> toQuery = new HashSet<>();
+        List<ReferencedBinaryFiles> result = new ArrayList<>(binaryFileIds.size());
+        for (UUID id : binaryFileIds) {
+            String key = applicationId + "::" + datatype + "::" + id;
+            List<ReferencedBinaryFiles> cached = referencedFilesCache.get(key);
+            if (cached != null) {
+                log.debug("referencedFiles cache hit  for {}", key);
+                result.addAll(cached);
+            } else {
+                toQuery.add(id);
+            }
+        }
+        if (!toQuery.isEmpty()) {
+            log.debug("referencedFiles cache miss for {} ids , querying", toQuery.size());
+            List<ReferencedBinaryFiles> fresh = getBinaryFileRepository(applicationId.toString())
+                    .getReferencedBinaryFiles(datatype, toQuery);
+            // Regrouper le resultat par binaryFileId pour pouvoir cacher
+            // par ID . Tout id absent du resultat ( aucune reference )
+            // recoit une liste vide cachee pour eviter les futures
+            // queries inutiles .
+            Map<UUID, List<ReferencedBinaryFiles>> grouped = fresh.stream()
+                    .collect(Collectors.groupingBy(ReferencedBinaryFiles::binaryFileId));
+            for (UUID id : toQuery) {
+                List<ReferencedBinaryFiles> sub = grouped.getOrDefault(id, List.of());
+                referencedFilesCache.put(applicationId + "::" + datatype + "::" + id, sub);
+                result.addAll(sub);
+            }
+        }
+        return result;
     }
 }

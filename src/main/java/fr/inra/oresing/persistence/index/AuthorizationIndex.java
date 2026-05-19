@@ -9,6 +9,7 @@ import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.authorization.request.*;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
+import fr.inra.oresing.persistence.PgIdentifier;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
@@ -247,8 +248,23 @@ public record AuthorizationIndex(Application application, Set<String> dataNames)
                 .toList();
     }
 
+    /**
+     * Suffixe le plus long parmi {@code _refvalues_index} ( 16 ),
+     * {@code _auth_index} ( 11 ) et {@code _timescope_index} ( 16 ).
+     * Réservé en amont pour que la troncature laisse toujours la place
+     * au suffixe ajouté par {@link #createIndex(String)}.
+     */
+    private static final int RESERVED_SUFFIX_LENGTH = "_timescope_index".length();
+
     public String indexName(String dataname) {
-        return "authorization_%1$s_index".formatted(dataname);
+        // Construit le préfixe nominal puis garantit qu'il rentre dans
+        // PgIdentifier.MAX_IDENTIFIER_LENGTH ( 63 ) après concaténation
+        // du suffixe le plus long ( cf. RESERVED_SUFFIX_LENGTH ). Si la
+        // longueur dépasse, PgIdentifier.truncateSafe substitue les
+        // octets en trop par un hash CRC32 court, garantissant l'unicité
+        // entre datatypes ACBB longs ( ex. t_soil_analysis_sana_complete_long ).
+        final String raw = "authorization_%1$s_index".formatted(dataname);
+        return PgIdentifier.truncateSafe(raw, RESERVED_SUFFIX_LENGTH);
     }
 
     /**

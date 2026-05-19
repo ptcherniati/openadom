@@ -1,5 +1,6 @@
 package fr.inra.oresing.persistence;
 
+import fr.inra.oresing.persistence.refref.RefrefRebuildSql;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
@@ -23,8 +24,10 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.postgresql.PGConnection;
 import org.postgresql.copy.CopyManager;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -55,6 +58,21 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     public static final String REF_TYPE = "refType";
     public static final String[] ORDERED_COLUMNS = new String[]{"id", "patternColumnName", "application", "ReferenceType", "hierarchicalKey", "naturalKey", "refsLinkedTo", "refValues", "binaryFile", "\"authorization\""};
     public static final int PIPE_SIZE = 65536;
+
+    /**
+     * Lecture du compteur via la table de stats {@code referencevalue_count_stats}
+     * ( maintenue par triggers AFTER INSERT/DELETE statement-level , cf.
+     * migration application/V5__referencevalue_count_stats.sql ) plutot que
+     * par un {@code SELECT count(*) GROUP BY referencetype} sur la table
+     * source ( ~12s sur 10M rows , 2-5 min sur 200M ).
+     *
+     * <p>Defaut {@code true}. Pour debug ou benchmark , passer a {@code false}
+     * via la propriete {@code openadom.referencevalue.count.use-stats-table}
+     * ou la variable d'environnement {@code OPENADOM_REFERENCEVALUE_COUNT_USE_STATS_TABLE}
+     * pour forcer le COUNT direct ( cf. {@link #buildReferenceSynthesis} ).</p>
+     */
+    @Value("${openadom.referencevalue.count.use-stats-table:true}")
+    private boolean useReferencevalueCountStatsTable;
 
     public DataRepository(final Application application) {
         super(application);
@@ -217,59 +235,14 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         long copyMs = (System.nanoTime() - copyStart) / 1_000_000L;
                         log.info("storeAll : COPY phase loaded {} rows into temp table in {} ms", copiedRows, copyMs);
 
-                        // Reconstruction reference_reference - 4 etapes ordonnees :
-                        //
-                        //   1. Snapshot ( id , referencesby ) du jsonb refslinkedto
-                        //      dans une temp table dediee . Doit se faire AVANT le
-                        //      bulk INSERT car celui-ci consomme referencevalue_import
-                        //      via DELETE RETURNING ( CTE batchee ) .
-                        //   2. DELETE des liens reference_reference existants pour
-                        //      les ids importes ( re-import = reconstruction propre ).
-                        //   3. Bulk INSERT/UPSERT vers la table cible referencevalue
-                        //      ( consomme referencevalue_import ).
-                        //   4. INSERT reference_reference depuis le snapshot .
-                        //
-                        // Ordre crucial : la FK reference_reference_referenceid_fkey
-                        // pointe sur referencevalue(id) NON deferred . Le INSERT
-                        // reference_reference DOIT se faire APRES le bulk INSERT
-                        // sinon la FK echoue au tout premier depot d'un referentiel
-                        // ( les UUIDs n'existent pas encore dans referencevalue ) .
-                        // L'ancien ordre 1->2->4->3 marchait par chance uniquement
-                        // sur les re-depots ( les UUIDs existaient deja ) .
-                        try (Statement stmt = connection.createStatement()) {
-                            stmt.execute("""
-                                    CREATE TEMP TABLE refref_pending (
-                                        referenceid  uuid,
-                                        referencesby uuid
-                                    ) ON COMMIT DROP
-                                    """);
-                        }
-
-                        try (Statement stmt = connection.createStatement()) {
-                            stmt.execute("""
-                                    INSERT INTO refref_pending(referenceid, referencesby)
-                                    SELECT DISTINCT
-                                     (s.data->>'id')::uuid AS referenceid,
-                                     referencesby::uuid    AS referencesby
-                                    FROM
-                                     referencevalue_import s,
-                                         JSON_TABLE (
-                                             s.data, '$.refslinkedto.*.*.*.uuids' COLUMNS (
-                                             NESTED PATH '$[*]' COLUMNS(
-                                                     referencesby  TEXT PATH '$')
-                                                 )
-                                         ) as joins
-                                    """);
-                        }
-
-                        try (Statement stmt = connection.createStatement()) {
-                            stmt.execute("""
-                                    DELETE FROM %1$s.reference_reference
-                                    WHERE referenceid IN (
-                                        SELECT referenceid FROM refref_pending
-                                    )
-                                    """.formatted(getSchema().getName()));
-                        }
+                        // Reconstruction reference_reference - refacto B :
+                        // tout le SQL est centralise dans {@link RefrefRebuildSql}
+                        // ( source of truth partagee avec StagingFinalizeSql ) .
+                        // Etapes 1-2 ici ( snapshot + delete old ) , etapes 4-5
+                        // apres le UPSERT batche .
+                        RefrefRebuildSql.createSourceTable(connection);
+                        RefrefRebuildSql.populateSource(connection, "referencevalue_import", null);
+                        RefrefRebuildSql.deleteOldLinks(connection, getSchema().getName());
 
                         // INSERT decoupe en batches. Au lieu d'1 INSERT massif
                         // qui tient des locks sur 280k+ rows + force la pending
@@ -327,17 +300,16 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         log.info("storeAll : INSERT phase upserted {} rows in {} batches ( batch size = {} ) in {} ms",
                                 totalUpserted, batchCount, BULK_INSERT_BATCH_SIZE, insertMs);
 
-                        // Etape 4 : reference_reference est maintenant valide
-                        // car les UUIDs existent dans referencevalue ( bulk
-                        // UPSERT vient de finir ) .
-                        try (Statement stmt = connection.createStatement()) {
-                            int refrefInserted = stmt.executeUpdate("""
-                                    INSERT INTO %1$s.reference_reference(referenceid, referencesby)
-                                    SELECT referenceid, referencesby FROM refref_pending
-                                    """.formatted(getSchema().getName()));
-                            log.info("storeAll : reference_reference rebuilt with {} link(s) in {} ms",
-                                    refrefInserted, (System.nanoTime() - insertStart) / 1_000_000L - insertMs);
-                        }
+                        // Etapes 4-5 refacto B : refref_pending construit
+                        // POST-UPSERT via {@link RefrefRebuildSql} . rv.id
+                        // post-UPSERT = OLD pour existing , NEW pour fresh .
+                        try { onPhaseChange.accept(fr.inra.oresing.workflow.WorkflowPhase.REFREF_REBUILD); } catch (RuntimeException ignored) { /* best effort */ }
+                        long refrefStart = System.nanoTime();
+                        RefrefRebuildSql.createPendingTable(connection);
+                        RefrefRebuildSql.populatePending(connection, getSchema().getName());
+                        int refrefInserted = RefrefRebuildSql.insertReferenceReference(connection, getSchema().getName());
+                        log.info("storeAll : reference_reference rebuilt with {} link(s) in {} ms",
+                                refrefInserted, (System.nanoTime() - refrefStart) / 1_000_000L);
 
                         connection.commit();
                         committed = true;
@@ -383,17 +355,141 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
     @Override
 
-    public void removeByFileId(final UUID fileId) {
+    /**
+     * Counts referencevalue rows belonging to a given binaryfile . Used by
+     * the unpublish / delete-file flows to populate {@code recordsTotal}
+     * BEFORE the actual DELETE runs , so oa-live can display the expected
+     * row count immediately in the "Lignes" column ( bar passes from
+     * indeterminate to determinate ) .
+     *
+     * <p>Hits the {@code referencevalue_binaryfile_idx} btree index (V14) :
+     * O ( log N ) scan + index-only path for a single file . Negligible
+     * cost even on 100M+ row tables . Safe to call inline before DELETE .
+     */
+    public long countByFileId(final UUID fileId) {
         final String query = String.format("""
-                        DELETE FROM %s
-                        WHERE binaryfile::text = :binaryFile
+                        SELECT count(*) FROM %s WHERE binaryfile = :binaryFile
                         """,
-                getTable().getSqlIdentifier()
-        );
+                getTable().getSqlIdentifier());
+        Map<String, Object> params = Map.of("binaryFile", fileId);
+        Long n = getNamedParameterJdbcTemplate().queryForObject(query, params, Long.class);
+        return n == null ? 0L : n;
+    }
 
-        Map<String, Object> params = Map.of("binaryFile", fileId.toString());
-        int unpublishedLines = getNamedParameterJdbcTemplate().update(query, params);
+    public void removeByFileId(final UUID fileId) {
+        // PERF : cast {@code binaryfile::text} eliminait l'usage de l'index sur
+        // la colonne uuid -> SEQ SCAN sur referencevalue entiere ( minutes sur
+        // gros datasets ) . Compare UUID a UUID directement pour utiliser le
+        // btree dedie {@code referencevalue_binaryfile_idx} ( V14 ) .
+        //
+        // ATTENTION SCALING : sur fichiers > 1M rows , les RI triggers de la
+        // FK {@code reference_reference_referenceid_fkey ON DELETE CASCADE}
+        // s'executent par ligne ( ~50us / call -> ~1h sur 100M rows ) .
+        // Cette methode reste pour compatibilite mais delegue a
+        // {@link #removeByFileIdChunked} pour deblocage scale + cancel
+        // intermediate progress reporting .
+        removeByFileIdChunked(fileId, REMOVE_BY_FILE_DEFAULT_CHUNK_SIZE, null, null);
+    }
+
+    /** Default chunk size for {@link #removeByFileIdChunked} . 10k rows par
+     *  chunk = compromis lock duration ( ~1s sur gros volumes ) vs nombre
+     *  d'iterations ( 100M / 10k = 10000 iterations , overhead negligeable ) . */
+    public static final int REMOVE_BY_FILE_DEFAULT_CHUNK_SIZE = 10_000;
+
+    /**
+     * Chunked DELETE of {@code referencevalue} rows attached to a binaryfile ,
+     * with per-chunk progress reporting and cooperative cancellation .
+     *
+     * <h2>Why chunked</h2>
+     *
+     * <p>The naive single-statement DELETE has 3 scaling pathologies on
+     * large files :
+     * <ol>
+     *   <li>Single tx = single WAL flush at commit . 100M rows = ~50 GB WAL
+     *       redo + undo in one shot -> checkpoint pressure + replica lag .</li>
+     *   <li>Single statement = single lock duration .
+     *       {@code statement_timeout} ( typically 1h ) becomes the hard cap ;
+     *       very large files time out and leave inconsistent state .</li>
+     *   <li>No live progress = oa-live shows EN_ATTENTE for the full
+     *       duration ( 1h+ on big files ) , no cancel capability mid-DELETE .</li>
+     * </ol>
+     *
+     * <p>Chunking by id-batches addresses all three :
+     * <ul>
+     *   <li>Each chunk commits independently ( WAL pressure bounded ) ;</li>
+     *   <li>Per-chunk duration ~seconds ( well under statement_timeout ) ;</li>
+     *   <li>{@code onProgress} fires after each chunk for live bar ;
+     *       {@code cancelCheck} consulted between chunks for SLA cancel .</li>
+     * </ul>
+     *
+     * <h2>RI trigger cost</h2>
+     *
+     * <p>The {@code reference_reference_referenceid_fkey ON DELETE CASCADE}
+     * trigger still fires per deleted row . Pre-deleting
+     * {@code reference_reference} rows in bulk BEFORE each batch reduces
+     * the per-row trigger cost from ~50us ( actual cascade DELETE ) to
+     * ~5us ( index lookup returning 0 dependent rows ) - 10x improvement
+     * on link-heavy datatypes .
+     *
+     * @param fileId       binaryfile uuid to wipe from referencevalue
+     * @param chunkSize    rows per batch ( e.g. 10_000 )
+     * @param onProgress   optional callback receiving cumulative rows
+     *                     deleted ; called after each chunk
+     * @param cancelCheck  optional cooperative cancel : if returns true
+     *                     between chunks , {@link java.util.concurrent.CancellationException}
+     *                     is thrown ( partial DELETE remains committed )
+     * @return total rows deleted from {@code referencevalue}
+     */
+    public long removeByFileIdChunked(final UUID fileId,
+                                      final int chunkSize,
+                                      final java.util.function.LongConsumer onProgress,
+                                      final java.util.function.BooleanSupplier cancelCheck) {
+        final String table  = getTable().getSqlIdentifier();
+        final String schema = getSchema().getName();
+
+        final String selectIdsSql = """
+                SELECT id FROM %s
+                WHERE binaryfile = :binaryFile
+                LIMIT :chunkSize
+                """.formatted(table);
+        final String deleteLinksSql = """
+                DELETE FROM %s.reference_reference
+                WHERE referenceid = ANY(:ids)
+                """.formatted(schema);
+        final String deleteRowsSql = """
+                DELETE FROM %s
+                WHERE id = ANY(:ids)
+                """.formatted(table);
+
+        long total = 0L;
+        int batch;
+        do {
+            if (cancelCheck != null && cancelCheck.getAsBoolean()) {
+                throw new java.util.concurrent.CancellationException(
+                        "Cancelled during removeByFileIdChunked ( total deleted so far : " + total + " )");
+            }
+            java.util.List<UUID> ids = getNamedParameterJdbcTemplate().queryForList(
+                    selectIdsSql,
+                    Map.of("binaryFile", fileId, "chunkSize", chunkSize),
+                    UUID.class);
+            batch = ids.size();
+            if (batch == 0) break;
+
+            UUID[] idsArray = ids.toArray(new UUID[0]);
+            getNamedParameterJdbcTemplate().update(deleteLinksSql, Map.of("ids", idsArray));
+            getNamedParameterJdbcTemplate().update(deleteRowsSql,  Map.of("ids", idsArray));
+
+            total += batch;
+            if (onProgress != null) {
+                try { onProgress.accept(total); }
+                catch (RuntimeException ignored) { /* best effort */ }
+            }
+        } while (batch == chunkSize);
+
+        log.info("removeByFileIdChunked : deleted {} referencevalue rows for fileId={} ( chunk size = {} )",
+                total, fileId, chunkSize);
         flush();
+        return total;
     }
 
 
@@ -467,14 +563,23 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         return getNamedParameterJdbcTemplate().queryForList(query, paramSource, UUID.class);
     }
 
+    // P0.1 : DISTINCT removed . The PK
+    // ( application , referencetype , hierarchicalkey , patterncolumnname )
+    // already guarantees row unicity for FROM monotable + WHERE on
+    // ( application , referencetype ) , so DISTINCT was a costly no-op .
+    // On a 4 . 29 M-row referencetype , removing DISTINCT cuts execution
+    // from 110 sec to 11 sec ( 9.76x , bench iso-rows verified by md5 of
+    // sorted string_agg under role applicationManager ) by skipping a
+    // HashAggregate spilling 4 . 86 GB and a Sort spilling 4 . 91 GB .
+
     public Stream<DataValue> findAllByReferenceTypeStream(final String referenceName) {
         String query = """
-                SELECT DISTINCT '%1$s' as "@class",
+                SELECT '%1$s' as "@class",
                 to_jsonb(t)  as json
                 FROM
                 %2$s t
                 WHERE application=:applicationId::uuid AND ReferenceType=:refType
-                
+
                 """
                 .formatted(DataValue.class.getName(), getTable().getSqlIdentifier());
         final MapSqlParameterSource paramSource = new MapSqlParameterSource(APPLICATION_ID, getApplication().getId())
@@ -485,12 +590,12 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
     public List<DataValue> findAllByReferenceType(final String referenceName) {
         String query = """
-                SELECT DISTINCT '%1$s' as "@class",
+                SELECT '%1$s' as "@class",
                 to_jsonb(t)  as json
                 FROM
                 %2$s t
                 WHERE application=:applicationId::uuid AND ReferenceType=:refType
-                
+
                 """
                 .formatted(DataValue.class.getName(), getTable().getSqlIdentifier());
         final MapSqlParameterSource paramSource = new MapSqlParameterSource(APPLICATION_ID, getApplication().getId())
@@ -518,32 +623,46 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 .map(List::getFirst)
                 .filter(o -> o.matches("[0-9]*|ALL"))
                 .orElse("ALL");
+        // P0.2 : CTE " agg " replaced by a LEFT JOIN LATERAL correlated to t.id .
+        // The original form materialised json_object_agg over the entire
+        // reference_reference table ( 39.7 M rows on si_acbb ) BEFORE any filter ,
+        // which raised " string buffer exceeds maximum allowed length "
+        // ( 1 GB jsonb cap ) on referentials with rich back-links - OOM
+        // visible from 3 K rows ( see SQL_REPORT_10_05_26 . md Q2 ) . The
+        // LATERAL fires once per t row retained by the outer WHERE +
+        // OFFSET / LIMIT , bounded to that row's back-links , never above
+        // the per-row jsonb cap .
+        //
+        // Iso-result verified ( md5 of sorted string_agg ) on
+        // t_paturage_pat ( 1251 rows ) and t_data_sol_analyse_dsa ( 3131
+        // rows ) under role applicationManager : strict equality with the
+        // CTE form constrained to the same refType ( the unconstrained
+        // form OOMs and cannot be benched directly ) .
+        //
+        // Preserved : cross join with jsonb_each_text(t.refvalues) kv +
+        // DISTINCT ( both required for the addReferenceConditions ' any '
+        // filter which references kv.value ) ; same WHERE predicates ;
+        // RLS path unchanged ( both referencevalue accesses honour the
+        // role set by setRoleForClient ) .
         String query = """
-                with
-                agg as (
-                     select
-                         referencesby,
-                         json_object_agg(referenceid, d2.refValues) agg
-                        from %1$s.reference_reference dr
-                        left join %2$s d2 on dr.referenceId = d2.id
-                     group by referencesby
-                )
-                """
-                .formatted(getSchema().getSqlIdentifier(), getTable().getSqlIdentifier());
-        query += """
                 SELECT DISTINCT
                     '%1$s' as "@class",
                     to_jsonb(t) ||
-                        jsonb_build_object('referencingreferences',agg.agg) as json
+                        jsonb_build_object('referencingreferences', refs.agg) as json
                 FROM
                     %2$s t
-                    left join agg on agg.referencesby = t.id,
+                    left join lateral (
+                        select json_object_agg(rr.referenceid, d2.refvalues) as agg
+                        from %3$s.reference_reference rr
+                        left join %2$s d2 on d2.id = rr.referenceid
+                        where rr.referencesby = t.id
+                    ) refs on true,
                     jsonb_each_text(t.refvalues) kv
                 WHERE
                     application=:applicationId::uuid AND
                     ReferenceType=:refType
                 """
-                .formatted(DataValue.class.getName(), getTable().getSqlIdentifier());
+                .formatted(DataValue.class.getName(), getTable().getSqlIdentifier(), getSchema().getSqlIdentifier());
         final MapSqlParameterSource paramSource = new MapSqlParameterSource(APPLICATION_ID, getApplication().getId())
                 .addValue(REF_TYPE, refType);
 
@@ -646,17 +765,195 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
     @Override
     public ImmutableMap<DataValue.LineIdentityColumnName, UUID> getDataIdPerKeys(final String ReferenceType) {
+        // Avant ce fix : findAllByReferenceType materialisait TOUS les rows
+        // referencevalue ( jsonb refvalues complet inclus ) en List<DataValue>
+        // via Jackson , juste pour extraire 4 colonnes ( id / naturalkey /
+        // hierarchicalkey / patterncolumnname ) . Sur si_acbb t_soil_water_content_swc
+        // = 1.26M rows × ~500-1000 bytes JSON inflation Java = ~1.5-2 GB
+        // heap allocation au demarrage workflow . Cause directe d'OOM .
+        //
+        // Fix : SQL projection uniquement sur les 4 colonnes necessaires
+        // ( ~30 bytes/row ) . Gain x40 : ~40 MB heap au lieu de 1.5-2 GB .
+        final String query = """
+                SELECT id, naturalkey::text AS naturalkey,
+                       hierarchicalkey::text AS hierarchicalkey,
+                       patterncolumnname
+                  FROM %1$s
+                 WHERE application = :applicationId::uuid
+                   AND ReferenceType = :refType
+                """.formatted(getTable().getSqlIdentifier());
+        final MapSqlParameterSource params = new MapSqlParameterSource(APPLICATION_ID, getApplication().getId())
+                .addValue(REF_TYPE, ReferenceType);
+        // Instrumentation timing for diagnosis ( see step 1 of the prep-time
+        // investigation ) . Slices the call into measurable phases so we can
+        // identify whether the cost lives in PG ( query exec / network ) ,
+        // JDBC iteration ( ResultSet next ) , Java per-row parsing , or the
+        // final immutable copy . No business-logic change .
+        final long t0 = System.nanoTime();
+        final long[] firstRowAtNs = { 0L };
+        final long[] rowCount     = { 0L };
         Map<DataValue.LineIdentityColumnName, UUID> dataIdPerKeys = new HashMap<>();
-        // Utilisation de la version non-streaming pour éviter de maintenir une connexion JDBC ouverte
-        findAllByReferenceType(ReferenceType)
-                .forEach(dataValue -> {
-                    DataValue.LineIdentityColumnName naturalKey = dataValue.buildLineIdentityColumnName();
-                    dataIdPerKeys.put(naturalKey, dataValue.getId());
-                });
+        getNamedParameterJdbcTemplate().query(query, params, rs -> {
+            if (firstRowAtNs[0] == 0L) firstRowAtNs[0] = System.nanoTime();
+            UUID id = UUID.fromString(rs.getString("id"));
+            // Skip Ltree.checkSyntax on read : the values come straight from
+            // PostgreSQL where they were validated at write time . The legacy
+            // Ltree.fromSql ( ligne 56 ) runs Splitter + regex per label , which
+            // adds up to millions of regex matches per publish on a 1M-row
+            // referencevalue table ( 2 keys per row x N refTypes preloaded )
+            // and dominates the pre-cascade preparation time observed at
+            // ~2m30s wall-clock . fromSqlWithoutCheck does the same allocation
+            // without the per-row syntax validation .
+            Ltree naturalKey      = Ltree.fromSqlWithoutCheck(rs.getString("naturalkey"));
+            Ltree hierarchicalKey = Ltree.fromSqlWithoutCheck(rs.getString("hierarchicalkey"));
+            String patternColName = rs.getString("patterncolumnname");
+            dataIdPerKeys.put(
+                    new DataValue.LineIdentityColumnName(naturalKey, hierarchicalKey, patternColName),
+                    id);
+            rowCount[0]++;
+        });
+        final long t1 = System.nanoTime();
+        ImmutableMap<DataValue.LineIdentityColumnName, UUID> result = ImmutableMap.copyOf(dataIdPerKeys);
+        final long t2 = System.nanoTime();
+        final long firstRow = firstRowAtNs[0];
+        log.debug("[GDPK] ref={} rows={} sql_to_firstRow={}ms iter+parse={}ms immCopy={}ms total={}ms",
+                ReferenceType,
+                rowCount[0],
+                firstRow == 0L ? 0L : (firstRow - t0) / 1_000_000L,
+                firstRow == 0L ? 0L : (t1 - firstRow)  / 1_000_000L,
+                (t2 - t1) / 1_000_000L,
+                (t2 - t0) / 1_000_000L);
+        return result;
+    }
+
+    /**
+     * Variante lazy de {@link #getDataIdPerKeys(String)} : ne charge en
+     * RAM que les rows {@code referencevalue} dont la {@code naturalkey}
+     * appartient a {@code naturalKeysOfInterest} ( typiquement issu du
+     * pre-scan du CSV en cours de publication ) .
+     *
+     * <h2>Motivation</h2>
+     *
+     * <p>Le full preload via {@link #getDataIdPerKeys} materialise TOUTES
+     * les rows du refType ( 10 MB pour 100k rows , 1 GB pour 10M rows ,
+     * OOM au-dela ) . Sur des refs de 100M+ rows en BDD c'est inutilisable .
+     *
+     * <p>Cette variante charge uniquement le sous-ensemble effectivement
+     * reference dans le CSV soumis a publication ( typiquement 50-5000
+     * valeurs distinctes ) . Memoire : O(M_referenced) au lieu de
+     * O(N_ref_size) . Latence : O(M log N) via index btree
+     * {@code nk_patternColumnNam_type} .
+     *
+     * <h2>Strategie SQL</h2>
+     *
+     * <p>{@code WHERE naturalkey::text = ANY(?::text[])} avec array
+     * binding cote JDBC :
+     * <ul>
+     *   <li>Pas de limite parametres prepared statement ( contrairement
+     *       a {@code WHERE nk IN (?, ?, ...)} limite a 32 767 ) .</li>
+     *   <li>PG choisit hash join automatique sur gros arrays ; index
+     *       seek per value sur petits arrays .</li>
+     *   <li>Pour des sets > 1M nks , preferable d'utiliser une TEMP
+     *       TABLE + JOIN ( hors scope de cette methode ; le caller doit
+     *       splitter en batches ou utiliser une variante TEMP-TABLE ) .</li>
+     * </ul>
+     *
+     * @param referenceType        refType cible
+     * @param naturalKeysOfInterest set des naturalkeys ( format texte
+     *                              compatible ltree ) presentes dans le CSV
+     * @return mapping {@link DataValue.LineIdentityColumnName} -> UUID ,
+     *         bornee a {@code naturalKeysOfInterest.size()} entrees max .
+     *         Vide si le set est vide ou null .
+     */
+    @Override
+    public ImmutableMap<DataValue.LineIdentityColumnName, UUID> getDataIdPerKeysByNaturalKeys(
+            final String referenceType,
+            final java.util.Set<String> naturalKeysOfInterest) {
+        if (naturalKeysOfInterest == null || naturalKeysOfInterest.isEmpty()) {
+            return ImmutableMap.of();
+        }
+        // Cast text[] -> ltree[] cote PG ; respecte le type ltree natif de
+        // la colonne naturalkey + permet l'usage de l'index btree existant
+        // {@code nk_patternColumnNam_type} ( referencetype , naturalkey ,
+        // patterncolumnname ) .
+        final String query = """
+                SELECT id, naturalkey::text AS naturalkey,
+                       hierarchicalkey::text AS hierarchicalkey,
+                       patterncolumnname
+                  FROM %1$s
+                 WHERE application = :applicationId::uuid
+                   AND ReferenceType = :refType
+                   AND naturalkey = ANY(:nks::ltree[])
+                """.formatted(getTable().getSqlIdentifier());
+        String[] nksArray = naturalKeysOfInterest.toArray(new String[0]);
+        final MapSqlParameterSource params = new MapSqlParameterSource(APPLICATION_ID, getApplication().getId())
+                .addValue(REF_TYPE, referenceType)
+                .addValue("nks", nksArray);
+        final long t0 = System.nanoTime();
+        final long[] rowCount = { 0L };
+        Map<DataValue.LineIdentityColumnName, UUID> dataIdPerKeys = new HashMap<>(naturalKeysOfInterest.size() * 2);
+        getNamedParameterJdbcTemplate().query(query, params, rs -> {
+            UUID id = UUID.fromString(rs.getString("id"));
+            Ltree naturalKey      = Ltree.fromSqlWithoutCheck(rs.getString("naturalkey"));
+            Ltree hierarchicalKey = Ltree.fromSqlWithoutCheck(rs.getString("hierarchicalkey"));
+            String patternColName = rs.getString("patterncolumnname");
+            dataIdPerKeys.put(
+                    new DataValue.LineIdentityColumnName(naturalKey, hierarchicalKey, patternColName),
+                    id);
+            rowCount[0]++;
+        });
+        long elapsedMs = (System.nanoTime() - t0) / 1_000_000L;
+        log.debug("[GDPK-LAZY] ref={} nks_requested={} rows_loaded={} elapsed={}ms",
+                referenceType, naturalKeysOfInterest.size(), rowCount[0], elapsedMs);
         return ImmutableMap.copyOf(dataIdPerKeys);
     }
 
     public List<ApplicationResult.DataSynthesis> buildReferenceSynthesis() {
+        if (useReferencevalueCountStatsTable) {
+            try {
+                return readSynthesisFromStatsTable();
+            } catch (final BadSqlGrammarException tableMissing) {
+                // Migration V5 pas encore appliquee sur ce schema ( cas d'un
+                // upgrade sur une instance ou Flyway n'a pas encore tourne ,
+                // ou app cree avant la livraison de la table de stats ).
+                // Fallback automatique sur le COUNT direct pour ne pas casser
+                // l'endpoint pendant la fenetre de migration.
+                log.info("referencevalue_count_stats absente sur {}, fallback COUNT direct ( applicable jusqu'a la prochaine migration Flyway )",
+                        getTable().schema().getSqlIdentifier());
+                return readSynthesisFromDirectCount();
+            }
+        }
+        return readSynthesisFromDirectCount();
+    }
+
+    /**
+     * Lecture rapide depuis la table de stats maintenue par triggers
+     * statement-level ( cf. migration V5 ). Lookup PRIMARY KEY <1ms quel
+     * que soit le volume de la table source {@code referencevalue}.
+     */
+    private List<ApplicationResult.DataSynthesis> readSynthesisFromStatsTable() {
+        final String query = String.format("""
+                        SELECT
+                            referencetype AS ReferenceType,
+                            line_count AS lineCount
+                        FROM %s.referencevalue_count_stats
+                        """,
+                getTable().schema().getSqlIdentifier()
+        );
+        return getNamedParameterJdbcTemplate().query(
+                query,
+                Map.of(),
+                BeanPropertyRowMapper.newInstance(ApplicationResult.DataSynthesis.class)
+        );
+    }
+
+    /**
+     * Mode legacy : COUNT(*) GROUP BY direct sur la table source.
+     * Conserve comme fallback ( table de stats absente ) et activable
+     * explicitement pour debug / benchmark via la propriete
+     * {@code openadom.referencevalue.count.use-stats-table=false}.
+     */
+    private List<ApplicationResult.DataSynthesis> readSynthesisFromDirectCount() {
         final String query = String.format("""
                         SELECT
                             ReferenceType AS ReferenceType,
@@ -671,6 +968,57 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 Map.of(),
                 BeanPropertyRowMapper.newInstance(ApplicationResult.DataSynthesis.class)
         );
+    }
+
+    /**
+     * Renvoie l'horodatage du dernier rafraichissement de la table de stats
+     * pour cette application , ou {@code Optional.empty()} si la table est
+     * absente ou vide. Affiche cote frontend a cote du bouton "Recompute"
+     * pour informer l'admin de la fraicheur du compteur.
+     */
+    public java.util.Optional<java.time.Instant> findLastReferencevalueCountStatsUpdate() {
+        final String query = String.format(
+                "SELECT MAX(updated_at) FROM %s.referencevalue_count_stats",
+                getTable().schema().getSqlIdentifier()
+        );
+        try {
+            final java.sql.Timestamp ts = getNamedParameterJdbcTemplate()
+                    .queryForObject(query, Map.of(), java.sql.Timestamp.class);
+            return java.util.Optional.ofNullable(ts).map(java.sql.Timestamp::toInstant);
+        } catch (final BadSqlGrammarException tableMissing) {
+            return java.util.Optional.empty();
+        }
+    }
+
+    /**
+     * Reconstruit integralement la table de stats depuis l'etat actuel de
+     * {@code referencevalue}. A appeler depuis l'endpoint admin
+     * {@code POST /api/v1/admin/applications/{name}/recompute-stats} pour
+     * resync explicite apres une dérive ( DELETE pgAdmin , restore partiel ,
+     * UPDATE de referencetype , etc. ).
+     *
+     * <p>Cout : 1 SELECT GROUP BY sur la table source ( meme cout que le
+     * COUNT direct legacy , execute uniquement a la demande de l'admin ).
+     * Sur 200M rows ACBB : 2-5 min - acceptable car declenche manuellement.</p>
+     *
+     * @return l'horodatage de la nouvelle ligne updated_at
+     */
+    public java.time.Instant recomputeReferencevalueCountStats() {
+        final String schema = getTable().schema().getSqlIdentifier();
+        final String source = getTable().getSqlIdentifier();
+        // TRUNCATE + INSERT dans une seule transaction pour atomicite :
+        // pendant la duree du recompute , les lectures voient soit l'ancien
+        // etat ( si la transaction n'est pas encore committee ) soit le
+        // nouveau. Pas d'etat intermediaire incoherent visible.
+        getNamedParameterJdbcTemplate().getJdbcTemplate().execute(
+                "TRUNCATE TABLE " + schema + ".referencevalue_count_stats");
+        getNamedParameterJdbcTemplate().getJdbcTemplate().execute(String.format("""
+                INSERT INTO %1$s.referencevalue_count_stats (referencetype, line_count, updated_at)
+                SELECT referencetype, count(*), now()
+                FROM %2$s
+                GROUP BY referencetype
+                """, schema, source));
+        return findLastReferencevalueCountStatsUpdate().orElse(java.time.Instant.now());
     }
 
     public void updateConstraintForeignReferences(final List<UUID> uuids) {
@@ -1000,7 +1348,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
      * pour alimenter la dropdown du frontend ( cf. {@link ColumnDistinctValues} ).
      *
      * <p>Une requête par colonne ; le résultat est mis en cache au niveau du
-     * datatype par {@code DataService.filterListAsJson} ( cache déjà présent
+     * datatype par {@code DataService.getFilterListResult} ( cache déjà présent
      * pour les FilterList , même politique d'invalidation ).
      *
      * <p><b>Multiplicité</b> :
@@ -1081,7 +1429,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
      * <p>Le surcoût par rapport à un simple {@code EXISTS} reste très
      * faible : {@code DISTINCT ... LIMIT 2} sort dès le second row trouvé.
      * Le résultat est mis en cache au niveau du datatype par
-     * {@code DataService.filterListAsJson} ( cache déjà existant ).
+     * {@code DataService.getFilterListResult} ( cache déjà existant ).
      *
      * @param dataName     nom du datatype ( = referenceType en base )
      * @param componentKey clé de la colonne à interroger

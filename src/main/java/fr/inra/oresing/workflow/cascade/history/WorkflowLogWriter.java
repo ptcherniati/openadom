@@ -151,13 +151,28 @@ public class WorkflowLogWriter {
         for (int attempt = 0; attempt < backoffMs.length; attempt++) {
             try {
                 int inserted = repository.insertBatch(java.util.List.of(entry));
-                if (inserted >= 0) {
+                if (inserted > 0) {
                     if (attempt > 0) {
                         log.info("recordEnd : entry persistee apres {} retries pour {}",
                                 attempt, entry.correlationId());
                     }
                     return true;
                 }
+                // P0-3 cancel-divergence observability : inserted == 0 signifie
+                // que le SQL record_workflow a filtre la row ( WHERE status =
+                // 'IN_PROGRESS' ) - typiquement parce que le watchdog ou un
+                // cancel utilisateur a deja marque la row terminale . Avant
+                // P0-1+P0-2 ce silent no-op masquait la divergence ; on log
+                // ERROR pour rendre la trace visible en cas de regression
+                // d'invariant ( un workflow Phase 2 ne devrait JAMAIS voir
+                // sa row marquee terminale par un tiers grace au heartbeat
+                // P0-1 + FOR UPDATE P0-2 ; si ca arrive , c'est un signal
+                // de regression a investiguer ) .
+                log.error("recordEnd : SQL record_workflow returned 0 rows for {} "
+                                + "( row probably already terminal - watchdog race or cancel ) "
+                                + "status={} fatalError={} - investigate if invariant regressed",
+                        entry.correlationId(), entry.status(), entry.fatalError());
+                return false;
             } catch (RuntimeException ex) {
                 log.warn("recordEnd attempt {}/{} failed for {} : {}",
                         attempt + 1, backoffMs.length, entry.correlationId(), ex.getMessage());

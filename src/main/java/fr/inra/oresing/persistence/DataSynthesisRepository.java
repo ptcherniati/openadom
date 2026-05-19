@@ -124,9 +124,9 @@ public class DataSynthesisRepository extends JsonTableInApplicationSchemaReposit
                                          "referencetype",
                                          lower(("authorization").timescope)       mindate,
                                          upper(("authorization").timescope)       maxdate,
-                                         ("authorization").requiredAuthorizations requiredAuthorizations,
-                                         jsonb_object_agg(refvalues)             datavalues
+                                         ("authorization").requiredAuthorizations requiredAuthorizations
                                   from %1$s."referencevalue"
+                                  where "referencetype" in (select "datatype" from vars)
                                   group by application, "referencetype", ("authorization").requiredAuthorizations, ("authorization").timescope,
                                            hierarchicalkey, linehierarchicalkeypatterncolumnname
                         ),

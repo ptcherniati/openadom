@@ -55,7 +55,7 @@ class ConfigEditServiceTest {
                 new fr.inra.oresing.workflow.cascade.ExtractionRateLimiter(
                         5, 0L, null, null, null);
 
-        registry = new ConfigFieldRegistry(props, reloader, importRl, extractionRl,
+        registry = new ConfigFieldRegistry(props, new PublishProperties(), reloader, importRl, extractionRl,
                 Optional.empty());
         registry.registerAll();
 

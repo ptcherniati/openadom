@@ -92,6 +92,28 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(eee);
     }
 
+    /**
+     * Reject 409 Conflict lorsqu'une operation lifecycle ( PUBLISH / UNPUBLISH /
+     * DELETE_FILE ) est deja en cours sur le meme fileId . Le corps de la
+     * reponse contient le code {@code WORKFLOW_ALREADY_IN_PROGRESS} + les
+     * details de l'operation active ( type , correlationId , login auteur )
+     * pour que le frontend affiche une popup explicite a l'utilisateur ( ex
+     * "Un PUBLISH est deja en cours par jdoe , veuillez patienter" ) plutot
+     * qu'un message d'erreur generique .
+     */
+    @ExceptionHandler(fr.inra.oresing.rest.usecases.storage.versioning.WorkflowAlreadyInProgressException.class)
+    public ResponseEntity<Map<String, Object>> handle(
+            final fr.inra.oresing.rest.usecases.storage.versioning.WorkflowAlreadyInProgressException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "code",                 "WORKFLOW_ALREADY_IN_PROGRESS",
+                "message",              ex.getMessage(),
+                "activeCorrelationId",  String.valueOf(ex.activeCorrelationId()),
+                "activeWorkflowType",   String.valueOf(ex.activeWorkflowType()),
+                "activeUserLogin",      ex.activeUserLogin() == null ? "" : ex.activeUserLogin(),
+                "fileId",               String.valueOf(ex.fileId()),
+                "timestamp",            Instant.now().toString()));
+    }
+
 
     @ExceptionHandler(AuthenticationFailure.class)
     public ResponseEntity<String> handle(final AuthenticationFailure eee) {

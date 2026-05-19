@@ -28,6 +28,7 @@ import java.util.Optional;
 public class ConfigFieldRegistry {
 
     private final ImportProperties importProperties;
+    private final PublishProperties publishProperties;
     private final PoolReloader     poolReloader;
     private final fr.inra.oresing.workflow.cascade.ImportRateLimiter     importRateLimiter;
     private final fr.inra.oresing.workflow.cascade.ExtractionRateLimiter extractionRateLimiter;
@@ -155,6 +156,93 @@ public class ConfigFieldRegistry {
                 .getter(importProperties::getPipelineQueueCapacity)
                 .setter(importProperties::setPipelineQueueCapacity)
                 .range(1, 10_000)
+                .build());
+
+        // ---- PublishProperties hot ( profil republication ) ----
+        // Distinct de ImportProperties : preferences memoire-friendly
+        // pour le toggle publish/unpublish ( data deja validee , concurrent
+        // avec autres workflows , profil different de l'upload initial ) .
+        register(ConfigField.intField("publish.chunkSizeLines")
+                .description("Publish/republish : nombre de lignes CSV par chunk . "
+                        + "Plus petit que l'upload initial ( default 200 vs 1000 ) "
+                        + "pour minimiser le pic memoire pendant la republication .")
+                .getter(publishProperties::getChunkSizeLines)
+                .setter(publishProperties::setChunkSizeLines)
+                .range(1, 1_000_000)
+                .build());
+
+        register(ConfigField.intField("publish.parallelism")
+                .description("Publish/republish : parallelisme du pipeline cascade . "
+                        + "Default 2 ( vs 4 pour upload ) : minimise la concurrence "
+                        + "avec autres workflows en cours pendant la republication .")
+                .getter(publishProperties::getParallelism)
+                .setter(publishProperties::setParallelism)
+                .range(1, 64)
+                .build());
+
+        register(ConfigField.intField("publish.maxErrorsThreshold")
+                .description("Publish/republish : seuil d'erreurs avant abort . "
+                        + "Default 100 ( data deja validee donc 0 erreur attendue ) .")
+                .getter(publishProperties::getMaxErrorsThreshold)
+                .setter(publishProperties::setMaxErrorsThreshold)
+                .range(0, 1_000_000)
+                .build());
+
+        register(ConfigField.enumField("publish.sinkStrategy", ImportProperties.SinkStrategy.class)
+                .description("Publish/republish : MERGE_FILE = temp files locaux + 1 COPY final "
+                        + "atomique ; DIRECT_COPY = N workers COPY parallel vers staging .")
+                .getter(() -> publishProperties.getSinkStrategy().name())
+                .setter(s -> publishProperties.setSinkStrategy(
+                        ImportProperties.SinkStrategy.valueOf(s)))
+                .build());
+
+        register(ConfigField.enumField("publish.stagingStrategy", ImportProperties.StagingStrategy.class)
+                .description("Publish/republish : pertinent uniquement si sinkStrategy=DIRECT_COPY . "
+                        + "PER_CONNECTION_TEMP / SHARED_UNLOGGED / PER_WORKFLOW_TABLE .")
+                .getter(() -> publishProperties.getStagingStrategy().name())
+                .setter(s -> publishProperties.setStagingStrategy(
+                        ImportProperties.StagingStrategy.valueOf(s)))
+                .build());
+
+        register(ConfigField.enumField("publish.pipelineMode", PipelineMode.class)
+                .description("Publish/republish : STAGED ( atomicite , memoire elevee ) vs "
+                        + "PIPELINED ( memoire bornee , commits partiels acceptables car "
+                        + "data deja validee ) . Default PIPELINED .")
+                .getter(() -> publishProperties.getPipelineMode().name())
+                .setter(s -> publishProperties.setPipelineMode(PipelineMode.valueOf(s)))
+                .build());
+
+        // ---- Publish FAST path + mode CACHED_ROTATION ( hot ) ----
+        register(ConfigField.enumField("publish.publishMode", PublishProperties.PublishMode.class)
+                .description("Strategie pipeline publication . CASCADE_ALWAYS = legacy "
+                        + "( cascade re-execute a chaque republish ) . CACHED_ROTATION = "
+                        + "snapshot rows -> processed_data au unpublish , COPY -> referencevalue "
+                        + "+ clear au republish . Pas de duplication storage en steady state .")
+                .getter(() -> publishProperties.getPublishMode().name())
+                .setter(s -> publishProperties.setPublishMode(PublishProperties.PublishMode.valueOf(s)))
+                .build());
+
+        register(ConfigField.boolField("publish.fastPathEnabled")
+                .description("Active le FAST path republish ( COPY processed_data -> "
+                        + "referencevalue direct , bypass DataImporter ) si cache + hash OK . "
+                        + "Fallback automatique sur cascade LITE/FULL si erreur ou conditions non remplies .")
+                .getter(publishProperties::isFastPathEnabled)
+                .setter(publishProperties::setFastPathEnabled)
+                .build());
+
+        register(ConfigField.boolField("publish.captureProcessedEnabled")
+                .description("Mode CASCADE_ALWAYS : capture JSON processed pendant cascade pour "
+                        + "armer FAST path subsequent ( +30% disk ) . Ignore en CACHED_ROTATION "
+                        + "( cache alimente par snapshot SQL au unpublish ) .")
+                .getter(publishProperties::isCaptureProcessedEnabled)
+                .setter(publishProperties::setCaptureProcessedEnabled)
+                .build());
+
+        register(ConfigField.boolField("publish.refreshHashOnFullPath")
+                .description("Met a jour params.configHash apres republish FULL ( hash mismatch ) . "
+                        + "Permet aux republishes suivants de basculer en LITE/FAST si config stable .")
+                .getter(publishProperties::isRefreshHashOnFullPath)
+                .setter(publishProperties::setRefreshHashOnFullPath)
                 .build());
 
         // ---- Quotas par utilisateur ( hot ) ----

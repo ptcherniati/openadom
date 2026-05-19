@@ -59,6 +59,24 @@ public class AuthenticationResources {
     @Value("${jwt.expiration:3600}")
     private int jwtExpirationSeconds;
 
+    // Audit OA_FULL_REVIEW (8/5/26) - exposé au frontend pour afficher le
+    // mode actif du compteur de lignes par référencetype dans l'onglet
+    // "Gestion de l'application" ( bouton Recompute ). Si false, les
+    // valeurs sont calculées via SELECT count(*) GROUP BY direct ( mode
+    // dégradé pour debug/benchmark ) et le bouton Recompute n'a pas de
+    // sens ( il sera masqué ou désactivé côté frontend ).
+    @Value("${openadom.referencevalue.count.use-stats-table:true}")
+    private boolean referencevalueCountUseStatsTable;
+
+    // Audit OA_FULL_REVIEW (8/5/26) - bornes du cache ETag JS-side
+    // ( cf. EtagCache.ts ). Exposées au frontend via /session/config pour
+    // permettre un tuning prod sans rebuild du bundle.
+    @Value("${openadom.cache.front.etag.max-entries:50}")
+    private int frontEtagCacheMaxEntries;
+
+    @Value("${openadom.cache.front.etag.max-bytes-mb:20}")
+    private int frontEtagCacheMaxBytesMb;
+
     public AuthenticationResources(AuthenticationService authenticationService,
                                    JWTExtractor jwtExtractor,
                                    UserSessionRegistry sessionRegistry,
@@ -77,7 +95,12 @@ public class AuthenticationResources {
             tags = {"Authentication"})
     @GetMapping(value = "/session/config", produces = MediaType.APPLICATION_JSON_VALUE)
     public Map<String, Object> sessionConfig() {
-        return Map.of("jwtExpirationSeconds", jwtExpirationSeconds);
+        return Map.of(
+                "jwtExpirationSeconds", jwtExpirationSeconds,
+                "referencevalueCountUseStatsTable", referencevalueCountUseStatsTable,
+                "frontEtagCacheMaxEntries", frontEtagCacheMaxEntries,
+                "frontEtagCacheMaxBytesMb", frontEtagCacheMaxBytesMb
+        );
     }
 
     @Operation(

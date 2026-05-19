@@ -17,9 +17,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public class SchemaFlywayCallback implements Callback {
     private final Application application;
@@ -95,6 +97,24 @@ public class SchemaFlywayCallback implements Callback {
             statement.execute("ALTER SCHEMA %s OWNER TO \"%s\""
                     .formatted(sqlSchemaForApplication.getName(), applicationManagerOnApplicationRole.getAsSqlRole()));
 
+            // Build the set of tables whose owner is already the target role .
+            // Without this short-circuit , every backend startup re-issues
+            // ALTER TABLE OWNER TO ... on every table , which requires
+            // AccessExclusiveLock . Auto-vacuum running on a large table
+            // ( e . g . referencevalue ) blocks the lock until the lock_timeout
+            // fires , which kills the Flyway callback and the backend startup .
+            // The owner only needs to change after a migration that creates
+            // new tables , so for steady-state startups the loop is a no-op .
+            final String expectedOwner = userManagerOnApplicationRole.getAsSqlRole();
+            Set<String> alreadyOwnedByTarget = new HashSet<>();
+            try (ResultSet ownerRs = statement.executeQuery(
+                    "SELECT tablename FROM pg_tables WHERE schemaname = '%1$s' AND tableowner = '%2$s'"
+                            .formatted(sqlSchemaForApplication.getName(), expectedOwner))) {
+                while (ownerRs.next()) {
+                    alreadyOwnedByTarget.add(ownerRs.getString("tablename"));
+                }
+            }
+
             // Changer le propriétaire des tables
             ResultSet rs = statement.executeQuery(
                     "SELECT tablename FROM pg_tables WHERE schemaname = '%s'"
@@ -106,11 +126,14 @@ public class SchemaFlywayCallback implements Callback {
                 if (tableName.equals("flyway_schema_history")) {
                     continue;
                 }
+                if (alreadyOwnedByTarget.contains(tableName)) {
+                    continue;
+                }
                 tableNames.add(tableName);
             }
             for (String tableName : tableNames) {
                 statement.execute("ALTER TABLE %s.%s OWNER TO \"%s\""
-                        .formatted(sqlSchemaForApplication.getName(), tableName, userManagerOnApplicationRole.getAsSqlRole()));
+                        .formatted(sqlSchemaForApplication.getName(), tableName, expectedOwner));
 
             }
 

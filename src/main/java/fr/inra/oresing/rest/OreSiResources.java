@@ -79,7 +79,7 @@ import fr.inra.oresing.rest.usecases.storage.additionalfile.DeleteAdditionalFile
 import fr.inra.oresing.rest.usecases.storage.additionalfile.FindAdditionalFileUseCase;
 import fr.inra.oresing.rest.usecases.storage.additionalfile.GetAdditionalFilesZipStreamUseCase;
 import fr.inra.oresing.rest.usecases.storage.binaryfile.*;
-import fr.inra.oresing.rest.usecases.storage.versioning.UnPublishVersionBeforeDeleteUseCase;
+import fr.inra.oresing.rest.usecases.storage.versioning.PublishLifecycleService;
 import fr.inra.oresing.workflow.cascade.ExtractionRateLimiter;
 import fr.inra.oresing.workflow.cascade.history.WorkflowLogEntry;
 import fr.inra.oresing.workflow.cascade.history.WorkflowLogWriter;
@@ -94,6 +94,7 @@ import org.apache.commons.io.output.TeeOutputStream;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -184,16 +185,24 @@ public class OreSiResources {
     private final GetCharteUseCase getCharteUseCase;
     private final GetAdditionalFilesZipStreamUseCase getAdditionalFilesZipStreamUseCase;
     private final CreateDataUseCase createDataUseCase;
-    private final RemoveFileUseCase removeFileUseCase;
     private final GetFileWithDataUseCase getFileWithDataUseCase;
     private final GetFilesOnRepositoryUseCase getFilesOnRepositoryUseCase;
     private final GetReferencedBinaryFilesUseCase getReferencedBinaryFilesUseCase;
     private final GetStoreFileUseCase getStoreFileUseCase;
-    private final UnPublishVersionBeforeDeleteUseCase unPublishVersionBeforeDeleteUseCase;
+    private final PublishLifecycleService publishLifecycleService;
     private final GetSynthesisUseCase getSynthesisUseCase;
     private final GetSynthesisWithVariableUseCase getSynthesisWithVariableUseCase;
     private final BuildSynthesisUseCase buildSynthesisUseCase;
     private final GetAllUsersUseCase getAllUsersUseCase;
+    /**
+     * ObjectMapper dédié à la sérialisation manuelle de {@code GetDataResult}
+     * dans {@link #getAllDataJson} ( ETag content-aware ). Static + final
+     * pour le partage thread-safe entre requêtes ; configuré une fois avec
+     * {@link JavaTimeModule} pour gérer les dates ISO de manière cohérente
+     * avec le converter Spring par défaut.
+     */
+    private static final ObjectMapper jacksonObjectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+
     private final GetAuthorizationScopesUseCase getAuthorizationScopesUseCase;
     private final GetApplicationOrAccordingToRightsUseCase getApplicationOrAccordingToRightsUseCase;
     private final BuildOpenAdomUseCase buildOpenAdomUseCase;
@@ -251,7 +260,7 @@ public class OreSiResources {
             GetAdditionalFilesZipStreamUseCase getAdditionalFilesZipStreamUseCase,
             CreateDataUseCase createDataUseCase,
             GetStoreFileUseCase getStoreFileUseCase,
-            UnPublishVersionBeforeDeleteUseCase unPublishVersionBeforeDeleteUseCase,
+            PublishLifecycleService publishLifecycleService,
             GetSynthesisUseCase getSynthesisUseCase,
             GetSynthesisWithVariableUseCase getSynthesisWithVariableUseCase,
             BuildSynthesisUseCase buildSynthesisUseCase,
@@ -264,7 +273,6 @@ public class OreSiResources {
             GetReferenceDisplaysByIdUseCase getReferenceDisplaysByIdUseCase,
             GetDataCsvStreamUseCase getDataCsvStreamUseCase,
             GetDataColumnUseCase getDataColumnUseCase,
-            RemoveFileUseCase removeFileUseCase,
             GetFileWithDataUseCase getFileWithDataUseCase,
             GetFilesOnRepositoryUseCase getFilesOnRepositoryUseCase,
             GetReferencedBinaryFilesUseCase getReferencedBinaryFilesUseCase,
@@ -308,7 +316,7 @@ public class OreSiResources {
         this.getAdditionalFilesZipStreamUseCase = getAdditionalFilesZipStreamUseCase;
         this.createDataUseCase = createDataUseCase;
         this.getStoreFileUseCase = getStoreFileUseCase;
-        this.unPublishVersionBeforeDeleteUseCase = unPublishVersionBeforeDeleteUseCase;
+        this.publishLifecycleService = publishLifecycleService;
         this.getSynthesisUseCase = getSynthesisUseCase;
         this.getSynthesisWithVariableUseCase = getSynthesisWithVariableUseCase;
         this.buildSynthesisUseCase = buildSynthesisUseCase;
@@ -321,7 +329,6 @@ public class OreSiResources {
         this.getReferenceDisplaysByIdUseCase = getReferenceDisplaysByIdUseCase;
         this.getDataCsvStreamUseCase = getDataCsvStreamUseCase;
         this.getDataColumnUseCase = getDataColumnUseCase;
-        this.removeFileUseCase = removeFileUseCase;
         this.getFileWithDataUseCase = getFileWithDataUseCase;
         this.getFilesOnRepositoryUseCase = getFilesOnRepositoryUseCase;
         this.getReferencedBinaryFilesUseCase = getReferencedBinaryFilesUseCase;
@@ -401,12 +408,27 @@ public class OreSiResources {
     }
 
 
+    /**
+     * Suppression d'un fichier binaire ( 2-phase async ) .
+     *
+     * <p>Phase 1 ( synchrone , dans cet endpoint ) : check droits ,
+     * supersedure d'un workflow concurrent sur ce {@code fileId} , flag
+     * visuel ( unpublish si etait publie ) + audit workflow_log
+     * IN_PROGRESS + mail START + COMMIT . Phase 2 ( asynchrone ) :
+     * DELETE rows referencevalue si etait publie + DELETE row binaryfile
+     * + recompute synthesis + mail END . Voir
+     * {@code PublishLifecycleService} et {@code PUBLISH_UNPUBLISH.md} .
+     *
+     * <p>Reponse HTTP 202 + body = id du fichier ( retro-compat avec le
+     * frontend qui attendait juste le UUID texte ) ; le correlationId
+     * pour suivre la phase 2 est lisible dans {@code workflow_log} .
+     */
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DELETE_FILE')")
     @DeleteMapping(value = "/applications/{name}/file/{id}", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> removeFile(
             HttpServletRequest request,
             @PathVariable("name") final String applicationName,
-            @PathVariable("id") final UUID id) throws IOException {
+            @PathVariable("id") final UUID id) {
 
         Locale locale = localeResolver.resolveLocale(request);
 
@@ -442,45 +464,24 @@ public class OreSiResources {
         if (!canDelete) {
             throw new NotApplicationCanDeleteRightsException(applicationName, dataName);
         }
-        if (!storeFile.builder().getFileOrUUID().topublish()) {
-            if (!applicationDataDelete.get().hasRightForPublishOrUnPublish(storeFile.fileOrUuid())) {
-                throw new NotApplicationDataWriterForPublishException(applicationName, dataName);
-            }
-            // withEmail=false : le mail "Suppression réussie" est envoyé
-            // post-commit dans finalizePostCommit pour qu il porte le
-            // compteur frais ( cascade 3.0.0 deferred fait tourner le
-            // UPSERT dans afterCommit ; lire le compteur inline donnerait
-            // une valeur stale ) .
-            DataVersioningResult dataVersioningResult = unPublishVersionBeforeDeleteUseCase
-                    .execute(locale, applicationName, id, false);
-            if (dataVersioningResult != null) {
-                // Capture le fileName AVANT removeFileUseCase qui supprime
-                // le binaryFile : sinon le mail aurait fileName=null .
-                String fileName = serviceContainer.binaryFileService()
-                        .getFile(applicationName, id)
-                        .map(fr.inra.oresing.domain.BinaryFile::getName)
-                        .orElse(null);
-                serviceContainer.versioningService().finalizePostCommit(
-                        locale, applicationName, dataName, fileName,
-                        dataVersioningResult, true);
-            }
+        // topublish() est vrai si le fichier ETAIT publie au moment du
+        // delete -> on doit avoir le droit de depublier en cascade .
+        if (!storeFile.builder().getFileOrUUID().topublish()
+                && !applicationDataDelete.get().hasRightForPublishOrUnPublish(storeFile.fileOrUuid())) {
+            throw new NotApplicationDataWriterForPublishException(applicationName, dataName);
         }
-        Optional<UUID> uuid = removeFileUseCase.execute(application, id);
-        if (uuid.isPresent()) {
-            return okResponse(id.toString());
-        } else {
-            throw new NotApplicationCanDeleteRightsException(applicationName, dataName);
-        }
+
+        publishLifecycleService.startDeleteFile(applicationName, id, locale);
+
+        return ResponseEntity.status(org.springframework.http.HttpStatus.ACCEPTED).body(id.toString());
     }
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/filesOnRepository/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<BinaryFileResult>> getFilesOnRepository(@PathVariable("nameOrId") final String nameOrId,
-                                                                       @PathVariable("dataType") final String dataType,
-                                                                       @JsonParam("repositoryId") final BinaryFileDataset binaryFileDataset) {
-        if (binaryFileDataset == null) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<String> getFilesOnRepository(@PathVariable("nameOrId") final String nameOrId,
+                                                        @PathVariable("dataType") final String dataType,
+                                                        @JsonParam("repositoryId") final BinaryFileDataset binaryFileDataset,
+                                                        @RequestHeader(value = HttpHeaders.IF_NONE_MATCH, required = false) final String ifNoneMatch) {
         Optional.ofNullable(binaryFileDataset)
                 .ifPresent(binaryFileDataset1 -> binaryFileDataset1.setIfNotPresentDatatype(dataType));
         Map<UUID, UserDescriptionResult> users = getAllUsersUseCase.execute()
@@ -508,39 +509,80 @@ public class OreSiResources {
                 .map(LocalDateTimeRange.DATE_TIME_FORMATTER::format)
                 .orElse(binaryFileDataset.getTo());
         binaryFileDataset.setTo(to);
-        final List<BinaryFileResult> files =
-                getFilesOnRepositoryUseCase.execute(nameOrId, dataType, binaryFileDataset, false).stream()
-                        .map(binaryFile -> BinaryFileResult.of(
-                                binaryFile,
-                                Optional.ofNullable(binaryFile)
-                                        .map(BinaryFile::getParams)
-                                        .map(BinaryFileInfos::createuser)
-                                        .map(users::get)
-                                        .orElse(null),
-                                Optional.ofNullable(binaryFile)
-                                        .map(BinaryFile::getParams)
-                                        .map(BinaryFileInfos::publisheduser)
-                                        .map(users::get)
-                                        .orElse(null),
-                                getReferencedFiles(binaryFile)
-                        ))
-                        .toList();
-        return okResponse(files);
-    }
 
-    private List<ReferencedBinaryFiles> getReferencedFiles(BinaryFile binaryFile) {
-        if (Optional.ofNullable(binaryFile)
-                .map(BinaryFile::getParams)
-                .stream().noneMatch(BinaryFileInfos::published)) {
-            return null;
+        final List<BinaryFile> rawFiles = getFilesOnRepositoryUseCase.execute(nameOrId, dataType, binaryFileDataset, false);
+
+        // Audit OA_FULL_REVIEW (8/5/26) - fix N+1 : avant , chaque BinaryFile
+        // déclenchait sa propre requête getReferencedBinaryFiles ( SQL par
+        // fichier ). Sur 50 fichiers = 50 SQL en plus du listing principal.
+        // Désormais : 1 seule SQL avec WHERE binaryfile IN ( ids... ) , puis
+        // lookup en mémoire par fichier. Le SQL `getReferencedBinaryFiles`
+        // accepte déjà un Set<UUID> ( cf. BinaryFileRepository:50 ) , il
+        // suffisait d'arrêter de l'appeler 1-par-1.
+        Set<UUID> publishedIds = rawFiles.stream()
+                .filter(bf -> bf.getParams() != null && bf.getParams().published())
+                .map(BinaryFile::getId)
+                .collect(Collectors.toSet());
+        // Optimisation B / scaling 900M : on remplace l'enumeration complete
+        // du graphe ( getReferencedBinaryFiles ) par un EXISTS qui retourne
+        // juste le set des fileIds qui ont des liaisons sortantes . Cote
+        // front , isLinked() lit directement BinaryFileResult.hasLinks .
+        // Le champ legacy referencedFiles reste null ( backward compat
+        // pour les callers qui itereraient encore l'ancien shape ; aucun
+        // dans openADOM aujourd'hui ).
+        final Set<UUID> idsWithLinks;
+        if (publishedIds.isEmpty() || rawFiles.isEmpty()) {
+            idsWithLinks = Set.of();
+        } else {
+            UUID applicationId = rawFiles.getFirst().getApplication();
+            idsWithLinks = serviceContainer.binaryFileService()
+                    .findBinaryFileIdsWithLinks(applicationId, dataType, publishedIds);
         }
-        return Optional.ofNullable(binaryFile)
-                .map(bf -> getReferencedBinaryFilesUseCase.execute(
-                                bf.getApplication(),
-                                bf.getParams().binaryFiledataset().getDatatype(),
-                                Set.of(bf.getId()))
-                )
-                .orElseGet(List::of);
+
+        final List<BinaryFileResult> files = rawFiles.stream()
+                .map(binaryFile -> BinaryFileResult.of(
+                        binaryFile,
+                        Optional.ofNullable(binaryFile)
+                                .map(BinaryFile::getParams)
+                                .map(BinaryFileInfos::createuser)
+                                .map(users::get)
+                                .orElse(null),
+                        Optional.ofNullable(binaryFile)
+                                .map(BinaryFile::getParams)
+                                .map(BinaryFileInfos::publisheduser)
+                                .map(users::get)
+                                .orElse(null),
+                        idsWithLinks.contains(binaryFile.getId()),
+                        null
+                ))
+                .toList();
+
+        // Audit OA_FULL_REVIEW (8/5/26) - ETag content-based pour permettre au
+        // browser de se contenter d'un 304 quand le payload n'a pas changé
+        // ( navigation rapide site -> site -> site sur même datatype ).
+        // Le SQL est déjà rapide ( <1ms , GIN index ) donc on n'ajoute pas
+        // de cache mémoire backend ; juste un hash sur la sérialisation pour
+        // skipper le retransfert + parse JSON côté frontend si possible.
+        final String json;
+        try {
+            json = jacksonObjectMapper.writeValueAsString(files);
+        } catch (JsonProcessingException e) {
+            throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
+        }
+        final String etag = computeWeakEtag(json);
+        org.springframework.http.CacheControl cacheControl =
+                org.springframework.http.CacheControl.noCache().mustRevalidate().cachePrivate();
+        if (etag.equals(ifNoneMatch)) {
+            return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
+                    .eTag(etag)
+                    .cacheControl(cacheControl)
+                    .build();
+        }
+        return ResponseEntity.ok()
+                .eTag(etag)
+                .cacheControl(cacheControl)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(json);
     }
 
     private ResponseEntity<StreamingResponseBody> getFile(
@@ -886,11 +928,12 @@ public class OreSiResources {
     /**
      * export as JSON
      */
-        protected ResponseEntity<GetDataResult> getAllDataJson(
+        protected ResponseEntity<String> getAllDataJson(
             final String nameOrId,
             final String dataName,
             final DownloadDatasetQuery params,
-            boolean loadExample) {
+            boolean loadExample,
+            final String ifNoneMatch) {
 
         Application application = getApplicationUseCase.execute(nameOrId);
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery =
@@ -939,13 +982,61 @@ public class OreSiResources {
         // PERF #465 — filterLists est désormais une liste vide ici.
         // Les filtres sont chargés via l'endpoint séparé GET /filters (voir getDataFilters ci-dessous).
         // Cela permet d'afficher les données immédiatement sans attendre la requête lente des filtres (~54s).
-        return okResponse(new GetDataResult(
+        GetDataResult result = new GetDataResult(
                 downloadDatasetQuery.patternDefinitionCount(),
                 variables,
                 dataRowResults,
                 List.of(),
                 checkedFormatcomponents,
-                referenceScopes));
+                referenceScopes);
+
+        // PERF audit (8/5/26) - sérialisation manuelle pour pouvoir hasher
+        // le JSON et émettre un ETag stable. Le hash dépend uniquement du
+        // contenu sérialisé , donc tout changement ( import , delete ,
+        // grant ) qui modifie l'arbre / les rows / les checkers se traduit
+        // en mismatch d'ETag -&gt; 200 fresh ; cohérence garantie sans
+        // invalidation explicite côté browser.
+        final String json;
+        try {
+            json = jacksonObjectMapper.writeValueAsString(result);
+        } catch (JsonProcessingException e) {
+            throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
+        }
+        final String etag = computeWeakEtag(json);
+
+        org.springframework.http.CacheControl cacheControl =
+                org.springframework.http.CacheControl.noCache().mustRevalidate().cachePrivate();
+
+        if (etag.equals(ifNoneMatch)) {
+            return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
+                    .eTag(etag)
+                    .cacheControl(cacheControl)
+                    .build();
+        }
+        return ResponseEntity.ok()
+                .eTag(etag)
+                .cacheControl(cacheControl)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(json);
+    }
+
+    /**
+     * Calcule un ETag faible ( {@code W/"…"} ) à partir d'un JSON. SHA-256
+     * tronqué 64 bits suffit en pratique pour distinguer les variantes de
+     * payload sans collision.
+     */
+    private static String computeWeakEtag(final String json) {
+        try {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder(20).append("W/\"");
+            for (int i = 0; i < 8; i++) {
+                sb.append(String.format("%02x", hash[i]));
+            }
+            return sb.append('"').toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 indisponible", e);
+        }
     }
 
     /**
@@ -980,15 +1071,41 @@ public class OreSiResources {
     public ResponseEntity<String> getDataFilters(
             @PathVariable("nameOrId") final String nameOrId,
             @PathVariable("dataType") final String dataName,
-            @RequestParam(defaultValue = "false") boolean refresh) {
+            @RequestParam(defaultValue = "false") boolean refresh,
+            @RequestHeader(value = HttpHeaders.IF_NONE_MATCH, required = false) final String ifNoneMatch) {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
-        // Si refresh=true, on invalide le cache pour forcer un rechargement depuis la base
+        // Si refresh=true , on invalide le cache pour forcer un rechargement depuis la base.
+        // L'ETag change après recompute car le payload a changé , donc 304 sera systématiquement
+        // évité au prochain hit ( comportement attendu d'un refresh manuel ).
         if (refresh) {
             serviceContainer.dataService().invalidateFilterListCache(application, dataName);
         }
-        // Retourne le JSON sérialisé directement depuis le cache (pas de re-sérialisation Jackson)
-        String json = serviceContainer.dataService().filterListAsJson(application, dataName);
-        return okResponse(json);
+        // Récupère JSON + ETag : sur cache hit , les deux sont stockés côte
+        // à côte ( pas de recomputation hash à chaque hit ).
+        fr.inra.oresing.rest.data.DataService.FilterListResult result =
+                serviceContainer.dataService().getFilterListResult(application, dataName);
+        // PERF audit (8/5/26) - HTTP 304 si le browser détient déjà cette
+        // version. Évite le retransfert de ~1.7 MB sur les datasets riches
+        // ( ACBB ) : Tomcat répond ~30 ms sans body au lieu de 1-3 s avec gzip.
+        //
+        // Cache-Control : "no-cache , must-revalidate , private" - le browser
+        // STOCKE la réponse ( contrairement à no-store ) , mais doit la
+        // revalider via If-None-Match à chaque navigation. private = pas de
+        // CDN / proxy cache ( payload contient des données métier protégées
+        // par ACL ). Sans ce header , Spring Security applique son default
+        // "no-store" qui empêche le browser de garder l'ETag.
+        org.springframework.http.CacheControl cacheControl =
+                org.springframework.http.CacheControl.noCache().mustRevalidate().cachePrivate();
+        if (result.etag().equals(ifNoneMatch)) {
+            return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
+                    .eTag(result.etag())
+                    .cacheControl(cacheControl)
+                    .build();
+        }
+        return ResponseEntity.ok()
+                .eTag(result.etag())
+                .cacheControl(cacheControl)
+                .body(result.json());
     }
 
     /**

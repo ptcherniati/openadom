@@ -11,9 +11,24 @@ public record BinaryFileInfos(
         UUID createuser,
         String createdate,
         String comment,
-        BinaryFileDataset binaryFiledataset) {
+        BinaryFileDataset binaryFiledataset,
+        String configHash) {
+    /**
+     * Hash de configuration ( SHA-256 hex ) du {@code StandardDataDescription}
+     * applicable au datatype au moment du 1er upload . Utilise par
+     * {@code PublishLifecyclePhase2Handler} pour decider si un republish
+     * peut emprunter le chemin lite ( bypass {@code DataImporter} cumulatif )
+     * ou doit re-valider via le chemin FULL ( config evoluee ) .
+     *
+     * <p>Optionnel ( {@code null} sur fichiers historiques ante-feature ) :
+     * un {@code null} force le chemin FULL ( decision conservative ) .
+     */
+    public BinaryFileInfos(boolean published, UUID publisheduser, String publisheddate, UUID createuser, String createdate, String comment, BinaryFileDataset binaryFiledataset) {
+        this(published, publisheduser, publisheddate, createuser, createdate, comment, binaryFiledataset, null);
+    }
+
     public BinaryFileInfos(BinaryFileDataset binaryFileDataset) {
-        this(false, null, null, null, null, null, binaryFileDataset);
+        this(false, null, null, null, null, null, binaryFileDataset, null);
     }
 
     public static BinaryFileInfos forPublish(boolean published, UUID publisheduser, String publisheddate, BinaryFileDataset binaryFileDataset) {
@@ -24,7 +39,8 @@ public record BinaryFileInfos(
                 null,
                 null,
                 Optional.ofNullable(binaryFileDataset).map(BinaryFileDataset::getComment).orElse(""),
-                binaryFileDataset
+                binaryFileDataset,
+                null
         );
     }
 
@@ -36,7 +52,8 @@ public record BinaryFileInfos(
                 createuser(),
                 createdate(),
                 comment(),
-                binaryFiledataset()
+                binaryFiledataset(),
+                configHash()
         );
     }
 
@@ -48,7 +65,25 @@ public record BinaryFileInfos(
                 createuser(),
                 createdate(),
                 comment(),
-                binaryFiledataset
+                binaryFiledataset,
+                configHash()
+        );
+    }
+
+    /**
+     * @return nouvelle instance avec {@code configHash} mis a jour ;
+     *         tous les autres champs preserves a l'identique .
+     */
+    public BinaryFileInfos withConfigHash(String configHash) {
+        return new BinaryFileInfos(
+                published(),
+                publisheduser(),
+                publisheddate(),
+                createuser(),
+                createdate(),
+                comment(),
+                binaryFiledataset(),
+                configHash
         );
     }
 }

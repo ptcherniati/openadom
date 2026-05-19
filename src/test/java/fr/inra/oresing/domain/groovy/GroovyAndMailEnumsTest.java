@@ -124,7 +124,10 @@ class GroovyAndMailEnumsTest {
                     EmailService.UPLOAD_STATE.UPLOADED,
                     EmailService.UPLOAD_STATE.PUBLISHED,
                     EmailService.UPLOAD_STATE.UNPUBLISHED,
-                    EmailService.UPLOAD_STATE.DELETED);
+                    EmailService.UPLOAD_STATE.DELETED,
+                    EmailService.UPLOAD_STATE.PUBLISH_STARTED,
+                    EmailService.UPLOAD_STATE.UNPUBLISH_STARTED,
+                    EmailService.UPLOAD_STATE.DELETE_STARTED);
         }
 
         @Test

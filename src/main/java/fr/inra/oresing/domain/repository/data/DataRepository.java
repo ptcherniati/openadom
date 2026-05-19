@@ -85,6 +85,53 @@ public interface DataRepository {
 
     void removeByFileId(UUID id);
 
+    /**
+     * Chunked variant of {@link #removeByFileId} : DELETE the rows by
+     * id-batches with per-chunk progress + cooperative cancellation .
+     * Required at scale ( 1M+ rows ) to avoid {@code statement_timeout} ,
+     * WAL pressure and unobservable EN_ATTENTE periods .
+     *
+     * @param fileId      binaryfile uuid to wipe
+     * @param chunkSize   rows per batch ( typical 10_000 )
+     * @param onProgress  optional callback ( cumulative rows deleted ) ;
+     *                    fires after each chunk for live UI bar
+     * @param cancelCheck optional cooperative cancel between chunks ;
+     *                    throws {@link java.util.concurrent.CancellationException}
+     *                    if returns true ; partial DELETE remains committed
+     * @return total rows deleted from referencevalue
+     */
+    long removeByFileIdChunked(UUID fileId,
+                               int chunkSize,
+                               java.util.function.LongConsumer onProgress,
+                               java.util.function.BooleanSupplier cancelCheck);
+
+    /**
+     * Returns the number of {@code referencevalue} rows currently linked
+     * to {@code fileId} . Used to populate {@code workflow_log.records_total}
+     * BEFORE the DELETE during an unpublish / delete-file flow so oa-live
+     * can render the "Lignes" column and the progress bar immediately .
+     * Uses the {@code referencevalue_binaryfile_idx} btree index ; cost
+     * negligible even on 100M+ row tables .
+     */
+    long countByFileId(UUID fileId);
+
+    /**
+     * Variante lazy de {@link #getDataIdPerKeys(String)} : ne charge que
+     * les naturalkeys donnees en parametre ( typiquement extraites du CSV
+     * en cours de publication via le pre-scan ) . Borne la memoire a
+     * O(M_referenced) au lieu de O(N_ref_size) ; permet de scaler aux
+     * referentiels 100M+ rows en BDD sans OOM cote Java .
+     *
+     * @param referenceType         refType cible
+     * @param naturalKeysOfInterest set des naturalkeys ( format texte
+     *                              compatible ltree ) ; vide / null = no-op
+     * @return mapping bornee a {@code naturalKeysOfInterest.size()} entrees
+     *         max ; vide si aucune nk ne matche
+     */
+    com.google.common.collect.ImmutableMap<fr.inra.oresing.domain.data.DataValue.LineIdentityColumnName, UUID>
+            getDataIdPerKeysByNaturalKeys(String referenceType,
+                                          java.util.Set<String> naturalKeysOfInterest);
+
     Map<String, List<Ltree>> resolveRequiredAuthorizations(Map<String, List<Ltree>> stringLtreeMap);
 
     Map<String, String> findHierarchicalKeysByKeyForReferenceTypes(List<String> referenceType);

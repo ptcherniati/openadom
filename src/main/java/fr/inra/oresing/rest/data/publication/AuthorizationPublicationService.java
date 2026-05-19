@@ -78,8 +78,13 @@ public class AuthorizationPublicationService {
                     dataRepository.removeByFileId(file.getId());
                     file.markAsPublished(false);
                     binaryFileRepository.store(file);
-                    synthesisService.buildSynthesis(application.getName(), dataName, null);
                 });
+        // Single post-loop synthesis recompute : buildSynthesis fully
+        // rebuilds the precomputed oresisynthesis rows for the dataType
+        // ( DELETE + INSERT-from-scratch ) , so calling it once after all
+        // files are unpublished gives the exact same final state as the
+        // previous N+1 calls ( one per file inside the loop , one after )
+        // without scanning referencevalue N times.
         if (dataName != null) {
             synthesisService.buildSynthesis(application.getName(), dataName, null);
         }

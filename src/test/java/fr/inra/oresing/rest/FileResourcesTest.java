@@ -6,6 +6,7 @@ import fr.inra.oresing.domain.BinaryFileInfos;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.ReferencedBinaryFiles;
 import fr.inra.oresing.rest.model.data.BinaryFileResult;
+import fr.inra.oresing.rest.usecases.storage.versioning.PublishLifecycleService;
 import fr.inra.oresing.rest.usecases.security.authorization.GetAllUsersUseCase;
 import fr.inra.oresing.rest.usecases.storage.binaryfile.GetFileUseCase;
 import fr.inra.oresing.rest.usecases.storage.binaryfile.GetFileWithDataUseCase;
@@ -56,7 +57,9 @@ class FileResourcesTest {
                 getFileWithDataUseCase,
                 getFileUseCase,
                 getAllUsersUseCase,
-                getReferencedBinaryFilesUseCase);
+                getReferencedBinaryFilesUseCase,
+                mock(PublishLifecycleService.class),
+                mock(org.springframework.web.servlet.LocaleResolver.class));
     }
 
     // ─── constantes ───────────────────────────────────────────────────────────

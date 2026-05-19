@@ -28,6 +28,7 @@ import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
@@ -42,13 +43,32 @@ public record AsynchroneFileImporterContext(
         ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences,
         ImmutableMap<HkPatternKey, UUID> storedReferencesByHkPattern,
         Map<NaturalKeyPattern, UUID> naturalKeyPatternIndex,
-        SetMultimap<Ltree, Long> encounteredHierarchicalKeysForConflictDetection, //asynchronous
+        // PERF : prev type was {@code SetMultimap} backed by
+        // {@code Multimaps.synchronizedSetMultimap(HashMultimap.create())} which
+        // serialized all N parallel transform workers on a global mutex for
+        // every {@code put(key, lineNumber)} - audit shows 15-20% throughput
+        // loss on 4+ workers . ConcurrentHashMap uses bucket locking ( 16+
+        // segments ) + {@code computeIfAbsent} for atomic get-or-create + the
+        // inner Set is {@code ConcurrentHashMap.newKeySet()} = lock-free add .
+        // Net : near-linear scaling vs parallelism vs global-lock SetMultimap .
+        ConcurrentMap<Ltree, Set<Long>> encounteredHierarchicalKeysForConflictDetection, //asynchronous
         Set<Column> columnsWithPatternColumns,
         Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey,
         List<ReferenceScope.NodeDescription> nodesForMenu,
         BuildColumns buildColumns,
         ReportErrors allErrors,
-        DataHeaderReader dataHeaderReader) {
+        DataHeaderReader dataHeaderReader,
+        // Axe A.3 plan resilience : loader lazy + batch coalescing pour
+        // les parents recursifs non pre-charges par Axe B . Quand le
+        // context est construit via {@link #ofWithNaturalKeysHint} sur un
+        // refType recursif , le loader est pre-populated avec les rows
+        // chargees ; sur cache miss dans {@link #getKnownId} , le loader
+        // fait une query bulk SQL lazy ( par batch de naturalkeys ) au
+        // lieu d'echouer . Couvre le cas incremental imports ou un row
+        // CSV reference un parent qui existe deja en BDD mais n'etait
+        // pas dans le prescan . Null si non-recursif ou hint absent
+        // ( fallback legacy full preload ) .
+        fr.inra.oresing.domain.data.deposit.prescan.LazyParentLoader lazyParentLoader) {
 
     /**
      * Cle composite ( hierarchicalKey , patternColumnName ) pour le lookup
@@ -84,6 +104,94 @@ public record AsynchroneFileImporterContext(
             Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey,
             Mapper jsonRowMapper,
             DataRepository referenceValueRepository) {
+        return ofInternal(constants, publishContextBuilder, lineCheckers,
+                displayNamesByReferenceAndNaturalKey, jsonRowMapper,
+                referenceValueRepository, /* naturalKeysHint */ null);
+    }
+
+    /**
+     * Variante du factory {@link #of(ContextConstants, PublishContext.PublishContextBuilder, ImmutableSet, Map, Mapper, DataRepository)}
+     * qui accepte un hint pre-scanne des naturalkeys reellement
+     * referencees par le CSV en cours d'import . Sur un refType recursif ,
+     * le hint declenche un chargement <i>lazy</i> de
+     * {@code storedReferences} via
+     * {@link DataRepository#getDataIdPerKeysByNaturalKeys} au lieu du
+     * full preload via {@link DataRepository#getDataIdPerKeys} , bornant
+     * la consommation memoire a {@code O(|naturalKeysHint|)} au lieu
+     * de {@code O(N_ref_size)} .
+     *
+     * <h2>Pourquoi</h2>
+     *
+     * <p>Le full preload materialise TOUTES les rows {@code referencevalue}
+     * du refType en RAM Java ( 10 MB pour 100k rows , 1 GB pour 10M rows ,
+     * OOM au-dela ) . Pour des refs recursifs de 10M+ rows c'est
+     * inutilisable . Cette variante charge uniquement le sous-ensemble
+     * effectivement reference par le CSV soumis a publication
+     * ( typiquement 50-5000 valeurs distinctes ) .
+     *
+     * <h2>Iso-resultat garanti</h2>
+     *
+     * <p>Sous l'invariant {@code naturalKeysHint contient toutes les
+     * naturalkeys lues par le caller au cours de l'import } , la map
+     * resultante est un sous-ensemble strict de celle retournee par le
+     * full preload limite aux rows reellement utilisees . Les indexes
+     * {@code hkIndex} / {@code nkIndex} sont construits sur ce
+     * sous-ensemble et restent semantiquement identiques pour les
+     * lookups effectivement effectues par {@code WithRecursion} et
+     * {@code DataTransformer} .
+     *
+     * <h2>Effet sur les non-recursifs</h2>
+     *
+     * <p>Identique a la variante legacy : {@code storedReferences =
+     * ImmutableMap.of()} ( refacto B ; les ids existants sont recuperes
+     * en SQL via JOIN post-UPSERT cote {@code DataRepository.storeAll} ) .
+     * Le hint est ignore .
+     *
+     * <h2>Fallback</h2>
+     *
+     * <p>Si {@code naturalKeysHint} est {@code null} ou vide , la
+     * methode retombe sur le chemin legacy ( full preload ) pour
+     * preserver la coherence : un hint absent signifie que le caller
+     * n'a pas pu pre-scanner ( CSV non disponible , prescan disable
+     * par config , erreur transient ) , donc on prefere un coup couteux
+     * mais sur a une perte silencieuse de rows .
+     *
+     * @param naturalKeysHint  set des naturalkeys composees pre-scannees
+     *                         depuis le CSV ; format texte compatible
+     *                         ltree . {@code null} ou vide -> fallback
+     *                         legacy ( full preload ) .
+     * @since openadom plan resilience Axe B
+     */
+    public static AsynchroneFileImporterContext ofWithNaturalKeysHint(
+            ContextConstants constants,
+            PublishContext.PublishContextBuilder publishContextBuilder,
+            ImmutableSet<LineChecker<? extends FieldType<?>>> lineCheckers,
+            Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey,
+            Mapper jsonRowMapper,
+            DataRepository referenceValueRepository,
+            Set<String> naturalKeysHint) {
+        return ofInternal(constants, publishContextBuilder, lineCheckers,
+                displayNamesByReferenceAndNaturalKey, jsonRowMapper,
+                referenceValueRepository, naturalKeysHint);
+    }
+
+    /**
+     * Construction effective partagee entre les deux factories publiques .
+     *
+     * @param naturalKeysHint  {@code null} pour le chemin legacy ( full
+     *                         preload sur recursif , {@code ImmutableMap.of()}
+     *                         sur non-recursif ) ; non-vide pour le chemin
+     *                         lazy ( charge uniquement les naturalkeys
+     *                         requestees ) .
+     */
+    private static AsynchroneFileImporterContext ofInternal(
+            ContextConstants constants,
+            PublishContext.PublishContextBuilder publishContextBuilder,
+            ImmutableSet<LineChecker<? extends FieldType<?>>> lineCheckers,
+            Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey,
+            Mapper jsonRowMapper,
+            DataRepository referenceValueRepository,
+            Set<String> naturalKeysHint) {
 
         final StandardDataDescription referenceDescription = constants.dataConfiguration();
         final Map<Class<? extends ComponentDescription>, List<Map.Entry<String, ComponentDescription>>> componentDescriptionEntryByComputedType = referenceDescription.componentDescriptions()
@@ -92,8 +200,43 @@ public record AsynchroneFileImporterContext(
 
         BuildColumns result = BuildColumns.buildColumns(componentDescriptionEntryByComputedType, referenceValueRepository);
 
-        ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences =
-                referenceValueRepository.getDataIdPerKeys(constants.refType());
+        // Refacto B ( perf : skip ~110s + ~2.1 GB heap sur datatypes
+        // non-recursifs gros , 16-05-26 ) : la map nk->id n'est plus
+        // necessaire en RAM cote Java pour les datatypes non recursifs .
+        // Les ids existants seront retrouves directement en SQL via JOIN
+        // post-UPSERT dans {@link DataRepository#storeAll} ( refref_pending
+        // build par JOIN sur referencevalue plutot que via s.data->>'id' ) .
+        //
+        // Pour le NON-recursif : id reste random ( generation
+        // {@code UUID.randomUUID()} cote {@code OreSiEntity} ) , puis
+        // l'UPSERT preserve l'id existant via ON CONFLICT DO UPDATE pour
+        // les rows en collision , INSERT l'id NEW pour les nouvelles .
+        // Le JOIN SQL post-UPSERT recupere rv.id correct dans tous les cas .
+        //
+        // Pour le RECURSIF : la map est OBLIGATOIRE car WithRecursion chaine
+        // les UUIDs parent->child au sein du run via
+        // {@code addKnownIdToReferenceValues} . Garder le path actuel .
+        boolean isRecursive = constants.application().getConfiguration()
+                .findCompositeReferencesUsing(constants.refType())
+                .filter(HierarchicalNode::isRecursive)
+                .isPresent();
+
+        // Axe B : sur refType recursif , si le caller a fourni un hint
+        // pre-scanne des naturalkeys reellement referencees par le CSV ,
+        // utilise getDataIdPerKeysByNaturalKeys ( O(|hint|) RAM + index
+        // btree nk_patternColumnNam_type ) au lieu de getDataIdPerKeys
+        // ( O(N_ref_size) RAM ) . Sur des refs 10M+ rows cela evite l'OOM .
+        // Sans hint -> fallback legacy ( full preload ) pour preserver la
+        // coherence quand le pre-scan n'est pas disponible .
+        ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences;
+        if (!isRecursive) {
+            storedReferences = ImmutableMap.of();
+        } else if (naturalKeysHint != null && !naturalKeysHint.isEmpty()) {
+            storedReferences = referenceValueRepository.getDataIdPerKeysByNaturalKeys(
+                    constants.refType(), naturalKeysHint);
+        } else {
+            storedReferences = referenceValueRepository.getDataIdPerKeys(constants.refType());
+        }
 
         // B4 / #5 : index O(1) pour {@link #getIdForSameHierarchicalKeyInDatabase}.
         // Cette methode est appelee par ligne par DataTransformer ; sur un
@@ -124,6 +267,23 @@ public record AsynchroneFileImporterContext(
                     entry.getValue());
         }
 
+        // Axe A.3 : si recursif + hint fourni , pre-populated lazy loader
+        // pour permettre fallback sur cache miss ( ex : import incremental
+        // ou un row CSV reference un parent deja en BDD non present dans
+        // le prescan ) . Le loader est pre-warmed avec les rows deja
+        // chargees ( storedReferences ) pour eviter de re-query celles-ci .
+        // Null pour non-recursif ou si hint absent ( comportement legacy ) .
+        final fr.inra.oresing.domain.data.deposit.prescan.LazyParentLoader lazyLoader;
+        if (isRecursive && naturalKeysHint != null && !naturalKeysHint.isEmpty()) {
+            lazyLoader = new fr.inra.oresing.domain.data.deposit.prescan.LazyParentLoader(
+                    referenceValueRepository, constants.refType());
+            for (Map.Entry<DataValue.LineIdentityColumnName, UUID> entry : storedReferences.entrySet()) {
+                lazyLoader.putKnown(entry.getKey().naturalKey(), entry.getValue());
+            }
+        } else {
+            lazyLoader = null;
+        }
+
         return new AsynchroneFileImporterContext(
                 constants,
                 publishContextBuilder,
@@ -135,13 +295,14 @@ public record AsynchroneFileImporterContext(
                 storedReferences,
                 hkIndex,
                 nkIndex,
-                Multimaps.synchronizedSetMultimap(HashMultimap.create()),
+                new ConcurrentHashMap<>(),
                 new HashSet<>(),
                 displayNamesByReferenceAndNaturalKey,
                 referenceValueRepository.getNodesForMenu(MenuType.authorization),
                 result,
                 new ReportErrors(jsonRowMapper),
-                new DataHeaderReader(result, publishContextBuilder, constants.dataConfiguration())
+                new DataHeaderReader(result, publishContextBuilder, constants.dataConfiguration()),
+                lazyLoader
         );
     }
 
@@ -198,12 +359,44 @@ public record AsynchroneFileImporterContext(
             UUID hit = idx.get(new NaturalKeyPattern(naturalKey, patternColumnName));
             if (hit != null) return Optional.of(hit);
         }
-        return afterPreloadReferenceUuids().entrySet().stream()
+        Optional<UUID> scanHit = afterPreloadReferenceUuids().entrySet().stream()
                 .filter(entry -> entry.getKey().naturalKey().equals(naturalKey) &&
                                  entry.getKey().patternColomnName().equals(patternColumnName)
                 )
                 .map(Map.Entry::getValue)
                 .findFirst();
+        if (scanHit.isPresent()) {
+            return scanHit;
+        }
+        // Axe A.3 : fallback lazy DB lookup pour le cas incremental
+        // import ou un parent existe deja en BDD mais n'etait pas dans
+        // le prescan ( hint Axe B ) . Si lazyParentLoader present
+        // ( recursif + hint ) , on declenche une query lazy bornee par
+        // negative cache pour ne pas re-query les naturalkeys deja
+        // confirmees absentes . Si null ( non-recursif ou full preload
+        // legacy ) , semantique inchangee .
+        if (lazyParentLoader != null && naturalKey != null) {
+            UUID cached = lazyParentLoader.getCachedId(naturalKey);
+            if (cached != null) {
+                // Promote dans l'index local pour eviter de retraverser
+                // le loader sur les acces ulterieurs ( WithRecursion
+                // peut iterer plusieurs fois sur la meme naturalkey ) .
+                if (idx != null) {
+                    idx.putIfAbsent(new NaturalKeyPattern(naturalKey, patternColumnName), cached);
+                }
+                return Optional.of(cached);
+            }
+            lazyParentLoader.request(naturalKey);
+            lazyParentLoader.flush();
+            UUID loaded = lazyParentLoader.getCachedId(naturalKey);
+            if (loaded != null) {
+                if (idx != null) {
+                    idx.putIfAbsent(new NaturalKeyPattern(naturalKey, patternColumnName), loaded);
+                }
+                return Optional.of(loaded);
+            }
+        }
+        return Optional.empty();
     }
 
     /**
@@ -321,7 +514,11 @@ public record AsynchroneFileImporterContext(
 
         final long lineNumber = keysAndReferenceDatumAfterChecking.getLineNumber();
         final Ltree hierarchicalKey = keysAndReferenceDatumAfterChecking.hierarchicalKey();
-        encounteredHierarchicalKeysForConflictDetection().put(hierarchicalKey, lineNumber);
+        // computeIfAbsent atomic = bucket-level lock only ; add on
+        // ConcurrentHashMap.newKeySet() is lock-free .
+        encounteredHierarchicalKeysForConflictDetection()
+                .computeIfAbsent(hierarchicalKey, k -> ConcurrentHashMap.newKeySet())
+                .add(lineNumber);
         return keysAndReferenceDatumAfterChecking;
     }
 }

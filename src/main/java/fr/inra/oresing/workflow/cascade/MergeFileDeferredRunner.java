@@ -81,7 +81,7 @@ public final class MergeFileDeferredRunner implements TransactionSynchronization
                 ? n -> registry.addFinalRows(correlationId, n)
                 : n -> { };
         Consumer<String> onPhase = (registry != null && correlationId != null)
-                ? phase -> registry.setMergeFilePhase(correlationId, phase)
+                ? phase -> registry.setSubPhase(correlationId, phase)
                 : phase -> { };
         long upserted;
         try {

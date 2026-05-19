@@ -165,6 +165,14 @@ public class VersioningService {
             safeSendUploadSuccessMail(application, dataName, fileName, uploadState, locale, dataVersioningResult);
         }
         if (compId != null) compensationLogService.confirm(compId);
+        // Invalidation cache referencedFiles : toute mutation reelle du
+        // binaryfile / des referencevalue rows associees rend le cache
+        // potentiellement obsolete. Le toggle publish ( PublishLifecycleService )
+        // gere sa propre invalidation en phase 2 ; on s'occupe ici uniquement
+        // du flux upload / createData .
+        if (serviceContainer.binaryFileService() instanceof fr.inra.oresing.rest.binaryFile.BinaryFileService bfs) {
+            bfs.invalidateReferencedFilesCache(application.getName());
+        }
         return dataVersioningResult;
 
         } catch (RuntimeException | IOException ex) {
@@ -297,29 +305,6 @@ public class VersioningService {
                 .testAndBuild(dataRepository);
     }
 
-    @Transactional
-    public DataVersioningResult unPublishVersionBeforeDelete(
-            Locale locale, String applicationName, UUID id, boolean withEmail) throws IOException {
-        Optional<BinaryFile> storedFile = serviceContainer.binaryFileService().getFile(applicationName, id);
-        if (storedFile.isPresent()) {
-            Optional<String> dataName = storedFile
-                    .map(BinaryFile::getParams)
-                    .map(BinaryFileInfos::binaryFiledataset)
-                    .map(BinaryFileDataset::getDatatype);
-            if (dataName.isPresent()) {
-                return createData(
-                        locale,
-                        applicationName,
-                        dataName.get(),
-                        null,
-                        true,
-                        withEmail
-                );
-            }
-
-        }
-        return null;
-    }
 
     private DataRepository dataRepository(Application application) {
         return repository.getRepository(application).data();
@@ -329,5 +314,18 @@ public class VersioningService {
         return repository.getRepository(application).binaryFile();
     }
 
+    private void unPublishVersions(final Application application, final Set<BinaryFile> filesToStore, final String dataType) {
+        filesToStore.forEach(f -> {
+            dataRepository(application).removeByFileId(f.getId());
+            f.markAsPublished(false);
+            binaryFileRepository(application).store(f);
+        });
+        // Single post-loop recompute ( see AuthorizationPublicationService.unPublishVersions
+        // for rationale ) - buildSynthesis is idempotent , one call after all
+        // files are unpublished gives the same final state as one per file.
+        if (dataType != null) {
+            serviceContainer.synthesisService().buildSynthesis(application.getName(), dataType, null);
+        }
+    }
 
 }

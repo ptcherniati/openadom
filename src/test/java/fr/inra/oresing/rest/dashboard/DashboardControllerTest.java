@@ -50,9 +50,9 @@ class DashboardControllerTest {
     @DisplayName("history() → 200 avec la page du service")
     void history() {
         DashboardWorkflowDTO.Page page = new DashboardWorkflowDTO.Page(List.of(), 0L, 100, 0);
-        when(service.listHistory(null, null, null, null, null, null)).thenReturn(page);
+        when(service.listHistory(null, null, null, null, null, null, true)).thenReturn(page);
         ResponseEntity<DashboardWorkflowDTO.Page> r =
-                controller.history(null, null, null, null, null, null);
+                controller.history(null, null, null, null, null, null, true);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(r.getBody()).isEqualTo(page);
     }
@@ -61,10 +61,10 @@ class DashboardControllerTest {
     @DisplayName("history() avec filtres → délègue tous les args au service")
     void historyWithFilters() {
         DashboardWorkflowDTO.Page page = new DashboardWorkflowDTO.Page(List.of(), 5L, 10, 0);
-        when(service.listHistory(10, 0, "IMPORT", "COMPLETED", "myapp", "alice"))
+        when(service.listHistory(10, 0, "IMPORT", "COMPLETED", "myapp", "alice", true))
                 .thenReturn(page);
         ResponseEntity<DashboardWorkflowDTO.Page> r =
-                controller.history(10, 0, "IMPORT", "COMPLETED", "myapp", "alice");
+                controller.history(10, 0, "IMPORT", "COMPLETED", "myapp", "alice", true);
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(r.getBody()).isEqualTo(page);
     }

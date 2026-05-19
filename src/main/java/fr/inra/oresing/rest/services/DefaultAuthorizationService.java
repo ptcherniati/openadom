@@ -35,6 +35,8 @@ import fr.inra.oresing.domain.exceptions.role.role.BadRoleException;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
+import fr.inra.oresing.cache.MemoryCache;
+import fr.inra.oresing.domain.additionalfiles.OperationAdditionalFileType;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.UpdateRolesOnAdditionalFilesManagement;
@@ -43,12 +45,15 @@ import fr.inra.oresing.rest.model.authorization.*;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.authorization.request.AuthorizationRequestBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
 
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -67,6 +72,61 @@ public class DefaultAuthorizationService implements fr.inra.oresing.domain.servi
     private ServiceContainer serviceContainer;
     /** Auto-référence via proxy Spring pour honorer @Transactional sur les appels internes. */
     private DefaultAuthorizationService self;
+
+    /**
+     * Flag d'activation du cache des authorization scopes ( cf.
+     * {@link #scopesCache} ). Quand désactivé , chaque appel à
+     * {@link #getAuthorizationScopes} relance la fonction SQL
+     * {@code <schema>.getnodes(...)} ( ~5 s sur dataset 4M+ rows ).
+     * Mode dégradé conservé pour debug / benchmarking.
+     */
+    @Value("${openadom.cache.authorization-scopes.enabled:true}")
+    private boolean authorizationScopesCacheEnabled;
+
+    // ─── Cache mémoire des scopes ────────────────────────────────────────────
+    //
+    // Audit OA_FULL_REVIEW (8/5/26) : la fonction SQL <schema>.getnodes() fait
+    // un walk récursif des hierarchicalkey + LATERAL unnest + DISTINCT ON sur
+    // referencevalue ( 4.3M rows sur si_acbb ) , coût mesuré ~4.9 s par appel.
+    // Le résultat est :
+    //  - indépendant du datatype courant ( arbre global pour tout l'app ) ;
+    //  - indépendant des filtres/pagination /data/json ;
+    //  - stable entre deux events ( import/delete , YAML edit , grant admin ).
+    //
+    // Politique d'invalidation :
+    //  - explicite : invalidateAuthorizationScopesForApplication appelée par
+    //    OreSiResources.saveData / deleteData / BundleResources / addAuthorization ,
+    //    plus refresh manuel admin si besoin ;
+    //  - filet : TTL 5 min ( ScOPES_CACHE_TTL_MS ) ;
+    //  - LRU : éviction du plus ancien quand on dépasse SCOPES_CACHE_MAX_ENTRIES.
+    //
+    // Clé : userId::appName::menuType. Inclure l'userId est obligatoire car la
+    // requête SQL est filtrée par RLS sur le rôle Postgres courant ( deux users
+    // différents peuvent voir des arbres différents pour le même app/menu ).
+    /**
+     * Type stocké dans le cache : map de scopes par datatype. Pas de
+     * gestion de timestamp ici - {@link MemoryCache} la porte en interne.
+     */
+    private record ScopesValue(Map<String, List<GetGrantableResult.ReferenceScope>> scopes) {}
+
+    @Value("${openadom.cache.authorization-scopes.ttl-minutes:120}")
+    private long scopesCacheTtlMinutes;
+
+    @Value("${openadom.cache.authorization-scopes.max-entries:200}")
+    private int scopesCacheMaxEntries;
+
+    /**
+     * Cache mémoire des scopes utilisateurs ; clé
+     * {@code userId::appName::menuType}. Initialisé après construction
+     * via {@link #initScopesCache} ( les @Value ne sont injectés
+     * qu'après la construction de l'instance ).
+     */
+    private MemoryCache<String, ScopesValue> scopesCache;
+
+    @jakarta.annotation.PostConstruct
+    void initScopesCache() {
+        this.scopesCache = new MemoryCache<>("authorizationScopes", scopesCacheMaxEntries, scopesCacheTtlMinutes);
+    }
 
     @org.springframework.beans.factory.annotation.Autowired
     @org.springframework.context.annotation.Lazy
@@ -427,7 +487,40 @@ public class DefaultAuthorizationService implements fr.inra.oresing.domain.servi
                 .toList();
     }
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    @org.springframework.context.annotation.Lazy
+    private fr.inra.oresing.workflow.cascade.metrics.OpenadomCacheMetrics cacheMetrics;
+
     public Map<String, List<GetGrantableResult.ReferenceScope>> getAuthorizationScopes(final Application application, final MenuType menuType) {
+        if (!authorizationScopesCacheEnabled) {
+            return computeAuthorizationScopes(application, menuType);
+        }
+
+        final String userId = serviceContainer.authenticationService().getCurrentUser().getId().toString();
+        final String cacheKey = userId + "::" + application.getName() + "::" + menuType.getType();
+
+        ScopesValue cached = scopesCache.get(cacheKey);
+        if (cached != null) {
+            log.debug("authorizationScopes cache hit for {}", cacheKey);
+            if (cacheMetrics != null) cacheMetrics.recordScopesHit();
+            return cached.scopes();
+        }
+
+        log.info("authorizationScopes cache miss for {} , computing from SQL", cacheKey);
+        if (cacheMetrics != null) cacheMetrics.recordScopesMiss();
+        Map<String, List<GetGrantableResult.ReferenceScope>> result = computeAuthorizationScopes(application, menuType);
+        scopesCache.put(cacheKey, new ScopesValue(result));
+        return result;
+    }
+
+    /**
+     * Calcul effectif des scopes via la fonction SQL {@code getnodes()}.
+     * Extrait ici pour pouvoir être appelé soit en bypass de cache ( flag
+     * désactivé ) soit en miss interne. Pas d'overload public pour ne pas
+     * exposer la cassure de l'invariant cache aux callers.
+     */
+    private Map<String, List<GetGrantableResult.ReferenceScope>> computeAuthorizationScopes(
+            final Application application, final MenuType menuType) {
         Map<ReferenceScope.Context, List<ReferenceScope.TreeNode>> nodesByContext =
                 repository.getRepository(application).data()
                         .getNodesForMenu(menuType)
@@ -441,6 +534,73 @@ public class DefaultAuthorizationService implements fr.inra.oresing.domain.servi
         return nodesByContext.entrySet().stream()
                 .map(entry -> new GetGrantableResult.ReferenceScope(entry.getKey(), entry.getValue()))
                 .collect(Collectors.groupingBy(GetGrantableResult.ReferenceScope::datatype));
+    }
+
+    /**
+     * Invalide les entrées de cache pour une application. À appeler après
+     * tout événement susceptible de modifier le résultat de {@code getnodes()}
+     * pour cette app : import / delete data , update YAML config , grant /
+     * revoke d'autorisation.
+     *
+     * <p>L'app est identifiée par son nom ; toutes les entrées dont la clé
+     * contient {@code ::appName::} ( quels que soient l'user et le menuType )
+     * sont retirées.
+     */
+    public void invalidateAuthorizationScopesForApplication(String appName) {
+        if (appName == null || scopesCache == null) return;
+        final String marker = "::" + appName + "::";
+        int removed = scopesCache.invalidateMatching(k -> k.contains(marker));
+        log.info("authorizationScopes cache invalidated for app {} ( {} entries )", appName, removed);
+        if (cacheMetrics != null) cacheMetrics.recordScopesInvalidate();
+
+        // Cache materialise V8 ( table per-app data_versioning_scope_cache ) :
+        // les scopes user changent => les valeurs visibles par user changent
+        // => DELETE cache pour cette app . Approche simple ( DELETE all rows
+        // de cette app ) plutot que par userId pour rester aligne sur la
+        // granularite des scopes globaux par-app .
+        try {
+            fr.inra.oresing.domain.application.Application application =
+                    serviceContainer.applicationService().getApplication(appName);
+            serviceContainer.dataVersioningScopeCacheService().invalidateAllForApp(application);
+        } catch (RuntimeException e) {
+            log.warn("dataVersioningScopeCache.invalidateAllForApp failed for {} : {}",
+                    appName, e.getMessage());
+        }
+    }
+
+    /**
+     * Invalide tout le cache ( toutes apps , tous users , tous menus ).
+     * Réservé aux cas extrêmes ( purge debug , redéploiement à chaud ).
+     */
+    public void invalidateAllAuthorizationScopes() {
+        if (scopesCache != null) scopesCache.invalidateAll();
+        log.info("All authorizationScopes caches invalidated");
+    }
+
+    /** Observabilité : taille courante du cache scopes. */
+    public int getAuthorizationScopesCacheSize() {
+        return scopesCache == null ? 0 : scopesCache.size();
+    }
+
+    /**
+     * Observabilité : taille mémoire approximative du cache scopes via
+     * sérialisation Jackson . Appelée uniquement par CacheSizeEstimator
+     * sur demande admin , pas en hot path .
+     */
+    public long estimateAuthorizationScopesCacheSizeBytes(com.fasterxml.jackson.databind.ObjectMapper mapper) {
+        return scopesCache == null ? 0L : scopesCache.estimateSizeBytes(mapper);
+    }
+
+    public boolean isAuthorizationScopesCacheEnabled() {
+        return authorizationScopesCacheEnabled;
+    }
+
+    public int getAuthorizationScopesCacheMaxEntries() {
+        return scopesCache == null ? scopesCacheMaxEntries : scopesCache.maxEntries();
+    }
+
+    public long getAuthorizationScopesCacheTtlMinutes() {
+        return scopesCache == null ? scopesCacheTtlMinutes : scopesCache.ttlMinutes();
     }
 
     @Transactional

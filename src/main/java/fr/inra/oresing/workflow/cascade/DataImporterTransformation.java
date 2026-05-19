@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -32,6 +33,19 @@ public final class DataImporterTransformation implements Transformation<Path, Pa
     private final ImportProgressReporter   progressReporter;
     private final Path                     processedDir;
     private final String                   correlationId;
+    /**
+     * Publish FAST path : si non-null , chaque chunk processed file est
+     * concatene dans ce fichier d'agregation apres production . En fin
+     * de workflow , le fichier contient TOUS les JSON DataValue lines du
+     * dataset , persistable dans {@code binaryfile.processed_data} pour
+     * activer le FAST path au prochain republish .
+     *
+     * <p>Concatenation se fait en append-binary ({@code APPEND}) pour
+     * preserver l'ordre des lignes et eviter le reparsing JSON .
+     * Si la copie echoue , on log et on continue ( capture = optimisation
+     * non-critique , pas de fail du workflow principal ) .
+     */
+    private final Path                     captureAggregateFile;
 
     public DataImporterTransformation(
             DataImporter             dataImporter,
@@ -39,11 +53,29 @@ public final class DataImporterTransformation implements Transformation<Path, Pa
             ImportProgressReporter   progressReporter,
             Path                     processedDir,
             String                   correlationId) {
-        this.dataImporter      = dataImporter;
-        this.importProperties  = importProperties;
-        this.progressReporter  = progressReporter;
-        this.processedDir      = processedDir;
-        this.correlationId     = correlationId;
+        this(dataImporter, importProperties, progressReporter, processedDir, correlationId, null);
+    }
+
+    /**
+     * Constructeur avec capture optionnelle ( Publish FAST path ) .
+     *
+     * @param captureAggregateFile fichier d'agregation ; chaque chunk processed
+     *                             y est concatene apres son ecriture . Peut etre
+     *                             {@code null} ( capture desactivee ) .
+     */
+    public DataImporterTransformation(
+            DataImporter             dataImporter,
+            ImportProperties         importProperties,
+            ImportProgressReporter   progressReporter,
+            Path                     processedDir,
+            String                   correlationId,
+            Path                     captureAggregateFile) {
+        this.dataImporter         = dataImporter;
+        this.importProperties     = importProperties;
+        this.progressReporter     = progressReporter;
+        this.processedDir         = processedDir;
+        this.correlationId        = correlationId;
+        this.captureAggregateFile = captureAggregateFile;
     }
 
     @Override
@@ -77,6 +109,22 @@ public final class DataImporterTransformation implements Transformation<Path, Pa
             }
 
             Files.deleteIfExists(chunkFile);
+
+            // Publish FAST path : concatener ce chunk processed file dans
+            // l'aggregate de capture ( si activee ) . Append binaire ,
+            // preserve ordre . Echec = log + continue ( non-critique ) .
+            if (captureAggregateFile != null) {
+                try {
+                    Files.write(captureAggregateFile,
+                            Files.readAllBytes(processedPath),
+                            StandardOpenOption.CREATE,
+                            StandardOpenOption.APPEND);
+                } catch (IOException ioe) {
+                    org.slf4j.LoggerFactory.getLogger(DataImporterTransformation.class)
+                            .warn("Publish capture failed for chunk {} : {} ( non-critical , continuing )",
+                                    chunk.chunkIndex(), ioe.getMessage());
+                }
+            }
 
             // logicalRecordCount = lignes reellement traitees pour ce chunk.
             // MetricsChunkInterceptor le lit pour cumuler le total dans

@@ -69,6 +69,38 @@ public class CascadeImportPipeline {
     private final fr.inra.oresing.workflow.cascade.history.HeartbeatService heartbeatService;
     private final fr.inra.oresing.monitoring.compensation.CompensationLogService compensationLogService;
 
+    /**
+     * Optional : utilise pour mapping parent PUBLISH cid -> child IMPORT cid
+     * ( fix BUG-1 cancel propagation ) . Field injection required=false pour
+     * preserver les tests qui n'ont pas le coordinator dans leur context .
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private fr.inra.oresing.rest.usecases.storage.versioning.PublishLifecycleCoordinator publishLifecycleCoordinator;
+
+    /**
+     * Optional : utilise pour publier la phase CASCADE_RUNNING sur le parent
+     * PUBLISH quand le cascade pipeline demarre reellement les workers .
+     * Permet a oa-live de distinguer la phase opaque {@code CASCADE_PREPARING}
+     * ( pre-warm checkers + reference cache + CSV normalize , 1-3 min ) de
+     * la phase {@code CASCADE_RUNNING} ( workers actifs , progress visible ) .
+     * Field injection required=false pour preserver les tests sans repository .
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository workflowLogRepository;
+
+    /**
+     * Pont SPI cascade 3.3.0 -> workflow_log . Quand un futur preparator
+     * sera attache via {@code .withDataPreparator(...)} , ses emissions
+     * de sous-phases ( {@code CSV_REENCODING} , {@code PREWARM_REFS} ,
+     * etc . ) seront routees vers
+     * {@code workflowLogRepository.updatePhase(cid, phase)} par ce listener .
+     * En l'absence de preparator attache , l'interceptor reste silencieux
+     * ( zero overhead ) . Voir
+     * {@link fr.inra.oresing.workflow.cascade.preparation.PreparationPhaseListenerInterceptor} .
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private fr.inra.oresing.workflow.cascade.preparation.PreparationPhaseListenerInterceptor preparationPhaseListener;
+
     public CascadeImportPipeline(
             ImportProperties       importProperties,
             ImportProgressReporter progressReporter,
@@ -130,6 +162,11 @@ public class CascadeImportPipeline {
      * Lance un import pour un fichier CSV sans en-tete deja prepare par
      * {@link DataImporter#prepareContextForDataTreatment}.
      *
+     * <p>Backward-compat : delegue a la version 8-params avec
+     * {@code override = CascadeRuntimeOverride.EMPTY} ( comportement
+     * identique au pre-refacto : tous les params lus depuis
+     * {@link ImportProperties} ) .
+     *
      * @param applicationName nom de l'application ( tag metrics )
      * @param dataType        type de reference/data ( tag metrics )
      */
@@ -141,10 +178,85 @@ public class CascadeImportPipeline {
             String         applicationName,
             String         dataType,
             UUID           sourceBinaryFileId) {
+        execute(dataImporter, referenceValueRepository, headerlessCsv, userId,
+                applicationName, dataType, sourceBinaryFileId,
+                fr.inra.oresing.workflow.cascade.config.CascadeRuntimeOverride.EMPTY);
+    }
+
+    /**
+     * Variante avec override per-call des 6 axes strategiques :
+     * pipelineMode , sinkStrategy , stagingStrategy , parallelism ,
+     * chunkSizeLines , maxErrorsThreshold ( cf
+     * {@link fr.inra.oresing.workflow.cascade.config.CascadeRuntimeOverride} ) .
+     *
+     * <p>Tout field non-null de l'override surcharge la valeur de
+     * {@link ImportProperties} pour ce workflow uniquement . Les autres
+     * fields ( temp dirs , collectorChunkSize , skipCsvReencoding , etc . )
+     * restent globaux et lus depuis {@link ImportProperties} .
+     *
+     * <p>Cas d'usage : {@code PublishLifecyclePhase2Handler.doPublish}
+     * passe un override construit depuis {@code PublishProperties}
+     * ( profil memoire-friendly ) pendant que l'upload initial passe
+     * {@link fr.inra.oresing.workflow.cascade.config.CascadeRuntimeOverride#EMPTY}
+     * ( profil throughput-friendly hérité d'ImportProperties ) .
+     *
+     * @since openadom phase B publish/unpublish refonte
+     */
+    public void execute(
+            DataImporter   dataImporter,
+            DataRepository referenceValueRepository,
+            Path           headerlessCsv,
+            String         userId,
+            String         applicationName,
+            String         dataType,
+            UUID           sourceBinaryFileId,
+            fr.inra.oresing.workflow.cascade.config.CascadeRuntimeOverride override) {
+        execute(dataImporter, referenceValueRepository, headerlessCsv, userId,
+                applicationName, dataType, sourceBinaryFileId, override,
+                /* preGeneratedCid */ null);
+    }
+
+    /**
+     * Variante acceptant un correlation id pre-genere par le caller .
+     * Cas d'usage : {@code DataService.addData} pre-cree la row workflow_log
+     * pour visibilite du depot frais pendant prepareContext . Quand
+     * {@code preGeneratedCid} est non null , reuse au lieu de generer un
+     * nouveau . {@code logWriter.recordStart} interne reste appele mais
+     * il est idempotent ( skip silencieusement sur duplicate primary key ) .
+     *
+     * @since openadom plan resilience Phase 2 cascade adoption
+     */
+    public void execute(
+            DataImporter   dataImporter,
+            DataRepository referenceValueRepository,
+            Path           headerlessCsv,
+            String         userId,
+            String         applicationName,
+            String         dataType,
+            UUID           sourceBinaryFileId,
+            fr.inra.oresing.workflow.cascade.config.CascadeRuntimeOverride override,
+            String         preGeneratedCid) {
 
         if (!Files.exists(headerlessCsv)) {
             throw new IllegalArgumentException("Input file does not exist: " + headerlessCsv);
         }
+
+        // Resolu une seule fois ici . Toutes les references aux 6 fields
+        // override-ables ( pipelineMode , sinkStrategy , stagingStrategy ,
+        // parallelism , chunkSizeLines , maxErrorsThreshold ) doivent
+        // utiliser ces variables locales et NON importProperties.getXxx() .
+        final fr.inrae.ore.cascade.model.workflow.PipelineMode effPipelineMode =
+                override.pipelineMode() != null ? override.pipelineMode() : importProperties.getPipelineMode();
+        final ImportProperties.SinkStrategy effSinkStrategy =
+                override.sinkStrategy() != null ? override.sinkStrategy() : importProperties.getSinkStrategy();
+        final ImportProperties.StagingStrategy effStagingStrategy =
+                override.stagingStrategy() != null ? override.stagingStrategy() : importProperties.getStagingStrategy();
+        final int effParallelismRaw =
+                override.parallelism() != null ? override.parallelism() : importProperties.getParallelism();
+        final int effChunkSizeLinesRaw =
+                override.chunkSizeLines() != null ? override.chunkSizeLines() : importProperties.getChunkSizeLines();
+        final int effMaxErrorsThreshold =
+                override.maxErrorsThreshold() != null ? override.maxErrorsThreshold() : importProperties.getMaxErrorsThreshold();
 
         // Quota par utilisateur : 429 Too Many Requests immediat si trop
         // d'imports simultanes. Le slot est libere dans le finally
@@ -156,8 +268,47 @@ public class CascadeImportPipeline {
 
         // Identifiants safe ( UUID + parsing local ) declares avant le
         // try afin d'etre visibles dans le finally cleanup .
-        final String correlationId = UUID.randomUUID().toString();
+        // Phase 2 adoption : reuse preGeneratedCid si fourni par caller
+        // ( DataService.addData pre-creation row workflow_log ) , sinon
+        // generation legacy . Comportement identique quand preGeneratedCid
+        // est null .
+        final String correlationId = preGeneratedCid != null
+                ? preGeneratedCid
+                : UUID.randomUUID().toString();
         final UUID   corrUuid      = safeUuid(correlationId);
+
+        // Fix BUG-1 : si on tourne en sub-IMPORT d'un PUBLISH parent ,
+        // enregistrer le mapping parent->child dans le coordinator publish
+        // pour permettre la propagation du cancel utilisateur .
+        // Le ThreadLocal {@link fr.inra.oresing.domain.cancel.CancellationContext}
+        // est set par {@link PublishLifecyclePhase2Handler#doPublish} avant
+        // l'appel a {@code dataService.addData} . Sans ce mapping , un cancel
+        // sur la PUBLISH cid ne touche pas le sub-IMPORT en cours .
+        UUID publishParent = fr.inra.oresing.domain.cancel.CancellationContext.currentParentCid();
+        if (publishParent != null && corrUuid != null && publishLifecycleCoordinator != null) {
+            publishLifecycleCoordinator.registerChildImport(publishParent, corrUuid);
+            // Race protection : si le PUBLISH parent a deja ete cancelled
+            // PENDANT la preparation du sub-IMPORT ( ex : lecture file , write
+            // temp file -> ~10 s ) , le cancel propagation a tente un lookup
+            // child empty et n'a rien fait . Maintenant que le sub est registered ,
+            // on re-check le flag parent et on abort immediatement si cancelled .
+            // Garantie : aucun chunk transform / sink ne demarre si user a annule
+            // avant que le sub commence vraiment .
+            if (publishLifecycleCoordinator.isCancelled(publishParent)) {
+                log.warn("Sub-IMPORT {} : PUBLISH parent {} deja cancelled -> abort immediat , aucun chunk transform/sink ne demarre",
+                        corrUuid, publishParent);
+                throw new RuntimeException("Parent PUBLISH workflow " + publishParent + " was cancelled before sub-IMPORT could start");
+            }
+            log.info("Sub-IMPORT cascade {} enregistre comme child de PUBLISH parent {}",
+                    corrUuid, publishParent);
+            // Publie CASCADE_RUNNING sur le PUBLISH parent : la phase
+            // CASCADE_PREPARING ( setup contexte cascade dans DataService ) est
+            // termine , les workers cascade s'apprete a demarrer . Permet a
+            // oa-live de basculer de "Preparation cascade" a "Cascade en cours" .
+            if (workflowLogRepository != null) {
+                workflowLogRepository.updatePhase(publishParent, fr.inra.oresing.workflow.WorkflowPhase.CASCADE_RUNNING);
+            }
+        }
 
         // Marqueur lu par le finally : a true des qu un runner deferred a
         // ete enregistre sur le TransactionSynchronizationManager Spring .
@@ -210,6 +361,16 @@ public class CascadeImportPipeline {
             registerWorkflowStart(corrUuid, userUuid, userLogin, applicationName, dataType,
                     resourceName, startedAt, fileSizeBytes);
 
+            // Persist the parent linkage on the child IMPORT workflow_log row
+            // now that recordStart has inserted it ( previous call site at line
+            // 249 raced the INSERT and UPDATEd 0 rows ) . Reads the parentCid
+            // from CancellationContext which is set by PublishLifecyclePhase2Handler
+            // before invoking the cascade . Without this tag the history endpoint
+            // shows two rows per publish ( parent PUBLISH + cascade IMPORT child ) .
+            if (publishParent != null && workflowLogRepository != null) {
+                workflowLogRepository.setParentCorrelationId(corrUuid, publishParent);
+            }
+
             // Heartbeat lifecycle pipeline-wide ( cf doc pipelineHeartbeat
             // ci-dessus ) . Demarre apres recordStart pour que l UPDATE
             // beat_workflow trouve la row IN_PROGRESS deja persistee .
@@ -261,12 +422,15 @@ public class CascadeImportPipeline {
             final boolean isRecursive = dataImporter.getDataImporterContext().isRecursive();
             final boolean isStrictOrdered = dataImporter.getDataImporterContext().isOrderStrictTaggedOnRecursiveValidation()
                     || importProperties.isOrderedRecursionMode();
-            final int chunkSizeLines  = effectiveChunkSizeLines(importProperties, isRecursive, isStrictOrdered);
-            final int parallelism     = effectiveParallelism(importProperties, isRecursive);
+            // Resolu inline depuis effChunkSizeLinesRaw / effParallelismRaw
+            // calcules en tete d'execute() . Les helpers effectiveXxx
+            // gardent la logique recursivite / ordering forcing par compat .
+            final int chunkSizeLines  = isRecursive && !isStrictOrdered ? Integer.MAX_VALUE : effChunkSizeLinesRaw;
+            final int parallelism     = isRecursive ? 1 : effParallelismRaw;
             final int sourcePoolSize       = resolvePoolSize("source",    parallelism);
             final int transformPoolSize    = resolvePoolSize("transform", parallelism);
             final int rawSinkPoolSize      = resolvePoolSize("sink",      DEFAULT_PARALLELISM);
-            final int maxErrors            = importProperties.getMaxErrorsThreshold();
+            final int maxErrors            = effMaxErrorsThreshold;
             final int collectorChunkSize   = importProperties.getCollectorChunkSize();
             final boolean enableMetrics    = importProperties.isEnableMetrics();
 
@@ -308,8 +472,18 @@ public class CascadeImportPipeline {
                     processedDir,
                     correlationId);
 
-            ImportProperties.SinkStrategy strategy = importProperties.getSinkStrategy();
+            // Strategy switch ( cascade 1.7.0 + ) :
+            //   MERGE_FILE  : MergingFileSink + storeAll(merged.csv)  -- legacy , default
+            //   DIRECT_COPY : StagingPostgresSink with FinalizeHook  -- production
+            //   DISCARD     : Sinks.discard() no-op sink ( cascade 3.2.0 ) -- admin
+            //                 pre-compute path : validators + transformers + chunk
+            //                 emit run normally ( processed_data capture file
+            //                 alimente par DataImporter.convertToCSVLine ) mais
+            //                 le sink est un /dev/null . Aucune ecriture sur
+            //                 referencevalue , aucune staging table requise .
+            ImportProperties.SinkStrategy strategy = effSinkStrategy;
             boolean directCopy = strategy == ImportProperties.SinkStrategy.DIRECT_COPY;
+            boolean discard    = strategy == ImportProperties.SinkStrategy.DISCARD;
 
             // PER_WORKFLOW_TABLE : CREATE UNLOGGED TABLE oa_staging.referencevalue_import_<corrid>
             // avant que cascade demarre . La table sera DROPpee apres
@@ -317,7 +491,7 @@ public class CascadeImportPipeline {
             // sweeper orphan apres TTL si le workflow crash en cours .
             fr.inra.oresing.workflow.cascade.staging.StagingMode stagingMode = directCopy
                     ? fr.inra.oresing.workflow.cascade.staging.StagingMode.of(
-                            importProperties.getStagingStrategy(), corrUuid,
+                            effStagingStrategy, corrUuid,
                             importProperties.getStagingSharedTableName(),
                             importProperties.getStagingSharedOrphanTtlMinutes())
                     : null;
@@ -347,7 +521,7 @@ public class CascadeImportPipeline {
             final java.util.concurrent.atomic.AtomicReference<java.util.UUID> stagingCompensationIdRef =
                     new java.util.concurrent.atomic.AtomicReference<>();
             if (directCopy
-                    && importProperties.getStagingStrategy() != ImportProperties.StagingStrategy.PER_CONNECTION_TEMP
+                    && effStagingStrategy != ImportProperties.StagingStrategy.PER_CONNECTION_TEMP
                     && corrUuid != null && stagingMode != null) {
                 String fullTableName = stagingMode.tableName();
                 String[] parts = fullTableName.split("\\.", 2);
@@ -361,7 +535,7 @@ public class CascadeImportPipeline {
                             correlationId,
                             corrUuid, userUuid, userLogin,
                             java.util.Map.of(
-                                    "stagingStrategy", importProperties.getStagingStrategy().name(),
+                                    "stagingStrategy", effStagingStrategy.name(),
                                     "tableName",       fullTableName,
                                     "correlationId",   correlationId),
                             importProperties.getStagingSharedOrphanTtlMinutes());
@@ -389,13 +563,21 @@ public class CascadeImportPipeline {
 
             // MERGE_FILE deferred : on garde une reference typee sur le sink
             // pour pouvoir ensuite recuperer le path capte via takeDeferredMergedPath .
-            StoreAllPathSink mergeFileSink = directCopy
+            // DISCARD : ni mergeFileSink ni staging requis ; on injecte un sink no-op .
+            StoreAllPathSink mergeFileSink = (directCopy || discard)
                     ? null
                     : new StoreAllPathSink(referenceValueRepository, activeRegistry, outerTxActive);
-            fr.inrae.ore.cascade.model.core.Sink<java.nio.file.Path> sink = directCopy
-                    ? CascadeSinkFactory.directCopy(referenceValueRepository, importProperties, corrUuid, heartbeatService, activeRegistry, finalizeMode)
-                    : mergeFileSink;
-            MergedFileChunkCollector mergeCollector = directCopy
+            fr.inrae.ore.cascade.model.core.Sink<java.nio.file.Path> sink;
+            if (discard) {
+                sink = fr.inrae.ore.cascade.api.Sinks.discard();
+            } else if (directCopy) {
+                sink = CascadeSinkFactory.directCopy(referenceValueRepository, importProperties, corrUuid, heartbeatService, activeRegistry, finalizeMode);
+            } else {
+                sink = mergeFileSink;
+            }
+            // DISCARD : pas de collector ( les chunks ne sont pas merges ) ,
+            // PipelineMode peut etre STAGED ou PIPELINED indifferemment .
+            MergedFileChunkCollector mergeCollector = (directCopy || discard)
                     ? null
                     : new MergedFileChunkCollector(mergedPath);
 
@@ -408,14 +590,14 @@ public class CascadeImportPipeline {
             // ( ConfigEditForm ) desactive aussi le dropdown pipelineMode
             // pour MERGE_FILE pour que ca soit visible .
             fr.inrae.ore.cascade.model.workflow.PipelineMode effectivePipelineMode =
-                    directCopy
-                            ? importProperties.getPipelineMode()
+                    (directCopy || discard)
+                            ? effPipelineMode
                             : fr.inrae.ore.cascade.model.workflow.PipelineMode.STAGED;
-            if (!directCopy && importProperties.getPipelineMode()
+            if (!directCopy && !discard && effPipelineMode
                     != fr.inrae.ore.cascade.model.workflow.PipelineMode.STAGED) {
                 log.info("[{}] MERGE_FILE force pipelineMode=STAGED ( cascade PIPELINED ne supporte pas les Collectors ) ; "
                         + "valeur configuree {} ignoree pour ce workflow",
-                        correlationId, importProperties.getPipelineMode());
+                        correlationId, effPipelineMode);
             }
 
             log.info("[{}] Demarrage import : user={}, file={}, chunkSize={}, pools=[source={},transform={},sink={}], "
@@ -449,6 +631,16 @@ public class CascadeImportPipeline {
                             .withPipelineMode(effectivePipelineMode)
                             .withPipelineQueueCapacity(importProperties.getPipelineQueueCapacity());
 
+            // Cascade 3.3.0 : attache le listener PreparationInterceptor pour
+            // router les sous-phases emises par un futur DataPreparator vers
+            // workflow_log.metadata.phase . Sans preparator attache , aucune
+            // emission n'a lieu et l'interceptor reste silencieux . Le wiring
+            // ici est prospectif : il evite que chaque futur preparator ait
+            // a se soucier d'enregistrer son propre listener observability .
+            if (preparationPhaseListener != null) {
+                builder = builder.withInterceptor(preparationPhaseListener);
+            }
+
             // Sink parallelism wiring ( cascade 2.1.0 ) :
             //   - DIRECT_COPY + PER_CONNECTION_TEMP : sticky connection ,
             //     force sinkParallelism=1 ( PgConnection pas thread-safe et
@@ -461,7 +653,7 @@ public class CascadeImportPipeline {
             // Cascade 2.1.0 default sinkParallelism=1 ; donc sans cet appel
             // explicite le sink reste sequentiel meme si pool.sink=4 .
             boolean stickyConnection = directCopy
-                    && importProperties.getStagingStrategy() == ImportProperties.StagingStrategy.PER_CONNECTION_TEMP;
+                    && effStagingStrategy == ImportProperties.StagingStrategy.PER_CONNECTION_TEMP;
             int effectiveSinkPar;
             if (stickyConnection) {
                 effectiveSinkPar = 1;
@@ -494,7 +686,7 @@ public class CascadeImportPipeline {
                 activeRegistry.setStrategy(corrUuid,
                         new fr.inra.oresing.workflow.cascade.history.StrategySnapshot(
                                 strategy.name(),
-                                directCopy ? importProperties.getStagingStrategy().name() : null,
+                                directCopy ? effStagingStrategy.name() : null,
                                 effectivePipelineMode.name(),
                                 rawSinkPoolSize));
                 activeRegistry.setImportConfig(corrUuid,
@@ -551,6 +743,37 @@ public class CascadeImportPipeline {
                             activeRegistry.markCascadeFinished(corrUuid, Instant.now());
                         }
                     });
+                }
+                if (result.status() == ProcessingStatus.CANCELLED) {
+                    // Cascade signale annulation utilisateur ( WorkflowEventBus.cancel
+                    // observe par les chunks ) . Persiste CANCELLED dans workflow_log
+                    // pour que l'onglet Historique l'affiche cote dashboard
+                    // ( terminalOnly filter exclut IN_PROGRESS / UPLOADING / CHUNKING
+                    // / PROCESSING / LOADING_DB mais pas CANCELLED ) .
+                    Duration cancDuration = Duration.between(startedAt, Instant.now());
+                    String cancelMessage = result.fatalError()
+                            .map(CascadeImportPipeline::formatThrowable)
+                            .orElseGet(() -> result.errors().isEmpty()
+                                    ? "Cancelled by user"
+                                    : result.errors().get(0));
+                    log.info("[{}] Workflow cascade cancelled : processed={} chunks={} reason={}",
+                            correlationId, result.recordsProcessed(),
+                            result.chunksProcessed(), cancelMessage);
+                    metrics.recordImportCompleted(
+                            new fr.inra.oresing.workflow.cascade.metrics.OpenadomMetrics.ImportMetricsData(
+                                    applicationName, dataType, WorkflowLogEntry.STATUS_CANCELLED,
+                                    cancDuration, result.recordsProcessed(), result.recordsFailed(),
+                                    result.chunksProcessed(), fileSizeBytes));
+                    logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
+                            startedAt, cancDuration, WorkflowLogEntry.STATUS_CANCELLED,
+                            result.recordsProcessed(), result.recordsFailed(),
+                            result.chunksProcessed(), fileSizeBytes,
+                            result.errors(), cancelMessage, null);
+                    tempCleanup.cleanup(chunksDir, processedDir, uploadedPath);
+                    if (corrUuid != null) {
+                        activeRegistry.finish(corrUuid);
+                    }
+                    return;
                 }
                 if (result.status() == ProcessingStatus.FAILED) {
                     String firstError = result.errors().isEmpty()

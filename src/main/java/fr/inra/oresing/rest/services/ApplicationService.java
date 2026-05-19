@@ -433,7 +433,19 @@ public class ApplicationService {
 
                                 // Traiter l'application
                                 Application filtered = app.filterFieldsAndHidden(filters);
-                                List<ApplicationResult.DataSynthesis> synthesis = serviceContainer.dataService().getReferenceSynthesis(filtered);
+                                // Audit OA_FULL_REVIEW (8/5/26) : on n'appelle PAS
+                                // getReferenceSynthesis() ici. Le SELECT
+                                // "ReferenceType, COUNT(*) FROM referencevalue
+                                // GROUP BY ReferenceType" prend ~12 s sur
+                                // si_acbb ( 10M rows ) et était exécuté pour
+                                // CHAQUE application au chargement de la page
+                                // "Mes applications" alors que le résultat
+                                // n'y est même pas affiché ( la liste montre
+                                // uniquement nom + date + version ). La synthèse
+                                // reste calculée au niveau de la page détail
+                                // ( buildOpenAdom -> getReferenceSynthesis quand
+                                //   le filtre REFERENCETYPE est demandé ).
+                                List<ApplicationResult.DataSynthesis> synthesis = List.of();
                                 ApplicationLightResult result = ApplicationLightResult.of(filtered, currentUserRoles, synthesis);
 
                                 // Calculer la progression

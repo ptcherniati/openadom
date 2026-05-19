@@ -115,6 +115,15 @@ public class WorkflowActiveRegistry implements WorkflowListener {
             new ConcurrentHashMap<>();
 
     /**
+     * Snapshot live d'un workflow execute via le FAST path . Quand present ,
+     * oa-live affiche un panel dedie ( phases STREAM_CACHE / BUILD_REFREF /
+     * UPSERT_FINAL / ... ) au lieu de la grille cascade ( workers ) qui ne
+     * s'applique pas - le DataImporter est entierement bypass dans ce mode .
+     */
+    private final ConcurrentMap<UUID, FastPathSnapshot> fastPathByCid =
+            new ConcurrentHashMap<>();
+
+    /**
      * Compteurs in-memory des rows ecrites en staging et en finale par
      * workflow . Mis a jour a chaud par les listeners cascade ( pas de
      * SQL count par poll ) . Approximation acceptable : si une rollback
@@ -129,12 +138,13 @@ public class WorkflowActiveRegistry implements WorkflowListener {
     /**
      * Sous-phase MERGE_FILE ( {@code MERGE_LOCAL} / {@code TEMP_LOAD} /
      * {@code UPSERT_FINAL} ) emise par {@link DataRepository#storeAll}
-     * via {@link StoreAllPathSink} . Permet a la live view d'afficher
-     * 3 progress bars distinctes au lieu de 2 ( bar A determinate ,
-     * bar B indeterminate pendant TEMP_LOAD , bar C determinate ) .
-     * Null pour les workflows DIRECT_COPY ( pas de sous-phase MERGE_FILE ) .
+     * via {@link StoreAllPathSink} . Egalement {@code REFREF_REBUILD} ,
+     * {@code SYNTHESIS_REBUILD} , {@code CACHE_CAPTURE} ( post-UPSERT
+     * phases pushed by {@link
+     * fr.inra.oresing.workflow.phase.WorkflowPhaseTracker} ) .
+     * Null pour les workflows sans sous-phase observable .
      */
-    private final ConcurrentMap<UUID, String> mergeFilePhaseByCid =
+    private final ConcurrentMap<UUID, String> subPhaseByCid =
             new ConcurrentHashMap<>();
 
     public void addStagingRows(UUID correlationId, long delta) {
@@ -165,6 +175,20 @@ public class WorkflowActiveRegistry implements WorkflowListener {
         if (correlationId == null || count < 0) return;
         finalRowsByCid.computeIfAbsent(correlationId,
                 k -> new java.util.concurrent.atomic.AtomicLong()).set(count);
+
+        // Propage AUSSI au snapshot in-memory pour que DashboardWorkflowDTO.recordsProcessed
+        // ( lu par oa-live WorkflowDeleteProgress / WorkflowFinalizeBadge via le polling
+        // /api/v1/dashboard/active ) reflete la progression live . Sans ce propagate ,
+        // setFinalRowsAuthoritative ne mettait a jour qu'une side-map ignoree par les DTO
+        // de la vue active -> bar UNPUBLISH restait a 0 % toute la duree du DELETE chunked .
+        byCorrelationId.computeIfPresent(correlationId, (id, cur) -> {
+            // Calcule progressPercentage si recordsTotal connu , sinon null ( bar indeterminee ) .
+            Double pct = cur.recordsTotal() > 0
+                    ? (count * 100.0 / cur.recordsTotal())
+                    : null;
+            return cur.withProgress(count, cur.recordsFailed(), cur.chunksProcessed(),
+                                    pct, cur.bytesTotal());
+        });
     }
 
     public long stagingRows(UUID correlationId) {
@@ -178,20 +202,27 @@ public class WorkflowActiveRegistry implements WorkflowListener {
     }
 
     /**
-     * Marque la sous-phase MERGE_FILE en cours pour ce workflow . Appelle
-     * par {@link StoreAllPathSink#write} via le callback
-     * {@code onPhaseChange} expose par {@code DataRepository.storeAll} .
+     * Marque la sous-phase en cours pour ce workflow . Appelle :
+     * <ul>
+     *   <li>{@link StoreAllPathSink#write} via le callback
+     *       {@code onPhaseChange} de {@code DataRepository.storeAll}
+     *       pour {@code MERGE_LOCAL} / {@code TEMP_LOAD} /
+     *       {@code UPSERT_FINAL} / {@code REFREF_REBUILD} .</li>
+     *   <li>{@link fr.inra.oresing.workflow.phase.WorkflowPhaseTracker}
+     *       pour les phases post-UPSERT
+     *       ( {@code SYNTHESIS_REBUILD} , {@code CACHE_CAPTURE} ) .</li>
+     * </ul>
      *
-     * @param phase {@code MERGE_LOCAL} | {@code TEMP_LOAD} | {@code UPSERT_FINAL}
+     * @param phase voir {@link fr.inra.oresing.workflow.WorkflowPhase}
      */
-    public void setMergeFilePhase(UUID correlationId, String phase) {
+    public void setSubPhase(UUID correlationId, String phase) {
         if (correlationId == null || phase == null) return;
-        mergeFilePhaseByCid.put(correlationId, phase);
+        subPhaseByCid.put(correlationId, phase);
     }
 
-    /** @return sous-phase MERGE_FILE courante , ou empty pour DIRECT_COPY ou avant TEMP_LOAD . */
-    public Optional<String> findMergeFilePhase(UUID correlationId) {
-        return Optional.ofNullable(mergeFilePhaseByCid.get(correlationId));
+    /** @return sous-phase courante , ou empty si aucune publiee . */
+    public Optional<String> findSubPhase(UUID correlationId) {
+        return Optional.ofNullable(subPhaseByCid.get(correlationId));
     }
 
     public void initFinalizePhase(UUID correlationId, Instant startedAt) {
@@ -222,6 +253,50 @@ public class WorkflowActiveRegistry implements WorkflowListener {
 
     public Optional<FinalizePhaseSnapshot> findFinalizePhase(UUID correlationId) {
         return Optional.ofNullable(finalizePhaseByCid.get(correlationId));
+    }
+
+    /**
+     * Marque immediatement le workflow comme {@code CANCELLED} dans le snapshot
+     * in-memory expose par {@code DashboardService.listInProgress} . Appele par
+     * {@code PublishLifecycleService.rejectIfWorkflowAlreadyInProgress} en complement du
+     * {@code workflow_log.markCancelled} en DB , afin que oa-live Live tab
+     * affiche immediatement le statut CANCELLED sans attendre la fin de Phase 2 .
+     *
+     * <p>No-op si le snapshot n'est pas registered ( workflow termine ou jamais
+     * register ) .
+     */
+    public void markCancelled(UUID correlationId) {
+        if (correlationId == null) return;
+        byCorrelationId.computeIfPresent(correlationId,
+                (id, cur) -> cur.withStatus(WorkflowLogEntry.STATUS_CANCELLED));
+    }
+
+    // ---------- FAST path ( cache rotation ) snapshot ----------
+
+    public void registerFastPath(UUID correlationId, long cacheSizeBytes, Instant at,
+                                  UUID fileId, String filename) {
+        if (correlationId == null) return;
+        fastPathByCid.put(correlationId, FastPathSnapshot.starting(cacheSizeBytes, at, fileId, filename));
+    }
+
+    public void setFastPathPhase(UUID correlationId, String phase) {
+        if (correlationId == null) return;
+        fastPathByCid.computeIfPresent(correlationId, (k, cur) -> cur.withPhase(phase));
+    }
+
+    public void setFastPathUpsertedRows(UUID correlationId, long count) {
+        if (correlationId == null) return;
+        fastPathByCid.computeIfPresent(correlationId, (k, cur) -> cur.withUpsertedRows(count));
+    }
+
+    public void recordFastPathPhaseDuration(UUID correlationId, String phase, long durationMs) {
+        if (correlationId == null) return;
+        fastPathByCid.computeIfPresent(correlationId,
+                (k, cur) -> cur.withPhaseDuration(phase, durationMs));
+    }
+
+    public Optional<FastPathSnapshot> findFastPath(UUID correlationId) {
+        return Optional.ofNullable(fastPathByCid.get(correlationId));
     }
 
     /** Publie le binaryfile source d'un workflow d'import . */
@@ -364,7 +439,8 @@ public class WorkflowActiveRegistry implements WorkflowListener {
         finalizePhaseByCid.remove(correlationId);
         stagingRowsByCid.remove(correlationId);
         finalRowsByCid.remove(correlationId);
-        mergeFilePhaseByCid.remove(correlationId);
+        subPhaseByCid.remove(correlationId);
+        fastPathByCid.remove(correlationId);
         if (removed != null) {
             log.debug("Workflow unregistered : {} / {}",
                     removed.workflowType(), correlationId);

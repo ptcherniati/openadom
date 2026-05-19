@@ -149,7 +149,6 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
                         new TransformOneLineElementTransformer.GroovyExpressionOnOneLineElementTransformer(
                                 target,
                                 groovyExpression,
-                                new HashMap<>(),//groovyContext,
                                 multiplicity,
                                 references
                         );
@@ -161,6 +160,24 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
 
         sealed interface TransformOneLineElementTransformer extends LineTransformer permits TransformOneLineElementTransformer.GroovyExpressionOnOneLineElementTransformer {
             DataColumn target();
+
+            /**
+             * TRANSFORM optim B : pont thread-local pour passer le {@code context}
+             * per-row entre {@link #transform(DataDatum, Map)} ( appelant ) et
+             * {@link #transform(SomethingThatCanProvideEvaluationContext)} ( inner ) .
+             *
+             * <p>Avant : champ {@code Map context} dans le record , mute par tous les
+             * threads cascade via {@code context.putAll(perCall)} a chaque ligne ->
+             * race condition + lock contention ConcurrentHashMap . Le ConcurrentHashMap
+             * masquait la {@code ConcurrentModificationException} mais semantique
+             * incorrecte ( datum d'un row leakait sur eval d'un autre worker ) .
+             *
+             * <p>Apres : ThreadLocal stocke la ref du context du row courant pendant
+             * le call . Chaque worker cascade voit son propre context , zero partage ,
+             * zero contention , semantique correcte . set/remove dans try/finally
+             * pour eviter memory leak ( les threads pool reusent leur ThreadLocal ) .
+             */
+            ThreadLocal<Map<String, Object>> PER_CALL_CONTEXT = new ThreadLocal<>();
 
             @Override
             default DataDatum transform(final DataDatum referenceDatum, Map<String, Object> context) {
@@ -174,16 +191,22 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
                     // Comme il faut quand même appliquer la transformation, on part de rien
                     referenceColumnValue = DataColumnSingleValue.empty();
                 }
-                if (this instanceof GroovyExpressionOnOneLineElementTransformer groovyExpressionOnOneLineElementTransformer) {
-                    groovyExpressionOnOneLineElementTransformer.context.putAll(context);
+                final boolean isGroovy = this instanceof GroovyExpressionOnOneLineElementTransformer;
+                if (isGroovy) {
+                    PER_CALL_CONTEXT.set(context);
                 }
-
-                final UnaryOperator<FieldType<?>> fn = _ -> transform(referenceDatum);
-                final DataColumnValue<?, ?> transformedReferenceColumnValue = referenceColumnValue.transform(fn);
-                final DataDatum transformedDatum = DataDatum.copyOf(referenceDatum);
-                transformedDatum.put(target(), transformedReferenceColumnValue);
-                return (this instanceof GroovyExpressionOnOneLineElementTransformer groovyExpressionOnOneLineElementTransformer) &&
-                        groovyExpressionOnOneLineElementTransformer.multiplicity().equals(Multiplicity.ONE) ? referenceDatum : transformedDatum;
+                try {
+                    final UnaryOperator<FieldType<?>> fn = _ -> transform(referenceDatum);
+                    final DataColumnValue<?, ?> transformedReferenceColumnValue = referenceColumnValue.transform(fn);
+                    final DataDatum transformedDatum = DataDatum.copyOf(referenceDatum);
+                    transformedDatum.put(target(), transformedReferenceColumnValue);
+                    return (this instanceof GroovyExpressionOnOneLineElementTransformer groovyExpressionOnOneLineElementTransformer) &&
+                            groovyExpressionOnOneLineElementTransformer.multiplicity().equals(Multiplicity.ONE) ? referenceDatum : transformedDatum;
+                } finally {
+                    if (isGroovy) {
+                        PER_CALL_CONTEXT.remove();
+                    }
+                }
             }
 
             @SuppressWarnings("java:S1452")
@@ -192,7 +215,6 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
             record GroovyExpressionOnOneLineElementTransformer(
                     DataColumn target,
                     Expression<?> groovyExpression,
-                    Map<String, Object> context,
                     Multiplicity multiplicity,
                     Set<String> references
             ) implements TransformOneLineElementTransformer {
@@ -200,18 +222,16 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
                 @Override
                 @SuppressWarnings({"java:S3740"})
                 public FieldType<?> transform(final SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext) {
-                    ImmutableMap<String, Object> result = ImmutableMap.<String, Object>builder()
-                            .putAll(Stream.of(
-                                            this.context,
-                                            somethingThatCanProvideEvaluationContext.getEvaluationContext()
-                                    )
-                                    .flatMap(map -> map.entrySet().stream())
-                                    .collect(Collectors.toMap(
-                                            Map.Entry::getKey,
-                                            Map.Entry::getValue,
-                                            (_, v2) -> v2  // En cas de conflit, garder v2 (dernière valeur)
-                                    )))
-                            .build();
+                    // TRANSFORM optim B : merge per-call context ( ThreadLocal ) +
+                    // evaluation context fourni en parametre . Pas de partage entre
+                    // threads = pas de race , pas de lock . HashMap pre-taillee +
+                    // putAll x2 ( v2 wins on conflict pour preserver semantique ) .
+                    final Map<String, Object> perCallCtx = PER_CALL_CONTEXT.get();
+                    final Map<String, Object> evalCtx = somethingThatCanProvideEvaluationContext.getEvaluationContext();
+                    final int sizeHint = (perCallCtx == null ? 0 : perCallCtx.size()) + evalCtx.size();
+                    final Map<String, Object> result = new java.util.HashMap<>(sizeHint > 0 ? sizeHint : 4);
+                    if (perCallCtx != null) result.putAll(perCallCtx);
+                    result.putAll(evalCtx);  // evalCtx wins on conflict ( prev (v1,v2)->v2 semantic )
 
                     final Object evaluate = groovyExpression().evaluate(result);
                     if (evaluate instanceof Boolean bool) {

@@ -66,6 +66,7 @@ class DashboardServiceTest {
     @Mock private AuthenticationService authenticationService;
     @Mock private ImportProperties importProperties;
     @Mock private ImportRateLimiter importRateLimiter;
+    @Mock private fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository workflowLogRepository;
 
     @InjectMocks
     private DashboardService service;
@@ -167,7 +168,7 @@ class DashboardServiceTest {
                     .thenReturn(List.of());
 
             DashboardWorkflowDTO.Page page =
-                    service.listHistory(null, null, null, null, null, null);
+                    service.listHistory(null, null, null, null, null, null, true);
 
             assertEquals(0L, page.total());
             assertTrue(page.items().isEmpty());
@@ -184,7 +185,7 @@ class DashboardServiceTest {
                     .thenReturn(List.of());
 
             DashboardWorkflowDTO.Page page =
-                    service.listHistory(10, 0, "IMPORT", "FINISHED", "myapp", "alice");
+                    service.listHistory(10, 0, "IMPORT", "FINISHED", "myapp", "alice", true);
 
             assertEquals(3L, page.total());
         }
@@ -201,7 +202,7 @@ class DashboardServiceTest {
                     .thenReturn(List.of());
 
             DashboardWorkflowDTO.Page page =
-                    service.listHistory(null, null, null, null, null, null);
+                    service.listHistory(null, null, null, null, null, null, true);
 
             assertEquals(1L, page.total());
         }
@@ -217,7 +218,7 @@ class DashboardServiceTest {
                     .thenReturn(List.of());
 
             DashboardWorkflowDTO.Page page =
-                    service.listHistory(9999, -5, null, null, null, null);
+                    service.listHistory(9999, -5, null, null, null, null, true);
 
             assertEquals(500, page.limit());
             assertEquals(0, page.offset());
@@ -234,7 +235,7 @@ class DashboardServiceTest {
                     .thenReturn(List.of());
 
             DashboardWorkflowDTO.Page page =
-                    service.listHistory(null, null, null, null, null, null);
+                    service.listHistory(null, null, null, null, null, null, true);
 
             assertEquals(0L, page.total());
         }
@@ -281,7 +282,7 @@ class DashboardServiceTest {
                     });
 
             DashboardWorkflowDTO.Page page =
-                    service.listHistory(null, null, null, null, null, null);
+                    service.listHistory(null, null, null, null, null, null, true);
 
             assertEquals(1, page.items().size());
             DashboardWorkflowDTO dto = page.items().getFirst();
@@ -703,7 +704,7 @@ class DashboardServiceTest {
             when(registry.findBinaryFileId(corrId)).thenReturn(Optional.empty());
             when(registry.finalRows(corrId)).thenReturn(50L);
             when(registry.stagingRows(corrId)).thenReturn(0L);
-            when(registry.findMergeFilePhase(corrId)).thenReturn(Optional.empty());
+            when(registry.findSubPhase(corrId)).thenReturn(Optional.empty());
 
             FinalizeAggregateDTO agg = service.finalizeAggregate();
 
@@ -766,7 +767,7 @@ class DashboardServiceTest {
             when(registry.findBinaryFileId(corrId)).thenReturn(Optional.empty());
             when(registry.finalRows(corrId)).thenReturn(150L);
             when(registry.stagingRows(corrId)).thenReturn(0L);
-            when(registry.findMergeFilePhase(corrId)).thenReturn(Optional.empty());
+            when(registry.findSubPhase(corrId)).thenReturn(Optional.empty());
 
             Optional<FinalizeProgressDTO> result = service.finalizeProgress(corrId);
 
@@ -790,7 +791,7 @@ class DashboardServiceTest {
             when(registry.findBinaryFileId(corrId)).thenReturn(Optional.empty());
             when(registry.finalRows(corrId)).thenReturn(0L);
             when(registry.stagingRows(corrId)).thenReturn(0L);
-            when(registry.findMergeFilePhase(corrId)).thenReturn(Optional.empty());
+            when(registry.findSubPhase(corrId)).thenReturn(Optional.empty());
             when(jdbc.queryForObject(anyString(), any(SqlParameterSource.class), eq(Long.class)))
                     .thenReturn(null);
 
@@ -812,7 +813,7 @@ class DashboardServiceTest {
             when(registry.findBinaryFileId(corrId)).thenReturn(Optional.empty());
             when(registry.finalRows(corrId)).thenReturn(0L);
             when(registry.stagingRows(corrId)).thenReturn(0L);
-            when(registry.findMergeFilePhase(corrId)).thenReturn(Optional.empty());
+            when(registry.findSubPhase(corrId)).thenReturn(Optional.empty());
             when(jdbc.queryForObject(anyString(), any(SqlParameterSource.class), eq(Long.class)))
                     .thenReturn(99L);
 
@@ -833,7 +834,7 @@ class DashboardServiceTest {
             when(registry.findBinaryFileId(corrId)).thenReturn(Optional.of(binId));
             when(registry.finalRows(corrId)).thenReturn(0L);
             when(registry.stagingRows(corrId)).thenReturn(0L);
-            when(registry.findMergeFilePhase(corrId)).thenReturn(Optional.empty());
+            when(registry.findSubPhase(corrId)).thenReturn(Optional.empty());
             // 1ère requête = final_count → null ; 2ème = COUNT(*) → 42
             when(jdbc.queryForObject(anyString(), any(SqlParameterSource.class), eq(Long.class)))
                     .thenReturn(null)
@@ -858,7 +859,7 @@ class DashboardServiceTest {
             when(registry.findBinaryFileId(corrId)).thenReturn(Optional.empty());
             when(registry.finalRows(corrId)).thenReturn(0L);
             when(registry.stagingRows(corrId)).thenReturn(0L);
-            when(registry.findMergeFilePhase(corrId)).thenReturn(Optional.empty());
+            when(registry.findSubPhase(corrId)).thenReturn(Optional.empty());
 
             Optional<FinalizeProgressDTO> result = service.finalizeProgress(corrId);
 
@@ -880,7 +881,7 @@ class DashboardServiceTest {
             when(registry.findBinaryFileId(corrId)).thenReturn(Optional.empty());
             when(registry.finalRows(corrId)).thenReturn(0L);
             when(registry.stagingRows(corrId)).thenReturn(0L);
-            when(registry.findMergeFilePhase(corrId)).thenReturn(Optional.empty());
+            when(registry.findSubPhase(corrId)).thenReturn(Optional.empty());
             when(jdbc.queryForObject(anyString(), any(SqlParameterSource.class), eq(Long.class)))
                     .thenThrow(new RuntimeException("DB unavailable"));
 
@@ -943,6 +944,9 @@ class DashboardServiceTest {
             UUID corrId = UUID.randomUUID();
             when(authenticationService.getCurrentUserRoles()).thenReturn(adminRoles());
             when(registry.find(corrId)).thenReturn(Optional.empty());
+            // Fallback paths on workflowLogRepository : both empty ( truly absent ) .
+            when(workflowLogRepository.findActiveUserId(corrId)).thenReturn(Optional.empty());
+            when(workflowLogRepository.findAnyUserId(corrId)).thenReturn(Optional.empty());
 
             assertThrows(NoSuchElementException.class, () -> service.cancelWorkflow(corrId));
         }

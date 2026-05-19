@@ -169,6 +169,19 @@ public record WorkflowSnapshot(
                 progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks, importConfig, lastHeartbeatAt);
     }
 
+    /**
+     * Met a jour le statut ( typiquement pour basculer IN_PROGRESS -> CANCELLED
+     * suite a une supersedure ) . Permet a oa-live de refleter le cancel
+     * immediatement dans le Live tab sans attendre la fin de Phase 2 .
+     */
+    public WorkflowSnapshot withStatus(String status) {
+        return new WorkflowSnapshot(
+                correlationId, workflowType, userId, userLogin,
+                applicationName, dataType, resourceName, startTime,
+                status, recordsProcessed, recordsFailed, chunksProcessed,
+                progressPercentage, bytesTotal, recordsTotal, errors, chunks, workers, parallelism, strategy, sinkChunks, importConfig, lastHeartbeatAt);
+    }
+
     /** Met a jour le timestamp du dernier heartbeat ( phase longue active ) . */
     public WorkflowSnapshot withLastHeartbeatAt(Instant lastHeartbeatAt) {
         return new WorkflowSnapshot(

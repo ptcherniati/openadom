@@ -25,6 +25,40 @@ public non-sealed class GroovyExpression implements Expression<Object> {
 
     private final CompiledScript script;
 
+    /**
+     * TRANSFORM iter2 #3 : memoize isCacheable() result computed once in ctor .
+     * Profile async-profiler shows {@code expression.contains("currentRowNumber")}
+     * called per evaluate() on hot path ( ~75 samples on 2030 total = 3.7% CPU ) .
+     * String.contains() is O(N) , for ~50-char expressions x 1M rows x N expressions
+     * = wasted CPU . Boolean field = O(1) read , no allocation .
+     */
+    private final boolean cacheable;
+
+    /** Pattern statique compile une seule fois pour normaliser les espaces ;
+     *  utilise dans le constructeur ( pas dans le hot path par row , mais
+     *  evite N compilations regex au demarrage si beaucoup d'expressions ) . */
+    private static final java.util.regex.Pattern WHITESPACE_PATTERN =
+            java.util.regex.Pattern.compile("\\s+");
+
+    /**
+     * TRANSFORM optim A : scratch HashMap thread-local reuse pour eviter une
+     * allocation {@code new HashMap<>(context)} par {@link #evaluate} ( N par row x
+     * M expressions = sources GC pressure ) . Chaque thread de la cascade
+     * transform pool ( typiquement 3-8 workers ) a son propre HashMap reutilise
+     * via {@code clear() + putAll(context)} a chaque appel . Aucun partage entre
+     * threads = aucune contention . Capacite initiale 32 = couvre la majorite des
+     * contextes ( datum + few OA_xxx closures ) sans resize .
+     *
+     * <p>Safety : les Closure Groovy creees par {@link ScriptConstantProvider}
+     * capturent ce scratch par reference ( ex {@code context.get("datum")} dans
+     * BuildCompositeKey ) . Elles s'executent SYNCHRONEMENT pendant
+     * {@code script.eval(bindings)} ; apres retour de evaluate() , aucune closure
+     * n'est conservee . Donc reutiliser le scratch au prochain appel est safe :
+     * les anciennes closures sont devenues unreachable .
+     */
+    private static final ThreadLocal<java.util.HashMap<String, Object>> EVAL_SCRATCH =
+            ThreadLocal.withInitial(() -> new java.util.HashMap<>(32));
+
     // ─── R-P2-4 : cache des résultats d'évaluation Groovy ───────────────────
     // Clé : contexte d'entrée (Map<String,Object>) — même entrée → même sortie
     // pour les expressions sans effets de bord. Les expressions utilisant
@@ -42,17 +76,11 @@ public non-sealed class GroovyExpression implements Expression<Object> {
         this.maxCacheEntries = max;
     }
 
-    /**
-     * R-P2-4 — Une expression est cacheable si elle ne contient pas
-     * {@code currentRowNumber} (variable qui change à chaque ligne).
-     */
-    private static boolean isCacheable(String expression) {
-        return !expression.contains("currentRowNumber");
-    }
-
     public GroovyExpression(final String expression) {
         super();
-        this.expression = expression.replaceAll("\\s+", " ").trim();
+        this.expression = WHITESPACE_PATTERN.matcher(expression).replaceAll(" ").trim();
+        // TRANSFORM iter2 #3 : compute cacheable once . Same expression , same answer .
+        this.cacheable = !this.expression.contains("currentRowNumber");
         try {
             script = compile(this.expression);
         } catch (final ScriptException e) {
@@ -112,7 +140,7 @@ public non-sealed class GroovyExpression implements Expression<Object> {
         // contextes de validation de données — change à chaque ligne).
         // Sans ce guard, on paierait hashCode(context) + Map.copyOf(context)
         // à chaque évaluation sans jamais toucher le cache → régression pure.
-        final boolean tryCache = isCacheable(expression) && !context.containsKey("currentRow");
+        final boolean tryCache = cacheable && !context.containsKey("currentRow");
         if (tryCache) {
             Object cached = resultCache.get(context);
             if (cached != null) {
@@ -120,10 +148,17 @@ public non-sealed class GroovyExpression implements Expression<Object> {
             }
         }
 
-        // R-P2-5 : fusionne le contexte + les constantes en une seule copie HashMap
-        // (avant : new HashMap<>(context) + putAll dans SimpleBindings = 2 copies).
-        final Bindings bindings = new SimpleBindings(new HashMap<>(context));
-        ScriptConstantProvider.addAllToContext(bindings);
+        // TRANSFORM optim A : reuse scratch HashMap par thread au lieu d'allouer
+        // un nouveau HashMap par eval . Sur 1M rows * 5 expressions * 3 threads ,
+        // economise ~15M allocations + GC pressure correspondante .
+        // {@code clear() + putAll(context)} sur HashMap pre-alloue O(N) sans
+        // resize tant que context.size() <= 32 ( capacite initiale ) .
+        // {@code SimpleBindings(scratch)} wrappe sans copier ( cf doc JSR 223 ) .
+        final java.util.HashMap<String, Object> scratch = EVAL_SCRATCH.get();
+        scratch.clear();
+        scratch.putAll(context);
+        ScriptConstantProvider.addAllToContext(scratch);
+        final Bindings bindings = new SimpleBindings(scratch);
         try {
             final Object evaluation = script.eval(bindings);
 

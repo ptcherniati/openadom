@@ -40,7 +40,7 @@ public final class StoreAllPathSink implements Sink<Path>, RowCountingSink {
      * Optionnel : si fourni , chaque batch UPSERT publie son rowcount via
      * {@link WorkflowActiveRegistry#addFinalRows} et chaque transition de
      * sous-phase ( MERGE_LOCAL / TEMP_LOAD / UPSERT_FINAL ) via
-     * {@link WorkflowActiveRegistry#setMergeFilePhase} . La live view
+     * {@link WorkflowActiveRegistry#setSubPhase} . La live view
      * MERGE_FILE consomme ces signaux pour rendre 3 progress bars
      * distinctes ( merge local % , COPY -> TEMP indeterminate , UPSERT
      * -> finale % ) . Null pour les usages hors-pipeline ( tests , appels
@@ -169,7 +169,7 @@ public final class StoreAllPathSink implements Sink<Path>, RowCountingSink {
                 ? n -> registry.addFinalRows(corr, n)
                 : n -> { };
         java.util.function.Consumer<String> onPhase = (registry != null && corr != null)
-                ? phase -> registry.setMergeFilePhase(corr, phase)
+                ? phase -> registry.setSubPhase(corr, phase)
                 : phase -> { };
         long upserted = repository.storeAll(mergedFile, onBatch, onPhase);
         rowsWritten.addAndGet(upserted);
