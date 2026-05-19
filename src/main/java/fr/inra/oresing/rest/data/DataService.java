@@ -180,6 +180,15 @@ public class DataService {
     @Autowired(required = false)
     private fr.inra.oresing.workflow.cascade.history.WorkflowLogWriter workflowLogWriter;
 
+    /**
+     * Prescan service injected as Spring bean ( cascade 3.3.0+ , Axe B ) .
+     * Avant : instancie via {@code new} a chaque appel addData - tests
+     * impossibles a mocker , dependency hidden , reuse impossible . Bean
+     * Spring resout ces 3 problemes en 1 .
+     */
+    @Autowired
+    private fr.inra.oresing.domain.data.deposit.prescan.NaturalKeyPreScanService naturalKeyPreScanService;
+
     public DataService(
             OreSiRepository repo,
             JsonRowMapper jsonRowMapper,
@@ -383,8 +392,7 @@ public class DataService {
                             .setDelimiter(sep)
                             .get();
                     try (java.io.Reader r = Files.newBufferedReader(csvBufferFile, StandardCharsets.UTF_8)) {
-                        naturalKeysHint = new fr.inra.oresing.domain.data.deposit.prescan.NaturalKeyPreScanService()
-                                .extractCompositeNaturalKeys(
+                        naturalKeysHint = naturalKeyPreScanService.extractCompositeNaturalKeys(
                                         r, fmt, nkColumns,
                                         fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext
                                                 .COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR,

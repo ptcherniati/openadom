@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -65,7 +66,8 @@ import java.util.stream.StreamSupport;
  * @author R.YAHIAOUI
  */
 @Slf4j
-public final class NaturalKeyPreScanService {
+@Component
+public class NaturalKeyPreScanService {
 
     /**
      * Pre-scan le CSV et retourne pour chaque colonne d'interet l'ensemble
