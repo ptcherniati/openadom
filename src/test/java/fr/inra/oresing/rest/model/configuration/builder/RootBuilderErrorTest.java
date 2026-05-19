@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * l'EventHelper, et que {@code build()} retourne {@code null} en cas d'erreur.</p>
  */
 @Tag("core.config")
-@Tag("domain.model")
 class RootBuilderErrorTest {
 
     // -----------------------------------------------------------------------

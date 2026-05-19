@@ -5,9 +5,8 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.rest.Fixtures;
 import fr.inra.oresing.rest.fixtures.MonSoereFixture;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -20,11 +19,9 @@ import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Slf4j
 @Tag("docker-required")
 class NormalizedServiceTest extends AbstractIntegrationTest {
-
-    private static final Logger log = LoggerFactory.getLogger(NormalizedServiceTest.class);
-
     public final Fixtures.CreateUser monsoresimple = new Fixtures.CreateUser("monsoresimple", "xxxxxxxx", "monsoresimple@inrae.fr");
     public final Fixtures.CreateUser withRightsUser = new Fixtures.CreateUser("withrigths", "xxxxxxxx", "withrigths@inrae.fr");
 
@@ -50,7 +47,9 @@ class NormalizedServiceTest extends AbstractIntegrationTest {
                         dynamicTest("initialisation de l'utilisateur withRightsUser", () -> {
                             fixtures.withRightsUserConnection = fixtures.createUserForUserDefinition(withRightsUser, true, false);
                         }))),
-                dynamicTest("test public", monSoereFixture::testPublic),
+                dynamicTest("test public", () -> {
+                    monSoereFixture.testPublic();
+                }),
                 dynamicContainer("chargement de MONSOERE",
                         monSoereFixture.loadMonsore(appId)),
                 dynamicContainer("chargement de MONSOERE",

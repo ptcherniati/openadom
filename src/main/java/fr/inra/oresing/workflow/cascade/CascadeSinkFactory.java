@@ -8,7 +8,6 @@ import fr.inrae.ore.cascade.api.builder.SinkBuilder;
 import fr.inrae.ore.cascade.api.defaults.db.RowSerializer;
 import fr.inrae.ore.cascade.api.defaults.db.staging.FinalizeHook;
 import fr.inrae.ore.cascade.api.defaults.db.staging.FinalizeMode;
-import fr.inrae.ore.cascade.api.defaults.db.staging.StagingPostgresSink;
 import fr.inrae.ore.cascade.api.defaults.db.staging.StagingTableSpec;
 import fr.inrae.ore.cascade.core.defaults.db.WriteMode;
 import fr.inrae.ore.cascade.model.core.Sink;
@@ -115,22 +114,22 @@ public final class CascadeSinkFactory {
                     + "cannot build StagingPostgresSink");
         }
         // FK-violation fix : cascade ouvre sa propre Connection via
-        // dataSource.getConnection() . Sans wrapping , cette
+        // {@code dataSource.getConnection()} . Sans wrapping , cette
         // connection ne fait PAS partie de la transaction Spring
-        // @Transactional courante . Resultat : les rows
-        // binaryfile fraichement INSERT-ees par
-        // StoreFile.loadOrCreateFile ne sont pas visibles cote
+        // {@code @Transactional} courante . Resultat : les rows
+        // {@code binaryfile} fraichement INSERT-ees par
+        // {@code StoreFile.loadOrCreateFile} ne sont pas visibles cote
         // cascade ( pas encore commit-ees ) , et le UPSERT vers
-        // referencevalue echoue avec la FK
-        // referencevalue_binaryfile_fkey .
+        // {@code referencevalue} echoue avec la FK
+        // {@code referencevalue_binaryfile_fkey} .
         //
-        // TransactionAwareDataSourceProxy renvoie une connection
+        // {@link TransactionAwareDataSourceProxy} renvoie une connection
         // qui :
         //   - delegue a la connection bound a la tx Spring courante si
         //     une tx est active ,
-        //   - ignore les appels commit / rollback / setAutoCommit
+        //   - ignore les appels {@code commit / rollback / setAutoCommit}
         //     ( Spring les gere a l'exit du @Transactional ) ,
-        //   - ignore le close ( la connection retourne au pool a
+        //   - ignore le {@code close} ( la connection retourne au pool a
         //     la fin de la tx ) .
         //
         // Net effet : cascade rejoint la tx Spring de createData /

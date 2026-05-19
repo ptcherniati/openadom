@@ -3,16 +3,12 @@ package fr.inra.oresing.rest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.domain.OreSiUser;
-import fr.inra.oresing.domain.authorization.LoginAdminResult;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedUser;
-import fr.inra.oresing.domain.exceptions.AuthenticationFailure;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
-import fr.inra.oresing.monitoring.session.SessionInfo;
-import fr.inra.oresing.monitoring.session.UserSessionLogEntry;
-import fr.inra.oresing.monitoring.session.UserSessionLogWriter;
-import fr.inra.oresing.monitoring.session.UserSessionRegistry;
+import fr.inra.oresing.domain.exceptions.AuthenticationFailure;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
+import fr.inra.oresing.domain.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.security.JWTExtractor;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,6 +20,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import fr.inra.oresing.monitoring.session.SessionInfo;
+import fr.inra.oresing.monitoring.session.UserSessionLogEntry;
+import fr.inra.oresing.monitoring.session.UserSessionLogWriter;
+import fr.inra.oresing.monitoring.session.UserSessionRegistry;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -401,9 +401,7 @@ public class AuthenticationResources {
                 .filter(NotConnectedUser.class::isInstance)
                 .map(NotConnectedUser.class::cast)
                 .orElse(null);
-        if (notConnectedUser == null) {
-            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
-        }
+        assert notConnectedUser != null;
         final OreSiUser oreSiUser = authenticationService.updateUser(notConnectedUser);
         final String uri = UriUtils.encodePath("/users/" + Optional.ofNullable(oreSiUser)
                         .map(OreSiUser::getId)

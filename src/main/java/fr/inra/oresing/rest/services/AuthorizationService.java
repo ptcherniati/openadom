@@ -8,15 +8,9 @@ import fr.inra.oresing.domain.OreSiAuthorization;
 import fr.inra.oresing.domain.OreSiRoleForUser;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.additionalfiles.AuthorizationsAdditionalFilesResult;
-import fr.inra.oresing.domain.additionalfiles.OperationAdditionalFileType;
 import fr.inra.oresing.domain.additionalfiles.OreSiAdditionalFileAuthorization;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Configuration;
-import fr.inra.oresing.domain.authorization.ApplicationUserResult;
-import fr.inra.oresing.domain.authorization.AuthorizationParsed;
-import fr.inra.oresing.domain.authorization.AuthorizationsForUserResult;
-import fr.inra.oresing.domain.authorization.AuthorizationsResult;
-import fr.inra.oresing.domain.authorization.GetGrantableResult;
 import fr.inra.oresing.domain.authorization.privilegeassessor.*;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationUserManagerRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
@@ -27,7 +21,6 @@ import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
-import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.exceptions.role.role.BadApplicationRoleException;
@@ -41,6 +34,15 @@ import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.UpdateRolesOnAdditionalFilesManagement;
 import fr.inra.oresing.rest.UpdateRolesOnManagement;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
+import fr.inra.oresing.domain.authorization.ApplicationUserResult;
+import fr.inra.oresing.domain.authorization.AuthorizationParsed;
+import fr.inra.oresing.domain.authorization.AuthorizationsForUserResult;
+import fr.inra.oresing.domain.authorization.AuthorizationsResult;
+import fr.inra.oresing.domain.authorization.GetGrantableResult;
+import fr.inra.oresing.domain.authorization.LoginAdminResult;
+import fr.inra.oresing.domain.authorization.CurrentUserRolesResult;
+import fr.inra.oresing.domain.authorization.request.AuthorizationInput;
 import fr.inra.oresing.rest.model.authorization.*;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.authorization.request.AuthorizationRequestBuilder;
@@ -55,23 +57,20 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomainEnum.DATA_ACCESS;
 
 @Slf4j
-@Component("authorizationService")
+@Component
 @Transactional(readOnly = true)
-public class DefaultAuthorizationService implements fr.inra.oresing.domain.services.authorization.AuthorizationService {
+public class AuthorizationService implements fr.inra.oresing.domain.services.authorization.AuthorizationService {
 
     private final SqlService db;
     private final OreSiRepository repository;
     private final UserRepository userRepository;
     private ServiceContainer serviceContainer;
-    /** Auto-référence via proxy Spring pour honorer @Transactional sur les appels internes. */
-    private DefaultAuthorizationService self;
 
     /**
      * Flag d'activation du cache des authorization scopes ( cf.
@@ -128,13 +127,7 @@ public class DefaultAuthorizationService implements fr.inra.oresing.domain.servi
         this.scopesCache = new MemoryCache<>("authorizationScopes", scopesCacheMaxEntries, scopesCacheTtlMinutes);
     }
 
-    @org.springframework.beans.factory.annotation.Autowired
-    @org.springframework.context.annotation.Lazy
-    public void setSelf(DefaultAuthorizationService self) {
-        this.self = self;
-    }
-
-    public DefaultAuthorizationService(
+    public AuthorizationService(
             SqlService db,
             ServiceContainer serviceContainer,
             OreSiRepository repository,
@@ -198,6 +191,13 @@ public class DefaultAuthorizationService implements fr.inra.oresing.domain.servi
                                         columDescription.getValue().internationalization()
                                 )))
         );
+    }
+
+    // Méthode utilitaire pour vérifier si un Ltree en contient un autre ou est égal
+    private static boolean isLtreeContainedOrEqual(String containerLtree, String containedLtree) {
+        // Dans PostgreSQL, 'a.b' @> 'a.b.c' est vrai (a.b contient a.b.c)
+        // et 'a.b' @> 'a.b' est aussi vrai (égalité)
+        return containerLtree.equals(containedLtree) || containedLtree.startsWith(containerLtree + ".");
     }
 
     public static void authorizationsToParsedAuthorizations(
@@ -788,9 +788,10 @@ public class DefaultAuthorizationService implements fr.inra.oresing.domain.servi
         );
     }
 
-    public ImmutableSet<GetAuthorizationAdditionalFilesResult> getAdditionalFilesuthorizations(final String applicationNameOrId, final MultiValueMap<String, String> params) {
+    public ImmutableSet<GetAuthorizationAdditionalFilesResult> getAdditionalFilesuthorizations(final String applicationNameOrId, final AuthorizationsAdditionalFilesResult authorizationsForUser, final MultiValueMap<String, String> params) {
         final Application application = repository.application().findApplication(applicationNameOrId);
         final AuthorizationAdditionalFilesRepository authorizationRepository = repository.getRepository(application).authorizationAdditionalFiles();
+        List<OreSiAdditionalFileAuthorization> publicAuthorizations = authorizationRepository.findPublicAuthorizations();
         final long offset = Optional.ofNullable(params)
                 .map(map -> map.get("offset"))
                 .map(l -> l.isEmpty() ? "0" : l.getFirst())
@@ -816,12 +817,14 @@ public class DefaultAuthorizationService implements fr.inra.oresing.domain.servi
                         (user == null || oreSiReferenceAuthorization.getOreSiUsers().stream().anyMatch(uuid -> uuid.toString().equals(user)))
                         && (authorizationId == null || oreSiReferenceAuthorization.getId().toString().equals(authorizationId))
                 )
-                .map(oreSiAuthorization -> toGetAdditionalFilesAuthorizationResult(oreSiAuthorization))
+                .map(oreSiAuthorization -> toGetAdditionalFilesAuthorizationResult(oreSiAuthorization, publicAuthorizations, authorizationsForUser))
                 .collect(ImmutableSet.toImmutableSet());
     }
 
     private GetAuthorizationAdditionalFilesResult toGetAdditionalFilesAuthorizationResult(
-            final OreSiAdditionalFileAuthorization oreSiAuthorization) {
+            final OreSiAdditionalFileAuthorization oreSiAuthorization,
+            final List<OreSiAdditionalFileAuthorization> publicAuthorizations,
+            final AuthorizationsAdditionalFilesResult authorizationsForUser) {
         final List<OreSiUser> all = userRepository.findAll();
         return new GetAuthorizationAdditionalFilesResult(
                 oreSiAuthorization.getId(),
@@ -919,7 +922,7 @@ public class DefaultAuthorizationService implements fr.inra.oresing.domain.servi
                 .map(Map::keySet)
                 .map(application::findDependentNodes)
                 .ifPresent(dependantsNodes::addAll);
-        Predicate<String> isVersionningStrategy = application::strategyIsVersionning;
+        Function<String, Boolean> isVersionningStrategy = application::strategyIsVersionning;
         return Objects.requireNonNull(createAuthorizationRequest)
                 .addRequiredOperationTypes(isVersionningStrategy)
                 .addDependantAuthorizations(dependantsNodes);
@@ -1010,7 +1013,7 @@ public class DefaultAuthorizationService implements fr.inra.oresing.domain.servi
         AuthorizationsForApplicationUser authorizations = getAuthorizationsForApplicationUser(application);
         GetGrantableResult grantable = getGrantable(
                 application.getName(),
-                self.getAuthorizationsForUserAndPublic(
+                getAuthorizationsForUserAndPublic(
                         application.getName(),
                         serviceContainer.authenticationService().getCurrentUserRoles().userLogin()
                 )

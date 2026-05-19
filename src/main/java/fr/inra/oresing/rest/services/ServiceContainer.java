@@ -22,8 +22,8 @@ public class ServiceContainer {
         return (ApplicationService) context.getBean("applicationService");
     }
 
-    public DefaultAuthorizationService authorizationService() {
-        return (DefaultAuthorizationService) context.getBean("authorizationService");
+    public AuthorizationService authorizationService() {
+        return (AuthorizationService) context.getBean("authorizationService");
     }
 
     public AuthenticationService authenticationService() {

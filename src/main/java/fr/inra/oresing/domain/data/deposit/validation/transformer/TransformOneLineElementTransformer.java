@@ -5,7 +5,7 @@ import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.data.*;
 
 import java.util.Map;
-import java.util.function.UnaryOperator;
+import java.util.function.Function;
 
 public interface TransformOneLineElementTransformer extends LineTransformer {
 
@@ -34,7 +34,7 @@ public interface TransformOneLineElementTransformer extends LineTransformer {
             // Comme il faut quand même appliquer la transformation, on part de rien
             referenceColumnValue = DataColumnSingleValue.empty();
         }
-        final UnaryOperator<FieldType<?>> fn = value -> transform(referenceDatum, value);
+        final Function<FieldType<?>, FieldType<?>> fn = value -> transform(referenceDatum, value);
         final DataColumnValue transformedReferenceColumnValue = referenceColumnValue.transform(fn);
         final DataDatum transformedDatum = DataDatum.copyOf(referenceDatum);
         transformedDatum.put(referenceColumn, transformedReferenceColumnValue);

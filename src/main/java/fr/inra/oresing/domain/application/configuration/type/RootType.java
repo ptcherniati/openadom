@@ -47,7 +47,7 @@ public record RootType(SectionBuilder sectionBuilder,
         final StringBuilder builder = new StringBuilder();
         for (final Map.Entry<String, ConfigurationSchemaNodeType<?>> entry : children.entrySet()) {
             final String label = entry.getKey();
-            final ConfigurationSchemaNodeType<?> value = entry.getValue();
+            final ConfigurationSchemaNodeType value = entry.getValue();
             if (value == null) {
                 continue;
             }

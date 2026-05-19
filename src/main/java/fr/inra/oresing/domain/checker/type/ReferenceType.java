@@ -138,7 +138,7 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
      * dans {@link #check}. Rebuild complet à chaque appel de setReferenceValues.
      */
     private void buildNaturalKeyIndex(ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues) {
-        Map<Ltree, DataValue.LineIdentityColumnName> index = HashMap.newHashMap(referenceValues.size());
+        Map<Ltree, DataValue.LineIdentityColumnName> index = new HashMap<>(referenceValues.size() * 2);
         for (DataValue.LineIdentityColumnName key : referenceValues.keySet()) {
             index.put(key.naturalKey(), key);
         }
@@ -157,7 +157,7 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
 
     private Set<String> getSpecialCharacters(String naturalKey) {
         Predicate<String> containsSpecialCharacter = naturalKey::contains;
-        return Ltree.getKnownSymbolCodes()
+        return Ltree.KNOWN_SYMBOL_CODES
                 .stream()
                 .filter(containsSpecialCharacter)
                 .collect(Collectors.toSet());
@@ -174,7 +174,7 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
     }
 
     @Override
-    public CheckerValidationCheckResult<ReferenceType> check(final String rawValue, final LineChecker<?> lineChecker) {
+    public CheckerValidationCheckResult check(final String rawValue, final LineChecker lineChecker) {
         final String localRawValue = Ltree.escapeToLabel(rawValue, knownSpecialCharacters);
         final CheckerTarget target = lineChecker.target();
         value = Ltree.fromSql(localRawValue);
@@ -234,7 +234,7 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
     }
 
     @Override
-    public ReferenceType copy() {
+    public FieldType copy() {
         // R-P2-2 + TRANSFORM iter2 #1 : copie avec partage des caches seenOnce
         // + precomputedResults + naturalKeyIndex → les workers Cascade
         // parallèles partagent les caches ET l'index O(N) n'est jamais
@@ -276,8 +276,8 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
     }
 
     @Override
-    public DataColumnValue<?, ?> transform(final LineChecker<?> lineChecker,
-                                     final DataColumnValue<?, ?> referenceColumnRawValue,
+    public DataColumnValue transform(final LineChecker lineChecker,
+                                     final DataColumnValue referenceColumnRawValue,
                                      final DataColumn referenceColumn,
                                      final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo) {
         return Optional.ofNullable(value)

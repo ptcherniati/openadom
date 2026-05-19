@@ -21,10 +21,10 @@ class PipelinePoolsDtoTest {
     void poolDtoFromNull() {
         PipelinePoolsDTO.PoolDTO dto = PipelinePoolsDTO.PoolDTO.from(null);
         assertThat(dto.stage()).isEqualTo("UNKNOWN");
-        assertThat(dto.corePoolSize()).isZero();
-        assertThat(dto.activeCount()).isZero();
-        assertThat(dto.queueSize()).isZero();
-        assertThat(dto.queueCapacity()).isZero();
+        assertThat(dto.corePoolSize()).isEqualTo(0);
+        assertThat(dto.activeCount()).isEqualTo(0);
+        assertThat(dto.queueSize()).isEqualTo(0);
+        assertThat(dto.queueCapacity()).isEqualTo(0);
     }
 
     // ─── PoolDTO.from(snapshot) ───────────────────────────────────────────────

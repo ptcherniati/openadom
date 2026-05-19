@@ -3,7 +3,7 @@ package fr.inra.oresing.rest;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.rest.services.ApplicationService;
 import fr.inra.oresing.rest.data.DataService;
-import fr.inra.oresing.rest.services.DefaultAuthorizationService;
+import fr.inra.oresing.rest.services.AuthorizationService;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,7 +42,7 @@ class CacheAdminResourcesUnitTest {
 
     private ServiceContainer serviceContainer;
     private DataService dataService;
-    private DefaultAuthorizationService authorizationService;
+    private AuthorizationService authorizationService;
     private ApplicationService applicationService;
     private fr.inra.oresing.cache.DataVersioningScopeCacheService dataVersioningScopeCacheService;
     private fr.inra.oresing.cache.CacheSizeEstimator cacheSizeEstimator;
@@ -53,7 +53,7 @@ class CacheAdminResourcesUnitTest {
     void setUp() {
         serviceContainer = mock(ServiceContainer.class);
         dataService = mock(DataService.class);
-        authorizationService = mock(DefaultAuthorizationService.class);
+        authorizationService = mock(AuthorizationService.class);
         applicationService = mock(ApplicationService.class);
         dataVersioningScopeCacheService = mock(fr.inra.oresing.cache.DataVersioningScopeCacheService.class);
         cacheSizeEstimator = mock(fr.inra.oresing.cache.CacheSizeEstimator.class);

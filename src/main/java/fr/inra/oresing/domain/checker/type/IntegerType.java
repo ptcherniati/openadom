@@ -48,7 +48,7 @@ public non-sealed class IntegerType implements FieldType<Integer> {
     }
 
     @Override
-    public CheckerValidationCheckResult<IntegerType> check(final String value, final LineChecker<?> lineChecker) {
+    public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
         IntegerValidationCheckResult validationCheckResult;
         final DataColumn target = lineChecker.target();
         try {
@@ -87,7 +87,7 @@ public non-sealed class IntegerType implements FieldType<Integer> {
     }
 
     @Override
-    public IntegerType copy() {
+    public FieldType copy() {
         final IntegerType integerType = clone.get();
         integerType.value = value;
         return integerType;

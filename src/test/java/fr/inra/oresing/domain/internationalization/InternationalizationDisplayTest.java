@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.internationalization;
 
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -8,7 +7,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @org.junit.jupiter.api.Tag("domain.i18n")
-@Tag("domain.model")
 public class InternationalizationDisplayTest {
     final String pattern = "column 1 {column1} column 2 {column2} column 3 {column3} end";
 

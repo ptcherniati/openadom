@@ -2,7 +2,7 @@ package fr.inra.oresing.rest.security;
 
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.rest.authentication.evaluator.ApplicationPermissionEvaluator;
-import fr.inra.oresing.rest.services.DefaultAuthorizationService;
+import fr.inra.oresing.rest.services.AuthorizationService;
 import io.micrometer.common.KeyValue;
 import io.micrometer.common.KeyValues;
 import jakarta.servlet.http.HttpServletRequest;
@@ -74,7 +74,7 @@ public class SecurityConfig {
     @Bean
     @Lazy
     public PermissionEvaluator applicationPermissionEvaluator(
-            DefaultAuthorizationService authorizationService
+            AuthorizationService authorizationService
     ) {
         return new ApplicationPermissionEvaluator(authorizationService);
     }

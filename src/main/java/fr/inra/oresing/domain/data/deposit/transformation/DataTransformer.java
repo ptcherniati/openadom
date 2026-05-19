@@ -43,7 +43,7 @@ public class DataTransformer {
                 .filter(column -> column.getComputedValueUsage() != ComputedValueUsage.NOT_COMPUTED)
                 .forEach(column -> {
                     final DataColumn referenceColumn = column.getReferenceColumn();
-                    final Optional<DataColumnValue<?, ?>> evaluate = column.computeValue(rowWithReferenceDatum.referenceDatum());
+                    final Optional<DataColumnValue> evaluate = column.computeValue(rowWithReferenceDatum.referenceDatum());
                     evaluate.ifPresent(presentEvaluate -> {
                         if (column.getComputedValueUsage() == ComputedValueUsage.USE_COMPUTED_VALUE) {
                             rowWithValues.put(referenceColumn, presentEvaluate);

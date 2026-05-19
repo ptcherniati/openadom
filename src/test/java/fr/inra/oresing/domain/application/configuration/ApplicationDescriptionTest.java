@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import java.util.Locale;
 
 @Tag("core.config")
-@Tag("domain.model")
 class ApplicationDescriptionTest {
 
     @Test

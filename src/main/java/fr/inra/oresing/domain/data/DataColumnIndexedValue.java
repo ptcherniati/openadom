@@ -6,19 +6,19 @@ import fr.inra.oresing.domain.checker.type.MapType;
 import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
 
 import java.util.Map;
-import java.util.function.UnaryOperator;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public record DataColumnIndexedValue(
         Map<Ltree, String> values) implements DataColumnValue<MapType<String, String>, Map<String, String>> {
 
     @Override
-    public MapType<Ltree, String> getValuesToCheck() {
+    public MapType getValuesToCheck() {
         return new MapType<>(values);
     }
 
     @Override
-    public DataColumnIndexedValue transform(final UnaryOperator<FieldType<?>> transformation) {
+    public DataColumnIndexedValue transform(final Function<FieldType<?>, FieldType<?>> transformation) {
         final Map<Ltree, String> transformedValues = null;//Maps.transformValues(values, transformation::apply);
         return new DataColumnIndexedValue(null);
     }

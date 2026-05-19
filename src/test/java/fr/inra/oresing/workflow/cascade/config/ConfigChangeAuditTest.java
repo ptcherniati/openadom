@@ -1,7 +1,6 @@
 package fr.inra.oresing.workflow.cascade.config;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -9,20 +8,19 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("ConfigChangeAudit ring buffer")
-@Tag("domain.model")
 class ConfigChangeAuditTest {
 
     @Test
     @DisplayName("recent first ordering")
     void recentFirst() throws InterruptedException {
         ConfigChangeAudit audit = new ConfigChangeAudit();
-        audit.addEntry("alice", "chunkSizeLines", "1000", "2000",
+        audit.record("alice", "chunkSizeLines", "1000", "2000",
                 ConfigChangeAudit.Status.APPLIED, null);
-        Thread.sleep(2); //NOSONAR squid:S2925
-        audit.addEntry("alice", "maxErrorsThreshold", "100", "50",
+        Thread.sleep(2);
+        audit.record("alice", "maxErrorsThreshold", "100", "50",
                 ConfigChangeAudit.Status.APPLIED, null);
-        Thread.sleep(2); //NOSONAR squid:S2925
-        audit.addEntry("alice", "chunkSizeLines", "2000", "abc",
+        Thread.sleep(2);
+        audit.record("alice", "chunkSizeLines", "2000", "abc",
                 ConfigChangeAudit.Status.REJECTED, "value out of range");
 
         List<ConfigChangeAudit.Entry> list = audit.list();
@@ -37,7 +35,7 @@ class ConfigChangeAuditTest {
     void ringBufferCap() {
         ConfigChangeAudit audit = new ConfigChangeAudit();
         for (int i = 0; i < ConfigChangeAudit.MAX_ENTRIES + 50; i++) {
-            audit.addEntry("alice", "f" + i, null, "v",
+            audit.record("alice", "f" + i, null, "v",
                     ConfigChangeAudit.Status.APPLIED, null);
         }
         assertEquals(ConfigChangeAudit.MAX_ENTRIES, audit.size());
@@ -51,7 +49,7 @@ class ConfigChangeAuditTest {
     @DisplayName("clear empties buffer")
     void clear() {
         ConfigChangeAudit audit = new ConfigChangeAudit();
-        audit.addEntry("alice", "f", null, "v",
+        audit.record("alice", "f", null, "v",
                 ConfigChangeAudit.Status.APPLIED, null);
         assertEquals(1, audit.size());
         audit.clear();

@@ -36,9 +36,6 @@ public record BinaryFileResult(
             UserDescriptionResult publisheduser,
             boolean hasLinks,
             List<ReferencedBinaryFiles> referencedFiles) {
-        BinaryFileInfosResult params = binaryFile.getParams() == null
-                ? null
-                : BinaryFileInfosResult.of(binaryFile.getParams(), createuser, publisheduser);
         return new BinaryFileResult(
                 binaryFile.getId(),
                 binaryFile.getName(),
@@ -46,7 +43,7 @@ public record BinaryFileResult(
                 binaryFile.getSize(),
                 hasLinks,
                 referencedFiles,
-                params
+                BinaryFileInfosResult.of(binaryFile.getParams(), createuser, publisheduser)
         );
     }
 

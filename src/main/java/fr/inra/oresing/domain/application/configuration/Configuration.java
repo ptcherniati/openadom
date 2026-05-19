@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.application.configuration.internationalization.Int
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationData;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
+import fr.inra.oresing.domain.data.read.query.ComponentType;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
@@ -140,9 +141,10 @@ public record Configuration(Version version, Set<Tag> tags,
                 .collect(Collectors.toSet());
         boolean haveNoDefinedOrder = componentDescriptions.stream()
                 .allMatch(Predicate.not(ComponentDescription::hasOrderTag));
+        Function<String, ComponentType> getTypeForComponentKey = dataDescription::getTypeForComponentKey;
         return haveNoDefinedOrder ?
-                getSortedColumnsWithKeyThenAlphabeticOrder(dataname, locale, componentDescriptions, dataDescription.naturalKey()) :
-                getSortedColumnsWithOrderThenAlphabeticOrder(dataname, locale, componentDescriptions)
+                getSortedColumnsWithKeyThenAlphabeticOrder(dataname, getTypeForComponentKey, locale, componentDescriptions, dataDescription.naturalKey()) :
+                getSortedColumnsWithOrderThenAlphabeticOrder(dataname, getTypeForComponentKey, locale, componentDescriptions)
                         .entrySet().stream()
                         .sorted(comparator)
                         .collect(Collectors.toMap(
@@ -152,7 +154,7 @@ public record Configuration(Version version, Set<Tag> tags,
                                 LinkedHashMap::new));
     }
 
-    private Map<String, InternationalizedSortedColumn> getSortedColumnsWithKeyThenAlphabeticOrder(String dataname, String locale, Collection<ComponentDescription> componentDescriptions, LinkedHashSet<String> naturalKeys) {
+    private Map<String, InternationalizedSortedColumn> getSortedColumnsWithKeyThenAlphabeticOrder(String dataname, Function<String, ComponentType> getTypeForComponentKey, String locale, Collection<ComponentDescription> componentDescriptions, LinkedHashSet<String> naturalKeys) {
         ArrayList<String> naturalsKeys = new ArrayList<>(naturalKeys);
         Comparator<ComponentDescription> comparator = (a, b) -> {
             if (a.equals(b)) {
@@ -195,7 +197,7 @@ public record Configuration(Version version, Set<Tag> tags,
 
     }
 
-    private Map<String, InternationalizedSortedColumn> getSortedColumnsWithOrderThenAlphabeticOrder(String dataname, String locale, Collection<ComponentDescription> componentDescriptions) {
+    private Map<String, InternationalizedSortedColumn> getSortedColumnsWithOrderThenAlphabeticOrder(String dataname, Function<String, ComponentType> getTypeForComponentKey, String locale, Collection<ComponentDescription> componentDescriptions) {
         Comparator<ComponentDescription> comparator = (a, b) -> {
             if (a.equals(b)) {
                 return 0;

@@ -78,7 +78,7 @@ public abstract non-sealed class AbstractMapType<K, V> implements FieldType<Map<
     public void serialize(final ObjectNode node, final ObjectMapper mapper, final String key) {
         final ObjectNode mapNode = mapper.createObjectNode();
         for (final Map.Entry<K, V> kvEntry : value.entrySet()) {
-            mapNode.set((String) kvEntry.getKey(), kvEntry.getValue() instanceof JsonNode jsonNode ? jsonNode : new TextNode(kvEntry.getValue().toString()));
+            mapNode.set((String) kvEntry.getKey(), kvEntry.getValue() instanceof JsonNode ? (JsonNode) kvEntry.getValue() : new TextNode(kvEntry.getValue().toString()));
         }
         node.set(key, mapNode);
     }

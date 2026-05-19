@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.ComponentDescription;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
+import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.repository.data.DataRepository;
@@ -25,10 +26,10 @@ public class CheckerFactory {
         this.dataRepository = dataRepository;
     }
 
-    public ImmutableSet<LineChecker<?>> getCheckers(final Application application, final String dataName, final PublishContext.PublishContextBuilder publishContextBuilder) {
+    public ImmutableSet<LineChecker<? extends FieldType<?>>> getCheckers(final Application application, final String dataName, final PublishContext.PublishContextBuilder publishContextBuilder) {
         SiOreIllegalArgumentException.testExistsData(application, dataName);
         final StandardDataDescription dataDescription = application.getConfiguration().dataDescription().get(dataName);
-        final ImmutableSet.Builder<LineChecker<?>> checkers = ImmutableSet.builder();
+        final ImmutableSet.Builder<LineChecker<? extends FieldType<?>>> checkers = ImmutableSet.builder();
         for (final Map.Entry<String, ComponentDescription> variableEntry : dataDescription.componentDescriptions().entrySet()) {
             final ComponentDescription componentDescription = variableEntry.getValue();
             if (componentDescription.checker() != null) {

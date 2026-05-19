@@ -3,7 +3,7 @@ package fr.inra.oresing.rest.usecases.security.authorization;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.authorization.GetGrantableResult;
-import fr.inra.oresing.rest.services.DefaultAuthorizationService;
+import fr.inra.oresing.rest.services.AuthorizationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 class GetAuthorizationScopesUseCaseTest {
 
     @Mock
-    private DefaultAuthorizationService authorizationService;
+    private AuthorizationService authorizationService;
 
     private GetAuthorizationScopesUseCase useCase;
 

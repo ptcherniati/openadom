@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.ManyChecker, LineChecker.OneChecker {
 
 
-    @SuppressWarnings({"unchecked", "java:S3740"})
+    @SuppressWarnings({"unchecked", "rawtypes", "java:S3740"})
     static <L extends FieldType<?>> Set<LineChecker<L>> toLineChecker(
             DataRepository referenceValueRepository,
             PublishContext.PublishContextBuilder publishContextBuilder,
@@ -58,7 +58,7 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
                     lineTransformer,
                     checker
             ));
-            case MANY -> Set.of((LineChecker<L>) new ManyChecker<>(
+            case MANY -> Set.of(new ManyChecker(
                     new ListType<>(fieldType),
                     target,
                     lineTransformer,
@@ -103,7 +103,7 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
         final CheckerValidationCheckResult<?> validationCheckResult;
         if (Strings.isNullOrEmpty(value)) {
             if (checkerDescription().required()) {
-                final DataColumn target = target();
+                final DataColumn target = (DataColumn) target();
                 validationCheckResult = DefaultCheckerValidationCheckResult.error(target.getInternationalizedKey("requiredValue"), ImmutableMap.of("component", target.column()), target);
             } else {
                 validationCheckResult = DefaultCheckerValidationCheckResult.success(target(), new StringType(value));

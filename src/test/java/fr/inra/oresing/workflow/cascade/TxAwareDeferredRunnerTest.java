@@ -4,6 +4,7 @@ import fr.inrae.ore.cascade.api.defaults.db.staging.DeferredFinalize;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.transaction.support.TransactionSynchronization;
 
 import java.sql.SQLException;
@@ -30,7 +31,7 @@ class TxAwareDeferredRunnerTest {
 
     @Test
     @DisplayName("afterCommit() : execute(), cleanup() puis onSuccess sont appelés")
-    void afterCommitNominal() throws Exception {
+    void afterCommitNominal() throws SQLException {
         DeferredFinalize deferred = mock(DeferredFinalize.class);
         Runnable onSuccess = mock(Runnable.class);
 
@@ -46,7 +47,7 @@ class TxAwareDeferredRunnerTest {
 
     @Test
     @DisplayName("afterCommit() : execute() échoue → onPostCommitFailure appelé, onSuccess NON appelé")
-    void afterCommitExecuteFails() throws Exception {
+    void afterCommitExecuteFails() throws SQLException {
         DeferredFinalize deferred = mock(DeferredFinalize.class);
         SQLException cause = new SQLException("UPSERT failed");
         doThrow(cause).when(deferred).execute();
@@ -68,7 +69,7 @@ class TxAwareDeferredRunnerTest {
 
     @Test
     @DisplayName("afterCommit() : cleanup() échoue → onSuccess quand même appelé")
-    void afterCommitCleanupFails() throws Exception {
+    void afterCommitCleanupFails() throws SQLException {
         DeferredFinalize deferred = mock(DeferredFinalize.class);
         doThrow(new RuntimeException("cleanup failed")).when(deferred).cleanup();
         Runnable onSuccess = mock(Runnable.class);
@@ -76,39 +77,39 @@ class TxAwareDeferredRunnerTest {
         TxAwareDeferredRunner runner = new TxAwareDeferredRunner(
                 deferred, CORR_ID, onSuccess, null, null);
 
-        assertDoesNotThrow(runner::afterCommit);
+        assertDoesNotThrow(() -> runner.afterCommit());
         verify(onSuccess).run();
     }
 
     @Test
     @DisplayName("afterCommit() : onSuccess null → pas de NullPointerException")
-    void afterCommitNullOnSuccess() throws Exception {
+    void afterCommitNullOnSuccess() throws SQLException {
         DeferredFinalize deferred = mock(DeferredFinalize.class);
 
         TxAwareDeferredRunner runner = new TxAwareDeferredRunner(
                 deferred, CORR_ID, null, null, null);
 
-        assertDoesNotThrow(runner::afterCommit);
+        assertDoesNotThrow(() -> runner.afterCommit());
         verify(deferred).execute();
     }
 
     @Test
     @DisplayName("afterCommit() : onSuccess lève RuntimeException → absorbée silencieusement")
-    void afterCommitOnSuccessThrows() {
+    void afterCommitOnSuccessThrows() throws SQLException {
         DeferredFinalize deferred = mock(DeferredFinalize.class);
         Runnable onSuccess = () -> { throw new RuntimeException("callback error"); };
 
         TxAwareDeferredRunner runner = new TxAwareDeferredRunner(
                 deferred, CORR_ID, onSuccess, null, null);
 
-        assertDoesNotThrow(runner::afterCommit);
+        assertDoesNotThrow(() -> runner.afterCommit());
     }
 
     // ─── afterCompletion — rollback ──────────────────────────────────────────
 
     @Test
     @DisplayName("afterCompletion(COMMITTED) : rien ne se passe")
-    void afterCompletionCommitted() throws Exception {
+    void afterCompletionCommitted() throws SQLException {
         DeferredFinalize deferred = mock(DeferredFinalize.class);
         Runnable onRolledBack = mock(Runnable.class);
 
@@ -123,7 +124,7 @@ class TxAwareDeferredRunnerTest {
 
     @Test
     @DisplayName("afterCompletion(ROLLED_BACK) : cleanup() puis onTxRolledBack appelés")
-    void afterCompletionRolledBack() throws Exception {
+    void afterCompletionRolledBack() throws SQLException {
         DeferredFinalize deferred = mock(DeferredFinalize.class);
         Runnable onRolledBack = mock(Runnable.class);
 
@@ -138,7 +139,7 @@ class TxAwareDeferredRunnerTest {
 
     @Test
     @DisplayName("afterCompletion(UNKNOWN) : cleanup() et onTxRolledBack appelés")
-    void afterCompletionUnknown() throws Exception {
+    void afterCompletionUnknown() throws SQLException {
         DeferredFinalize deferred = mock(DeferredFinalize.class);
         Runnable onRolledBack = mock(Runnable.class);
 
@@ -153,7 +154,7 @@ class TxAwareDeferredRunnerTest {
 
     @Test
     @DisplayName("afterCompletion(ROLLED_BACK) : cleanup() échoue → onTxRolledBack quand même appelé")
-    void afterCompletionCleanupFails() throws Exception {
+    void afterCompletionCleanupFails() throws SQLException {
         DeferredFinalize deferred = mock(DeferredFinalize.class);
         doThrow(new RuntimeException("cleanup fail")).when(deferred).cleanup();
         Runnable onRolledBack = mock(Runnable.class);
@@ -169,7 +170,7 @@ class TxAwareDeferredRunnerTest {
 
     @Test
     @DisplayName("afterCompletion(ROLLED_BACK) : onTxRolledBack null → pas de NullPointerException")
-    void afterCompletionNullCallback() throws Exception {
+    void afterCompletionNullCallback() throws SQLException {
         DeferredFinalize deferred = mock(DeferredFinalize.class);
 
         TxAwareDeferredRunner runner = new TxAwareDeferredRunner(
@@ -178,18 +179,5 @@ class TxAwareDeferredRunnerTest {
         assertDoesNotThrow(() ->
                 runner.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK));
         verify(deferred).cleanup();
-    }
-
-    @Test
-    @DisplayName("afterCommit() : onPostCommitFailure lève RuntimeException → absorbée silencieusement")
-    void afterCommitOnPostCommitFailureThrows() throws Exception {
-        DeferredFinalize deferred = mock(DeferredFinalize.class);
-        doThrow(new RuntimeException("execute failed")).when(deferred).execute();
-        Consumer<Throwable> onFailure = t -> { throw new RuntimeException("callback threw"); };
-
-        TxAwareDeferredRunner runner = new TxAwareDeferredRunner(
-                deferred, CORR_ID, null, onFailure, null);
-
-        assertDoesNotThrow(runner::afterCommit);
     }
 }

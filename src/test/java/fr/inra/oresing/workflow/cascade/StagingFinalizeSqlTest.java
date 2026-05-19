@@ -6,7 +6,6 @@ import org.mockito.invocation.InvocationOnMock;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.UUID;
 
@@ -35,15 +34,11 @@ class StagingFinalizeSqlTest {
     /**
      * Mock {@code connection.createStatement()} pour que les CREATE TEMP /
      * Statement.execute appels du fix " ordre reference_reference " ne
-     * NPE pas dans les tests . Retourne un Statement mock qui signale une
-     * staging table vide par defaut ( COUNT(*) = 0 ) via executeQuery .
+     * NPE pas dans les tests . Retourne un Statement mock qui ne fait
+     * rien sur execute / close .
      */
     private static void wireCreateStatementMock(Connection conn) throws Exception {
         Statement stmt = mock(Statement.class);
-        ResultSet emptyRs = mock(ResultSet.class);
-        when(emptyRs.next()).thenReturn(true);
-        when(emptyRs.getLong(1)).thenReturn(0L);
-        when(stmt.executeQuery(anyString())).thenReturn(emptyRs);
         when(conn.createStatement()).thenReturn(stmt);
     }
 
@@ -223,6 +218,7 @@ class StagingFinalizeSqlTest {
         assertTrue(noTimeout,
                 "Expected no SET LOCAL statement_timeout , got : " + sqlCaptor.getAllValues());
     }
+
     @Test
     @DisplayName("Phase B L1 : emet ANALYZE staging table avant la boucle UPSERT")
     void emitsAnalyzeOnStagingTableBeforeLoop() throws Exception {

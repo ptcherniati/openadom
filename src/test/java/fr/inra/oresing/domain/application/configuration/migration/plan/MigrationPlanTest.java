@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Tag;
  * Tests unitaires pour {@link MigrationPlan}.
  */
 @Tag("core.config")
-@Tag("domain.model")
 class MigrationPlanTest {
 
     /**

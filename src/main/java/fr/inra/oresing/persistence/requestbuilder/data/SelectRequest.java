@@ -1,5 +1,6 @@
 package fr.inra.oresing.persistence.requestbuilder.data;
 
+import fr.inra.oresing.domain.data.DataRows;
 import fr.inra.oresing.domain.data.read.query.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;

@@ -17,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * {@link HierarchicalDependancesBuilder}.
  */
 @Tag("core.config")
-@Tag("domain.model")
 class HierarchicalDependancesBuilderTest {
 
     // -----------------------------------------------------------------------

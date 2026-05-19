@@ -1,7 +1,7 @@
 package fr.inra.oresing.workflow.cascade.metrics;
 
 import fr.inra.oresing.rest.data.DataService;
-import fr.inra.oresing.rest.services.DefaultAuthorizationService;
+import fr.inra.oresing.rest.services.AuthorizationService;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
  * les méthodes des services correspondants ( cf. recordHit / recordMiss
  * / recordInvalidation ) ; les gauges ( taille courante , capacité ) sont
  * lues à intervalle régulier par Micrometer via les accesseurs publics
- * exposés sur DataService et DefaultAuthorizationService.
+ * exposés sur DataService et AuthorizationService.
  *
  * <p>Préfixe métrique : {@code oa_cache_*} ( cohérent avec les autres
  * métriques OpenADOM : {@code oa_import_*} , {@code oa_extraction_*} ).
@@ -42,7 +42,7 @@ public class OpenadomCacheMetrics {
 
     private final MeterRegistry registry;
     private final DataService dataService;
-    private final DefaultAuthorizationService authorizationService;
+    private final AuthorizationService authorizationService;
 
     private Counter filterListHit;
     private Counter filterListMiss;
@@ -57,7 +57,7 @@ public class OpenadomCacheMetrics {
     public OpenadomCacheMetrics(
             MeterRegistry registry,
             @Lazy DataService dataService,
-            @Lazy DefaultAuthorizationService authorizationService) {
+            @Lazy AuthorizationService authorizationService) {
         this.registry = registry;
         this.dataService = dataService;
         this.authorizationService = authorizationService;
@@ -70,7 +70,7 @@ public class OpenadomCacheMetrics {
             registry.gauge(CACHE_PREFIX + "_size", Tags.of(TAG_NAME, FILTER_LIST),
                     dataService, DataService::getFilterListCacheSize);
             registry.gauge(CACHE_PREFIX + "_size", Tags.of(TAG_NAME, SCOPES),
-                    authorizationService, DefaultAuthorizationService::getAuthorizationScopesCacheSize);
+                    authorizationService, AuthorizationService::getAuthorizationScopesCacheSize);
             registry.gauge(CACHE_PREFIX + "_size", Tags.of(TAG_NAME, CHECKED_FORMAT),
                     dataService, DataService::getCheckedFormatComponentsCacheSize);
 
@@ -79,7 +79,7 @@ public class OpenadomCacheMetrics {
             registry.gauge(CACHE_PREFIX + "_max_entries", Tags.of(TAG_NAME, FILTER_LIST),
                     dataService, DataService::getFilterListCacheMaxEntries);
             registry.gauge(CACHE_PREFIX + "_max_entries", Tags.of(TAG_NAME, SCOPES),
-                    authorizationService, DefaultAuthorizationService::getAuthorizationScopesCacheMaxEntries);
+                    authorizationService, AuthorizationService::getAuthorizationScopesCacheMaxEntries);
             registry.gauge(CACHE_PREFIX + "_max_entries", Tags.of(TAG_NAME, CHECKED_FORMAT),
                     dataService, DataService::getCheckedFormatComponentsCacheMaxEntries);
 

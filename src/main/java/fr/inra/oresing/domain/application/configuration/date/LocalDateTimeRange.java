@@ -333,30 +333,30 @@ public class LocalDateTimeRange {
     }
 
     public String toSqlExpression() {
-        final Range<LocalDateTime> currentRange = this.range;
+        final Range<LocalDateTime> range = this.range;
         final String lowerBoundString;
-        if (currentRange.hasLowerBound()) {
-            final LocalDateTime bound = currentRange.lowerEndpoint();
+        if (range.hasLowerBound()) {
+            final LocalDateTime bound = range.lowerEndpoint();
             final String formattedLowerBound = formatBound(bound);
-            if (currentRange.lowerBoundType() == BoundType.OPEN) {
+            if (range.lowerBoundType() == BoundType.OPEN) {
                 lowerBoundString = "(" + formattedLowerBound;
-            } else if (currentRange.lowerBoundType() == BoundType.CLOSED) {
+            } else if (range.lowerBoundType() == BoundType.CLOSED) {
                 lowerBoundString = "[" + formattedLowerBound;
             } else {
-                throw getErrorBoundType(currentRange.lowerBoundType());
+                throw getErrorBoundType(range.lowerBoundType());
             }
         } else {
             lowerBoundString = "(";
         }
         final String upperBoundString;
-        if (currentRange.hasUpperBound()) {
-            final String formattedUpperBound = formatBound(currentRange.upperEndpoint());
-            if (currentRange.upperBoundType() == BoundType.OPEN) {
+        if (range.hasUpperBound()) {
+            final String formattedUpperBound = formatBound(range.upperEndpoint());
+            if (range.upperBoundType() == BoundType.OPEN) {
                 upperBoundString = formattedUpperBound + ")";
-            } else if (currentRange.upperBoundType() == BoundType.CLOSED) {
+            } else if (range.upperBoundType() == BoundType.CLOSED) {
                 upperBoundString = formattedUpperBound + "]";
             } else {
-                throw getErrorBoundType(currentRange.upperBoundType());
+                throw getErrorBoundType(range.upperBoundType());
             }
         } else {
             upperBoundString = ")";

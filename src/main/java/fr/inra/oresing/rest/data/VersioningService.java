@@ -2,7 +2,6 @@ package fr.inra.oresing.rest.data;
 
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
-import fr.inra.oresing.domain.BinaryFileInfos;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.DataWriter;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
@@ -11,6 +10,7 @@ import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
 import fr.inra.oresing.mail.EmailService;
+import fr.inra.oresing.domain.BinaryFileInfos;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.UserRepository;
@@ -24,8 +24,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.FileNotFoundException;
@@ -42,12 +40,12 @@ public class VersioningService {
     private final ServiceContainer serviceContainer;
     private final OreSiRepository repository;
     private final UserRepository userRepository;
-    private final JsonRowMapper<?> jsonRowMapper;
+    private final JsonRowMapper jsonRowMapper;
     private final fr.inra.oresing.monitoring.compensation.CompensationLogService compensationLogService;
     private final PlatformTransactionManager txManager;
 
     public VersioningService(ServiceContainer serviceContainer, OreSiRepository repository,
-                             UserRepository userRepository, JsonRowMapper<?> jsonRowMapper,
+                             UserRepository userRepository, JsonRowMapper jsonRowMapper,
                              fr.inra.oresing.monitoring.compensation.CompensationLogService compensationLogService,
                              PlatformTransactionManager txManager) {
         this.serviceContainer = serviceContainer;
@@ -115,7 +113,7 @@ public class VersioningService {
                 UUID userIdForCompLog = OreSiApiRequestContext.getRequestUserId();
                 String userLoginForCompLog = serviceContainer.authenticationService()
                         .getCurrentUserRoles().userLogin();
-                compId = compensationLogService.logPending(
+                compId = compensationLogService.record(
                         fr.inra.oresing.monitoring.compensation.handlers.BinaryFileCompensationHandler.OP_TYPE,
                         application.getName(),    // target_schema = nom application
                         "binaryfile",
@@ -176,30 +174,16 @@ public class VersioningService {
         return dataVersioningResult;
 
         } catch (RuntimeException | IOException ex) {
-            // Compensation differee : on NE PEUT PAS appeler compensateNow()
-            // directement ici car la tx outer est encore ACTIVE et tient un
-            // verrou ROW EXCLUSIVE sur binaryfile (via checkAndStoreFile).
-            // compensateNow(REQUIRES_NEW) ouvrirait une nouvelle connexion et
-            // attendrait ce verrou → deadlock applicatif infini.
-            // Solution : enregistrer afterCompletion pour executer la
-            // compensation APRES que la tx outer ait rollbacke et libere
-            // ses verrous . Le sweeper rattrape si afterCompletion echoue .
+            // Best-effort cleanup synchrone : tente la compensation immediatement
+            // ( smart-check protege contre data loss ) . Si fail , le sweeper
+            // rattrapera apres TTL .
             if (compId != null) {
-                final UUID finalCompId = compId;
-                TransactionSynchronizationManager.registerSynchronization(
-                        new TransactionSynchronization() {
-                            @Override
-                            public void afterCompletion(int status) {
-                                if (status == TransactionSynchronization.STATUS_ROLLED_BACK) {
-                                    try {
-                                        compensationLogService.compensateNow(finalCompId);
-                                    } catch (RuntimeException compErr) {
-                                        log.warn("compensateNow afterCompletion failed for {} ( sweeper will retry ) : {}",
-                                                finalCompId, compErr.getMessage());
-                                    }
-                                }
-                            }
-                        });
+                try {
+                    compensationLogService.compensateNow(compId);
+                } catch (RuntimeException compErr) {
+                    log.warn("compensateNow failed for {} ( sweeper will retry ) : {}",
+                            compId, compErr.getMessage());
+                }
             }
             throw ex;
         }

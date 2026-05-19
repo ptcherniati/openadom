@@ -9,10 +9,10 @@ import fr.inra.oresing.domain.checker.type.ListType;
 import fr.inra.oresing.domain.checker.type.MapType;
 import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.*;
-import fr.inra.oresing.domain.data.deposit.BuildColumns;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
 import fr.inra.oresing.domain.data.deposit.validation.transformer.data.RowWithReferenceDatum;
 import fr.inra.oresing.domain.file.FileOrUUID;
+import fr.inra.oresing.domain.data.deposit.BuildColumns;
 import org.apache.commons.csv.CSVRecord;
 
 import java.util.*;
@@ -45,7 +45,7 @@ public record DataHeaderReader(
 
     private void addConstants(final ConstantComponent constant, final FieldType<?> value) {
         switch (value) {
-            case final ListType<?> listType ->
+            case final ListType listType ->
                     constantValues().put(new DataColumn(constant.componentKey()), new DataColumnMultipleValue(listType.getValue()));
             case final MapType mapType -> throw new IllegalArgumentException("NO MAP HERE");
             case null, default ->
@@ -154,7 +154,7 @@ public record DataHeaderReader(
     public RowWithReferenceDatum addConstantsToRow(
             final RowWithReferenceDatum rowWithReferenceDatum
     ) {
-        final ImmutableMap<DataColumn, DataColumnValue<?, ?>> values = ImmutableMap.<DataColumn, DataColumnValue<?, ?>>builder()
+        final ImmutableMap<DataColumn, DataColumnValue> values = ImmutableMap.<DataColumn, DataColumnValue>builder()
                 .putAll(constantValues().values())
                 .putAll(rowWithReferenceDatum.referenceDatum().values())
                 .build();

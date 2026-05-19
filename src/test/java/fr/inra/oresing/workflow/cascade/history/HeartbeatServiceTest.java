@@ -3,18 +3,17 @@ package fr.inra.oresing.workflow.cascade.history;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -35,7 +34,6 @@ import static org.mockito.Mockito.when;
  * </ul>
  */
 @DisplayName("HeartbeatService")
-@Tag("domain.model")
 class HeartbeatServiceTest {
 
     private WorkflowLogRepository  repo;
@@ -69,10 +67,10 @@ class HeartbeatServiceTest {
 
         try (HeartbeatService.Heartbeat hb = service.start(corrId)) {
             // 1ere beat doit arriver presque immediatement ( delay=0 ) .
-            verify(repo, timeout(1000)).beat(corrId);
-            verify(registry, timeout(1000)).setLastHeartbeat(eq(corrId), any());
+            verify(repo, timeout(1000).times(1)).beat(eq(corrId));
+            verify(registry, timeout(1000).times(1)).setLastHeartbeat(eq(corrId), any());
             // 2eme beat apres ~1 sec ( interval ) .
-            verify(repo, timeout(2000).atLeast(2)).beat(corrId);
+            verify(repo, timeout(2000).atLeast(2)).beat(eq(corrId));
         }
     }
 
@@ -85,10 +83,10 @@ class HeartbeatServiceTest {
                 .when(repo).beat(any(UUID.class));
 
         HeartbeatService.Heartbeat hb = service.start(corrId);
-        Thread.sleep(1500);  //NOSONAR squid:S2925 - necessary wait for heartbeat timer
+        Thread.sleep(1500);  // ~1-2 beats
         hb.close();
         int afterClose = beatsObserved.get();
-        Thread.sleep(2000);  //NOSONAR squid:S2925 - waiting to confirm no extra beats
+        Thread.sleep(2000);  // attendre 2 sec : aucun beat supplementaire ne doit arriver
         assertThat(beatsObserved.get()).isEqualTo(afterClose);
     }
 
@@ -98,7 +96,7 @@ class HeartbeatServiceTest {
         UUID corrId = UUID.randomUUID();
         HeartbeatService.Heartbeat hb = service.start(corrId);
         hb.close();
-        assertThatCode(hb::close).doesNotThrowAnyException();
+        hb.close();   // doit etre no-op , pas d'exception
     }
 
     @Test
@@ -116,10 +114,10 @@ class HeartbeatServiceTest {
     void try_with_resources_auto_cleanup() throws Exception {
         UUID corrId = UUID.randomUUID();
         try (HeartbeatService.Heartbeat hb = service.start(corrId)) {
-            verify(repo, timeout(1000).atLeast(1)).beat(corrId);
+            verify(repo, timeout(1000).atLeast(1)).beat(eq(corrId));
         }
         // Apres le bloc , au plus 1 beat supplementaire en cours d'execution .
-        Thread.sleep(2000); //NOSONAR squid:S2925 - necessary wait to confirm no extra beats
-        verify(repo, atMost(3)).beat(corrId);  // borne genereuse pour CI lent
+        Thread.sleep(2000);
+        verify(repo, atMost(3)).beat(eq(corrId));  // borne genereuse pour CI lent
     }
 }

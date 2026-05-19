@@ -9,8 +9,8 @@ import fr.inra.oresing.domain.application.ApplicationInformation;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.application.configuration.migration.plan.MigrationMode;
+import fr.inra.oresing.rest.config.MigrationProperties;
 import fr.inra.oresing.domain.application.configuration.migration.report.MigrationResult;
-import fr.inra.oresing.domain.authorization.AuthorizationsForUserResult;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationCreator;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationManager;
@@ -26,9 +26,9 @@ import fr.inra.oresing.persistence.flyway.MigrateService;
 import fr.inra.oresing.rest.MultiYaml;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
-import fr.inra.oresing.rest.config.MigrationProperties;
 import fr.inra.oresing.rest.model.application.ApplicationLightResult;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
+import fr.inra.oresing.domain.authorization.AuthorizationsForUserResult;
 import fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult;
 import fr.inra.oresing.rest.reactive.ReactiveEventHelper;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
@@ -36,12 +36,10 @@ import fr.inra.oresing.rest.reactive.ReactiveTypeProgress;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.unit.DataSize;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -66,7 +64,6 @@ public class ApplicationService {
     private final MigrationService migrationService;
     private final MigrateService flywayMigrateService;
     private final MigrationProperties migrationProperties;
-    private final long multipartMaxFileSizeBytes;
     @Setter
     private ServiceContainer serviceContainer;
 
@@ -75,14 +72,12 @@ public class ApplicationService {
             ServiceContainer serviceContainer,
             MigrationService migrationService,
             MigrateService flywayMigrateService,
-            MigrationProperties migrationProperties,
-            @Value("${spring.servlet.multipart.max-file-size:1MB}") DataSize multipartMaxFileSize) {
+            MigrationProperties migrationProperties) {
         this.repository = repository;
         this.serviceContainer = serviceContainer;
         this.migrationService = migrationService;
         this.flywayMigrateService = flywayMigrateService;
         this.migrationProperties = migrationProperties;
-        this.multipartMaxFileSizeBytes = multipartMaxFileSize.toBytes();
     }
 
     public Application getApplication(final String nameOrId) {
@@ -248,6 +243,7 @@ public class ApplicationService {
         }
         final String applicationName = application.getName();
         final Configuration newConfiguration = serviceContainer.applicationService().getApplication(applicationName).getConfiguration();
+        //TODO test à faire entre version ancienne et nouvelle
         final Version oldVersion = oldConfiguration.applicationDescription().version();
         final Version newVersion = newConfiguration.applicationDescription().version();
         final boolean bypass = migrationProperties.isBypassConfigurationCheck();
@@ -291,7 +287,7 @@ public class ApplicationService {
         final ReactiveEventHelper helperParsingConfiguration = helperConfiguration.withSubLabel("parsingConfiguration");
         Application newApplication;
         if (Objects.requireNonNull(configurationFile.fileName()).matches(".*\\.zip")) {
-            InputStream multiYAmlInput = MultiYaml.parseConfigurationBytes(configurationFile, multipartMaxFileSizeBytes);
+            InputStream multiYAmlInput = MultiYaml.parseConfigurationBytes(configurationFile);
             helperParsingConfiguration.pushMessage("forMulti", Map.of(APPLICATION_NAME, applicationName));
             newApplication = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, helperConfiguration, FileBomResolver.of(multiYAmlInput));
         } else {
@@ -312,7 +308,7 @@ public class ApplicationService {
             // Cas mise à jour : on préserve la structure des données et des
             // fichiers additionnels de l'ancienne configuration ; ce contrat
             // existe pour les chemins en aval qui itèrent {@code Application#getData()}
-            // ( ex. {@code DefaultAuthorizationService} ). La levée de cette préservation
+            // ( ex. {@code AuthorizationService} ). La levée de cette préservation
             // pour les modifications structurelles ( renommage / suppression /
             // ajout de datatype , de composant , de naturalKey , de submission )
             // est traitée dans le chantier "datatype vide ⇒ tout autorisé"
@@ -403,7 +399,6 @@ public class ApplicationService {
         }
     }
 
-    @SuppressWarnings("java:S3740")
     public Flux<ReactiveResult> getApplications(final List<ApplicationInformation> filters) {
         return Mono.fromCallable(() -> {
                     // Charger les applications
@@ -478,7 +473,7 @@ public class ApplicationService {
         try {
             final Application application;
             if (Objects.requireNonNull(file.fileName()).matches(".*\\.zip")) {
-                application = ApplicationConfigurationService.unzipConfiguration(file, eventHelper, multipartMaxFileSizeBytes);
+                application = ApplicationConfigurationService.unzipConfiguration(file, eventHelper);
             } else {
                 application = ApplicationConfigurationService.parseConfigurationBytes("", "", eventHelper, FileBomResolver.of(file.inputStream()));
             }

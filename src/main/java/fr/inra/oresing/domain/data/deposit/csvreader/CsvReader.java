@@ -5,6 +5,7 @@ import com.google.common.primitives.Ints;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.checker.LineChecker;
+import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
@@ -30,10 +31,10 @@ public class CsvReader {
         this.recursionStrategy = recursionStrategy;
     }
 
-    @SuppressWarnings("java:S1452")
-    public Set<LineChecker<?>> buildLineCheckers(Map<DataColumn, DataColumnValue<?, ?>> constantColumnsValues) {
-        final HashSet<LineChecker<?>> linecheckersBuilder = new HashSet<>();
-        for (final LineChecker<?> lineChecker : dataImporterContext.lineCheckers()) {
+    @SuppressWarnings("java:S3740")
+    public  Set<LineChecker<? extends FieldType<?>>> buildLineCheckers(Map<DataColumn, DataColumnValue> constantColumnsValues) {
+        final HashSet<LineChecker<? extends FieldType<?>>> linecheckersBuilder = new HashSet<>();
+        for (final LineChecker<? extends FieldType<?>> lineChecker : dataImporterContext.lineCheckers()) {
             if (!dataImporterContext.existsColumn(lineChecker.target(), constantColumnsValues)) {
                 continue;
             }
@@ -47,12 +48,12 @@ public class CsvReader {
                         .forEach(ltreeUUIDEntry -> builder.put(ltreeUUIDEntry.getKey(), ImmutableSet.of(ltreeUUIDEntry.getValue())));
                 final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referencesValues = builder.build();
                 switch (lineChecker) {
-                    case final LineChecker.ManyChecker<?, ?> manyChecker -> {
+                    case final LineChecker.ManyChecker manyChecker -> {
                         manyChecker.value().getValue()
                                 .forEach(o -> ((ReferenceType) o).setReferenceValues(referencesValues));
                         referenceType.setReferenceValues(referencesValues);
                     }
-                    case final LineChecker.OneChecker<?> oneChecker -> {
+                    case final LineChecker.OneChecker oneChecker -> {
                         ((ReferenceType) oneChecker.fieldTypeForOne()).setReferenceValues(referencesValues);
                         referenceType.setReferenceValues(referencesValues);
                     }

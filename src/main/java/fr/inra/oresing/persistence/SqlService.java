@@ -24,7 +24,7 @@ public class SqlService {
 
     public void createSchema(final SqlSchema schema, final OreSiRole owner) {
         namedParameterJdbcTemplate.getJdbcTemplate().
-                execute("CREATE SCHEMA " +  schema.getSqlIdentifier() + " AUTHORIZATION " + owner.getSqlIdentifier());
+                execute("CREATE SCHEMA " + schema.getSqlIdentifier() + " AUTHORIZATION " + owner.getSqlIdentifier());
     }
 
     public void dropSchema(final SqlSchemaForRelationalViewsForApplication schema) {

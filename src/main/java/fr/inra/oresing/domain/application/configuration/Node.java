@@ -23,7 +23,7 @@ public record Node(
         }
     }
 
-    public static SortedSet<Node> buildNode(final Collection<BuilderNode> nodes) {
+    public static SortedSet<Node> buildNode(final Collection<BuilderNode> nodes, final Validation validation) {
         Map<String, BuilderNode> nodesWithAllDepends = nodes.stream()
                 .map(node -> node.withAllDepends(nodes))
                 .collect(Collectors.toMap(BuilderNode::nodeName, Function.identity()));

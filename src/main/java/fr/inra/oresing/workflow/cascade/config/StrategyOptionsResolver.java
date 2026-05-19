@@ -37,16 +37,18 @@ public class StrategyOptionsResolver {
     public Map<String, List<Option>> resolve(Map<String, Object> effective) {
         Map<String, List<Option>> out = new LinkedHashMap<>();
         for (var meta : registry.schema()) {
-            if ("enum".equals(meta.type()) && meta.hot() && meta.allowedValues() != null) {
-                List<Option> opts = new ArrayList<>();
-                for (String candidate : meta.allowedValues()) {
-                    Map<String, Object> hypothetical = new LinkedHashMap<>(effective);
-                    hypothetical.put(meta.name(), candidate);
-                    String blockReason = firstBlockingReason(hypothetical);
-                    opts.add(new Option(candidate, blockReason == null, blockReason));
-                }
-                out.put(meta.name(), opts);
+            if (!"enum".equals(meta.type())) continue;
+            if (!meta.hot()) continue;
+            if (meta.allowedValues() == null) continue;
+
+            List<Option> opts = new ArrayList<>();
+            for (String candidate : meta.allowedValues()) {
+                Map<String, Object> hypothetical = new LinkedHashMap<>(effective);
+                hypothetical.put(meta.name(), candidate);
+                String blockReason = firstBlockingReason(hypothetical);
+                opts.add(new Option(candidate, blockReason == null, blockReason));
             }
+            out.put(meta.name(), opts);
         }
         return out;
     }

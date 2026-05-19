@@ -33,14 +33,13 @@ public non-sealed class ListType<F extends FieldType<?>> implements FieldType<Li
     private final F fieldType;
     List<F> value = new LinkedList<>();
 
-    @SuppressWarnings("unchecked")
     public ListType(F fieldType) {
         this.fieldType = fieldType;
-        clone = () -> new ListType<>((F) fieldType.copy());
+        clone = () -> new ListType(fieldType.copy());
     }
 
-    public static ListType<StringType> getListTypeFromListValue(final List<StringType> value) {
-        final ListType<StringType> listType = new ListType<>(StringType.getStringTypeFromStringValue(""));
+    public static ListType getListTypeFromListValue(final List<StringType> value) {
+        final ListType listType = new ListType(StringType.getStringTypeFromStringValue(""));
         listType.value = value;
         return listType;
     }
@@ -60,17 +59,16 @@ public non-sealed class ListType<F extends FieldType<?>> implements FieldType<Li
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public CheckerValidationCheckResult<ListType<F>> check(final String value, final LineChecker<?> lineChecker) {
+    public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
         final FieldType<?> underlyingType = lineChecker.fieldTypeForOne();
         final List<ValidationCheckResult> collect = Arrays.stream(value.split(","))
                 .map(v -> underlyingType.check(v, lineChecker))
                 .map(v -> {
                     this.value.add((F) underlyingType.copy());
-                    return (ValidationCheckResult) v;
+                    return v;
                 })
-                .toList();
-        return (CheckerValidationCheckResult<ListType<F>>) (CheckerValidationCheckResult<?>) new DefaultManyValidationCheckResult(collect, lineChecker.target());
+                .collect(Collectors.toList());
+        return new DefaultManyValidationCheckResult(collect, lineChecker.target());
     }
 
     @Override
@@ -79,7 +77,7 @@ public non-sealed class ListType<F extends FieldType<?>> implements FieldType<Li
     }
 
     @Override
-    public ListType<F> copy() {
+    public FieldType copy() {
         final ListType<F> listType = clone.get();
         if (value != null) {
             listType.value = value.stream().collect(Collectors.toCollection(ArrayList::new));

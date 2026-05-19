@@ -8,7 +8,7 @@ import fr.inra.oresing.rest.reactive.ReactiveTypeError;
 import fr.inra.oresing.rest.reactive.ReactiveTypeInfo;
 import fr.inra.oresing.rest.services.AbstractIntegrationTest;
 import fr.inra.oresing.rest.usecases.data.SendZipLinkByMailUseCase;
-
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -51,6 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Tag("integration.bundle")
 @Tag("docker-required")
 @DisplayName("Cycle de vie complet bundle — Pattern : sauvegarde & restauration")
+@Slf4j
 class BundleResourcesIntegrationTest extends AbstractIntegrationTest {
 
     /** Remplacement du service d'envoi de zip par mail pour capturer le zip généré. */

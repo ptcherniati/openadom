@@ -9,7 +9,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Attribue effectivement les autorisations sélectionnées par le gestionnaire
@@ -86,27 +91,28 @@ public class RightsRequestAuthorizationGranter {
         final List<UUID> missing = new ArrayList<>();
 
         for (final UUID authId : linkedAuthorizationIds) {
-            if (authId != null) {
-                final OreSiAuthorization auth = authRepo.findById(authId);
-                if (auth == null) {
-                    log.warn("Skip authorization {} on application {} : not found ( deleted between submission and treatment )",
-                            authId, application.getName());
-                    missing.add(authId);
-                } else {
-                    final Set<UUID> users = auth.getOreSiUsers() == null
-                            ? new HashSet<>()
-                            : new HashSet<>(auth.getOreSiUsers());
-                    if (!users.add(requesterId)) {
-                        alreadyMember.add(authId);
-                    } else {
-                        auth.setOreSiUsers(users);
-                        authRepo.store(auth);
-                        granted.add(authId);
-                        log.info("Granted authorization {} ( {} ) to user {} on application {} via rights request",
-                                authId, auth.getName(), requesterId, application.getName());
-                    }
-                }
+            if (authId == null) {
+                continue;
             }
+            final OreSiAuthorization auth = authRepo.findById(authId);
+            if (auth == null) {
+                log.warn("Skip authorization {} on application {} : not found ( deleted between submission and treatment )",
+                        authId, application.getName());
+                missing.add(authId);
+                continue;
+            }
+            final Set<UUID> users = auth.getOreSiUsers() == null
+                    ? new HashSet<>()
+                    : new HashSet<>(auth.getOreSiUsers());
+            if (!users.add(requesterId)) {
+                alreadyMember.add(authId);
+                continue;
+            }
+            auth.setOreSiUsers(users);
+            authRepo.store(auth);
+            granted.add(authId);
+            log.info("Granted authorization {} ( {} ) to user {} on application {} via rights request",
+                    authId, auth.getName(), requesterId, application.getName());
         }
         return new GrantReport(List.copyOf(granted), List.copyOf(alreadyMember), List.copyOf(missing));
     }

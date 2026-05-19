@@ -2,13 +2,13 @@ package fr.inra.oresing.rest.model.authorization;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import fr.inra.oresing.domain.authorization.request.AuthorizationInput;
 import fr.inra.oresing.domain.exceptions.authorization.AuthorizationRequestException;
 import fr.inra.oresing.domain.exceptions.authorization.SiOreAuthorizationRequestException;
+import fr.inra.oresing.domain.authorization.request.AuthorizationInput;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 
 import java.util.*;
-import java.util.function.Predicate;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -76,7 +76,7 @@ public record CreateAuthorizationRequest(
         );
     }
 
-    public CreateAuthorizationRequest addRequiredOperationTypes(Predicate<String> isVersionningStrategy) {
+    public CreateAuthorizationRequest addRequiredOperationTypes(Function<String, Boolean> isVersionningStrategy) {
         return new CreateAuthorizationRequest(
                 uuid(),
                 name(),
@@ -87,7 +87,7 @@ public record CreateAuthorizationRequest(
         );
     }
 
-    private Map<String, AuthorizationInput> authorizationsWithRestrictionWithDependants(Predicate<String> isVersionningStrategy) {
+    private Map<String, AuthorizationInput> authorizationsWithRestrictionWithDependants(Function<String, Boolean> isVersionningStrategy) {
         if(authorizationsWithRestriction()==null){
             return Map.of();
         }
@@ -99,7 +99,7 @@ public record CreateAuthorizationRequest(
                 );
     }
 
-    private Map<String, Set<OperationType>> authorizationForAllWithDependants(Predicate<String> isVersionningStrategy) {
+    private Map<String, Set<OperationType>> authorizationForAllWithDependants(Function<String, Boolean> isVersionningStrategy) {
         if(authorizationForAll() == null){
             return Map.of();
         }
@@ -108,7 +108,7 @@ public record CreateAuthorizationRequest(
                         Map.Entry::getKey,
                         entry -> entry.getValue().stream()
                                 .flatMap(operationType -> {
-                                    final boolean isVersionning = isVersionningStrategy.test(entry.getKey());
+                                    final Boolean isVersionning = isVersionningStrategy.apply(entry.getKey());
                                     if(operationType==null){
                                         return Stream.of();
                                     }

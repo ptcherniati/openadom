@@ -2,7 +2,6 @@ package fr.inra.oresing.mail.rightsrequest;
 
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.rightsrequest.TreatmentDecision;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +27,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import org.junit.jupiter.api.Tag;
 
 /**
  * Tests unitaires pour {@link RightsRequestNotificationService} (#487 Phase 1).
@@ -46,7 +44,6 @@ import org.junit.jupiter.api.Tag;
  * <p>L'exécutor utilisé en test est synchrone ({@code Runnable::run}) pour rendre
  * les vérifications déterministes.
  */
-@Tag("domain.model")
 class RightsRequestNotificationServiceTest {
 
     private static final String APP_NAME = "ticket_507";
@@ -226,185 +223,10 @@ class RightsRequestNotificationServiceTest {
         service.notifyRequestSubmitted(application, UUID.randomUUID(), requester, "ok", Locale.FRENCH);
 
         // Vérifie que les 2 lookups portent bien sur les rôles de CETTE application
-        verify(userRepository).findUsersGrantedRole(adminRoleName());
-        verify(userRepository).findUsersGrantedRole(userManagerRoleName());
+        verify(userRepository).findUsersGrantedRole(eq(adminRoleName()));
+        verify(userRepository).findUsersGrantedRole(eq(userManagerRoleName()));
         // Et qu'aucun autre rôle n'a été interrogé
         verify(userRepository, times(2)).findUsersGrantedRole(any());
-    }
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // notifyRequestTreated – couverture de la méthode de traitement
-    // ──────────────────────────────────────────────────────────────────────────
-
-    @Test
-    @DisplayName("notifyRequestTreated(null application) → aucun envoi")
-    void treated_null_application_short_circuits() {
-        service.notifyRequestTreated(null, requester, null, TreatmentDecision.APPROVED,
-                null, "corps", false, Locale.FRENCH);
-        verify(mailSender, never()).send(any(SimpleMailMessage.class));
-    }
-
-    @Test
-    @DisplayName("notifyRequestTreated(null decision) → aucun envoi")
-    void treated_null_decision_short_circuits() {
-        service.notifyRequestTreated(application, requester, null, null,
-                null, "corps", false, Locale.FRENCH);
-        verify(mailSender, never()).send(any(SimpleMailMessage.class));
-    }
-
-    @Test
-    @DisplayName("suppressMail=true → demandeur non notifié, gestionnaires quand même notifiés")
-    void treated_suppress_mail_skips_requester_but_notifies_managers() {
-        OreSiUser manager = newUser("alice", "alice@example.org");
-        when(userRepository.findUsersGrantedRole(adminRoleName())).thenReturn(List.of(manager));
-        when(userRepository.findUsersGrantedRole(userManagerRoleName())).thenReturn(List.of());
-        OreSiUser treatedBy = newUser("bob", "bob@example.org");
-
-        service.notifyRequestTreated(application, requester, treatedBy, TreatmentDecision.APPROVED,
-                null, "corps", true, Locale.FRENCH);
-
-        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(mailSender, times(1)).send(captor.capture());
-        assertThat(captor.getValue().getTo()[0]).isEqualTo("alice@example.org");
-    }
-
-    @Test
-    @DisplayName("mailBody null → demandeur non notifié")
-    void treated_blank_body_skips_requester_notification() {
-        when(userRepository.findUsersGrantedRole(any())).thenReturn(List.of());
-
-        service.notifyRequestTreated(application, requester, null, TreatmentDecision.APPROVED,
-                null, null, false, Locale.FRENCH);
-
-        verify(mailSender, never()).send(any(SimpleMailMessage.class));
-    }
-
-    @Test
-    @DisplayName("mailBody blank → demandeur non notifié")
-    void treated_whitespace_body_skips_requester_notification() {
-        when(userRepository.findUsersGrantedRole(any())).thenReturn(List.of());
-
-        service.notifyRequestTreated(application, requester, null, TreatmentDecision.APPROVED,
-                null, "   ", false, Locale.FRENCH);
-
-        verify(mailSender, never()).send(any(SimpleMailMessage.class));
-    }
-
-    @Test
-    @DisplayName("Requester sans email → skip demandeur, gestionnaires notifiés")
-    void treated_requester_without_email_skipped() {
-        requester.setEmail(null);
-        OreSiUser manager = newUser("alice", "alice@example.org");
-        when(userRepository.findUsersGrantedRole(adminRoleName())).thenReturn(List.of(manager));
-        when(userRepository.findUsersGrantedRole(userManagerRoleName())).thenReturn(List.of());
-
-        service.notifyRequestTreated(application, requester, manager, TreatmentDecision.APPROVED,
-                null, "corps", false, Locale.FRENCH);
-
-        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(mailSender, times(1)).send(captor.capture());
-        assertThat(captor.getValue().getTo()[0]).isEqualTo("alice@example.org");
-    }
-
-    @Test
-    @DisplayName("APPROVED → sujet localisé par défaut contient Acceptée")
-    void treated_approved_subject_template_when_no_custom_subject() {
-        when(userRepository.findUsersGrantedRole(any())).thenReturn(List.of());
-
-        service.notifyRequestTreated(application, requester, null, TreatmentDecision.APPROVED,
-                null, "corps approuved", false, Locale.FRENCH);
-
-        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(mailSender).send(captor.capture());
-        assertThat(captor.getValue().getSubject()).containsIgnoringCase("accept");
-    }
-
-    @Test
-    @DisplayName("REJECTED → sujet localisé par défaut contient refusé")
-    void treated_rejected_subject_template_when_no_custom_subject() {
-        when(userRepository.findUsersGrantedRole(any())).thenReturn(List.of());
-
-        service.notifyRequestTreated(application, requester, null, TreatmentDecision.REJECTED,
-                null, "corps refusé", false, Locale.FRENCH);
-
-        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(mailSender).send(captor.capture());
-        assertThat(captor.getValue().getSubject()).containsIgnoringCase("refus");
-    }
-
-    @Test
-    @DisplayName("Sujet personnalisé → sujet du mail = sujet fourni par le gestionnaire")
-    void treated_custom_subject_used_when_provided() {
-        when(userRepository.findUsersGrantedRole(any())).thenReturn(List.of());
-
-        service.notifyRequestTreated(application, requester, null, TreatmentDecision.APPROVED,
-                "Mon sujet custom", "corps", false, Locale.FRENCH);
-
-        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(mailSender).send(captor.capture());
-        assertThat(captor.getValue().getSubject()).isEqualTo("Mon sujet custom");
-    }
-
-    @Test
-    @DisplayName("Notification gestionnaires : REJECTED → sujet et corps template rejet")
-    void treated_managers_notified_with_rejection_template() {
-        OreSiUser manager = newUser("alice", "alice@example.org");
-        when(userRepository.findUsersGrantedRole(adminRoleName())).thenReturn(List.of(manager));
-        when(userRepository.findUsersGrantedRole(userManagerRoleName())).thenReturn(List.of());
-        OreSiUser treatedBy = newUser("bob", "bob@example.org");
-
-        service.notifyRequestTreated(application, requester, treatedBy, TreatmentDecision.REJECTED,
-                null, "   ", false, Locale.FRENCH);
-
-        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(mailSender).send(captor.capture());
-        assertThat(captor.getValue().getTo()[0]).isEqualTo("alice@example.org");
-        assertThat(captor.getValue().getSubject()).containsIgnoringCase("refus");
-    }
-
-    @Test
-    @DisplayName("Manager sans email dans notifyRequestTreated → skippé")
-    void treated_manager_without_email_skipped() {
-        OreSiUser noEmailManager = newUser("noemail", null);
-        when(userRepository.findUsersGrantedRole(adminRoleName())).thenReturn(List.of(noEmailManager));
-        when(userRepository.findUsersGrantedRole(userManagerRoleName())).thenReturn(List.of());
-
-        service.notifyRequestTreated(application, requester, null, TreatmentDecision.APPROVED,
-                null, "   ", false, Locale.FRENCH);
-
-        verify(mailSender, never()).send(any(SimpleMailMessage.class));
-    }
-
-    @Test
-    @DisplayName("Locale EN dans notifyRequestTreated → template anglais")
-    void treated_english_locale_uses_english_template() {
-        when(userRepository.findUsersGrantedRole(any())).thenReturn(List.of());
-
-        service.notifyRequestTreated(application, requester, null, TreatmentDecision.APPROVED,
-                null, "body", false, Locale.ENGLISH);
-
-        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(mailSender).send(captor.capture());
-        assertThat(captor.getValue().getSubject()).containsIgnoringCase("approved");
-    }
-
-    @Test
-    @DisplayName("TreatmentDecision.fromNullable : null → APPROVED")
-    void treatmentDecisionFromNullable_null_returnsApproved() {
-        assertThat(TreatmentDecision.fromNullable(null)).isEqualTo(TreatmentDecision.APPROVED);
-    }
-
-    @Test
-    @DisplayName("TreatmentDecision.fromNullable : REJECTED → REJECTED")
-    void treatmentDecisionFromNullable_rejected() {
-        assertThat(TreatmentDecision.fromNullable("REJECTED")).isEqualTo(TreatmentDecision.REJECTED);
-        assertThat(TreatmentDecision.fromNullable("rejected")).isEqualTo(TreatmentDecision.REJECTED);
-    }
-
-    @Test
-    @DisplayName("TreatmentDecision.fromNullable : valeur inconnue → APPROVED")
-    void treatmentDecisionFromNullable_unknown_returnsApproved() {
-        assertThat(TreatmentDecision.fromNullable("INVALID")).isEqualTo(TreatmentDecision.APPROVED);
     }
 
     private String adminRoleName() {

@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * {@link ReferenceGraphBuilder.RelationType#PARENT_CHILD}.</p>
  */
 @Tag("core.config")
-@Tag("domain.model")
 class ReferenceGraphBuilderTest {
 
     // -----------------------------------------------------------------------

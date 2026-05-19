@@ -235,7 +235,7 @@ public class Application extends OreSiEntity {
                 .orElse(null);
     }
 
-    @SuppressWarnings({"java:S1452", "unchecked"})
+    @SuppressWarnings("java:S1452")
     public DatePattern<?> findSubmissionDatePattern(String dataName) {
         String timescope = findData(dataName)
                 .map(StandardDataDescription::submission)
@@ -252,7 +252,7 @@ public class Application extends OreSiEntity {
                 .filter(DateChecker.class::isInstance)
                 .map(DateChecker.class::cast)
                 .map(DateChecker::pattern)
-                .<DatePattern<?>>map(DatePattern::of)
+                .map(DatePattern::of)
                 .findFirst().orElse(DatePattern.DEFAULT);
     }
 }

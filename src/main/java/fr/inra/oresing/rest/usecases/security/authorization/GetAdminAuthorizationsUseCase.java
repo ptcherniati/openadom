@@ -1,7 +1,7 @@
 package fr.inra.oresing.rest.usecases.security.authorization;
 
-import fr.inra.oresing.domain.authorization.LoginAdminResult;
 import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.domain.authorization.LoginAdminResult;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

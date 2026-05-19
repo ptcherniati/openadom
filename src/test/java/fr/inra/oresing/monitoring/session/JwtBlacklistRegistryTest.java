@@ -111,7 +111,7 @@ class JwtBlacklistRegistryTest {
 
     @Test
     @DisplayName("list() retourne toutes les entrées non-expirées, triées DESC")
-    void listReturnsSortedDesc() {
+    void listReturnsSortedDesc() throws InterruptedException {
         Instant t1 = Instant.now().minusMillis(100);
         Instant t2 = Instant.now();
         registry.add("hash-old", USER_A, "alice", SESSION_A, t1, future());

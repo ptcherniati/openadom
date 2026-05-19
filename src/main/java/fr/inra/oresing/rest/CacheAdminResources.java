@@ -2,7 +2,7 @@ package fr.inra.oresing.rest;
 
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.rest.data.DataService;
-import fr.inra.oresing.rest.services.DefaultAuthorizationService;
+import fr.inra.oresing.rest.services.AuthorizationService;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -143,7 +143,7 @@ public class CacheAdminResources {
             @PathVariable("nameOrId") final String nameOrId) {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
         DataService dataService = serviceContainer.dataService();
-        DefaultAuthorizationService authorizationService = serviceContainer.authorizationService();
+        AuthorizationService authorizationService = serviceContainer.authorizationService();
 
         // Purge ciblée par application :
         //  - filterList : retire toutes les entrées dont la clé commence par
@@ -195,7 +195,7 @@ public class CacheAdminResources {
     @PostMapping(value = "/admin/caches/invalidate-all", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> invalidateAllCaches() {
         DataService dataService = serviceContainer.dataService();
-        DefaultAuthorizationService authorizationService = serviceContainer.authorizationService();
+        AuthorizationService authorizationService = serviceContainer.authorizationService();
 
         dataService.invalidateAllFilterListCaches();
         authorizationService.invalidateAllAuthorizationScopes();
@@ -240,7 +240,7 @@ public class CacheAdminResources {
     @GetMapping(value = "/admin/caches/stats", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> cacheStats() {
         DataService dataService = serviceContainer.dataService();
-        DefaultAuthorizationService authorizationService = serviceContainer.authorizationService();
+        AuthorizationService authorizationService = serviceContainer.authorizationService();
         return ResponseEntity.ok(Map.of(
                 "filterList", Map.of(
                         "enabled", dataService.isFilterListCacheEnabled(),

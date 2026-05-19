@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Tag("core.config")
-@Tag("domain.model")
 class ConfigurationBuilderTest {
 
     @Test

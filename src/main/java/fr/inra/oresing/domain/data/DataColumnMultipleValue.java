@@ -1,5 +1,6 @@
 package fr.inra.oresing.domain.data;
 
+import com.google.common.base.Preconditions;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.ListType;
@@ -11,7 +12,7 @@ import lombok.Value;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.UnaryOperator;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -20,18 +21,17 @@ import java.util.stream.Collectors;
  * @param <U>
  */
 @Value
-public class DataColumnMultipleValue<U> implements DataColumnValue<ListType<FieldType<?>>, FieldType<?>> {
+public class DataColumnMultipleValue<U> implements DataColumnValue<ListType, FieldType> {
 
     private static final String COLLECTION_AS_JSON_STRING_SEPARATOR = ",";
-    ListType<FieldType<?>> values;
+    ListType values;
 
-    @SuppressWarnings("unchecked")
-    public DataColumnMultipleValue(final List<?> values) {
+    public DataColumnMultipleValue(final List values) {
         super();
-        final ListType<FieldType<?>> fieldsType = new ListType<>(StringType.getStringTypeFromStringValue(null));
+        final ListType fieldsType = new ListType(StringType.getStringTypeFromStringValue(null));
         for (final Object value : values) {
             if (value instanceof FieldType) {
-                fieldsType.getValue().add((FieldType<?>) value);
+                fieldsType.getValue().add(value);
             } else {
                 fieldsType.getValue().add(StringType.getStringTypeFromStringValue("" + value));
             }
@@ -39,32 +39,32 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType<Fiel
         this.values = fieldsType;
     }
 
-    public DataColumnMultipleValue(final ListType<FieldType<?>> values) {
+    public DataColumnMultipleValue(final ListType values) {
         this.values = values;
     }
 
     @Override
-    public ListType<FieldType<?>> toJsonForDatabase() {
+    public ListType toJsonForDatabase() {
         return values;
     }
 
     @Override
-    public FieldType<?> getValuesToCheck() {
+    public FieldType getValuesToCheck() {
 
         return values;
     }
 
     @Override
-    public DataColumnValue<ListType<FieldType<?>>, FieldType<?>> transform(UnaryOperator<FieldType<?>> transformation) {
-        final ListType<FieldType<?>> fieldType = Optional.ofNullable(values)
+    public DataColumnValue<ListType, FieldType> transform(Function<FieldType<?>, FieldType<?>> transformation) {
+        final ListType fieldType = Optional.ofNullable((FieldType<?>) values)
                 .map(transformation)
                 .filter(ListType.class::isInstance)
-                .map(t -> (ListType<FieldType<?>>) t)
+                .map(ListType.class::cast)
                 .orElse(values);
         return Optional.ofNullable(fieldType)
                 .map(ListType::getValue)
-                .map(v -> new DataColumnMultipleValue<U>(v))
-                .orElse(new DataColumnMultipleValue<>(List.of()));
+                .map(DataColumnMultipleValue::new)
+                .orElse(new DataColumnMultipleValue<>(ListType.EMPTY_LIST));
     }
 
     private U stringToValue(final String s) {
@@ -74,28 +74,30 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType<Fiel
 
     @Override
     public String toValueString(final AsynchroneFileImporterContext referenceImporterContext, final String referencedColumn, final String locale) {
-        return values.getValue().stream()
+        return (String) values.getValue().stream()
                 .map(s -> referenceImporterContext.getDisplayNamesByReferenceAndNaturalKey(referencedColumn, s.toString(), locale))
                 .collect(Collectors.joining(",", "[", "]"));
     }
 
     @Override
-    @SuppressWarnings("java:S1452")
-    public FieldType<?> toJsonForFrontend() {
+    public FieldType toJsonForFrontend() {
         return values.copy();
     }
 
     public String getCsvCellContent() {
-        List<String> cellValues = values.getValue().stream()
+        return (String) values.getValue().stream()
                 .map(Object::toString)
-                .toList();
-        for (String value : cellValues) {
-            if (value.contains(ManyValuesStaticColumn.CSV_CELL_SEPARATOR)) {
-                throw new IllegalStateException(
-                        String.format(ExceptionMessage.SEPARATOR_USING_IN_VALUE.toMessage(), value, ManyValuesStaticColumn.CSV_CELL_SEPARATOR)
-                );
-            }
-        }
-        return String.join(ManyValuesStaticColumn.CSV_CELL_SEPARATOR, cellValues);
+                .map(value -> {
+                            Preconditions.checkState(
+                                    !value.toString().contains(ManyValuesStaticColumn.CSV_CELL_SEPARATOR),
+                                    ExceptionMessage.SEPARATOR_USING_IN_VALUE.toMessage(),
+                                    value,
+                                    ManyValuesStaticColumn.CSV_CELL_SEPARATOR
+                            );
+                            return values;
+                        }
+                )
+                .collect(Collectors.joining(ManyValuesStaticColumn.CSV_CELL_SEPARATOR));
+
     }
 }

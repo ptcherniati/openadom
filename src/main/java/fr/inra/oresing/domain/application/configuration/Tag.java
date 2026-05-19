@@ -5,9 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.exceptions.application.SiOreConfigurationFormatException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
-import jakarta.annotation.Nullable;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import jakarta.annotation.Nullable;
 
 import java.util.*;
 import java.util.function.Function;
@@ -34,7 +34,7 @@ public sealed interface Tag {
     }
 
     static LinkedHashSet<Tag> buildTags(final Set<String> tagNames, final Validation validation) {
-        Objects.requireNonNull(validation, "validation must not be null");
+        assert validation != null;
         try {
             if (CollectionUtils.isEmpty(tagNames)) {
                 return new LinkedHashSet<>(Set.of(NoTag.instance()));

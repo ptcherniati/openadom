@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 @org.junit.jupiter.api.Tag("core.config")
-@org.junit.jupiter.api.Tag("domain.model")
 class TagTest {
 
     @Test

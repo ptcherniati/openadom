@@ -1,11 +1,21 @@
 package fr.inra.oresing.domain.checker.type;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import fr.inra.oresing.domain.checker.LineChecker;
+import fr.inra.oresing.domain.data.SomethingToBeSentToFrontend;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.PatternValidationCheckResult;
 
+
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -19,12 +29,17 @@ public non-sealed class PatternType<K, V> extends AbstractMapType<K, V> implemen
     }
 
     @Override
+    public Map<K, V> getValue() {
+        return super.getValue();
+    }
+
+    @Override
     public SqlPrimitiveType getSqlType() {
         return SqlPrimitiveType.JSONB;
     }
 
     @Override
-    public CheckerValidationCheckResult<PatternType<K, V>> check(final String value, final LineChecker<?> lineChecker) {
+    public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
         return null;
     }
 
@@ -44,8 +59,9 @@ public non-sealed class PatternType<K, V> extends AbstractMapType<K, V> implemen
     }
 
     @Override
-    public PatternType<K, V> copy() {
-        return clone.get();
+    public FieldType copy() {
+        final PatternType mapType = clone.get();
+        return mapType;
     }
 
     @Override
@@ -61,18 +77,14 @@ public non-sealed class PatternType<K, V> extends AbstractMapType<K, V> implemen
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public CheckerValidationCheckResult<PatternType<K, V>> postTreatment(CheckerValidationCheckResult<?> checkerValidationCheckResult) {
-        return (CheckerValidationCheckResult<PatternType<K, V>>) (Object) PatternValidationCheckResult.of(checkerValidationCheckResult, this);
+    public CheckerValidationCheckResult postTreatment(CheckerValidationCheckResult checkerValidationCheckResult) {
+        return PatternValidationCheckResult.of(checkerValidationCheckResult, this);
     }
 
     public FieldType<?> getColumnValue() {
-        final V columnVal = Optional.ofNullable(getValue())
+        return Optional.ofNullable(getValue())
                 .map(map -> map.get(Column.__VALUE__))
-                .orElse(null);
-        if (columnVal instanceof FieldType<?> ft) {
-            return ft;
-        }
-        return NullType.INSTANCE;
+                .map(FieldType.class::cast)
+                .orElse(NullType.INSTANCE);
     }
 }

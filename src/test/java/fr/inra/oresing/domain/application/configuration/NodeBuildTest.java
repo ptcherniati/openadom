@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * </ul>
  */
 @Tag("core.config")
-@Tag("domain.model")
 class NodeBuildTest {
 
     // -----------------------------------------------------------------------
@@ -55,6 +54,10 @@ class NodeBuildTest {
                 new TreeSet<>(), new TreeSet<>(Arrays.asList(deps)), order, false);
     }
 
+    private static Validation noopValidation() {
+        return new Validation(p -> {}, null, Map.of());
+    }
+
     // -----------------------------------------------------------------------
     // 1. Idempotence : deux appels identiques → résultats équivalents
     // -----------------------------------------------------------------------
@@ -67,8 +70,8 @@ class NodeBuildTest {
                 builderNodeWithDep("c", 3, "b")
         );
 
-        SortedSet<Node> result1 = Node.buildNode(inputs);
-        SortedSet<Node> result2 = Node.buildNode(inputs);
+        SortedSet<Node> result1 = Node.buildNode(inputs, noopValidation());
+        SortedSet<Node> result2 = Node.buildNode(inputs, noopValidation());
 
         assertEquals(snapshot(result1), snapshot(result2),
                 "Deux appels successifs à buildNode doivent produire des résultats structurellement équivalents");
@@ -86,7 +89,7 @@ class NodeBuildTest {
         Set<String> aDepsBeore = new HashSet<>(nodeA.depends());
         Set<String> bDepsBefore = new HashSet<>(nodeB.depends());
 
-        Node.buildNode(List.of(nodeA, nodeB));
+        Node.buildNode(List.of(nodeA, nodeB), noopValidation());
 
         assertEquals(aDepsBeore, nodeA.depends(),
                 "Les depends() du BuilderNode nodeA ne doivent pas être mutés par buildNode");
@@ -106,7 +109,7 @@ class NodeBuildTest {
                 builderNodeWithDep("child2", 3, "root")
         );
 
-        SortedSet<Node> result = Node.buildNode(inputs);
+        SortedSet<Node> result = Node.buildNode(inputs, noopValidation());
 
         Configuration conf = new Configuration(
                 new Version("1.0.0"), Set.of(), null, null,
@@ -133,8 +136,8 @@ class NodeBuildTest {
                 builderNodeWithDep("b", 2, "a")
         );
 
-        SortedSet<Node> result1 = Node.buildNode(inputs);
-        SortedSet<Node> result2 = Node.buildNode(inputs);
+        SortedSet<Node> result1 = Node.buildNode(inputs, noopValidation());
+        SortedSet<Node> result2 = Node.buildNode(inputs, noopValidation());
 
         Node aFrom1 = result1.stream()
                 .flatMap(n -> n.children().stream())
@@ -164,7 +167,7 @@ class NodeBuildTest {
         BuilderNode recursiveSite = new BuilderNode(0, "site", "parent_col", "parent_col",
                 null, new TreeSet<>(), new TreeSet<>(), 1, true);
 
-        SortedSet<Node> result = Node.buildNode(List.of(recursiveSite));
+        SortedSet<Node> result = Node.buildNode(List.of(recursiveSite), noopValidation());
 
         assertEquals(1, result.size());
         assertTrue(result.first().isRecursive(), "Le nœud doit être marqué isRecursive=true");
@@ -200,7 +203,7 @@ class NodeBuildTest {
                 new TreeSet<>(), new TreeSet<>(Set.of("root", "intermediate", "leaf2")), 5, false);
 
         SortedSet<Node> result = Node.buildNode(
-                List.of(root, intermediate, leaf1, leaf2, leaf3));
+                List.of(root, intermediate, leaf1, leaf2, leaf3), noopValidation());
 
         long rootCount = result.stream()
                 .filter(n -> "root".equals(n.nodeName()))
@@ -246,9 +249,8 @@ class NodeBuildTest {
                 new TreeSet<>(), new TreeSet<>(Set.of("ghost")), 2, false);
 
         // On ne passe que 'orphan', pas 'ghost' → le parent est introuvable
-        List<BuilderNode> nodes = List.of(orphan);
         assertThrows(IllegalArgumentException.class,
-                () -> Node.buildNode(nodes),
+                () -> Node.buildNode(List.of(orphan), noopValidation()),
                 "Un nœud dont le parent (champ BuilderNode.parent) est introuvable " +
                         "doit lever IllegalArgumentException");
     }

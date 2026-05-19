@@ -366,7 +366,6 @@ public class ConfigFieldRegistry {
      * @throws UnsupportedOperationException si le field est read-only
      * @throws IllegalArgumentException si valeur invalide / hors plage
      */
-    @SuppressWarnings("java:S1452")
     public ConfigField.Mutation<?> apply(String fieldName, Object value) {
         ConfigField<?> f = Optional.ofNullable(fields.get(fieldName))
                 .orElseThrow(() -> new java.util.NoSuchElementException(
@@ -374,7 +373,6 @@ public class ConfigFieldRegistry {
         return f.apply(value);
     }
 
-    @SuppressWarnings("java:S1452")
     public Optional<ConfigField<?>> find(String fieldName) {
         return Optional.ofNullable(fields.get(fieldName));
     }

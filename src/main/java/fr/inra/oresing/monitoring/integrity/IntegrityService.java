@@ -3,6 +3,7 @@ package fr.inra.oresing.monitoring.integrity;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.Schemas;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -10,7 +11,12 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.sql.ResultSet;
-import java.util.*;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Service "Intégrité" : compare les counts staging vs final pour
@@ -36,15 +42,6 @@ import java.util.*;
 @RequiredArgsConstructor
 @Slf4j
 public class IntegrityService {
-
-    private static final String COL_APPLICATION_NAME = "application_name";
-    private static final String COL_STATUS           = "status";
-    private static final String COL_METADATA         = "metadata";
-    private static final String STATUS_IN_PROGRESS   = "IN_PROGRESS";
-    private static final String STATUS_FAILED        = "FAILED";
-    private static final String STATUS_CANCELLED     = "CANCELLED";
-    private static final String SQL_REFVAL_WHERE_BINARYFILE = ".referencevalue WHERE binaryfile = ?";
-    private static final String SQL_WHERE_CORRELATION_ID    = " WHERE correlation_id = ?";
 
     private final JdbcTemplate jdbc;
     private final AuthenticationService authenticationService;
@@ -131,14 +128,14 @@ public class IntegrityService {
                     Map<String, Object> m = new HashMap<>();
                     m.put("correlationId",      rs.getObject("correlation_id"));
                     m.put("workflowType",       rs.getString("workflow_type"));
-                    m.put("applicationName",    rs.getString(COL_APPLICATION_NAME));
+                    m.put("applicationName",    rs.getString("application_name"));
                     m.put("dataType",           rs.getString("data_type"));
-                    m.put(COL_STATUS,           rs.getString(COL_STATUS));
+                    m.put("status",             rs.getString("status"));
                     m.put("recordsProcessed",   rs.getLong("records_processed"));
                     m.put("startTime",          rs.getTimestamp("start_time"));
                     m.put("endTime",            rs.getTimestamp("end_time"));
                     m.put("lastHeartbeatAt",    rs.getTimestamp("last_heartbeat_at"));
-                    m.put(COL_METADATA,         rs.getString(COL_METADATA));
+                    m.put("metadata",           rs.getString("metadata"));
                     long fc = rs.getLong("final_count");
                     m.put("finalCount",         rs.wasNull() ? null : fc);
                     return m;
@@ -149,7 +146,7 @@ public class IntegrityService {
         for (Map<String, Object> w : workflows) {
             UUID corrId = (UUID) w.get("correlationId");
             long expected = (long) w.get("recordsProcessed");
-            String status = (String) w.get(COL_STATUS);
+            String status = (String) w.get("status");
 
             long stagingCount = 0;
             try {
@@ -166,7 +163,7 @@ public class IntegrityService {
             //      lors du markCompleted ) -> 1 query mise en cache
             //   4. final = -1 si encore impossible -> UI affiche N/A
             String appName = (String) w.get("applicationName");
-            UUID binaryFileId = extractBinaryFileId((String) w.get(COL_METADATA));
+            UUID binaryFileId = extractBinaryFileId((String) w.get("metadata"));
             long finalCount = -1L;
             Long persistedFinalCount = (Long) w.get("finalCount");
             if (persistedFinalCount != null) {
@@ -197,12 +194,11 @@ public class IntegrityService {
             // bascule en CANCELLED .
             java.sql.Timestamp lastHeartbeat = (java.sql.Timestamp) w.get("lastHeartbeatAt");
             java.sql.Timestamp startTs       = (java.sql.Timestamp) w.get("startTime");
-            java.time.Instant startFallback = startTs != null ? startTs.toInstant() : java.time.Instant.now();
             java.time.Instant referenceInstant = lastHeartbeat != null
                     ? lastHeartbeat.toInstant()
-                    : startFallback;
-            boolean stuck = STATUS_IN_PROGRESS.equals(status)
-                    && referenceInstant.isBefore(java.time.Instant.now().minusSeconds(5L * 60));
+                    : (startTs != null ? startTs.toInstant() : java.time.Instant.now());
+            boolean stuck = "IN_PROGRESS".equals(status)
+                    && referenceInstant.isBefore(java.time.Instant.now().minusSeconds(5 * 60));
 
             if (finalCount < 0) {
                 // metadata.binaryFileId absent -> impossible de calculer
@@ -214,10 +210,10 @@ public class IntegrityService {
                 delta = 0;
                 if (stuck) {
                     integrityStatus = "STUCK";
-                } else if ((STATUS_FAILED.equals(status) || STATUS_CANCELLED.equals(status))
+                } else if (("FAILED".equals(status) || "CANCELLED".equals(status))
                         && stagingCount == 0) {
                     integrityStatus = "REDEPOT_REQUIRED";
-                } else if ((STATUS_FAILED.equals(status) || STATUS_CANCELLED.equals(status))
+                } else if (("FAILED".equals(status) || "CANCELLED".equals(status))
                         && stagingCount > 0) {
                     integrityStatus = "RECOVERABLE";
                 } else {
@@ -259,7 +255,7 @@ public class IntegrityService {
      * Le {@code appSchema} est valide en amont par {@link #SAFE_IDENT} .
      */
     private long countReferencevalueByBinaryFile(String appSchema, UUID binaryFileId) {
-        String sql = "SELECT COUNT(*) FROM \"" + appSchema + "\"" + SQL_REFVAL_WHERE_BINARYFILE;
+        String sql = "SELECT COUNT(*) FROM \"" + appSchema + "\".referencevalue WHERE binaryfile = ?";
         Long count = jdbc.queryForObject(sql, Long.class, binaryFileId);
         return count != null ? count : 0L;
     }
@@ -313,20 +309,32 @@ public class IntegrityService {
     private String computeStatus(String workflowStatus, long stagingCount, long delta, long finalCount) {
         if (delta > 0) return "DATA_LOSS";
         if (delta < 0 && finalCount > 0) {
+            // finale > attendu : ne pas afficher COHERENT a tort .
+            // Le cas le plus courant aujourd'hui est un partage de
+            // binaryFileId entre plusieurs workflows ( re-depot du meme
+            // fichier ) . On expose OVERCOUNT pour declencher la
+            // verification manuelle sans crier DATA_LOSS .
             return "OVERCOUNT";
         }
         if (stagingCount > 0) {
-            if (STATUS_IN_PROGRESS.equals(workflowStatus)) return STATUS_IN_PROGRESS;
-            if (STATUS_FAILED.equals(workflowStatus) || STATUS_CANCELLED.equals(workflowStatus)) {
+            if ("IN_PROGRESS".equals(workflowStatus)) return "IN_PROGRESS";
+            // Workflow termine en echec MAIS staging non vide -&gt; data
+            // potentiellement recuperable via Reprocess UPSERT-only .
+            if ("FAILED".equals(workflowStatus) || "CANCELLED".equals(workflowStatus)) {
                 return "RECOVERABLE";
             }
             return "INCONSISTENT";
         }
         // staging vide
-        if (STATUS_FAILED.equals(workflowStatus) || STATUS_CANCELLED.equals(workflowStatus)) {
+        if ("FAILED".equals(workflowStatus) || "CANCELLED".equals(workflowStatus)) {
+            // Pas de rows en staging et pas de rows finales : aucune
+            // donnee deposee . L'utilisateur doit redeposer .
             if (finalCount <= 0) {
                 return "REDEPOT_REQUIRED";
             }
+            // Workflow FAILED mais des rows finales existent : cas
+            // ambigu ( retry partiel ou finalize a moitie commit + crash ) .
+            // On signale INCONSISTENT pour declencher l'investigation .
             return "INCONSISTENT";
         }
         return "COHERENT";
@@ -385,14 +393,14 @@ public class IntegrityService {
         } catch (org.springframework.dao.EmptyResultDataAccessException e) {
             return DeletePreview.notFound(correlationId);
         }
-        String appName       = (String) meta.get(COL_APPLICATION_NAME);
+        String appName       = (String) meta.get("application_name");
         String dataType      = (String) meta.get("data_type");
-        String status        = (String) meta.get(COL_STATUS);
+        String status        = (String) meta.get("status");
         String resourceName  = (String) meta.get("resource_name");
         java.sql.Timestamp startTs = (java.sql.Timestamp) meta.get("start_time");
         java.time.Instant startTime = startTs != null ? startTs.toInstant() : null;
         long recordsProcessed = ((Number) meta.getOrDefault("records_processed", 0L)).longValue();
-        UUID binaryFileId    = extractBinaryFileId((String) meta.get(COL_METADATA));
+        UUID binaryFileId    = extractBinaryFileId((String) meta.get("metadata"));
         String binaryFileName = null;
 
         // 2) Resolution du nom du binaryfile ( si binaryFileId connu )
@@ -413,7 +421,7 @@ public class IntegrityService {
         long referenceReferenceCount = 0L;
         if (appName != null && SAFE_IDENT.matcher(appName).matches() && binaryFileId != null) {
             referenceValueCount = countOrZero(
-                    "SELECT count(*) FROM \"" + appName + "\"" + SQL_REFVAL_WHERE_BINARYFILE,
+                    "SELECT count(*) FROM \"" + appName + "\".referencevalue WHERE binaryfile = ?",
                     binaryFileId);
             referenceReferenceCount = countOrZero(
                     "SELECT count(*) FROM \"" + appName + "\".reference_reference rr "
@@ -425,8 +433,8 @@ public class IntegrityService {
         long stagingCount = 0L;
         try {
             stagingCount = countOrZero(
-                    "SELECT count(*) FROM oa_staging.referencevalue_import_shared"
-                            + SQL_WHERE_CORRELATION_ID,
+                    "SELECT count(*) FROM oa_staging.referencevalue_import_shared "
+                            + " WHERE correlation_id = ?",
                     correlationId);
         } catch (org.springframework.dao.DataAccessException ex) {
             log.debug("deletePreview : staging count ignored : {}", ex.getMessage());
@@ -495,8 +503,8 @@ public class IntegrityService {
         // 1) Lecture metadata du workflow_log : besoin de application_name
         // ( pour resoudre le schema ) et de binaryFileId ( pour cibler les
         // referencevalue rows ) .
-        String metaSql = "SELECT " + COL_APPLICATION_NAME + ", metadata FROM oa_audit.workflow_log "
-                + SQL_WHERE_CORRELATION_ID;
+        String metaSql = "SELECT application_name, metadata FROM oa_audit.workflow_log "
+                + " WHERE correlation_id = ?";
         Map<String, Object> meta;
         try {
             meta = jdbc.queryForMap(metaSql, correlationId);
@@ -504,15 +512,15 @@ public class IntegrityService {
             return new DeleteResult(false, 0, 0, 0, 0, 0,
                     "Workflow inconnu : aucun row workflow_log pour " + correlationId);
         }
-        String appName = (String) meta.get(COL_APPLICATION_NAME);
-        UUID binaryFileId = extractBinaryFileId((String) meta.get(COL_METADATA));
+        String appName = (String) meta.get("application_name");
+        UUID binaryFileId = extractBinaryFileId((String) meta.get("metadata"));
 
         // 2) Suppression staging rows ( oa_staging schema partage ) .
         long stagingDeleted = 0L;
         try {
             stagingDeleted = jdbc.update(
-                    "DELETE FROM oa_staging.referencevalue_import_shared"
-                            + SQL_WHERE_CORRELATION_ID,
+                    "DELETE FROM oa_staging.referencevalue_import_shared "
+                            + " WHERE correlation_id = ?",
                     correlationId);
         } catch (org.springframework.dao.DataAccessException ex) {
             log.warn("deleteWorkflow : staging cleanup ignored ( table absente ou autre ) : {}",
@@ -523,7 +531,7 @@ public class IntegrityService {
         long referenceValueDeleted = 0L;
         if (appName != null && SAFE_IDENT.matcher(appName).matches() && binaryFileId != null) {
             referenceValueDeleted = jdbc.update(
-                    "DELETE FROM \"" + appName + "\"" + SQL_REFVAL_WHERE_BINARYFILE,
+                    "DELETE FROM \"" + appName + "\".referencevalue WHERE binaryfile = ?",
                     binaryFileId);
         }
 
@@ -617,5 +625,10 @@ public class IntegrityService {
             return new DeletePreview(false, cid, null, null, null, null, null,
                     0L, null, null, 0L, 0L, 0L, 0L, 0L);
         }
+    }
+
+    @SuppressWarnings("unused") private void __unusedRefs() {
+        // keep import Schemas used somewhere
+        String s = Schemas.AUDIT;
     }
 }

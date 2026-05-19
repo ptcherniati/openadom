@@ -2,8 +2,11 @@ package fr.inra.oresing.domain.data.deposit.context;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
-import fr.inra.oresing.domain.Mapper;
-import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.application.configuration.ComponentDescription;
+import fr.inra.oresing.domain.application.configuration.HierarchicalNode;
+import fr.inra.oresing.domain.application.configuration.Ltree;
+import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
+import fr.inra.oresing.domain.application.configuration.Tag;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
 import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
@@ -11,7 +14,6 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.*;
-import fr.inra.oresing.domain.data.deposit.BuildColumns;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.data.deposit.context.hierarchicalkey.HierarchicalKeyFactory;
@@ -21,9 +23,11 @@ import fr.inra.oresing.domain.data.deposit.validation.transformer.data.RowWithRe
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
 import fr.inra.oresing.domain.data.read.DataHeaderReader;
-import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.repository.data.DataRepository;
+import fr.inra.oresing.domain.Mapper;
+import fr.inra.oresing.domain.data.deposit.BuildColumns;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
@@ -35,8 +39,8 @@ import java.util.stream.Collectors;
 public record AsynchroneFileImporterContext(
         ContextConstants contextConstants,
         PublishContext.PublishContextBuilder publishContextBuilder,
-        ImmutableSet<LineChecker<?>> lineCheckers,
-        Set<LineChecker<?>> transformedLineCheckers,
+        ImmutableSet<LineChecker<? extends FieldType<?>>> lineCheckers,
+        Set<LineChecker<? extends FieldType<?>>> transformedLineCheckers,
         Mapper jsonRowMapper,
         ConcurrentHashMap<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids,
         ConcurrentHashMap<Ltree, List<RowWithReferenceDatum>> missingParentLine,
@@ -100,7 +104,7 @@ public record AsynchroneFileImporterContext(
     public static AsynchroneFileImporterContext of(
             ContextConstants constants,
             PublishContext.PublishContextBuilder publishContextBuilder,
-            ImmutableSet<LineChecker<?>> lineCheckers,
+            ImmutableSet<LineChecker<? extends FieldType<?>>> lineCheckers,
             Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey,
             Mapper jsonRowMapper,
             DataRepository referenceValueRepository) {
@@ -246,7 +250,7 @@ public record AsynchroneFileImporterContext(
         // En cas de collisions ( meme HK + pattern , peu probable mais
         // possible historiquement ) on garde la PREMIERE occurrence ,
         // identique au .findFirst() de l'ancien stream.
-        Map<HkPatternKey, UUID> hkIndexTmp = HashMap.newHashMap(storedReferences.size());
+        Map<HkPatternKey, UUID> hkIndexTmp = new HashMap<>(storedReferences.size() * 2);
         for (Map.Entry<DataValue.LineIdentityColumnName, UUID> entry : storedReferences.entrySet()) {
             DataValue.LineIdentityColumnName k = entry.getKey();
             hkIndexTmp.putIfAbsent(
@@ -436,7 +440,8 @@ public record AsynchroneFileImporterContext(
         );
     }
 
-    public boolean existsColumn(final DataColumn column, Map<DataColumn, DataColumnValue<?, ?>> constantColumnsValues) {
+    @SuppressWarnings("java:S3740")
+    public boolean existsColumn(final DataColumn column, Map<DataColumn, DataColumnValue> constantColumnsValues) {
         return columnsWithPatternColumns().stream()
                        .map(registeredColumn -> registeredColumn.as(column.column()))
                        .anyMatch(Objects::nonNull) ||

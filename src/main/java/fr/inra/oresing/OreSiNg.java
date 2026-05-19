@@ -21,7 +21,9 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.info.GitProperties;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.context.support.ResourceBundleMessageSource;
@@ -34,12 +36,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.resource.PathResourceResolver;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
@@ -98,6 +103,16 @@ public class OreSiNg implements WebMvcConfigurer {
         log.info("=== Adding JsonRequestParamArgumentResolver ===");
         resolvers.addFirst(jsonRequestParamArgumentResolver);
         log.info("=== Total resolvers: " + resolvers.size() + " ===");
+    }
+    @Override
+    public void addResourceHandlers(final ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
+        registry
+                .addResourceHandler("/static/**")
+                .addResourceLocations("file://" + new File(".").getAbsolutePath() + "/src/main/resources/web/", "classpath:/web/")
+                .setCachePeriod(0)
+                .resourceChain(false)
+                .addResolver(new PathResourceResolver());
     }
 
     @Override
@@ -159,21 +174,16 @@ public class OreSiNg implements WebMvcConfigurer {
 
         private Object buildGitInfo() {
                 org.springframework.boot.actuate.info.Info.Builder infoBuilder = new org.springframework.boot.actuate.info.Info.Builder();
-            infoBuilder.withDetail("branch", getPropertyOrEmpty("git.branch"));
-            infoBuilder.withDetail("commit.id", getPropertyOrEmpty("git.commit.id"));
-            infoBuilder.withDetail("commit.abbrev", getPropertyOrEmpty("git.commit.id.abbrev"));
-            infoBuilder.withDetail("time", getPropertyOrEmpty("git.commit.time"));
-            infoBuilder.withDetail("remote.origin.url", getPropertyOrEmpty("git.remote.origin.url"));
-            infoBuilder.withDetail("commit.user.name", getPropertyOrEmpty("git.commit.user.name"));
-            infoBuilder.withDetail("commit.user.email", getPropertyOrEmpty("git.commit.user.email"));
-            infoBuilder.withDetail("commit.message.short", getPropertyOrEmpty("git.commit.message.short"));
-            infoBuilder.withDetail("commit.message.full", getPropertyOrEmpty("git.commit.message.full"));
+            infoBuilder.withDetail("branch", Optional.ofNullable(gitProperties.get("git.branch")).orElse(""));
+            infoBuilder.withDetail("commit.id", Optional.ofNullable(gitProperties.get("git.commit.id")).orElse(""));
+            infoBuilder.withDetail("commit.abbrev", Optional.ofNullable(gitProperties.get("git.commit.id.abbrev")).orElse(""));
+            infoBuilder.withDetail("time", Optional.ofNullable(gitProperties.get("git.commit.time")).orElse(""));
+            infoBuilder.withDetail("remote.origin.url", Optional.ofNullable(gitProperties.get("git.remote.origin.url")).orElse(""));
+            infoBuilder.withDetail("commit.user.name", Optional.ofNullable(gitProperties.get("git.commit.user.name")).orElse(""));
+            infoBuilder.withDetail("commit.user.email", Optional.ofNullable(gitProperties.get("git.commit.user.email")).orElse(""));
+            infoBuilder.withDetail("commit.message.short", Optional.ofNullable(gitProperties.get("git.commit.message.short")).orElse(""));
+            infoBuilder.withDetail("commit.message.full", Optional.ofNullable(gitProperties.get("git.commit.message.full")).orElse(""));
             return infoBuilder.build();
-        }
-
-        private String getPropertyOrEmpty(String key) {
-            String val = gitProperties.get(key);
-            return val != null ? val : "";
         }
     }
 

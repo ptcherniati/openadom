@@ -4,12 +4,9 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
-import fr.inra.oresing.domain.BinaryFileInfos;
 import fr.inra.oresing.domain.ReferencedBinaryFiles;
 import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
-import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFileResult;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.authorization.AuthorizationParsed;
 import fr.inra.oresing.domain.data.DataFile;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.DefaultValidationCheckResult;
@@ -19,10 +16,13 @@ import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
 import fr.inra.oresing.cache.MemoryCache;
 import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.domain.BinaryFileInfos;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
-import fr.inra.oresing.rest.services.DefaultAuthorizationService;
+import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFileResult;
+import fr.inra.oresing.domain.authorization.AuthorizationParsed;
+import fr.inra.oresing.rest.services.AuthorizationService;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -248,7 +248,7 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     public AdditionalBinaryFileResult getAdditionalBinaryFileResult(AdditionalBinaryFile additionalBinaryFile) {
 
         Map<String, List<AuthorizationParsed>> authorizationsParsed = new HashMap<>();
-        DefaultAuthorizationService.authorizationsToParsedAuthorizations(
+        AuthorizationService.authorizationsToParsedAuthorizations(
                 additionalBinaryFile.getAssociates(),
                 authorizationsParsed);
         return new AdditionalBinaryFileResult(additionalBinaryFile, authorizationsParsed);

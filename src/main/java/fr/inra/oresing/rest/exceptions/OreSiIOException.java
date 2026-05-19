@@ -9,10 +9,6 @@ public class OreSiIOException extends OreSiTechnicalException {
         super(message);
     }
 
-    public OreSiIOException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
     public static OreSiIOException ORE_SI_IOEXCEPTION_CANT_LOAD_FILE() {
         return new OreSiIOException(CANT_LOAD_FILE);
     }

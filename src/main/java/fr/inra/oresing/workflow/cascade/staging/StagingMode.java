@@ -47,13 +47,6 @@ public sealed interface StagingMode
     /** SQL DROP a executer apres cascade succes ( null si rien a faire ) . */
     String dropTableSql();
 
-    /**
-     * Parametre UUID a lier en position 1 du PreparedStatement pour
-     * {@link #createTableSql()} / {@link #dropTableSql()} .
-     * Retourne null si le SQL ne comporte pas de placeholder ( ? ) .
-     */
-    UUID tableDdlParam();
-
     /** Nom de la table staging effective ( utile pour SELECT count cote sweeper / dashboard ) . */
     String tableName();
 
@@ -103,7 +96,6 @@ public sealed interface StagingMode
         @Override public String correlationIdFilter(UUID correlationId)      { return null; }
         @Override public String createTableSql()                             { return null; }
         @Override public String dropTableSql()                               { return null; }
-        @Override public UUID tableDdlParam()                                { return null; }
         @Override public String tableName()                                  { return "referencevalue_import"; }
     }
 
@@ -118,7 +110,6 @@ public sealed interface StagingMode
         @Override public String correlationIdFilter(UUID correlationId)      { return correlationId == null ? null : correlationId.toString(); }
         @Override public String createTableSql()                             { return null; }
         @Override public String dropTableSql()                               { return null; }
-        @Override public UUID tableDdlParam()                                { return null; }
         @Override public String tableName()                                  { return sharedTableName; }
     }
 
@@ -146,16 +137,13 @@ public sealed interface StagingMode
             // et grant SELECT/INSERT/DELETE TO PUBLIC pour que le COPY
             // de l'app ( role per-app ) y accede . Evite GRANT CREATE TO
             // PUBLIC sur le schema , bien plus permissif .
-            // The ? placeholder is bound to the correlationId UUID by the caller
-            // via PreparedStatement to avoid dynamic SQL formatting.
-            return "SELECT oa_staging.create_per_workflow_referencevalue_import(?)";
+            return "SELECT oa_staging.create_per_workflow_referencevalue_import('"
+                    + correlationId + "')";
         }
         @Override public String dropTableSql()                               {
-            // The ? placeholder is bound to the correlationId UUID by the caller
-            // via PreparedStatement to avoid dynamic SQL formatting.
-            return "SELECT oa_staging.drop_per_workflow_referencevalue_import(?)";
+            return "SELECT oa_staging.drop_per_workflow_referencevalue_import('"
+                    + correlationId + "')";
         }
-        @Override public UUID tableDdlParam()                                { return correlationId; }
         @Override public String tableName()                                  { return perWorkflowTableName(correlationId); }
     }
 }

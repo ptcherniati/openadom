@@ -10,7 +10,7 @@ import java.util.Map;
 
 public abstract class OneValueStaticColumn extends Column {
 
-    protected OneValueStaticColumn(final DataColumn referenceColumn, final ComponentPresenceConstraint presenceConstraint, final ComputedValueUsage computedValueUsage, TransformationConfiguration defaultValue) {
+    public OneValueStaticColumn(final DataColumn referenceColumn, final String headerForColumn, final ComponentPresenceConstraint presenceConstraint, final ComputedValueUsage computedValueUsage, TransformationConfiguration defaultValue) {
         super(referenceColumn, presenceConstraint, computedValueUsage, defaultValue);
     }
 

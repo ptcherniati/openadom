@@ -13,9 +13,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -29,7 +34,6 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 @Tag("core.config")
-@Tag("domain.model")
 @DisplayName("ConfigEditService — tests unitaires")
 class ConfigEditServiceTest {
 
@@ -39,7 +43,8 @@ class ConfigEditServiceTest {
     private ConfigFieldRegistry  registry;
     private ConfigChangeAudit    audit;
     private ConfigEditService    service;
-    
+    private ThreadPoolExecutor   tpe;
+
     @BeforeEach
     void setUp() {
         props = new ImportProperties();
@@ -149,8 +154,8 @@ class ConfigEditServiceTest {
     @DisplayName("applyPatch() lève AccessDeniedException pour non-admin")
     void patchDeniedForNonAdmin() {
         asRegularUser();
-        Map<String, Object> patch = Map.of("chunkSizeLines", 2000);
-        assertThrows(AccessDeniedException.class, () -> service.applyPatch(patch));
+        assertThrows(AccessDeniedException.class,
+                () -> service.applyPatch(Map.of("chunkSizeLines", 2000)));
     }
 
     // ─── applyPatch — rejets ──────────────────────────────────────────────
@@ -159,16 +164,16 @@ class ConfigEditServiceTest {
     @DisplayName("applyPatch() avec champ inconnu lève NoSuchElementException")
     void patchUnknownFieldThrows() {
         asAdmin();
-        Map<String, Object> patch = Map.of("nonExistentField", 42);
-        assertThrows(java.util.NoSuchElementException.class, () -> service.applyPatch(patch));
+        assertThrows(java.util.NoSuchElementException.class,
+                () -> service.applyPatch(Map.of("nonExistentField", 42)));
     }
 
     @Test
     @DisplayName("applyPatch() sur champ read-only lève UnsupportedOperationException")
     void patchReadOnlyFieldThrows() {
         asAdmin();
-        Map<String, Object> patch = Map.of("virtualThreads", true);
-        assertThrows(UnsupportedOperationException.class, () -> service.applyPatch(patch));
+        assertThrows(UnsupportedOperationException.class,
+                () -> service.applyPatch(Map.of("virtualThreads", true)));
     }
 
     @Test
@@ -185,8 +190,9 @@ class ConfigEditServiceTest {
         };
         ConfigEditService blockedService = new ConfigEditService(
                 registry, audit, authenticationService, List.of(alwaysBlocking));
-        Map<String, Object> patch = Map.of("chunkSizeLines", 2000);
-        assertThrows(IllegalArgumentException.class, () -> blockedService.applyPatch(patch));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> blockedService.applyPatch(Map.of("chunkSizeLines", 2000)));
     }
 
     // ─── schema() ────────────────────────────────────────────────────────────

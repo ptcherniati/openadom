@@ -5,7 +5,11 @@ import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.workflow.cascade.cleanup.WorkflowTempCleanup;
 import fr.inra.oresing.workflow.cascade.config.ImportProperties;
-import fr.inra.oresing.workflow.cascade.history.*;
+import fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry;
+import fr.inra.oresing.workflow.cascade.history.WorkflowLogEntry;
+import fr.inra.oresing.workflow.cascade.history.WorkflowLogWriter;
+import fr.inra.oresing.workflow.cascade.history.WorkflowMetadataCollector;
+import fr.inra.oresing.workflow.cascade.history.WorkflowSnapshot;
 import fr.inra.oresing.workflow.cascade.metrics.OpenadomMetrics;
 import fr.inra.oresing.workflow.cascade.progress.ImportProgressReporter;
 import fr.inrae.ore.cascade.api.workflow.builder.WorkflowBuilder;
@@ -497,12 +501,8 @@ public class CascadeImportPipeline {
                     : null;
             if (stagingMode != null && stagingMode.createTableSql() != null) {
                 try (java.sql.Connection c = referenceValueRepository.getDataSource().getConnection();
-                     java.sql.PreparedStatement ps = c.prepareStatement(stagingMode.createTableSql())) {
-                    java.util.UUID ddlParam = stagingMode.tableDdlParam();
-                    if (ddlParam != null) {
-                        ps.setObject(1, ddlParam);
-                    }
-                    ps.execute();
+                     java.sql.Statement st = c.createStatement()) {
+                    st.execute(stagingMode.createTableSql());
                     log.info("[{}] PER_WORKFLOW_TABLE : table dediee {} creee",
                             correlationId, stagingMode.tableName());
                 } catch (java.sql.SQLException e) {
@@ -528,7 +528,7 @@ public class CascadeImportPipeline {
                 String compSchema = parts.length == 2 ? parts[0] : "oa_staging";
                 String compTable  = parts.length == 2 ? parts[1] : fullTableName;
                 try {
-                    java.util.UUID compId = compensationLogService.logPending(
+                    java.util.UUID compId = compensationLogService.record(
                             fr.inra.oresing.monitoring.compensation.handlers.StagingCleanupHandler.OP_TYPE,
                             compSchema,
                             compTable,
@@ -551,6 +551,26 @@ public class CascadeImportPipeline {
                 }
             }
 
+            // Sink + ( optionnel ) Collector selon strategy :
+            //   DIRECT_COPY : 1 sink chunk-par-chunk vers staging DB ;
+            //                 pas de collector .
+            //   MERGE_FILE  : Collector qui accumule les chunk paths et les
+            //                 concatene en merged.csv a finish() , puis Sink
+            //                 qui prend ce 1 chunk merge et fait 1 COPY DB
+            //                 massif via storeAll . UI cascade reflete
+            //                 fidelement le travail reel ( cf rationale dans
+            //                 javadoc MergedFileChunkCollector ) .
+            // Cascade 3.0.0 : si on tourne dans une tx Spring outer ( cas
+            // openADOM standard via @Transactional sur le controller ) , on
+            // passe le sink en DEFERRED_TO_CALLER pour que le UPSERT
+            // staging -> table finale soit execute apres la commit Spring
+            // sur la connexion du caller ( evite le deadlock sink-thread vs
+            // caller-thread sur les row-locks de la table finale ) . Hors
+            // tx Spring ( tests directs , scripts ) on conserve
+            // SYNCHRONOUS = comportement cascade 2.x .
+            // S applique aux deux strategies : DIRECT_COPY ( deferred via
+            // FinalizeMode.DEFERRED_TO_CALLER cascade 3.0.0 ) ET MERGE_FILE
+            // ( deferred via StoreAllPathSink.deferToCaller phase B ) .
             final boolean outerTxActive = org.springframework.transaction.support.TransactionSynchronizationManager
                     .isActualTransactionActive();
             final fr.inrae.ore.cascade.api.defaults.db.staging.FinalizeMode finalizeMode = (directCopy && outerTxActive)
@@ -759,11 +779,10 @@ public class CascadeImportPipeline {
                     log.info("[{}] Workflow cascade cancelled : processed={} chunks={} reason={}",
                             correlationId, result.recordsProcessed(),
                             result.chunksProcessed(), cancelMessage);
-                    metrics.recordImportCompleted(
-                            new fr.inra.oresing.workflow.cascade.metrics.OpenadomMetrics.ImportMetricsData(
-                                    applicationName, dataType, WorkflowLogEntry.STATUS_CANCELLED,
-                                    cancDuration, result.recordsProcessed(), result.recordsFailed(),
-                                    result.chunksProcessed(), fileSizeBytes));
+                    metrics.recordImportCompleted(applicationName, dataType,
+                            WorkflowLogEntry.STATUS_CANCELLED,
+                            cancDuration, result.recordsProcessed(), result.recordsFailed(),
+                            result.chunksProcessed(), fileSizeBytes);
                     logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
                             startedAt, cancDuration, WorkflowLogEntry.STATUS_CANCELLED,
                             result.recordsProcessed(), result.recordsFailed(),
@@ -792,12 +811,9 @@ public class CascadeImportPipeline {
                     log.error("[{}] Workflow cascade en echec ( stage={} ) : {}",
                             correlationId, failedStage, firstError);
                     Duration failDuration = Duration.between(startedAt, Instant.now());
-                    metrics.recordImportFailed(
-                            new fr.inra.oresing.workflow.cascade.metrics.OpenadomMetrics.ImportMetricsData(
-                                    applicationName, dataType, "FAILED",
-                                    failDuration, result.recordsProcessed(), result.recordsFailed(),
-                                    result.chunksProcessed(), fileSizeBytes),
-                            failedStage);
+                    metrics.recordImportFailed(applicationName, dataType, failedStage,
+                            failDuration, result.recordsProcessed(), result.recordsFailed(),
+                            result.chunksProcessed(), fileSizeBytes);
                     logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
                             startedAt, failDuration, WorkflowLogEntry.STATUS_FAILED,
                             result.recordsProcessed(), result.recordsFailed(),
@@ -830,6 +846,9 @@ public class CascadeImportPipeline {
                 final String finalAppSchema = referenceValueRepository.getSchemaName();
                 final java.util.UUID finalBinaryFileId = sourceBinaryFileId;
                 final Runnable markCompleted = () -> {
+                    // Stop heartbeat AVANT l UPDATE final pour eviter qu un
+                    // beat tardif ( race condition entre cancel et tick )
+                    // ne reouvre la row en IN_PROGRESS apres notre flip .
                     closeHeartbeatQuietly(pipelineHeartbeat);
                     if (corrUuid != null) {
                         activeRegistry.markFinalizeFinished(corrUuid, Instant.now());
@@ -837,17 +856,21 @@ public class CascadeImportPipeline {
                     long effective = effectiveRecordsProcessed(finalResult, finalSink);
                     Duration dur   = Duration.between(startedAt, Instant.now());
 
+                    // AUDIT 06-05-26 #1 : COUNT(*) authoritatif post-afterCommit .
+                    // Reajuste le registry AVANT finish pour que le dernier poll
+                    // WorkflowFinalizeBadge voie la valeur exacte . Persiste
+                    // dans workflow_log.final_count pour que les polls
+                    // ulterieurs ( IntegrityView , dashboard ) lisent la
+                    // colonne au lieu de refaire COUNT(*) systematiquement .
                     Long authoritativeCount = countReferencevaluePostCommit(
                             referenceValueRepository, finalAppSchema, finalBinaryFileId, correlationId);
                     if (authoritativeCount != null && corrUuid != null) {
                         activeRegistry.setFinalRowsAuthoritative(corrUuid, authoritativeCount);
                     }
 
-                    metrics.recordImportCompleted(
-                            new fr.inra.oresing.workflow.cascade.metrics.OpenadomMetrics.ImportMetricsData(
-                                    applicationName, dataType, WorkflowLogEntry.STATUS_COMPLETED,
-                                    dur, effective, finalResult.recordsFailed(),
-                                    finalResult.chunksProcessed(), finalFileSize));
+                    metrics.recordImportCompleted(applicationName, dataType, WorkflowLogEntry.STATUS_COMPLETED,
+                            dur, effective, finalResult.recordsFailed(),
+                            finalResult.chunksProcessed(), finalFileSize);
                     logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
                             startedAt, dur, WorkflowLogEntry.STATUS_COMPLETED,
                             effective, finalResult.recordsFailed(),
@@ -856,12 +879,8 @@ public class CascadeImportPipeline {
                     // PER_WORKFLOW_TABLE : DROP table dediee post-succes .
                     if (finalStagingMode != null && finalStagingMode.dropTableSql() != null) {
                         try (java.sql.Connection c = referenceValueRepository.getDataSource().getConnection();
-                             java.sql.PreparedStatement ps = c.prepareStatement(finalStagingMode.dropTableSql())) {
-                            java.util.UUID ddlParam = finalStagingMode.tableDdlParam();
-                            if (ddlParam != null) {
-                                ps.setObject(1, ddlParam);
-                            }
-                            ps.execute();
+                             java.sql.Statement st = c.createStatement()) {
+                            st.execute(finalStagingMode.dropTableSql());
                             log.info("[{}] PER_WORKFLOW_TABLE : table {} droppee apres succes",
                                     correlationId, finalStagingMode.tableName());
                         } catch (java.sql.SQLException dropErr) {
@@ -895,12 +914,9 @@ public class CascadeImportPipeline {
                     }
                     Duration dur = Duration.between(startedAt, Instant.now());
                     String   stage = extractFailedStage(err);
-                    metrics.recordImportFailed(
-                            new fr.inra.oresing.workflow.cascade.metrics.OpenadomMetrics.ImportMetricsData(
-                                    applicationName, dataType, "FAILED",
-                                    dur, finalResult.recordsProcessed(), finalResult.recordsFailed(),
-                                    finalResult.chunksProcessed(), finalFileSize),
-                            stage);
+                    metrics.recordImportFailed(applicationName, dataType, stage, dur,
+                            finalResult.recordsProcessed(), finalResult.recordsFailed(),
+                            finalResult.chunksProcessed(), finalFileSize);
                     logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
                             startedAt, dur, WorkflowLogEntry.STATUS_FAILED,
                             finalResult.recordsProcessed(), finalResult.recordsFailed(),
@@ -924,6 +940,13 @@ public class CascadeImportPipeline {
                 };
 
                 // ---- Cascade 3.0.0 DEFERRED_TO_CALLER ( DIRECT_COPY ) ou
+                //      StoreAllPathSink.deferToCaller ( MERGE_FILE ) : le
+                //      sink a capture la finalize SQL ( ou le path
+                //      merged.csv ) au lieu de l executer inline . On
+                //      accroche un runner sur la tx Spring : afterCommit
+                //      execute le UPSERT puis markCompleted ; afterCommit
+                //      en erreur appelle markPostCommitFailure ;
+                //      afterCompletion(rolledBack) appelle markTxRolledBack . ----
                 boolean deferredMergeFile = false;
                 if (outerTxActive && directCopy) {
                     java.util.Optional<fr.inrae.ore.cascade.api.defaults.db.staging.DeferredFinalize> deferred =
@@ -942,10 +965,8 @@ public class CascadeImportPipeline {
                         org.springframework.transaction.support.TransactionSynchronizationManager
                                 .registerSynchronization(new MergeFileDeferredRunner(
                                         referenceValueRepository, tempCleanup, mergeFileSink,
-                                        new MergeFileDeferredRunner.WorkflowContext(
-                                                mergedDeferred.get(), finalProcessedDir, corrUuid, activeRegistry),
-                                        new MergeFileDeferredRunner.Callbacks(
-                                                markCompleted, markPostCommitFailure, markTxRolledBack)));
+                                        mergedDeferred.get(), finalProcessedDir, corrUuid, activeRegistry,
+                                        markCompleted, markPostCommitFailure, markTxRolledBack));
                         runnerWillFinalize.set(true);
                         deferredMergeFile = true;
                         log.info("[{}] MERGE_FILE deferred storeAll bind sur la Spring tx courante ( afterCommit )",
@@ -1374,6 +1395,22 @@ public class CascadeImportPipeline {
      * Deplace le fichier source dans un repertoire dedie au user et au
      * correlationId, puis renvoie le chemin final.
      */
+    /**
+     * Helper de construction + submission asynchrone d'une
+     * {@link WorkflowLogEntry} pour un import. Best-effort : en cas
+     * d'erreur de parsing des IDs , on log un warning et on continue.
+     */
+    private void logImportEvent(
+            String correlationId, String userId, String userLogin,
+            String applicationName, String dataType, String resourceName,
+            Instant startedAt, Duration duration, String status,
+            long recordsProcessed, long recordsFailed,
+            int chunksProcessed, long fileSizeBytes,
+            List<String> errors, String fatalError) {
+        logImportEvent(correlationId, userId, userLogin, applicationName, dataType,
+                resourceName, startedAt, duration, status, recordsProcessed, recordsFailed,
+                chunksProcessed, fileSizeBytes, errors, fatalError, null);
+    }
 
     /**
      * Resout le nombre de rows reellement traitees par l'import . Cascade

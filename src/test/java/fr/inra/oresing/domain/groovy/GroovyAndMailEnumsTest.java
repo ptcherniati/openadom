@@ -169,6 +169,7 @@ class GroovyAndMailEnumsTest {
     @DisplayName("BooleanGroovyExpression")
     class BooleanGroovyExpressionTest {
 
+        private final Map<String, Object> ctx = Map.of("x", true, "y", false);
 
         @Test
         @DisplayName("evaluate() retourne true quand l'expression est vraie")

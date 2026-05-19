@@ -1,10 +1,6 @@
 package fr.inra.oresing.domain.application.configuration;
 
 public class ConfigurationSchemaNode {
-
-    private ConfigurationSchemaNode() {
-    }
-
     public static final String OA_CHECKER = "OA_checker";
     public static final String OA_DEFAULT_VALUE = "OA_defaultValue";
     public static final String OA_ALLOW_UNEXPECTED_COLUMNS = "OA_allowUnexpectedColumns";

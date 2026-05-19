@@ -131,6 +131,10 @@ public record WorkflowLogEntry(
     public static final String STATUS_CANCELLED     = "CANCELLED";
     public static final String STATUS_RATE_LIMITED  = "RATE_LIMITED";
 
+    // Phases in-progress publiees dans WorkflowActiveRegistry pour oa-live .
+    // Ne sont pas persistees dans oa_audit.workflow_log ( qui ne contient
+    // que IN_PROGRESS au demarrage puis les etats terminaux ci-dessus ;
+    // les phases intra-execution restent en memoire ) .
     public static final String STATUS_UPLOADING     = "UPLOADING";
     public static final String STATUS_CHUNKING      = "CHUNKING";
     public static final String STATUS_PROCESSING    = "PROCESSING";

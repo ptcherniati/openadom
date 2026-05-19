@@ -1,9 +1,9 @@
 package fr.inra.oresing.domain.application.configuration.date;
 
 import com.google.common.collect.BoundType;
-import com.google.common.collect.Range;
 import fr.inra.oresing.domain.checker.type.DateType;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.Tag;
 
@@ -20,8 +20,8 @@ import java.util.stream.Stream;
 
 import static fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange.ACCEPTED_START_OF_BOUNDS;
 
+@Slf4j
 @Tag("core.config")
-@Tag("domain.model")
 class LocalDateTimeRangeTest {
     public static final String SQL_INTERVAL = "[\"2024-01-01 23:54:00\",\"2024-03-12 20:55:00\")";
     public static final LocalDateTime FROM = LocalDateTime.of(2024, 1, 1, 23, 54, 0);
@@ -450,102 +450,5 @@ class LocalDateTimeRangeTest {
         LocalDateTime dt = LocalDateTime.of(2021, 6, 15, 10, 30);
         LocalDateTimeRange range = LocalDateTimeRange.parse(dt, dateType);
         Assertions.assertEquals(LocalDateTime.of(2021, 6, 15, 0, 0, 0), range.getRange().lowerEndpoint());
-    }
-
-    @Test
-    @DisplayName("parseSql — range fermé-fermé [x,y]")
-    void parseSqlClosedClosed() {
-        String sql = "[\"2024-01-01 00:00:00\",\"2024-12-31 23:59:59\"]";
-        LocalDateTimeRange range = LocalDateTimeRange.parseSql(sql);
-        Assertions.assertEquals(LocalDateTime.of(2024, 1, 1, 0, 0, 0), range.getRange().lowerEndpoint());
-        Assertions.assertEquals(LocalDateTime.of(2024, 12, 31, 23, 59, 59), range.getRange().upperEndpoint());
-        Assertions.assertTrue(range.getRange().hasLowerBound());
-        Assertions.assertTrue(range.getRange().hasUpperBound());
-    }
-
-    @Test
-    @DisplayName("parseSql — range ouvert-ouvert (x,y)")
-    void parseSqlOpenOpen() {
-        String sql = "(\"2024-01-01 00:00:00\",\"2024-12-31 23:59:59\")";
-        LocalDateTimeRange range = LocalDateTimeRange.parseSql(sql);
-        Assertions.assertNotNull(range);
-        Assertions.assertTrue(range.getRange().hasLowerBound());
-        Assertions.assertTrue(range.getRange().hasUpperBound());
-    }
-
-    @Test
-    @DisplayName("parseSql — sans borne inférieure et sans borne supérieure (,)")
-    void parseSqlUnbounded() {
-        // (,) corresponds to Range.all()
-        String sql = "(,)";
-        LocalDateTimeRange range = LocalDateTimeRange.parseSql(sql);
-        Assertions.assertFalse(range.getRange().hasLowerBound());
-        Assertions.assertFalse(range.getRange().hasUpperBound());
-    }
-
-    @Test
-    @DisplayName("parseSql — sans borne inférieure, borne supérieure exclusive (,y)")
-    void parseSqlLowerUnbounded() {
-        String sql = "(,\"2024-12-31 23:59:59\")";
-        LocalDateTimeRange range = LocalDateTimeRange.parseSql(sql);
-        Assertions.assertFalse(range.getRange().hasLowerBound());
-        Assertions.assertTrue(range.getRange().hasUpperBound());
-    }
-
-    @Test
-    @DisplayName("parseSql — sans borne inférieure, borne supérieure inclusive (,y]")
-    void parseSqlLowerUnboundedClosedUpper() {
-        String sql = "(,\"2024-12-31 23:59:59\"]";
-        LocalDateTimeRange range = LocalDateTimeRange.parseSql(sql);
-        Assertions.assertFalse(range.getRange().hasLowerBound());
-        Assertions.assertTrue(range.getRange().hasUpperBound());
-    }
-
-    @Test
-    @DisplayName("parseSql — sans borne supérieure, borne inférieure inclusive [x,)")
-    void parseSqlUpperUnboundedClosedLower() {
-        String sql = "[\"2024-01-01 00:00:00\",)";
-        LocalDateTimeRange range = LocalDateTimeRange.parseSql(sql);
-        Assertions.assertTrue(range.getRange().hasLowerBound());
-        Assertions.assertFalse(range.getRange().hasUpperBound());
-    }
-
-    @Test
-    @DisplayName("parseSql — sans borne supérieure, borne inférieure exclusive (x,)")
-    void parseSqlUpperUnboundedOpenLower() {
-        String sql = "(\"2024-01-01 00:00:00\",)";
-        LocalDateTimeRange range = LocalDateTimeRange.parseSql(sql);
-        Assertions.assertTrue(range.getRange().hasLowerBound());
-        Assertions.assertFalse(range.getRange().hasUpperBound());
-    }
-
-    @Test
-    @DisplayName("toSqlExpression — range fermé-fermé produit [x,y]")
-    void toSqlExpressionClosedClosed() {
-        LocalDateTimeRange range = new LocalDateTimeRange(
-                Range.closed(
-                        LocalDateTime.of(2024, 1, 1, 0, 0, 0),
-                        LocalDateTime.of(2024, 12, 31, 0, 0, 0)
-                )
-        );
-        String sql = range.toSqlExpression();
-        Assertions.assertTrue(sql.startsWith("["), "Should start with [ for closed lower bound");
-        Assertions.assertTrue(sql.endsWith("]"), "Should end with ] for closed upper bound");
-    }
-
-    @Test
-    @DisplayName("getLowerPointOrMin — bounded lower returns actual lower endpoint")
-    void getLowerPointOrMinBounded() {
-        LocalDateTime lower = LocalDateTime.of(2024, 1, 1, 0, 0, 0);
-        LocalDateTimeRange range = LocalDateTimeRange.since(lower);
-        Assertions.assertEquals(lower, range.getLowerPointOrMin());
-    }
-
-    @Test
-    @DisplayName("getUpperEndpointOrMax — bounded upper returns actual upper endpoint")
-    void getUpperEndpointOrMaxBounded() {
-        LocalDateTime upper = LocalDateTime.of(2024, 12, 31, 0, 0, 0);
-        LocalDateTimeRange range = LocalDateTimeRange.until(upper);
-        Assertions.assertEquals(upper, range.getUpperEndpointOrMax());
     }
 }

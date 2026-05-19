@@ -12,10 +12,10 @@ import fr.inra.oresing.domain.data.deposit.bundle.RegisterReactiveResult;
 import fr.inra.oresing.domain.data.rapport.BundleReport;
 import fr.inra.oresing.domain.event.DomainProgressEvent;
 import fr.inra.oresing.domain.event.ImportProgressEvent;
-import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
-import fr.inra.oresing.domain.filesenderclient.BuildBundleReport;
 import fr.inra.oresing.rest.data.DataService;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
+import fr.inra.oresing.domain.filesenderclient.BuildBundleReport;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
 import fr.inra.oresing.rest.reactive.ReactiveTypeError;
 import fr.inra.oresing.rest.reactive.ReactiveTypeInfo;
@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.LocaleResolver;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
 
 import java.io.*;
@@ -50,8 +51,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -65,6 +65,7 @@ import java.util.stream.Stream;
 public class BundleResources {
 
     // ── constantes ──────────────────────────────────────────────────────────
+    private static final String TMP = "/tmp";
     private static final String BUNDLE_NAME = "%s-%s-upload-bundle";
     private static final DateTimeFormatter TIMESTAMP_FORMATER = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private static final String FILE_ERROR = "error.txt";
@@ -82,7 +83,6 @@ public class BundleResources {
 
     // ── contrôle de concurrence ──────────────────────────────────────────────
     private final ConcurrentHashMap<String, Boolean> runningBundleCreation = new ConcurrentHashMap<>();
-    private final Object remainingLock = new Object();
 
     // ── use cases ────────────────────────────────────────────────────────────
     private final GetApplicationUseCase    getApplicationUseCase;
@@ -100,14 +100,6 @@ public class BundleResources {
     // ── executors ─────────────────────────────────────────────────────────────
     private final ExecutorService normalExecutorService;
     private final ExecutorService heavyExecutorService;
-    private static Path bundleDirectory = Path.of("/tmp/bundles");
-    static {
-        try {
-            Files.createDirectories(bundleDirectory);
-        } catch (IOException e) {
-            log.error("Error creating bundle directory", e);
-        }
-    }
 
     public BundleResources(
             GetApplicationUseCase getApplicationUseCase,
@@ -138,7 +130,7 @@ public class BundleResources {
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
     @GetMapping(value = "/applications/{nameOrId}/upload-bundle")
-    public ResponseEntity<Object> getUploadBundle(
+    public ResponseEntity<?> getUploadBundle(
             @PathVariable("nameOrId") String nameOrId,
             @RequestParam(value = "withData", required = false, defaultValue = "false") boolean withData,
             @RequestParam(value = "locale", required = false) Locale locale,
@@ -162,7 +154,7 @@ public class BundleResources {
             Path tempZipDirectory = null;
             try {
                 SecurityContextHolder.setContext(securityContext);
-                tempZipDirectory = Files.createTempDirectory(bundleDirectory, fileName);
+                tempZipDirectory = Files.createTempDirectory(Paths.get(TMP), fileName);
 
                 BuildBundleReport report = null;
                 try {
@@ -236,13 +228,13 @@ public class BundleResources {
 
             boolean completedSuccessfully = false;
             try {
-                ObjectMapper objectMapper = new ObjectMapper();
+                ObjectMapper mapper = new ObjectMapper();
                 File finalZipFile = zipFile;
                 AtomicReference<Map<String, List<String>>> manifest = new AtomicReference<>();
                 readEntryUseCase.execute(zipFile, DataService.MANIFEST_JSON,
                         manifestStream -> {
                             try {
-                                manifest.set(objectMapper.readValue(manifestStream,
+                                manifest.set(mapper.readValue(manifestStream,
                                         new TypeReference<Map<String, List<String>>>() {}));
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
@@ -255,7 +247,7 @@ public class BundleResources {
                 readEntryUseCase.execute(zipFile, DataService.REFERENCES_JSON,
                         referencesStream -> {
                             try {
-                                references.set(objectMapper.readValue(referencesStream,
+                                references.set(mapper.readValue(referencesStream,
                                         new TypeReference<Map<String, List<String>>>() {}));
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
@@ -268,8 +260,8 @@ public class BundleResources {
                 final Consumer<ImportProgressEvent> eventConsumer = event -> {
                     if (event instanceof ReactiveResult<?> reactiveResult) {
                         sink.next(reactiveResult);
-                    } else if (event instanceof DomainProgressEvent(double progress)) {
-                        sink.next(new ReactiveTypeProgress<>(progress));
+                    } else if (event instanceof DomainProgressEvent dp) {
+                        sink.next(new ReactiveTypeProgress<>(dp.progress()));
                     }
                 };
                 final RegisterReactiveResult registerReactiveResult =
@@ -381,7 +373,7 @@ public class BundleResources {
             int MAX_DB_CONCURRENCY) {
 
         List<String> ready;
-        synchronized (remainingLock) {
+        synchronized (remaining) {
             ready = remaining.stream()
                     .filter(ref -> {
                         List<String> deps = references.getOrDefault(ref, List.of())
@@ -412,7 +404,7 @@ public class BundleResources {
         return Flux.fromIterable(ready)
                 .flatMap(processReference, MAX_DB_CONCURRENCY)
                 .then(Mono.defer(() -> {
-                    synchronized (remainingLock) {
+                    synchronized (remaining) {
                         remaining.removeAll(ready);
                     }
                     return processBatchTopological(processed, remaining, processReference, references, MAX_DB_CONCURRENCY);
@@ -432,7 +424,44 @@ public class BundleResources {
         entry.getValue().forEach(fileName -> {
             try {
                 readEntryUseCase.execute(finalZipFile, "%s/%s".formatted(dataName, fileName),
-                        fileToUpload -> loadDataFromEntry(fileToUpload, dataName, fileName, registerReactiveResult, locale, application, rapport));
+                        fileToUpload -> {
+                            final String[] split = fileName.split("\\.");
+                            File tempFile;
+                            try {
+                                tempFile = File.createTempFile(split[0], split[1]);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            tempFile.deleteOnExit();
+                            try (OutputStream out = new FileOutputStream(tempFile);
+                                 InputStream in = fileToUpload) {
+                                in.transferTo(out);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            try {
+                                // Bundle import : pas de mail individuel
+                                // ( withEmail=false ) , DataVersioningResult
+                                // ignore ( pas de count expose dans le
+                                // rapport bundle ) . Le seul side-effect
+                                // attendu est l execution de la cascade
+                                // pipeline + UPSERT staging -> table finale
+                                // ( synchrone ou differe selon la tx en cours ) .
+                                createDataUseCase.execute(
+                                        locale,
+                                        application.getName(),
+                                        dataName,
+                                        new DataFile(tempFile, (long) tempFile.length(), fileName),
+                                        false,
+                                        false);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            final ReactiveResult reactiveResult = new ReactiveTypeInfo("LOADED_DATA",
+                                    Map.of(PARAM_DATA_NAME, dataName, PARAM_FILE_NAME, fileName));
+                            registerReactiveResult.add(reactiveResult, true);
+                            rapport.add(reactiveResult);
+                        });
             } catch (InvalidDatasetContentException e) {
                 final ReactiveTypeError reactiveTypeError = new ReactiveTypeError(
                         Map.of(PARAM_DATA_NAME, dataName,
@@ -462,46 +491,6 @@ public class BundleResources {
                 // Ne pas re-throw : évite de terminer prématurément le flux NDJSON
             }
         });
-    }
-
-    private void loadDataFromEntry(InputStream fileToUpload, String dataName, String fileName, RegisterReactiveResult registerReactiveResult, Locale locale, Application application, BundleReport rapport) {
-        final String[] split = fileName.split("\\.");
-        File tempFile;
-        try {
-            final String suffix = split.length > 1 ? "." + split[1] : null;
-            tempFile = Files.createTempFile(bundleDirectory, split[0], suffix).toFile();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        tempFile.deleteOnExit();
-        try (OutputStream out = new FileOutputStream(tempFile);
-             InputStream in = fileToUpload) {
-            in.transferTo(out);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            // Bundle import : pas de mail individuel
-            // ( withEmail=false ) , DataVersioningResult
-            // ignore ( pas de count expose dans le
-            // rapport bundle ) . Le seul side-effect
-            // attendu est l execution de la cascade
-            // pipeline + UPSERT staging -> table finale
-            // ( synchrone ou differe selon la tx en cours ) .
-            createDataUseCase.execute(
-                    locale,
-                    application.getName(),
-                    dataName,
-                    new DataFile(tempFile, (long) tempFile.length(), fileName),
-                    false,
-                    false);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        final ReactiveResult reactiveResult = new ReactiveTypeInfo("LOADED_DATA",
-                Map.of(PARAM_DATA_NAME, dataName, PARAM_FILE_NAME, fileName));
-        registerReactiveResult.add(reactiveResult, true);
-        rapport.add(reactiveResult);
     }
 
     // ── utilitaires ───────────────────────────────────────────────────────────

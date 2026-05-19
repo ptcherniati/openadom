@@ -1,5 +1,5 @@
 package fr.inra.oresing.domain;
-
+import fr.inra.oresing.domain.BinaryFileInfos;
 import lombok.Getter;
 import lombok.Setter;
 

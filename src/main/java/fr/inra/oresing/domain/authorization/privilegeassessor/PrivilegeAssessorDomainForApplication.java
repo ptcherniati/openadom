@@ -3,12 +3,12 @@ package fr.inra.oresing.domain.authorization.privilegeassessor;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.application.configuration.SubmissionType;
-import fr.inra.oresing.domain.authorization.AuthorizationParsed;
-import fr.inra.oresing.domain.authorization.AuthorizationsForUserResult;
-import fr.inra.oresing.domain.authorization.GetGrantableResult;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.*;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
+import fr.inra.oresing.domain.authorization.AuthorizationParsed;
+import fr.inra.oresing.domain.authorization.AuthorizationsForUserResult;
+import fr.inra.oresing.domain.authorization.GetGrantableResult;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -96,7 +96,7 @@ public record PrivilegeAssessorDomainForApplication<P extends PrivilegeApplicati
     }
 
     public Map<AuthorizationsForUserResult.Roles, Boolean> getAuthorizationsForUser(String dataName) {
-        Map<AuthorizationsForUserResult.Roles, Boolean> roleForDatatype = new EnumMap<>(AuthorizationsForUserResult.Roles.class);
+        Map<AuthorizationsForUserResult.Roles, Boolean> roleForDatatype = new HashMap<>();
 
         Set<OperationType> rolesSetted = Optional.ofNullable(authorizations().userAuthorizations())
                 .map(map -> map.get(dataName))

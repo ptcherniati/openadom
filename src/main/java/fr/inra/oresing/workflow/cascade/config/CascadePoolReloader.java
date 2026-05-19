@@ -36,7 +36,6 @@ public class CascadePoolReloader implements PoolReloader {
      */
     private final Function<Stage, ExecutorService> executorResolver;
 
-    @org.springframework.beans.factory.annotation.Autowired
     public CascadePoolReloader() {
         this.executorResolver = stage -> {
             WorkflowPoolRegistry rm = WorkflowPoolRegistry.getInstance();

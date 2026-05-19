@@ -12,6 +12,6 @@ public record BooleanValidationCheckResult(ValidationLevel level, String message
                                            BooleanType value) implements CheckerValidationCheckResult<BooleanType> {
 
     public static BooleanValidationCheckResult success(final CheckerTarget target, final BooleanType value) {
-        return new BooleanValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, value.copy());
+        return new BooleanValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, (BooleanType) value.copy());
     }
 }

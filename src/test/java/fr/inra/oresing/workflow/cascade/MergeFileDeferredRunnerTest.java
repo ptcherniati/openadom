@@ -42,8 +42,9 @@ class MergeFileDeferredRunnerTest {
                                            Runnable onRolledBack) {
         return new MergeFileDeferredRunner(
                 repo, cleanup, sink,
-                new MergeFileDeferredRunner.WorkflowContext(mergedPath, processedDir, CORR_ID, null),
-                new MergeFileDeferredRunner.Callbacks(onSuccess, onFail, onRolledBack));
+                mergedPath, processedDir,
+                CORR_ID, null,
+                onSuccess, onFail, onRolledBack);
     }
 
     // ─── afterCommit — chemin nominal ────────────────────────────────────────
@@ -182,8 +183,9 @@ class MergeFileDeferredRunnerTest {
 
         MergeFileDeferredRunner r = new MergeFileDeferredRunner(
                 repo, cleanup, sink,
-                new MergeFileDeferredRunner.WorkflowContext(merged, processed, CORR_ID, registry),
-                new MergeFileDeferredRunner.Callbacks(null, null, null));
+                merged, processed,
+                CORR_ID, registry,
+                null, null, null);
         r.afterCommit();
 
         verify(sink).recordDeferredRowsWritten(50L);

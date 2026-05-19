@@ -8,7 +8,6 @@ import fr.inra.oresing.domain.authorization.request.AuthorizationForReferenceSco
 import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
 import fr.inra.oresing.domain.authorization.request.AuthorizationNoRestriction;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -21,7 +20,6 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @org.junit.jupiter.api.Tag("core.auth")
-@Tag("domain.model")
 class AuthorizationIndexTest {
 
     public static final String PEM = "pem";

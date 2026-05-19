@@ -5,7 +5,6 @@ import fr.inrae.ore.cascade.model.listener.WorkflowEvents.WorkflowAliveEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -27,7 +26,6 @@ import static org.mockito.Mockito.verify;
  * </ul>
  */
 @DisplayName("CascadeHeartbeatBridge")
-@Tag("domain.model")
 class CascadeHeartbeatBridgeTest {
 
     private WorkflowLogRepository repo;
@@ -52,7 +50,7 @@ class CascadeHeartbeatBridgeTest {
 
         bridge.onWorkflowAlive(ev);
 
-        verify(repo, times(1)).beat(corr);
+        verify(repo, times(1)).beat(eq(corr));
     }
 
     @Test

@@ -18,7 +18,6 @@ import fr.inra.oresing.persistence.AdditionalFileRepository;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.rest.data.DataService;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -36,6 +35,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.apache.commons.io.output.CloseShieldOutputStream;
 
 public class DataCsvBuilder {
     private static final Logger log = LoggerFactory.getLogger(DataCsvBuilder.class);

@@ -22,7 +22,7 @@ public class BinaryFileDataset {
     private String to;
     private String comment;
 
-    public static BinaryFileDataset emptyInstance() {
+    public static BinaryFileDataset EMPTY_INSTANCE() {
         return new BinaryFileDataset();
     }
 

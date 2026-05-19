@@ -13,7 +13,6 @@ import java.util.Optional;
 import java.util.Set;
 
 @Tag("core.config")
-@Tag("domain.model")
 class SectionBuilderTest {
 
     @Test
@@ -69,14 +68,14 @@ class SectionBuilderTest {
     @Test
     void testFindSchema() {
         SectionBuilder builder = SectionBuilder.getInstance();
-        Optional<ConfigurationSchemaNodeType<?>> schema = builder.findSchema(ConfigurationSchemaNode.OA_DATA);
+        Optional<ConfigurationSchemaNodeType> schema = builder.findSchema(ConfigurationSchemaNode.OA_DATA);
         Assertions.assertTrue(schema.isPresent());
     }
 
     @Test
     void testFindSchemaUnknown() {
         SectionBuilder builder = SectionBuilder.getInstance();
-        Optional<ConfigurationSchemaNodeType<?>> schema = builder.findSchema("unknown");
+        Optional<ConfigurationSchemaNodeType> schema = builder.findSchema("unknown");
         Assertions.assertTrue(schema.isEmpty());
     }
 

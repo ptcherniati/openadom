@@ -10,10 +10,10 @@ import java.util.Map;
 
 public record IntegerValidationCheckResult(ValidationLevel level, String message, Map<String, Object> messageParams,
                                            CheckerTarget target,
-                                           IntegerType value) implements CheckerValidationCheckResult<IntegerType> {
+                                           IntegerType value) implements CheckerValidationCheckResult {
     public static IntegerValidationCheckResult success(final CheckerTarget target, final IntegerType value) {
 
-        return new IntegerValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, value.copy());
+        return new IntegerValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, (IntegerType) value.copy());
     }
 
     public static IntegerValidationCheckResult error(final CheckerTarget target, final String message, final ImmutableMap<String, Object> messageParams) {

@@ -18,7 +18,7 @@ public class RightsRequest extends OreSiEntity {
     UUID application;
     UUID user;
     String comment;
-    private Map<String, String> rightsRequestForm;
+    Map<String, String> rightsRequestForm;
     OreSiAuthorization rightsRequest;
     boolean setted;
     /**
@@ -41,7 +41,7 @@ public class RightsRequest extends OreSiEntity {
     String treatmentMailBody;
 
     /** Identifiants des autorisations attribuées au demandeur lors d'une approbation. */
-    private List<UUID> linkedAuthorizationIds;
+    List<UUID> linkedAuthorizationIds;
 
     public static RightsRequest EMPTY_INSTANCE() {
         return new RightsRequest();

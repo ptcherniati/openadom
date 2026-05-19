@@ -1,6 +1,6 @@
 package fr.inra.oresing.domain.application.configuration.section;
-import fr.inra.oresing.domain.application.configuration.type.ConfigurationSchemaNodeType;
 
+import fr.inra.oresing.domain.application.configuration.type.ConfigurationSchemaNodeType;
 import fr.inra.oresing.domain.application.configuration.type.LabelDescription;
 
 public sealed interface Section

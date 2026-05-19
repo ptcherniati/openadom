@@ -13,15 +13,14 @@ public record PatternValidationCheckResult(
         String message,
         Map<String, Object> messageParams,
         CheckerTarget target,
-        PatternType<?, ?> value
+        PatternType value
 ) implements CheckerValidationCheckResult<PatternType<?, ?>> {
 
-    @SuppressWarnings({"unchecked", "java:S1452"})
-    public static CheckerValidationCheckResult<PatternType<?, ?>> of(CheckerValidationCheckResult<?> checkerValidationCheckResult, PatternType<?, ?> patternType) {
+    public static CheckerValidationCheckResult of(CheckerValidationCheckResult checkerValidationCheckResult, PatternType patternType) {
         if (checkerValidationCheckResult.isError()) {
-            return (CheckerValidationCheckResult<PatternType<?, ?>>) checkerValidationCheckResult;
+            return checkerValidationCheckResult;
         }
-        ((Map<Object, Object>) patternType.getValue()).put(Column.__VALUE__, checkerValidationCheckResult.value());
+        patternType.getValue().put(Column.__VALUE__, checkerValidationCheckResult.value());
         return new PatternValidationCheckResult(
                 checkerValidationCheckResult.level(),
                 checkerValidationCheckResult.message(),

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -177,4 +178,7 @@ class ConfigFieldRegistryTest {
             return new PoolSnapshot(stage, n, n, 0, n, 0, 100);
         }
     }
+
+    @SuppressWarnings("unused") // utilise par AtomicInteger import - clean
+    AtomicInteger __unused;
 }

@@ -57,7 +57,7 @@ class CompensationLogServiceTest {
                 .thenReturn(ID);
 
         CompensationLogService svc = service(repo, registry);
-        UUID result = svc.logPending("TYPE", "oa_data", "t", "id", CORR_ID, USER_ID, "alice",
+        UUID result = svc.record("TYPE", "oa_data", "t", "id", CORR_ID, USER_ID, "alice",
                 Map.of(), 60);
 
         assertThat(result).isEqualTo(ID);
@@ -73,7 +73,7 @@ class CompensationLogServiceTest {
                 .thenReturn(ID);
 
         CompensationLogService svc = service(repo, registry);
-        UUID result = svc.logPending("TYPE", "oa_data", "t", "id", CORR_ID, USER_ID, "alice", Map.of());
+        UUID result = svc.record("TYPE", "oa_data", "t", "id", CORR_ID, USER_ID, "alice", Map.of());
 
         assertThat(result).isEqualTo(ID);
     }

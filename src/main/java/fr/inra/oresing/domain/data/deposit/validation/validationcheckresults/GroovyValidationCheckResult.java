@@ -20,7 +20,7 @@ public record GroovyValidationCheckResult(
 ) implements CheckerValidationCheckResult<StringType> {
 
     public static GroovyValidationCheckResult success(final CheckerTarget target, final FieldType<?> value) {
-        if (value instanceof PatternType<?, ?> patternType) {
+        if (value instanceof PatternType patternType) {
             StringType stringTypeValue = Optional.ofNullable(patternType)
                     .map(PatternType::getValue)
                     .map(values -> values.get(Column.__VALUE__))

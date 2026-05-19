@@ -28,7 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Tests unitaires de la logique de cache dans {@link DefaultAuthorizationService}.
+ * Tests unitaires de la logique de cache dans {@link AuthorizationService}.
  *
  * <p>Vérifie via mocks Mockito que :
  * <ul>
@@ -47,7 +47,7 @@ import static org.mockito.Mockito.when;
  */
 class AuthorizationServiceCacheTest {
 
-    private DefaultAuthorizationService service;
+    private AuthorizationService service;
     private OreSiRepository repository;
     private DataRepository dataRepository;
     private OreSiRepository.RepositoryForApplication repoForApp;
@@ -75,7 +75,7 @@ class AuthorizationServiceCacheTest {
         // Aucun node retourné -> arbre vide , sans impact sur le test.
         when(dataRepository.getNodesForMenu(any(MenuType.class))).thenReturn(List.of());
 
-        service = new DefaultAuthorizationService(db, serviceContainer, repository, userRepository);
+        service = new AuthorizationService(db, serviceContainer, repository, userRepository);
 
         // Inject @Value defaults via réflection pour bypasser Spring.
         setField(service, "authorizationScopesCacheEnabled", true);

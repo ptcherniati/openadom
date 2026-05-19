@@ -75,9 +75,9 @@ class WorkflowSnapshotWithMethodsTest {
     @DisplayName("ParallelismSnapshot.empty() → (0,0,0)")
     void parallelismEmpty() {
         ParallelismSnapshot empty = ParallelismSnapshot.empty();
-        assertThat(empty.source()).isZero();
-        assertThat(empty.transform()).isZero();
-        assertThat(empty.sink()).isZero();
+        assertThat(empty.source()).isEqualTo(0);
+        assertThat(empty.transform()).isEqualTo(0);
+        assertThat(empty.sink()).isEqualTo(0);
     }
 
     // ─── withStrategy() ──────────────────────────────────────────────────────

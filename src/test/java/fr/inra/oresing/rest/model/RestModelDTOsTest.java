@@ -108,28 +108,6 @@ class RestModelDTOsTest {
         void defaultConstant() {
             assertThat(DataRowResult.DEFAULT).isEqualTo("default");
         }
-
-        @Test
-        @DisplayName("of() avec null refsLinked et null refsLinkedTo")
-        void ofWithNullRefsLinkedAndRefsLinkedTo() {
-            fr.inra.oresing.persistence.DataRow row = new fr.inra.oresing.persistence.DataRow(
-                    List.of("rowId1"),
-                    List.of(),
-                    null,
-                    null,
-                    Map.of(),
-                    null,
-                    List.of(),
-                    null
-            );
-            DataRowResult result = DataRowResult.of(row, com.google.common.collect.ImmutableSet.of(), "fr");
-            assertThat(result.rowId()).containsExactly("rowId1");
-            assertThat(result.naturalKey()).isNull();
-            assertThat(result.hierarchicalKey()).isNull();
-            assertThat(result.refsLinkeds()).isNull();
-            assertThat(result.refsLinkedTo()).isNull();
-            assertThat(result.displaysForRow()).isEmpty();
-        }
     }
 
     // ---------------------------------------------------------

@@ -36,7 +36,6 @@ public record PatternComponent(ComponentDescriptionType type,
                 submission);
     }
 
-    @Override
     public String buildImportHeaderForComponent() {
         String comment = patternComponentQualifiers().values().stream()
                 .map(patternColumnComponent -> "%d : %s as %s".formatted(

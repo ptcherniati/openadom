@@ -10,7 +10,14 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Deque;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Stream;
@@ -41,8 +48,6 @@ public class PipelineRegistry implements WorkflowListener {
 
     private static final int RECENT_EVENT_WINDOW = 30;
     private static final long THROUGHPUT_WINDOW_MS = 5_000L;
-    private static final String STATUS_RUNNING = "RUNNING";
-    private static final String STATUS_IDLE = "IDLE";
 
     private final ConcurrentMap<UUID, PipelineState> byCorrelationId = new ConcurrentHashMap<>();
 
@@ -101,7 +106,7 @@ public class PipelineRegistry implements WorkflowListener {
         PipelineState s = stateFor(e.correlationId());
         if (s == null) return;
         WorkerStat w = s.sourceWorker(e.workerName());
-        w.status = STATUS_RUNNING;
+        w.status = "RUNNING";
         w.lastActivity = e.time();
     }
 
@@ -110,7 +115,7 @@ public class PipelineRegistry implements WorkflowListener {
         PipelineState s = stateFor(e.correlationId());
         if (s == null) return;
         WorkerStat w = s.sourceWorker(e.workerName());
-        w.status = STATUS_IDLE;
+        w.status = "IDLE";
         w.chunksDoneTotal++;
         w.recordsTotal += e.recordsEmitted();
         w.lastActivity = e.time();
@@ -124,7 +129,7 @@ public class PipelineRegistry implements WorkflowListener {
         PipelineState s = stateFor(e.correlationId());
         if (s == null) return;
         WorkerStat w = s.transformWorker(e.workerName());
-        w.status = STATUS_RUNNING;
+        w.status = "RUNNING";
         w.currentChunk = e.chunkIndex();
         w.currentRecordsTotal = e.recordsExpected();
         w.currentRecordsProcessed = 0;
@@ -145,7 +150,7 @@ public class PipelineRegistry implements WorkflowListener {
         PipelineState s = stateFor(e.correlationId());
         if (s == null) return;
         WorkerStat w = s.transformWorker(e.workerName());
-        w.status = STATUS_IDLE;
+        w.status = "IDLE";
         w.chunksDoneTotal++;
         w.currentChunk = null;
         w.currentRecordsProcessed = 0;
@@ -162,7 +167,7 @@ public class PipelineRegistry implements WorkflowListener {
         PipelineState s = stateFor(e.correlationId());
         if (s == null) return;
         WorkerStat w = s.sinkWorker(e.workerName());
-        w.status = STATUS_RUNNING;
+        w.status = "RUNNING";
         w.currentChunk = e.chunkIndex();
         w.lastActivity = e.time();
         s.pushEvent(new PipelineSnapshot.PipelineEvent(
@@ -174,7 +179,7 @@ public class PipelineRegistry implements WorkflowListener {
         PipelineState s = stateFor(e.correlationId());
         if (s == null) return;
         WorkerStat w = s.sinkWorker(e.workerName());
-        w.status = STATUS_IDLE;
+        w.status = "IDLE";
         w.chunksDoneTotal++;
         w.currentChunk = null;
         w.lastDurationMs = e.duration() != null ? e.duration().toMillis() : null;
@@ -215,10 +220,10 @@ public class PipelineRegistry implements WorkflowListener {
 
     private static void resetStaleRunning(Map<String, WorkerStat> workers, long nowMs) {
         for (WorkerStat w : workers.values()) {
-            if (STATUS_RUNNING.equals(w.status)
-                    && w.lastActivity != null
-                    && nowMs - w.lastActivity.toEpochMilli() > STALE_RUNNING_RESET_MS) {
-                w.status = STATUS_IDLE;
+            if (!"RUNNING".equals(w.status)) continue;
+            if (w.lastActivity == null) continue;
+            if (nowMs - w.lastActivity.toEpochMilli() > STALE_RUNNING_RESET_MS) {
+                w.status = "IDLE";
                 w.currentChunk = null;
                 w.currentRecordsProcessed = 0L;
                 w.currentRecordsTotal = 0L;
@@ -332,7 +337,7 @@ public class PipelineRegistry implements WorkflowListener {
     /** Mutable per-worker accumulator . */
     static final class WorkerStat {
         final String  name;
-        volatile String  status = STATUS_IDLE;
+        volatile String  status = "IDLE";
         volatile Integer currentChunk;
         volatile long    currentRecordsProcessed;
         volatile long    currentRecordsTotal;

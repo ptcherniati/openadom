@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest.data;
 
+import fr.inra.oresing.domain.data.DataRows;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
@@ -14,22 +15,29 @@ import fr.inra.oresing.domain.checker.type.*;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.DataImporter;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
-import fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent;
 import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
 import fr.inra.oresing.domain.data.deposit.context.ContextConstants;
 import fr.inra.oresing.domain.data.rapport.BundleReport;
 import fr.inra.oresing.domain.data.rapport.Manifest;
 import fr.inra.oresing.domain.data.read.query.*;
-import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.file.DataFile;
 import fr.inra.oresing.domain.file.FileBomResolver;
 import fr.inra.oresing.domain.file.FileOrUUID;
-import fr.inra.oresing.domain.filesenderclient.*;
+import fr.inra.oresing.workflow.cascade.CascadeImportPipeline;
+import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisation;
+import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForBuildBundleReport;
+import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForDownloadDatasetQuery;
+import fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent;
 import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent;
+import fr.inra.oresing.persistence.data.read.bundle.FileContent;
 import fr.inra.oresing.rest.HierarchicalReferenceAsTree;
 import fr.inra.oresing.rest.data.extraction.DataCsvBuilder;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
+import fr.inra.oresing.domain.filesenderclient.BuildBundleReport;
+import fr.inra.oresing.domain.filesenderclient.MessageInformations;
 import fr.inra.oresing.rest.filesenderclient.FileInfos;
 import fr.inra.oresing.rest.filesenderclient.FileRepository;
 import fr.inra.oresing.rest.filesenderclient.FileSenderRepository;
@@ -37,7 +45,6 @@ import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.model.data.DefaultLineCheckerResult;
 import fr.inra.oresing.rest.model.data.LineCheckerResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
-import fr.inra.oresing.workflow.cascade.CascadeImportPipeline;
 import fr.inra.oresing.workflow.guard.BackendOverloadedException;
 import fr.inra.oresing.workflow.guard.HeapGuardService;
 import lombok.Setter;
@@ -117,7 +124,7 @@ public class DataService {
     @Setter
     ServiceContainer serviceContainer;
     private final OreSiRepository repo;
-    private final JsonRowMapper<?> jsonRowMapper;
+    private final JsonRowMapper jsonRowMapper;
     private final OreSiRepository repository;
     private final FileRepository fileRepository;
     private final PlatformTransactionManager transactionManager;
@@ -173,9 +180,18 @@ public class DataService {
     @Autowired(required = false)
     private fr.inra.oresing.workflow.cascade.history.WorkflowLogWriter workflowLogWriter;
 
+    /**
+     * Prescan service injected as Spring bean ( cascade 3.3.0+ , Axe B ) .
+     * Avant : instancie via {@code new} a chaque appel addData - tests
+     * impossibles a mocker , dependency hidden , reuse impossible . Bean
+     * Spring resout ces 3 problemes en 1 .
+     */
+    @Autowired
+    private fr.inra.oresing.domain.data.deposit.prescan.NaturalKeyPreScanService naturalKeyPreScanService;
+
     public DataService(
             OreSiRepository repo,
-            JsonRowMapper<?> jsonRowMapper,
+            JsonRowMapper jsonRowMapper,
             OreSiRepository repository,
             FileRepository fileRepository,
             ServiceContainer serviceContainer,
@@ -360,37 +376,52 @@ public class DataService {
                         && !dataDescription.naturalKey().isEmpty()) {
                     java.util.List<String> nkColumns = new java.util.ArrayList<>(dataDescription.naturalKey());
                     char sep = dataDescription.separator();
+                    // Header / first-data line numbers ( 1-indexed ) extraits de la
+                    // config YAML ( OA_dataHeaderLine / OA_dataFirstLine ) . Si
+                    // null = defaut legacy ( header ligne 1 ) ; sinon le prescan
+                    // skippe les lignes de metadata humain en tete et lit le
+                    // vrai header technique a la ligne configuree . Fix
+                    // ISSUE_GITLAB_PRESCAN_AXE_B_IGNORE_DATAHEADERLINE_2026-05-18
+                    // ( prescan plantait sur les datatypes Excel-style ACBB
+                    // recursifs car parsait la ligne 1 - metadata humain - comme
+                    // header CSV ) .
+                    Integer dataHeaderLine = dataDescription.headerLine();
+                    Integer dataFirstLine  = dataDescription.firstRowLine();
                     org.apache.commons.csv.CSVFormat fmt = org.apache.commons.csv.CSVFormat.Builder
                             .create(org.apache.commons.csv.CSVFormat.DEFAULT)
                             .setDelimiter(sep)
                             .get();
                     try (java.io.Reader r = Files.newBufferedReader(csvBufferFile, StandardCharsets.UTF_8)) {
-                        naturalKeysHint = new fr.inra.oresing.domain.data.deposit.prescan.NaturalKeyPreScanService()
-                                .extractCompositeNaturalKeys(
+                        naturalKeysHint = naturalKeyPreScanService.extractCompositeNaturalKeys(
                                         r, fmt, nkColumns,
                                         fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext
-                                                .COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR);
+                                                .COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR,
+                                        dataHeaderLine, dataFirstLine);
                     }
-                    log.debug("[Axe B] prescan refType={} columns={} naturalkeys_distinctes={}",
-                            refType, nkColumns, naturalKeysHint.size());
+                    log.debug("[Axe B] prescan refType={} columns={} headerLine={} firstLine={} naturalkeys_distinctes={}",
+                            refType, nkColumns, dataHeaderLine, dataFirstLine, naturalKeysHint.size());
                 } else {
                     log.debug("[Axe B] prescan skip refType={} : config naturalKey absente/vide ( fallback legacy )", refType);
                 }
                 effectiveInputStream = Files.newInputStream(csvBufferFile);
             } catch (RuntimeException | IOException ex) {
-                // Fallback graceful : nettoie le buffer si cree , retombe
-                // sur le chemin legacy ( hint=null ) . Le file reste a
-                // l'etat consomme partiellement ; un retry par
-                // l'utilisateur est necessaire pour qu'il fonctionne .
+                // Fallback graceful : retombe sur le chemin legacy ( hint=null ) .
+                // CRUCIAL : on conserve le csvBufferFile pour fournir un
+                // InputStream FRAIS au cascade ; l'original {@code file} a deja
+                // ete consume par Files.copy(...) ci-dessus , l'utiliser
+                // provoquerait NoSuchElementException dans CSVParser downstream .
+                // Fix ISSUE_GITLAB_PRESCAN_AXE_B_IGNORE_DATAHEADERLINE_2026-05-18
+                // ( cascade au 500 apres prescan failed parce que le legacy
+                // preload heritait d'un InputStream vide ) . Le file est
+                // supprime dans le finally en fin de methode .
                 log.warn("[Axe B] prescan failed for refType={} ( fallback legacy full preload ) : {}",
                         refType, ex.getMessage());
-                if (csvBufferFile != null) {
-                    try { Files.deleteIfExists(csvBufferFile); }
-                    catch (IOException ignored) { /* best-effort cleanup */ }
-                    csvBufferFile = null;
-                }
                 naturalKeysHint = null;
-                effectiveInputStream = file;
+                if (csvBufferFile != null) {
+                    effectiveInputStream = Files.newInputStream(csvBufferFile);
+                } else {
+                    effectiveInputStream = file;
+                }
             }
         }
 
@@ -580,7 +611,7 @@ public class DataService {
                             indexedByHierarchicalKeyReferenceValues.put(referenceValue.getNaturalKey(), referenceValue);
                             parentKeyColumn.ifPresent(presentParentKeyColumn -> {
                                 DataDatum referenceDatum = referenceValue.getRefValues();
-                                DataColumnValue<?, ?> referenceColumnValue = referenceDatum.get(presentParentKeyColumn);
+                                DataColumnValue referenceColumnValue = referenceDatum.get(presentParentKeyColumn);
                                 Preconditions.checkState(referenceColumnValue instanceof DataColumnSingleValue);
                                 String parentHierarchicalKeyAsString = ((DataColumnSingleValue) referenceColumnValue).getValue().toString();
                                 if (!parentHierarchicalKeyAsString.isEmpty()) {
@@ -631,9 +662,9 @@ public class DataService {
                 application,
                 dataName);
         final CheckerFactory checkerFactory = new CheckerFactory(referenceValueRepository);
-        Function<String, List<DataValue>> getDatavaluesByReference = referenceValueRepository::findAllByReferenceType;
+        Function<String, List<DataValue>> getDatavaluesByReference = reference -> referenceValueRepository.findAllByReferenceType(reference);
         PublishContext.PublishContextBuilder publishContextBuilder = new PublishContext.PublishContextBuilder(application, dataName, fileOrUUID, getDatavaluesByReference);
-        final ImmutableSet<LineChecker<?>> lineCheckers = checkerFactory.getCheckers(application, dataName,
+        final ImmutableSet<LineChecker<? extends FieldType<?>>> lineCheckers = checkerFactory.getCheckers(application, dataName,
                 publishContextBuilder);
         final Set<String> patternColumnsNames = Optional.ofNullable(contextConstants.displayPattern())
                 .map(InternationalizationTitle::getTitle)
@@ -1188,6 +1219,8 @@ private PlatformTransactionManager transactionManager;
             }
             case BundleReport bundleReport -> {
                 try {
+                    Locale locale = bundleReport.locale();
+
                     String applicationName = bundleReport.application().getName();
 
                     String subject = bundleReport.title();

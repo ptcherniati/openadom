@@ -10,6 +10,7 @@ import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.reactive.*;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.IsEqual;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.http.MediaType;
@@ -44,6 +45,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
+@Slf4j
 public class Fixtures {
 
     public final CreateUser lambda;
@@ -1067,14 +1069,6 @@ public class Fixtures {
         Application(final String name, final ImmutableSet<String> dataTypes) {
             this.name = name;
             this.dataTypes = dataTypes;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public ImmutableSet<String> getDataTypes() {
-            return dataTypes;
         }
 
     }

@@ -23,7 +23,7 @@ public class MultiYamlTest {
                 fileInputStream.transferTo(out);
             }
             final DataFile multipartFile = new DataFile(tempFile, 0L, "monzip");
-            InputStream bytes = MultiYaml.parseConfigurationBytes(multipartFile, 10L * 1024 * 1024);
+            InputStream bytes = MultiYaml.parseConfigurationBytes(multipartFile);
             Object configuration = new YAMLMapper().readValue(bytes, Object.class);
             assertNotNull(configuration);
             assertNotNull(((Map) configuration).get(ConfigurationSchemaNode.OA_DATA));

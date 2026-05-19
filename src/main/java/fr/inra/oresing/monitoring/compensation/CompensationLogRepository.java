@@ -12,7 +12,6 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -126,15 +125,15 @@ public class CompensationLogRepository {
      * transaction caller ( = thread sweeper ) .
      */
     public List<CompensationLogEntry> lockStalePendingBatch(int batchSize) {
-        return jdbc.query(FN_LOCK_STALE_PENDING, rowMapper, batchSize);
+        return jdbc.query(FN_LOCK_STALE_PENDING, ROW_MAPPER, batchSize);
     }
 
     public List<CompensationLogEntry> findByStatus(String status, int limit) {
-        return jdbc.query(SELECT_BY_STATUS_SQL, rowMapper, status, limit);
+        return jdbc.query(SELECT_BY_STATUS_SQL, ROW_MAPPER, status, limit);
     }
 
     public CompensationLogEntry findById(UUID id) {
-        List<CompensationLogEntry> list = jdbc.query(SELECT_BY_ID_SQL, rowMapper, id);
+        List<CompensationLogEntry> list = jdbc.query(SELECT_BY_ID_SQL, ROW_MAPPER, id);
         return list.isEmpty() ? null : list.get(0);
     }
 
@@ -145,7 +144,7 @@ public class CompensationLogRepository {
         return n == null ? 0 : n;
     }
 
-    private final RowMapper<CompensationLogEntry> rowMapper = (ResultSet rs, int rowNum) -> {
+    private final RowMapper<CompensationLogEntry> ROW_MAPPER = (ResultSet rs, int rowNum) -> {
         Timestamp lastAttempt = rs.getTimestamp("last_attempt_at");
         return new CompensationLogEntry(
                 (UUID) rs.getObject("id"),
@@ -179,7 +178,7 @@ public class CompensationLogRepository {
     }
 
     private Map<String, Object> deserializeJson(String json) {
-        if (json == null || json.isBlank()) return Collections.emptyMap();
+        if (json == null || json.isBlank()) return null;
         try {
             return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
         } catch (Exception ex) {

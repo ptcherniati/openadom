@@ -10,7 +10,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Tag("core.config")
-@Tag("domain.model")
 class DurationTest {
 
     @Test

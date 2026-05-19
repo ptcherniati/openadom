@@ -50,9 +50,7 @@ public final class SqlIdentifierUtils {
 
         private IdentifierTest(final String label) {
             identifier = Optional.ofNullable(label).orElse("");
-            if (identifier.length() > 63) {
-                throw new FieldNameTooLongForSqlFieldException(identifier);
-            }
+            testlabelLength();
         }
 
         /** Construit un {@code IdentifierTest} à partir du nom de colonne d'un {@link DataColumn}. */
@@ -83,9 +81,10 @@ public final class SqlIdentifierUtils {
          *         ou dépasse 63 caractères
          */
         public static IdentifierTest forStringIdentifier(final String identifier) {
-            return Optional.ofNullable(identifier)
+            Optional.ofNullable(identifier)
                     .map(IdentifierTest::new)
                     .orElseThrow(() -> new FieldNameTooLongForSqlFieldException(identifier));
+            return new IdentifierTest(identifier);
         }
 
         /** Lève {@link FieldNameTooLongForSqlFieldException} si la longueur dépasse 63. */

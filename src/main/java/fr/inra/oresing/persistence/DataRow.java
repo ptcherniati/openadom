@@ -1,12 +1,12 @@
 package fr.inra.oresing.persistence;
 
+import fr.inra.oresing.domain.data.DataRows;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.PatternComponent;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.ListType;
 import fr.inra.oresing.domain.checker.type.MapType;
-import fr.inra.oresing.domain.data.DataRows;
 import fr.inra.oresing.domain.data.RefsLinked;
 import fr.inra.oresing.domain.data.RefsLinkedToValue;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
@@ -35,16 +35,16 @@ public record DataRow(
                         .map(Map.Entry::getKey)
                 ).toList();
         Map<String, FieldType<?>> values = new HashMap<>(dataRows.getValues().getFirst());
-        @SuppressWarnings({"unchecked", "rawtypes"})
-        Map<String, ListType<FieldType<?>>> listTypeMap = (Map) patternComponentKeys.stream()
+        Map<String, ListType<? extends FieldType<?>>> listTypeMap = patternComponentKeys.stream()
                 .map(componentKey -> {
-                            final ListType<MapType<?, ?>> listTypes = new ListType<>(new MapType<>(Map.of()));
+
+                            final ListType<MapType<?, ?>> listTypes = new ListType<>(new MapType(Map.of()));
                             dataRows.getValues().stream()
                                     .filter(value -> value.containsKey(componentKey))
                                     .map(value -> value.get(componentKey))
                                     .map(MapType.class::cast)
                                     .forEach(listTypes::add);
-                            return new AbstractMap.SimpleEntry<String, ListType<? extends FieldType<?>>>(componentKey, listTypes);
+                            return new AbstractMap.SimpleEntry<String, ListType>(componentKey, listTypes);
                         }
                 )
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));

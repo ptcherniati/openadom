@@ -43,7 +43,7 @@ class DataDatumTest {
         @Test
         @DisplayName("constructeur avec map initialise les valeurs")
         void constructorWithMap() {
-            Map<DataColumn, DataColumnValue<?, ?>> map = new LinkedHashMap<>();
+            Map<DataColumn, DataColumnValue> map = new LinkedHashMap<>();
             map.put(col("col1"), strVal("val1"));
             DataDatum datum = new DataDatum(map);
             assertThat(datum.values()).hasSize(1);

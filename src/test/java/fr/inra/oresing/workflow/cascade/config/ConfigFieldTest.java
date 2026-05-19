@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * Mutation.oldString/newString.
  */
 @Tag("core.config")
-@Tag("domain.model")
 @DisplayName("ConfigField — builder et cast")
 class ConfigFieldTest {
 
@@ -256,17 +255,18 @@ class ConfigFieldTest {
     @Test
     @DisplayName("build() sans name lève IllegalStateException")
     void buildNoName() {
-        ConfigField.Builder<Integer> builder = new ConfigField.Builder<Integer>()
-                .type(ConfigField.Type.INT)
-                .getter(() -> 1);
-        assertThrows(IllegalStateException.class, builder::build);
+        assertThrows(IllegalStateException.class,
+                () -> new ConfigField.Builder<Integer>()
+                        .type(ConfigField.Type.INT)
+                        .getter(() -> 1)
+                        .build());
     }
 
     @Test
     @DisplayName("build() sans getter lève IllegalStateException")
     void buildNoGetter() {
-        ConfigField.Builder<Integer> builder = ConfigField.intField("f");
-        assertThrows(IllegalStateException.class, builder::build);
+        assertThrows(IllegalStateException.class,
+                () -> ConfigField.intField("f").build());
     }
 
     // ─── accesseurs divers ────────────────────────────────────────────────────

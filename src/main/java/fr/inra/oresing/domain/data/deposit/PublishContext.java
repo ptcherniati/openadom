@@ -12,7 +12,6 @@ import lombok.Getter;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 
@@ -67,7 +66,7 @@ public record PublishContext(
          * set sur tous les appels d'un meme workflow , l'identityHashCode
          * suffit a invalider correctement si l'API change un jour.
          */
-        private final AtomicReference<Map<String, Object>> cachedStaticContext = new AtomicReference<>();
+        private volatile Map<String, Object> cachedStaticContext;
         private volatile int                 cachedStaticContextKey;
 
         public PublishContextBuilder(Application application, String dataName, final FileOrUUID fileOrUUID, Function<String, List<DataValue>> getDatavaluesByReference) {
@@ -120,10 +119,10 @@ public record PublishContext(
             // set ( meme reference d'objet -> meme contenu , garanti par
             // l'appelant qui passe le set du context a chaque ligne ).
             final int cacheKey = (groovyReferences == null) ? 0 : System.identityHashCode(groovyReferences);
-            Map<String, Object> staticCtx = cachedStaticContext.get();
+            Map<String, Object> staticCtx = cachedStaticContext;
             if (staticCtx == null || cachedStaticContextKey != cacheKey) {
                 staticCtx = buildStaticGroovyContext(groovyReferences);
-                cachedStaticContext.set(staticCtx);
+                cachedStaticContext   = staticCtx;
                 cachedStaticContextKey = cacheKey;
             }
             // Partie dynamique : currentRow + currentRowNumber par ligne.

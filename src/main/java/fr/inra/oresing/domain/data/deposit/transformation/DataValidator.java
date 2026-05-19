@@ -26,42 +26,31 @@ import java.util.stream.Stream;
 
 public class DataValidator {
 
-    /**
-     * Contexte mutable accumulant les données et erreurs lors de la vérification d'une ligne.
-     */
-    record LineCheckContext(
-            DataDatum referenceDatumBeforeChecking,
-            Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo,
-            DataDatum referenceDatum,
-            ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder
-    ) {}
-
-    private List<ReferenceDatumAfterChecking> checkLineForChecker(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker<? extends FieldType<?>> lineChecker, LineCheckContext ctx) {
+    private List<ReferenceDatumAfterChecking> checkLineForChecker(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker lineChecker, DataDatum referenceDatumBeforeChecking, Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo, DataDatum referenceDatum, ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder) {
         if (matchingTarget(rowWithReferenceDatum, lineChecker)) {
             return null;
         }
-        if (lineChecker instanceof final LineChecker.ManyChecker<?, ?> manyChecker) {
+        if (lineChecker instanceof final LineChecker.ManyChecker manyChecker) {
             manyChecker.value().getValue().clear();
         }
         Map<String, Object> context = new HashMap<>();
 
-        final CheckerValidationCheckResult<?> validationCheckResults = testValues(rowWithReferenceDatum, publishContextBuilder, lineChecker, context, ctx.referenceDatumBeforeChecking());
-        registerCheckedValues(lineChecker, validationCheckResults, ctx.referenceDatumBeforeChecking(), ctx.refsLinkedTo(), ctx.referenceDatum());
+        final CheckerValidationCheckResult validationCheckResults = testValues(rowWithReferenceDatum, publishContextBuilder, lineChecker, context, referenceDatumBeforeChecking);
+        registerCheckedValues(lineChecker, validationCheckResults, referenceDatumBeforeChecking, refsLinkedTo, referenceDatum);
 
         if (validationCheckResults != null && !validationCheckResults.isSuccess()) {
-            return registerErrors(recursionStrategy, rowWithReferenceDatum, lineChecker, validationCheckResults, ctx.referenceDatumBeforeChecking(), ctx.allCheckerErrorsBuilder());
+            return registerErrors(recursionStrategy, rowWithReferenceDatum, lineChecker, validationCheckResults, referenceDatumBeforeChecking, allCheckerErrorsBuilder);
         }
         return null;
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    static void registerCheckedValues(LineChecker<? extends FieldType<?>> lineChecker, CheckerValidationCheckResult<?> validationCheckResults, DataDatum referenceDatumBeforeChecking, Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo, DataDatum referenceDatum) {
+    static void registerCheckedValues(LineChecker lineChecker, CheckerValidationCheckResult validationCheckResults, DataDatum referenceDatumBeforeChecking, Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo, DataDatum referenceDatum) {
         Optional.ofNullable(validationCheckResults)
                 .filter(ValidationCheckResult::isSuccess)
                 .ifPresent(validationCheckResult -> {
                             final DataColumn dataColumn = (DataColumn) validationCheckResult.target();
-                            final DataColumnValue<?, ?> referenceColumnRawValue = referenceDatumBeforeChecking.get(dataColumn);
-                            DataColumnValue<?, ?> valueToStoreInDatabase =
+                            final DataColumnValue referenceColumnRawValue = referenceDatumBeforeChecking.get(dataColumn);
+                            DataColumnValue valueToStoreInDatabase =
                                     validationCheckResults.transform(
                                             lineChecker,
                                             referenceColumnRawValue,
@@ -71,9 +60,9 @@ public class DataValidator {
                                     .map(DataColumn::new)
                                     .toList();
                             DataColumn firstPatternOfColumn = patternOfColumn.get(0);
-                            DataColumnValue<?, ?> columnValue = referenceDatum.get(firstPatternOfColumn);
+                            DataColumnValue columnValue = referenceDatum.get(firstPatternOfColumn);
                             if (columnValue instanceof DataColumnPatternValue(
-                                    Map<DataColumn, DataColumnValue<?, ?>> values
+                                    Map<DataColumn, DataColumnValue> values
                             )) {
                                 if (patternOfColumn.size() > 1) {
                                     DataColumn secondPatternOfColumn = patternOfColumn.get(1);
@@ -89,7 +78,7 @@ public class DataValidator {
                 );
     }
 
-    static List<ReferenceDatumAfterChecking> registerErrors(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, LineChecker<? extends FieldType<?>> lineChecker, CheckerValidationCheckResult<?> validationCheckResults, DataDatum referenceDatumBeforeChecking, ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder) {
+    static List<ReferenceDatumAfterChecking> registerErrors(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, LineChecker lineChecker, CheckerValidationCheckResult validationCheckResults, DataDatum referenceDatumBeforeChecking, ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder) {
         boolean isLineCheckerRecusrsiveReference = Optional.ofNullable(lineChecker.checkerDescription())
                 .filter(ReferenceChecker.class::isInstance)
                 .map(ReferenceChecker.class::cast)
@@ -110,7 +99,7 @@ public class DataValidator {
         return null;
     }
 
-    static List<ReferenceDatumAfterChecking> registerMissingLine(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, LineChecker<? extends FieldType<?>> lineChecker, DataDatum referenceDatumBeforeChecking) {
+    static List<ReferenceDatumAfterChecking> registerMissingLine(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, LineChecker lineChecker, DataDatum referenceDatumBeforeChecking) {
         Optional.ofNullable(lineChecker.checkerDescription())
                 .filter(ReferenceChecker.class::isInstance)
                 .map(ReferenceChecker.class::cast)
@@ -150,8 +139,7 @@ public class DataValidator {
                 ));
     }
 
-    @SuppressWarnings("java:S1452")
-    CheckerValidationCheckResult<?> testValues(RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker<? extends FieldType<?>> lineChecker, Map<String, Object> context, DataDatum referenceDatumBeforeChecking) {
+    CheckerValidationCheckResult testValues(RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker<? extends FieldType<?>> lineChecker, Map<String, Object> context, DataDatum referenceDatumBeforeChecking) {
         switch (lineChecker.transformer()) {
             case LineChecker.LineTransformer.ChainTransformersLineTransformer transformers -> {
                 for (LineChecker.LineTransformer transformer : transformers.transformers()) {
@@ -189,12 +177,12 @@ public class DataValidator {
         return lineChecker.checkReference(referenceDatumBeforeChecking, context);
     }
 
-    static boolean matchingTarget(RowWithReferenceDatum rowWithReferenceDatum, LineChecker<?> lineChecker) {
+    static boolean matchingTarget(RowWithReferenceDatum rowWithReferenceDatum, LineChecker<? extends FieldType<?>> lineChecker) {
         return rowWithReferenceDatum.referenceDatum().values()
                 .entrySet()
                 .stream()
                 .flatMap(entry -> {
-                    if (entry.getValue() instanceof DataColumnPatternValue(Map<DataColumn, DataColumnValue<?, ?>> values)) {
+                    if (entry.getValue() instanceof DataColumnPatternValue(Map<DataColumn, DataColumnValue> values)) {
                         return values.keySet().stream()
                                 .map(dataColumn -> dataColumn.column().equals(Column.__VALUE__) ?
                                         entry.getKey() :
@@ -221,11 +209,11 @@ public class DataValidator {
      *     <li>détecter les référentiels utilisés (et conserver les clés vers ceux utilisés pour fixer le refsLinkedTo)</li>
      * </ul>
      */
-    public List<ReferenceDatumAfterChecking> check(
+    public <F extends FieldType<?>> List<ReferenceDatumAfterChecking> check(
             Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey,
             RecursionStrategy recursionStrategy,
             final RowWithReferenceDatum rowWithReferenceDatum,
-            final Set<LineChecker<?>> transformedLineCheckers,
+            final Set<LineChecker<? extends FieldType<?>>> transformedLineCheckers,
             PublishContext.PublishContextBuilder publishContextBuilder) {
         final DataDatum referenceDatumBeforeChecking = rowWithReferenceDatum.referenceDatum();
         final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo = new HashMap<>();
@@ -240,9 +228,8 @@ public class DataValidator {
         // par checkLineForChecker qui appelle manyChecker.value().getValue().clear()
         // au debut , et par OneChecker.check(value) qui re-clone le
         // FieldType ( interne ).
-        final LineCheckContext ctx = new LineCheckContext(referenceDatumBeforeChecking, refsLinkedTo, referenceDatum, allCheckerErrorsBuilder);
-        for (final LineChecker<? extends FieldType<?>> lineChecker : transformedLineCheckers) {
-            final List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = checkLineForChecker(recursionStrategy, rowWithReferenceDatum, publishContextBuilder, lineChecker, ctx);
+        for (final LineChecker lineChecker : transformedLineCheckers) {
+            final List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = checkLineForChecker(recursionStrategy, rowWithReferenceDatum, publishContextBuilder, lineChecker, referenceDatumBeforeChecking, refsLinkedTo, referenceDatum, allCheckerErrorsBuilder);
             if (referenceDatumAfterCheckings != null) return referenceDatumAfterCheckings;
         }
         refsLinkedTo.putAll(rowWithReferenceDatum.refsLinkedTo());
@@ -257,7 +244,7 @@ public class DataValidator {
         return buildReferenceDataAfterChecking(buildKey, recursionStrategy, transformedLineCheckers, publishContextBuilder, referenceDatumAfterChecking);
     }
 
-    private List<ReferenceDatumAfterChecking> buildReferenceDataAfterChecking(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, Set<LineChecker<?>> transformedLineCheckers, PublishContext.PublishContextBuilder publishContextBuilder, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
+    private List<ReferenceDatumAfterChecking> buildReferenceDataAfterChecking(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, Set<LineChecker<? extends FieldType<?>>> transformedLineCheckers, PublishContext.PublishContextBuilder publishContextBuilder, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
         List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = List.of();
         if (recursionStrategy instanceof WithRecursion withRecursion) {
             addBuildedLineKeysToReferenceValues(buildKey, withRecursion, referenceDatumAfterChecking);
@@ -277,7 +264,7 @@ public class DataValidator {
     private List<ReferenceDatumAfterChecking> testLinesRegardingRecursivity(
             Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey,
             RecursionStrategy recursionStrategy,
-            Set<LineChecker<?>> transformedLineCheckers,
+            Set<LineChecker<? extends FieldType<?>>> transformedLineCheckers,
             PublishContext.PublishContextBuilder publishContextBuilder,
             ReferenceDatumAfterChecking referenceDatumAfterChecking) {
         if (recursionStrategy instanceof WithRecursion withRecursion) {

@@ -74,18 +74,21 @@ public class UserRolesService {
     private final AuthenticationService authenticationService;
     private final JdbcTemplate jdbcTemplate;
     private final RoleGrantAuditRepository auditRepository;
+    private final UserRolesAuditLogger auditLogger;
 
     @Autowired
     public UserRolesService(UserRepository userRepository,
                                  ApplicationRepository applicationRepository,
                                  AuthenticationService authenticationService,
                                  JdbcTemplate jdbcTemplate,
-                                 RoleGrantAuditRepository auditRepository) {
+                                 RoleGrantAuditRepository auditRepository,
+                                 UserRolesAuditLogger auditLogger) {
         this.userRepository = userRepository;
         this.applicationRepository = applicationRepository;
         this.authenticationService = authenticationService;
         this.jdbcTemplate = jdbcTemplate;
         this.auditRepository = auditRepository;
+        this.auditLogger = auditLogger;
     }
 
     // ---------------------------------------------------------------- //
@@ -211,7 +214,7 @@ public class UserRolesService {
             Application application = applicationRepository.findApplication(applicationId);
             grantApplicationRole(userId, application, roleName);
         }
-        logAudit(userId, roleName, applicationId, RoleGrantAudit.ACTION_GRANT);
+        auditLogger.logGrant(userId, roleName, applicationId);
     }
 
     // ---------------------------------------------------------------- //
@@ -241,7 +244,7 @@ public class UserRolesService {
             Application application = applicationRepository.findApplication(applicationId);
             revokeApplicationRole(userId, application, roleName);
         }
-        logAudit(userId, roleName, applicationId, RoleGrantAudit.ACTION_REVOKE);
+        auditLogger.logRevoke(userId, roleName, applicationId);
     }
 
     // ---------------------------------------------------------------- //
@@ -322,38 +325,18 @@ public class UserRolesService {
     }
 
     // ---------------------------------------------------------------- //
-    //  audit                                                           //
+    //  attribution lookup ( read-side )                                //
     // ---------------------------------------------------------------- //
-
-    /**
-     * Append une row dans {@code oa_audit.role_grant_audit} . Best-effort :
-     * un echec ( ex extension oa_audit absente apres downgrade BDD ) n'interrompt
-     * pas le grantRole / revokeRole metier - on log warn et on continue .
-     */
-    private void logAudit(UUID userId, String roleName, UUID applicationId, String action) {
-        UUID grantedBy = currentCallerUuid();
-        try {
-            auditRepository.logAction(userId, roleName, applicationId, action, grantedBy);
-        } catch (RuntimeException ex) {
-            log.warn("role_grant_audit insert failed for user {} role {} app {} action {} : {}",
-                    userId, roleName, applicationId, action, ex.getMessage());
-        }
-    }
-
-    private UUID currentCallerUuid() {
-        try {
-            CurrentUserRoles caller = authenticationService.getCurrentUserRoles();
-            return caller == null ? null : caller.userId();
-        } catch (RuntimeException ex) {
-            return null;
-        }
-    }
+    //
+    // Audit write-side ( grant / revoke logging ) extrait dans
+    // {@link UserRolesAuditLogger} pour respecter SRP . Cette section
+    // est la read-side qui consomme la table audit pour enrichir le
+    // detail user expose par l'API .
 
     /**
      * Charge la trace d'attribution complete pour un user + resoud les logins
-     * des admins grantor en batch ( 1 lookup par UUID distinct ) . Capsule a la
-     * fois la map "derniere action GRANT par (role, app)" et la table de
-     * resolution UUID -> login .
+     * des admins grantor . Capsule a la fois la map "derniere action GRANT
+     * par (role, app)" et la table de resolution UUID -> login .
      */
     private AttributionLookup buildAttributionLookup(UUID userId) {
         List<RoleGrantAudit> rows;
@@ -377,20 +360,20 @@ public class UserRolesService {
             latestGrant.putIfAbsent(key, row);
             if (row.grantedBy() != null) grantorIds.add(row.grantedBy());
         }
-        Map<UUID, String> loginByUuid = resolveLoginsBatch(grantorIds);
+        Map<UUID, String> loginByUuid = resolveLoginsSequentially(grantorIds);
         return new AttributionLookup(latestGrant, loginByUuid);
     }
 
     /**
-     * Resoud login par UUID en 1 query batch via {@code IN ( ... )} . Pour les
-     * UUIDs introuvables ( admin supprime ) , la map ne contient pas l'entree .
+     * Resoud login par UUID en boucle sequentielle ( 1 query par UUID
+     * distinct ) . Volume faible attendu : 1-5 admins distincts par user
+     * typiquement ; passer en vrai batch SQL ( {@code WHERE id IN (...)} )
+     * serait premature . Pour les UUIDs introuvables ( admin supprime ) ,
+     * la map ne contient pas l'entree .
      */
-    private Map<UUID, String> resolveLoginsBatch(Set<UUID> uuids) {
+    private Map<UUID, String> resolveLoginsSequentially(Set<UUID> uuids) {
         if (uuids == null || uuids.isEmpty()) return Map.of();
         Map<UUID, String> out = new HashMap<>();
-        // UserRepository.tryFindById renvoie un Optional<OreSiUser> ; on l'utilise
-        // pour 1 a 1 ( volume faible : 1-5 admins distinct par user typiquement ) .
-        // Un vrai batch SQL serait un over-engineering ici .
         for (UUID id : uuids) {
             try {
                 userRepository.tryFindById(id)

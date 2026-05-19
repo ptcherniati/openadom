@@ -99,7 +99,7 @@ public class AdditionalFileSearchHelper {
                 .collect(Collectors.joining(" or ", "(", ")" + byFileType));
     }
 
-    private String whereForAdditionalFileName(final Map.Entry<String, AdditionalFilesInfos.AdditionalFileInfos> entry) {
+    private String whereForAdditionalFileName(final Map.Entry<String, ? extends AdditionalFilesInfos.AdditionalFileInfos> entry) {
         final String additionalFileName = entry.getKey();
         AdditionalFilesInfos.AdditionalFileInfos additionalFileInfos = entry.getValue();
         Set<AdditionalFilesInfos.FieldFilters> fieldFilters = additionalFileInfos.getFieldFilters();

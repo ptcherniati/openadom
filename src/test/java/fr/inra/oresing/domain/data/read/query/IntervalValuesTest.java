@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery.*;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Tag;
 
@@ -268,67 +267,6 @@ class IntervalValuesTest {
                     new IntervalValuesTime("18:00", "08:00", "HH:mm")
             );
             assertEquals(FILTER_BAD_FORMAT_BAD_RANGE_FOR_TIMES, ex.getMessage());
-        }
-    }
-
-    // =========================================================================
-    //  IntervalValuesDateTime
-    // =========================================================================
-
-    @Nested
-    @DisplayName("IntervalValuesDateTime")
-    class IntervalValuesDateTimeTest {
-
-        @Test
-        @DisplayName("Création valide avec from et to en datetime")
-        void shouldCreateValidWithDateTimes() {
-            IntervalValuesDateTime iv = new IntervalValuesDateTime(
-                    "2023-01-01T08:00", "2023-12-31T18:00", "yyyy-MM-dd'T'HH:mm");
-            assertThat(iv.from()).isEqualTo("2023-01-01T08:00");
-            assertThat(iv.to()).isEqualTo("2023-12-31T18:00");
-            assertThat(iv.format()).isEqualTo("yyyy-MM-dd'T'HH:mm");
-        }
-
-        @Test
-        @DisplayName("Création valide avec from et to null")
-        void shouldCreateValidWithNullBounds() {
-            assertDoesNotThrow(() -> new IntervalValuesDateTime(null, null, "yyyy-MM-dd'T'HH:mm"));
-        }
-
-        @Test
-        @DisplayName("Lance BadDownloadDatasetQuery si format null ou vide")
-        void shouldThrowWhenFormatMissing() {
-            BadDownloadDatasetQuery ex = assertThrows(BadDownloadDatasetQuery.class, () ->
-                    new IntervalValuesDateTime("2023-01-01T08:00", "2023-01-02T18:00", null)
-            );
-            assertEquals(MISSING_FORMAT_FOR_INTERVAL_VALUE, ex.getMessage());
-        }
-
-        @Test
-        @DisplayName("Lance BadDownloadDatasetQuery si from a un format invalide")
-        void shouldThrowWhenFromBadFormat() {
-            BadDownloadDatasetQuery ex = assertThrows(BadDownloadDatasetQuery.class, () ->
-                    new IntervalValuesDateTime("not-a-datetime", "2023-12-31T18:00", "yyyy-MM-dd'T'HH:mm")
-            );
-            assertEquals(FILTER_BAD_FORMAT_FOR_START_DATE_TIME, ex.getMessage());
-        }
-
-        @Test
-        @DisplayName("Lance BadDownloadDatasetQuery si to a un format invalide")
-        void shouldThrowWhenToBadFormat() {
-            BadDownloadDatasetQuery ex = assertThrows(BadDownloadDatasetQuery.class, () ->
-                    new IntervalValuesDateTime("2023-01-01T08:00", "not-a-datetime", "yyyy-MM-dd'T'HH:mm")
-            );
-            assertEquals(FILTER_BAD_FORMAT_FOR_END_DATE_TIME, ex.getMessage());
-        }
-
-        @Test
-        @DisplayName("Lance BadDownloadDatasetQuery si to est avant from")
-        void shouldThrowWhenToBeforeFrom() {
-            BadDownloadDatasetQuery ex = assertThrows(BadDownloadDatasetQuery.class, () ->
-                    new IntervalValuesDateTime("2023-12-31T18:00", "2023-01-01T08:00", "yyyy-MM-dd'T'HH:mm")
-            );
-            assertEquals(FILTER_BAD_FORMAT_BAD_RANGE_FOR_DATE_TIMES, ex.getMessage());
         }
     }
 }

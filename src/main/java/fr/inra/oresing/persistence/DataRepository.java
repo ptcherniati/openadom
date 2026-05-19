@@ -1,5 +1,6 @@
 package fr.inra.oresing.persistence;
 
+import fr.inra.oresing.domain.data.DataRows;
 import fr.inra.oresing.persistence.refref.RefrefRebuildSql;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -9,7 +10,6 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.data.DataColumn;
-import fr.inra.oresing.domain.data.DataRows;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
@@ -43,6 +43,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Array;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
@@ -83,29 +84,21 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         // kv.value='LPF' OR t.refvalues @> '{"esp_nom":"ALO"}'::jsonb
         String cond = params.entrySet().stream().flatMap(e -> {
                     final String k = e.getKey();
-                    if ("_row_id_".equalsIgnoreCase(k)) {
-                        final java.util.List<String> values = e.getValue();
-                        if (values.isEmpty()) {
-                            return Stream.empty();
-                        }
-                        // Bind each UUID as a named parameter to prevent SQL injection.
-                        // UUID.fromString validates the format before binding.
-                        final String collect = values.stream().map(v -> {
-                                    UUID.fromString(v); // validate UUID format
-                                    final String arg = "arg" + i.getAndIncrement();
+                    if (StringUtils.equalsAnyIgnoreCase("_row_id_", k)) {
+                        final String collect = e.getValue().stream().map(v -> {
+                                    final String arg = ":arg" + i.getAndIncrement();
                                     paramSource.addValue(arg, v);
-                                    return ":" + arg + "::uuid";
+                                    return String.format("'%s'::uuid", v);
                                 })
                                 .collect(Collectors.joining(", "));
-                        return Stream.of("array[id]::uuid[] <@ array[" + collect + "]::uuid[]");
+                        return Stream.ofNullable(String.format("array[id]::uuid[] <@ array[%s]::uuid[]", collect));
                     }
-                    if ("_row_key_".equalsIgnoreCase(k)) {
-                        // Bind each key value as a named parameter to prevent SQL injection.
+                    if (StringUtils.equalsAnyIgnoreCase("_row_key_", k)) {
                         final String collect = e.getValue().stream()
                                 .map(v -> {
-                                    final String arg = "arg" + i.getAndIncrement();
+                                    final String arg = ":arg" + i.getAndIncrement();
                                     paramSource.addValue(arg, v);
-                                    return ":" + arg;
+                                    return String.format("'%s'", v);
                                 })
                                 .collect(Collectors.joining(", "));
                         if (collect.isEmpty()) {
@@ -113,22 +106,14 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         }
                         return Stream.ofNullable(String.format(" (naturalKey in (%1$s) or hierarchicalKey in (%1$s)) ", collect));
                     }
-                    if ("any".equalsIgnoreCase(k)) {
+                    if (StringUtils.equalsAnyIgnoreCase("any", k)) {
                         return e.getValue().stream().map(v -> {
-                            final String arg = "arg" + i.getAndIncrement();
+                            final String arg = ":arg" + i.getAndIncrement();
                             paramSource.addValue(arg, v);
-                            return "kv.value=:" + arg;
+                            return "kv.value=" + arg;
                         });
                     }
-                    // Bind both the JSON field name (k) and the value (v) as named parameters
-                    // to prevent SQL injection from arbitrary HTTP query parameters.
-                    return e.getValue().stream().map(v -> {
-                        final String keyArg = "arg" + i.getAndIncrement();
-                        final String valArg = "arg" + i.getAndIncrement();
-                        paramSource.addValue(keyArg, k);
-                        paramSource.addValue(valArg, ".*" + v + ".*");
-                        return String.format("lower(t.refvalues ->> :%s) ~ lower(:%s)", keyArg, valArg);
-                    });
+                    return e.getValue().stream().map(v -> String.format("lower(t.refvalues ->> '%s') ~ lower('.*%s.*')", k, v));
                 })
                 .filter(Objects::nonNull).
                 collect(Collectors.joining(" AND "));
@@ -206,11 +191,13 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         // Phase 1 : MERGE_LOCAL ( la concatenation est faite par cascade
         // collector AVANT cet appel ; on emit l'event juste pour aligner
         // l'UI sur la prochaine etape ) .
-        tryAcceptPhase(onPhaseChange, "MERGE_LOCAL");
+        try { onPhaseChange.accept("MERGE_LOCAL"); } catch (RuntimeException ignored) { /* best effort */ }
 
-        return getNamedParameterJdbcTemplate().getJdbcTemplate().execute(
+        Long upserted = getNamedParameterJdbcTemplate().getJdbcTemplate().execute(
                 (ConnectionCallback<Long>) connection -> {
-                    // ...
+                    // setAutoCommit jamais restaure par l'ancien code + 4
+                    // Statement createStatement() sans try-with-resources
+                    // ( leak ). Restoration en finally.
                     final boolean originalAutoCommit = connection.getAutoCommit();
                     connection.setAutoCommit(false);
                     boolean committed = false;
@@ -225,7 +212,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         // Phase 2 : TEMP_LOAD ( COPY merged.csv -> referencevalue_import ) .
                         // Cote UI : indeterminate ( 1 statement Postgres , pas de
                         // progress incremental observable ) .
-                        tryAcceptPhase(onPhaseChange, "TEMP_LOAD");
+                        try { onPhaseChange.accept("TEMP_LOAD"); } catch (RuntimeException ignored) { /* best effort */ }
                         long copiedRows;
                         long copyStart = System.nanoTime();
                         try (BufferedReader reader = Files.newBufferedReader(finalCsvFile, StandardCharsets.UTF_8)) {
@@ -281,7 +268,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         // Cote UI : determinate via {@code onBatchUpserted} qui propage
                         // le rowcount par batch au consommateur ( typiquement
                         // {@code StoreAllPathSink} -> {@code WorkflowActiveRegistry.addFinalRows} ) .
-                        tryAcceptPhase(onPhaseChange, "UPSERT_FINAL");
+                        try { onPhaseChange.accept("UPSERT_FINAL"); } catch (RuntimeException ignored) { /* best effort */ }
                         long insertStart = System.nanoTime();
                         long totalUpserted = 0L;
                         int batchCount = 0;
@@ -293,7 +280,12 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                 }
                                 totalUpserted += affected;
                                 batchCount++;
-                                tryAcceptBatch(onBatchUpserted, affected);
+                                try {
+                                    onBatchUpserted.accept((long) affected);
+                                } catch (RuntimeException ignored) {
+                                    /* best effort : un consommateur fautif ne doit pas
+                                       casser le UPSERT en cours */
+                                }
                             }
                         }
                         long insertMs = (System.nanoTime() - insertStart) / 1_000_000L;
@@ -327,24 +319,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         }
                     }
                 });
-    }
-
-    /** Appelle {@code consumer.accept(phase)} en avalant silencieusement les RuntimeException (best-effort). */
-    private static void tryAcceptPhase(java.util.function.Consumer<String> consumer, String phase) {
-        try {
-            consumer.accept(phase);
-        } catch (RuntimeException ignored) {
-            // best effort
-        }
-    }
-
-    /** Appelle {@code consumer.accept(value)} en avalant silencieusement les RuntimeException (best-effort). */
-    private static void tryAcceptBatch(java.util.function.LongConsumer consumer, long value) {
-        try {
-            consumer.accept(value);
-        } catch (RuntimeException ignored) {
-            // best effort : un consommateur fautif ne doit pas casser l'UPSERT en cours
-        }
+        return upserted == null ? 0L : upserted;
     }
 
 
@@ -536,7 +511,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 queryForObject(
                         sql,
                         parameterSource,
-                        new JsonRowMapper<Map<String, List<Ltree>>>()
+                        new JsonRowMapper<Map>()
                 );
     }
 
@@ -1200,7 +1175,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     }
 
     public Flux<FilterList> getFilterList(final String dataName) {
-        final Stream<FilterList> result;
+        final Stream result;
         // #59 - Optimisation : precalcul du flag isHierarchique dans une CTE separee.
         // Avant : jsonb_path_exists(application.configuration, ...) etait appele pour chaque ligne
         // de la jointure components_grouped x parents_grouped (ex: 4850 appels pour t_soil_analysis_sana).
@@ -1538,10 +1513,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         );
     }
 
-    /**
-     * @deprecated Migré vers {@code fr.inra.oresing.domain.repository.data.DataRepository.Order}.
-     */
-    @Deprecated(forRemoval = true)
+    @Deprecated(forRemoval = true) // migré vers domain.repository.data.DataRepository.Order
     public enum Order {
         ASC, DESC
     }

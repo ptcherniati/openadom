@@ -65,8 +65,7 @@ public record SessionInfo(
     /** Duree totale ( ou en cours ) , null si donnees insuffisantes . */
     public Duration duration(Instant now) {
         if (loginTime == null) return null;
-        Instant fallback = (expiresAt != null && now.isAfter(expiresAt)) ? expiresAt : now;
-        Instant end = endTime != null ? endTime : fallback;
+        Instant end = endTime != null ? endTime : (expiresAt != null && now.isAfter(expiresAt) ? expiresAt : now);
         return Duration.between(loginTime, end);
     }
 

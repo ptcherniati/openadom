@@ -21,8 +21,8 @@ import fr.inra.oresing.domain.data.deposit.context.hierarchicalkey.HierarchicalK
 import fr.inra.oresing.domain.data.deposit.validation.transformer.data.RowWithReferenceDatum;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
 import fr.inra.oresing.domain.data.read.query.ComponentOrderBy;
-import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import fr.inra.oresing.domain.repository.data.DataRepository;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
@@ -46,7 +46,7 @@ public class DataImporterContext {
     /**
      *
      */
-    private final ImmutableSet<LineChecker<? extends FieldType<?>>> lineCheckers;
+    private final ImmutableSet<LineChecker<FieldType<?>>> lineCheckers;
     /**
      * Les clés techniques de chaque clé naturelle hiérarchique de toutes les lignes existantes en base (avant l'import)
      */
@@ -62,7 +62,7 @@ public class DataImporterContext {
     private final PublishContext.PublishContextBuilder publishContextBuilder;
     private final Map<Ltree, List<RowWithReferenceDatum>> missingParentLines = new HashMap<>();
     @Getter
-    private ImmutableSet<LineChecker<? extends FieldType<?>>> transformedLineCheckers;
+    private ImmutableSet<LineChecker<FieldType<?>>> transformedLineCheckers;
     @Getter
     private ImmutableSet<Column> columnsWithPatternColumns;
     @Setter
@@ -70,7 +70,7 @@ public class DataImporterContext {
     private Map<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids = new HashMap<>();
 
     public DataImporterContext(final ContextConstants constants,
-                                                        final ImmutableSet<LineChecker<? extends FieldType<?>>> lineCheckers,
+                                                        final ImmutableSet<LineChecker<FieldType<?>>> lineCheckers,
                                                         final ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences,
                                                         final ImmutableSet<Column> columns,
                                                         final PatternColumnFactory patternColumnFactory,
@@ -201,16 +201,14 @@ public class DataImporterContext {
         return getDataDescription().separator();
     }
 
-    @SuppressWarnings("java:S1452")
-    public ImmutableSet<LineChecker<? extends FieldType<?>>> getLineCheckers() {
+    public ImmutableSet<LineChecker<?>> getLineCheckers() {
         return ImmutableSet.copyOf(lineCheckers);
     }
 
     /**
      * Dans le cas d'un référentiel récursif, le {@link ReferenceType} qui porte sur la colonne contenant des valeurs faisant référence à d'autres lignes du référentiel.
      */
-    @SuppressWarnings("java:S1452")
-    public LineChecker<? extends FieldType<?>> getReferenceLineChecker() {
+    public LineChecker<?> getReferenceLineChecker() {
         Preconditions.checkState(isRecursive());
         return getLineCheckers().stream()
                 .filter(lineChecker -> lineChecker.underlyingType() instanceof ReferenceType &&
@@ -298,7 +296,8 @@ public class DataImporterContext {
         return constants.hierarchicalKeyFactory().parent();
     }
 
-    public boolean existsColumn(final DataColumn column, Map<DataColumn, DataColumnValue<?, ?>> constantColumnsValues) {
+    @SuppressWarnings("java:S3740")
+    public boolean existsColumn(final DataColumn column, Map<DataColumn, DataColumnValue> constantColumnsValues) {
         return columnsWithPatternColumns.stream()
                        .map(registeredColumn -> registeredColumn.as(column.column()))
                        .anyMatch(Objects::nonNull) ||
@@ -330,7 +329,7 @@ public class DataImporterContext {
                 .toList();
     }
 
-    public void setTransformedLineCheckers(ImmutableSet<? extends LineChecker<? extends FieldType<?>>> transformedLineCheckers) {
+    public <F extends FieldType<?>> void setTransformedLineCheckers(ImmutableSet<LineChecker<F>> transformedLineCheckers) {
         ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = transformedLineCheckers.stream()
                 .map(LineChecker::fieldTypeForOne)
                 .filter(ReferenceType.class::isInstance)
@@ -350,7 +349,7 @@ public class DataImporterContext {
             referenceValues.put(key, ImmutableSet.of(uuid));
         }
         setReferenceValuesForSelfType(ImmutableMap.copyOf(referenceValues));
-        for (LineChecker<? extends FieldType<?>> lineChecker : getTransformedLineCheckers()) {
+        for (LineChecker<?> lineChecker : getTransformedLineCheckers()) {
             if (lineChecker.checkerDescription() instanceof ReferenceChecker referenceChecker && referenceChecker.refType().equals(getRefType())) {
                 ReferenceType fieldType = (ReferenceType) lineChecker.fieldTypeForOne();
                 fieldType.setReferenceValues(ImmutableMap.copyOf(referenceValues));

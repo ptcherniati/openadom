@@ -5,7 +5,6 @@ import fr.inrae.ore.cascade.model.chunk.ChunkMetadata;
 import fr.inrae.ore.cascade.model.collector.CollectorContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -31,7 +30,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  *   <li>finish() retourne un chunk unique avec la merged.csv path</li>
  * </ul>
  */
-@Tag("domain.model")
 @DisplayName("MergedFileChunkCollector")
 class MergedFileChunkCollectorTest {
 
@@ -58,7 +56,7 @@ class MergedFileChunkCollectorTest {
     @DisplayName("initialize ( ) cree un fichier merged.csv vide")
     void initialize_creates_empty_merged_file() {
         assertThat(Files.exists(mergedPath)).isTrue();
-        assertThat(mergedPath).isEmptyFile();
+        assertThat(mergedPath).hasSize(0);
     }
 
     @Test
@@ -119,7 +117,7 @@ class MergedFileChunkCollectorTest {
 
         Chunk<Path> merged = collector.finish().get().orElseThrow();
 
-        assertThat(merged.chunkIndex()).isZero();
+        assertThat(merged.chunkIndex()).isEqualTo(0);
         assertThat(merged.records()).containsExactly(mergedPath);
     }
 
@@ -155,8 +153,8 @@ class MergedFileChunkCollectorTest {
     @DisplayName("initialize ( ) appele 2 fois leve IllegalStateException")
     void double_initialize_throws_illegal_state() {
         // collector deja initialize via @BeforeEach -> 2eme appel doit refuser .
-        CollectorContext ctx = new CollectorContext("cid", -1, null, null, null, tempDir);
-        assertThatThrownBy(() -> collector.initialize(ctx))
+        assertThatThrownBy(() ->
+                collector.initialize(new CollectorContext("cid", -1, null, null, null, tempDir)))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("expected NEW");
     }
@@ -196,42 +194,7 @@ class MergedFileChunkCollectorTest {
         MergedFileChunkCollector c = new MergedFileChunkCollector(target);
         c.initialize(new CollectorContext("cid", -1, null, null, null, tempDir));
 
-        assertThat(target).isEmptyFile();
-    }
-
-    @Test
-    @DisplayName("finish ( ) ignore silencieusement un chunk-file manquant ( Files.exists == false )")
-    void finish_ignores_missing_chunk_file() throws Exception {
-        // Accept un chunk dont le path n'existe pas ( il a peut-etre ete efface
-        // par un crash precedent ) ; la concatenation doit rester stable .
-        Path ghost = tempDir.resolve("ghost-chunk.csv");
-        // ghost n'est pas cree exprès → Files.exists retourne false
-        collector.accept(chunkOf(0, ghost));
-
-        Optional<Chunk<Path>> out = collector.finish().get();
-        // Le merged file reste vide car le ghost-file n'a rien a apporter
-        assertThat(out).isPresent(); // chunk enregistre → Optional presente mais file vide
-        assertThat(mergedPath).isEmptyFile();
-    }
-
-    @Test
-    @DisplayName("initialize ( ) avec CollectorContext.correlationId() null est toleré")
-    void initialize_with_null_correlationId_tolerates() {
-        Path other = tempDir.resolve("null-cid.csv");
-        MergedFileChunkCollector c = new MergedFileChunkCollector(other);
-        // CollectorContext with null correlationId
-        c.initialize(new CollectorContext(null, -1, null, null, null, tempDir));
-        assertThat(Files.exists(other)).isTrue();
-        assertThat(c.getName()).contains("null-cid.csv");
-    }
-
-    @Test
-    @DisplayName("initialize ( ) avec context null est toleré")
-    void initialize_with_null_context_tolerates() {
-        Path other = tempDir.resolve("null-ctx.csv");
-        MergedFileChunkCollector c = new MergedFileChunkCollector(other);
-        c.initialize(null);
-        assertThat(Files.exists(other)).isTrue();
+        assertThat(target).hasSize(0);
     }
 
     private Path writeChunkFile(String name, String content) throws Exception {

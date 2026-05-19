@@ -83,7 +83,7 @@ public abstract class Column implements Comparable<Column> {
                         }
 
                         @Override
-                        public Optional<DataColumnValue<?, ?>> computeValue(final DataDatum referenceDatum) {
+                        public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
                             throw new UnsupportedOperationException("pas de valeur calculable pour " + referenceColumn);
                         }
                     };
@@ -94,14 +94,14 @@ public abstract class Column implements Comparable<Column> {
         final TransformationConfiguration computation = referenceStaticComputedColumnDescription.computation();
         final Map<String, Object> contextForExpression = computeGroovyContext(referenceValueRepository, computation);
         final Expression<Set<String>> computationExpression = StringSetGroovyExpression.forExpression(computation.expression());
-        return new ManyValuesStaticColumn(referenceColumn, ComponentPresenceConstraint.ABSENT, ComputedValueUsage.USE_COMPUTED_VALUE, null) {
+        return new ManyValuesStaticColumn(referenceColumn, referenceColumn.column(), ComponentPresenceConstraint.ABSENT, ComputedValueUsage.USE_COMPUTED_VALUE, null) {
             @Override
             public String getExpectedHeader() {
                 throw new UnsupportedOperationException("la colonne " + referenceColumn + " est calculée, il n'y a pas d'entête spécifié car elle ne doit pas être dans le CSV");
             }
 
             @Override
-            public Optional<DataColumnValue<?, ?>> computeValue(final DataDatum referenceDatum) {
+            public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
                 final ImmutableMap<String, Object> evaluationContext = ImmutableMap.<String, Object>builder()
                         .putAll(contextForExpression)
                         .putAll(referenceDatum.getEvaluationContext())
@@ -120,14 +120,14 @@ public abstract class Column implements Comparable<Column> {
         final TransformationConfiguration computation = referenceStaticComputedColumnDescription.computation();
         final Map<String, Object> contextForExpression = computeGroovyContext(referenceValueRepository, computation);
         final Expression<String> computationExpression = StringGroovyExpression.forExpression(computation.expression(), computation.exceptionMessages());
-        return new OneValueStaticColumn(referenceColumn, ComponentPresenceConstraint.ABSENT, ComputedValueUsage.USE_COMPUTED_VALUE, null) {
+        return new OneValueStaticColumn(referenceColumn, referenceColumn.column(), ComponentPresenceConstraint.ABSENT, ComputedValueUsage.USE_COMPUTED_VALUE, null) {
             @Override
             public String getExpectedHeader() {
                 throw new UnsupportedOperationException("la colonne " + referenceColumn + " est calculée, il n'y a pas d'entête spécifié");
             }
 
             @Override
-            public Optional<DataColumnValue<?, ?>> computeValue(final DataDatum referenceDatum) {
+            public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
                 final ImmutableMap<String, Object> evaluationContext = ImmutableMap.<String, Object>builder()
                         .putAll(contextForExpression)
                         .putAll(referenceDatum.getEvaluationContext())
@@ -165,6 +165,7 @@ public abstract class Column implements Comparable<Column> {
         return switch (multiplicity) {
             case ONE -> new OneValueStaticColumn(
                     referenceColumn,
+                    headerForColumn,
                     presenceConstraint,
                     defaultValue != null ? ComputedValueUsage.USE_COMPUTED_AS_DEFAULT_VALUE : ComputedValueUsage.NOT_COMPUTED,
                     defaultValue
@@ -176,11 +177,11 @@ public abstract class Column implements Comparable<Column> {
                 }
 
                 @Override
-                public Optional<DataColumnValue<?, ?>> computeValue(final DataDatum referenceDatum) {
+                public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
                     if (defaultValue == null) {
                         throw new UnsupportedOperationException(NO_DEFAULT_VALUE_MSG + referenceColumn);
                     }
-                    final Optional<DataColumnValue<?, ?>> dataColumnValue = Optional.ofNullable(referenceColumn).map(referenceDatum.values()::get);
+                    final Optional<DataColumnValue> dataColumnValue = Optional.ofNullable(referenceColumn).map(referenceDatum.values()::get);
                     if (dataColumnValue
                             .map(DataColumnValue::getValuesToCheck)
                             .map(FieldType::getValue)
@@ -197,6 +198,7 @@ public abstract class Column implements Comparable<Column> {
             };
             case MANY -> new ManyValuesStaticColumn(
                     referenceColumn,
+                    headerForColumn,
                     presenceConstraint,
                     defaultValue != null ? ComputedValueUsage.USE_COMPUTED_AS_DEFAULT_VALUE : ComputedValueUsage.NOT_COMPUTED,
                     defaultValue
@@ -208,11 +210,11 @@ public abstract class Column implements Comparable<Column> {
                 }
 
                 @Override
-                public Optional<DataColumnValue<?, ?>> computeValue(final DataDatum referenceDatum) {
+                public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
                     if (defaultValue == null) {
                         throw new UnsupportedOperationException(NO_DEFAULT_VALUE_MSG + referenceColumn);
                     }
-                    final Optional<DataColumnValue<?, ?>> dataColumnValue = Optional.ofNullable(referenceColumn).map(referenceDatum.values()::get);
+                    final Optional<DataColumnValue> dataColumnValue = Optional.ofNullable(referenceColumn).map(referenceDatum.values()::get);
                     if (dataColumnValue
                             .map(DataColumnValue::getValuesToCheck)
                             .map(FieldType::getValue)
@@ -227,7 +229,7 @@ public abstract class Column implements Comparable<Column> {
                                         .toList()
                                 )
                                 .map(ListType::getListTypeFromListValue)
-                                .map(lt -> new DataColumnMultipleValue<>(lt.getValue()));
+                                .map(DataColumnMultipleValue::new);
                     }
                     return dataColumnValue;
                 }
@@ -262,7 +264,7 @@ public abstract class Column implements Comparable<Column> {
             }
 
             @Override
-            public Optional<DataColumnValue<?, ?>> computeValue(final DataDatum referenceDatum) {
+            public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
                 throw new UnsupportedOperationException(NO_DEFAULT_VALUE_MSG + referenceColumn);
             }
         };
@@ -291,8 +293,7 @@ public abstract class Column implements Comparable<Column> {
         return presenceConstraint.isExpected();
     }
 
-    @SuppressWarnings("java:S1452")
-    public abstract Optional<DataColumnValue<?, ?>> computeValue(DataDatum referenceDatum);
+    public abstract Optional<DataColumnValue> computeValue(DataDatum referenceDatum);
 
     @Override
     public int compareTo(final Column o) {

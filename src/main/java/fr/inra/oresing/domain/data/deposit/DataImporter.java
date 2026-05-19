@@ -3,6 +3,7 @@ package fr.inra.oresing.domain.data.deposit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
+import fr.inra.oresing.workflow.cascade.config.ImportProperties;
 import fr.inra.oresing.domain.cancel.CancellationContext;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
@@ -22,7 +23,6 @@ import fr.inra.oresing.domain.data.deposit.validation.transformer.data.RowWithRe
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.ReferenceValidationCheckResult;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.file.FileBomResolver;
-import fr.inra.oresing.workflow.cascade.config.ImportProperties;
 import fr.inra.oresing.workflow.cascade.progress.ImportProgressReporter;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -51,11 +51,10 @@ public class DataImporter {
 
 
     public static final String HIERARCHICALKEY_SEPARATOR = "K";
-    public static final Path ORESING_DATA = Path.of("/tmp/oresing-data-");
+
+
+    /** R-P2-3 : seuil min d'occurrences pour pré-calculer une valeur de référence. */
     private static final int PRECOMPUTE_CACHE_THRESHOLD = 2;
-    public static final String NOT_SPLITABLE_DATA_FOR_CHUNKED_TREATMENT = "notSplitableDataForChunkedTreatment_";
-    public static final String DATA_FOR_CHUNKED_TREATMENT = "dataForChunkedTreatment_";
-    public static final String TMP = ".tmp";
 
     private final AsynchroneFileImporterContext dataImporterContext;
     private final RecursionStrategy recursionStrategy;
@@ -64,13 +63,6 @@ public class DataImporter {
     private final CsvReader csvReader;
     // R-P2-1/R-P2-3 : configurer le plafond du cache ReferenceType + pré-warmer dans prepareContextForDataTreatment.
     private final ImportProperties importProperties;
-    static {
-        try {
-            Files.createDirectories(ORESING_DATA);
-        } catch (IOException e) {
-            throw new ExceptionInInitializerError(e);
-        }
-    }
 
     /**
      * Mode « lite » : data deja validee anterieurement ( typiquement republish ) .
@@ -219,27 +211,6 @@ public class DataImporter {
         final Iterator<CSVRecord> linesIterator = csvParser.iterator();
 
         // === Setup context ( ALWAYS executed ) ===
-        Map<String, ReferenceType> refTypeByColumnName = setupContext(linesIterator);
-
-        // === Body write ===
-        try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8)) {
-            if (skipCsvReencoding) {
-                writeBodyFast(linesIterator, writer);
-            } else {
-                writeBodySafe(linesIterator, writer, csvFormat);
-            }
-        }
-        // R-P2-3 : pré-warmer sélectif — compter les fréquences de chaque valeur
-        // par colonne référence, puis pré-calculer les valeurs vues ≥ THRESHOLD fois.
-        // Un seul passage sur le fichier temp (déjà en cache OS ou SSD).
-        if (!refTypeByColumnName.isEmpty()) {
-            prewarmReferenceCache(tempFile, refTypeByColumnName);
-        }
-
-        return tempFile;
-    }
-
-    private Map<String, ReferenceType> setupContext(Iterator<CSVRecord> linesIterator) {
         getDataImporterContext().dataHeaderReader().readHeader(linesIterator);
         getDataImporterContext().withPatternColumn();
         getDataImporterContext().setTransformedLineCheckers(getRecursionStrategy(),
@@ -262,37 +233,72 @@ public class DataImporter {
                 refTypeByColumnName.put(col, rt);
             }
         });
-        return refTypeByColumnName;
-    }
 
-    private void writeBodyFast(Iterator<CSVRecord> linesIterator, BufferedWriter writer) throws IOException {
-        // FAST path : trust the input format , avoid CSVPrinter overhead .
-        // Saves ~1-3 s on a 274k-line file . Hazardous if cells contain
-        // the delimiter / quotes / newlines : the body lines would be
-        // unparseable downstream . Use only when the source is known
-        // clean ( machine-generated exports , validated upstream ) .
-        final char sep = getDataImporterContext().contextConstants().dataConfiguration().separator();
-        while (linesIterator.hasNext()) {
-            CSVRecord r = linesIterator.next();
-            int n = r.size();
-            for (int i = 0; i < n; i++) {
-                if (i > 0) writer.write(sep);
-                writer.write(r.get(i));
-            }
-            writer.newLine();
+        // === Body write ===
+        // Emet la sous-phase CSV_REENCODING avant de demarrer l'ecriture .
+        // L'UI affiche "Re-encodage CSV" au lieu d'un opaque "CASCADE_PREPARING"
+        // pendant les 30s-3min que peut prendre cette etape sur 1M+ lignes .
+        if (phaseEmitter != null) {
+            try { phaseEmitter.accept(fr.inra.oresing.workflow.WorkflowPhase.CSV_REENCODING); }
+            catch (RuntimeException ignored) { /* best effort */ }
         }
-    }
+        // Cancellation : poll every CANCEL_POLL_ROWS rows so SLA 5s holds on
+        // 1.1M-row files ( body write phase alone takes ~10 s without checkpoints ) .
+        // Poll cost negligible ( atomic read on volatile flag ) .
+        final int CANCEL_POLL_ROWS = 10_000;
+        long writtenRows = 0L;
+        try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8)) {
+            if (skipCsvReencoding) {
+                // FAST path : trust the input format , avoid CSVPrinter overhead .
+                // Saves ~1-3 s on a 274k-line file . Hazardous if cells contain
+                // the delimiter / quotes / newlines : the body lines would be
+                // unparseable downstream . Use only when the source is known
+                // clean ( machine-generated exports , validated upstream ) .
+                final char sep = getDataImporterContext().contextConstants().dataConfiguration().separator();
+                while (linesIterator.hasNext()) {
+                    CSVRecord r = linesIterator.next();
+                    int n = r.size();
+                    for (int i = 0; i < n; i++) {
+                        if (i > 0) writer.write(sep);
+                        writer.write(r.get(i));
+                    }
+                    writer.newLine();
+                    if ((++writtenRows % CANCEL_POLL_ROWS) == 0) {
+                        CancellationContext.checkpoint("body write fast " + writtenRows);
+                    }
+                }
+            } else {
+                // SAFE path : re-encode via CSVPrinter ( default ) .
+                // #499 - quotes cells containing the delimiter , double
+                // quotes , or embedded newlines so the chunker downstream
+                // can split lines safely .
+                try (CSVPrinter printer = new CSVPrinter(writer, csvFormat)) {
+                    while (linesIterator.hasNext()) {
+                        printer.printRecord(linesIterator.next());
+                        if ((++writtenRows % CANCEL_POLL_ROWS) == 0) {
+                            CancellationContext.checkpoint("body write safe " + writtenRows);
+                        }
+                    }
+                }
+            }
+        }
+        CancellationContext.checkpoint("body write done");
+        // R-P2-3 : pré-warmer sélectif - compter les fréquences de chaque valeur
+        // par colonne référence, puis pré-calculer les valeurs vues >= THRESHOLD fois.
+        // Un seul passage sur le fichier temp (déjà en cache OS ou SSD).
+        // Mode lite : data deja validee , skip second-pass file scan .
+        if (!lightweight && !refTypeByColumnName.isEmpty()) {
+            // Emet la sous-phase PREWARM_REFS pour que l'UI distingue ce
+            // segment ( 30s-2min selon le nombre de references distinctes )
+            // du CSV_REENCODING precedent .
+            if (phaseEmitter != null) {
+                try { phaseEmitter.accept(fr.inra.oresing.workflow.WorkflowPhase.PREWARM_REFS); }
+                catch (RuntimeException ignored) { /* best effort */ }
+            }
+            prewarmReferenceCache(tempFile, refTypeByColumnName);
+        }
 
-    private void writeBodySafe(Iterator<CSVRecord> linesIterator, BufferedWriter writer, CSVFormat csvFormat) throws IOException {
-        // SAFE path : re-encode via CSVPrinter ( default ) .
-        // #499 - quotes cells containing the delimiter , double
-        // quotes , or embedded newlines so the chunker downstream
-        // can split lines safely .
-        try (CSVPrinter printer = new CSVPrinter(writer, csvFormat)) {
-            while (linesIterator.hasNext()) {
-                printer.printRecord(linesIterator.next());
-            }
-        }
+        return tempFile;
     }
 
     /**

@@ -44,9 +44,9 @@ class CompensationSweeperTest {
 
         CompensationSweeper.SweepResult result = sweeper.sweepNow();
 
-        assertThat(result.totalProcessed()).isZero();
-        assertThat(result.compensated()).isZero();
-        assertThat(result.failed()).isZero();
+        assertThat(result.totalProcessed()).isEqualTo(0);
+        assertThat(result.compensated()).isEqualTo(0);
+        assertThat(result.failed()).isEqualTo(0);
     }
 
     @Test
@@ -66,7 +66,7 @@ class CompensationSweeperTest {
         assertThat(result.totalProcessed()).isEqualTo(2);
         assertThat(result.compensated()).isEqualTo(1);
         assertThat(result.failed()).isEqualTo(1);
-        assertThat(result.durationMs()).isNotNegative();
+        assertThat(result.durationMs()).isGreaterThanOrEqualTo(0);
     }
 
     // ─── sweep() ─────────────────────────────────────────────────────────────
@@ -105,6 +105,6 @@ class CompensationSweeperTest {
         CompensationSweeper.SweepResult a = new CompensationSweeper.SweepResult(5, 3, 2, 100L);
         CompensationSweeper.SweepResult b = new CompensationSweeper.SweepResult(5, 3, 2, 100L);
         assertThat(a).isEqualTo(b);
-        assertThat(a).hasSameHashCodeAs(b);
+        assertThat(a.hashCode()).isEqualTo(b.hashCode());
     }
 }

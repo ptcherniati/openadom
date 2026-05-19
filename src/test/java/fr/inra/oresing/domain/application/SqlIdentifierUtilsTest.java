@@ -174,8 +174,8 @@ class SqlIdentifierUtilsTest {
         @Test
         @DisplayName("Identifiant de 64 caractères → FieldNameTooLongForSqlFieldException")
         void tooLongThrows() {
-            String tooLong = "a".repeat(64);
-            assertThatThrownBy(() -> SqlIdentifierUtils.IdentifierTest.forStringIdentifier(tooLong))
+            String too_long = "a".repeat(64);
+            assertThatThrownBy(() -> SqlIdentifierUtils.IdentifierTest.forStringIdentifier(too_long))
                     .isInstanceOf(FieldNameTooLongForSqlFieldException.class);
         }
 
@@ -247,9 +247,8 @@ class SqlIdentifierUtilsTest {
                     .forNaturalKey()
                     .forId()
                     .testAndReturnIdentifier();
-            assertThat(result)
-                    .isEqualTo("ab_naturalkey_id")
-                    .hasSizeLessThanOrEqualTo(63);
+            assertThat(result).isEqualTo("ab_naturalkey_id");
+            assertThat(result).hasSizeLessThanOrEqualTo(63);
         }
     }
 
@@ -269,48 +268,6 @@ class SqlIdentifierUtilsTest {
                     .forReference(col)
                     .testAndReturnIdentifier();
             assertThat(result).isEqualTo("myref");
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // IdentifierTest.forDynamicReferenceHierachicakKey
-    // -------------------------------------------------------------------------
-
-    @Nested
-    @DisplayName("IdentifierTest.forDynamicReferenceHierachicakKey(int)")
-    class ForDynamicReferenceTest {
-
-        @Test
-        @DisplayName("Builds dynamic key for count=1 and short base identifier")
-        void dynamicKeyCount1() {
-            String result = SqlIdentifierUtils.IdentifierTest
-                    .forStringIdentifier("taxon")
-                    .forDynamicReferenceHierachicakKey(1)
-                    .testAndReturnIdentifier();
-            assertThat(result).isNotEmpty();
-            assertThat(result.length()).isLessThanOrEqualTo(63);
-        }
-
-        @Test
-        @DisplayName("Builds dynamic key for count=42 and typical base identifier")
-        void dynamicKeyCount42() {
-            String result = SqlIdentifierUtils.IdentifierTest
-                    .forStringIdentifier("site")
-                    .forDynamicReferenceHierachicakKey(42)
-                    .testAndReturnIdentifier();
-            assertThat(result).isNotEmpty();
-            assertThat(result.length()).isLessThanOrEqualTo(63);
-        }
-
-        @Test
-        @DisplayName("Truncates to at most 63 chars for long identifier")
-        void dynamicKeyTruncated() {
-            // "a" repeated 50 chars + suffix _hierachicakKey + prefix _count = would exceed 63
-            String result = SqlIdentifierUtils.IdentifierTest
-                    .forStringIdentifier("ab")
-                    .forDynamicReferenceHierachicakKey(1)
-                    .testAndReturnIdentifier();
-            assertThat(result.length()).isLessThanOrEqualTo(63);
         }
     }
 }

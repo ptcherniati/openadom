@@ -1,7 +1,6 @@
 package fr.inra.oresing.workflow.cascade.staging;
 
 import fr.inra.oresing.workflow.cascade.config.ImportProperties;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -16,7 +15,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  *
  * @author R.YAHIAOUI
  */
-@Tag("domain.model")
 class StagingModeTest {
 
     private static final UUID CID = UUID.fromString("11dbf758-b670-43bc-9c91-aa64544016ae");
@@ -32,7 +30,6 @@ class StagingModeTest {
         assertThat(m.correlationIdFilter(CID)).isNull();
         assertThat(m.createTableSql()).isNull();
         assertThat(m.dropTableSql()).isNull();
-        assertThat(m.tableDdlParam()).isNull();
         assertThat(m.tableName()).isEqualTo("referencevalue_import");
     }
 
@@ -46,7 +43,6 @@ class StagingModeTest {
         assertThat(m.correlationIdFilter(CID)).isEqualTo(CID.toString());
         assertThat(m.createTableSql()).isNull();
         assertThat(m.dropTableSql()).isNull();
-        assertThat(m.tableDdlParam()).isNull();
         assertThat(m.tableName()).isEqualTo(SHARED_TABLE);
     }
 
@@ -61,15 +57,13 @@ class StagingModeTest {
         assertThat(m.tableName())
                 .isEqualTo("oa_staging.referencevalue_import_11dbf758_b670_43bc_9c91_aa64544016ae");
         // SQL = appel a fonction SECURITY DEFINER ( cf V3 migration )
-        // Le UUID est lie via PreparedStatement (?) pour eviter le formatage SQL dynamique.
+        // pour eviter GRANT CREATE TO PUBLIC sur le schema oa_staging .
         assertThat(m.createTableSql())
                 .startsWith("SELECT oa_staging.create_per_workflow_referencevalue_import(")
-                .contains("?");
+                .contains(CID.toString());
         assertThat(m.dropTableSql())
                 .startsWith("SELECT oa_staging.drop_per_workflow_referencevalue_import(")
-                .contains("?");
-        // Le parametre DDL expose le correlationId pour le lier dans le PreparedStatement.
-        assertThat(m.tableDdlParam()).isEqualTo(CID);
+                .contains(CID.toString());
     }
 
     @Test

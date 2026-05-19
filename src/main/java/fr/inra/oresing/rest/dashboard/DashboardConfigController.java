@@ -1,6 +1,5 @@
 package fr.inra.oresing.rest.dashboard;
 
-import fr.inra.oresing.workflow.cascade.config.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -10,7 +9,18 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import fr.inra.oresing.workflow.cascade.config.ConfigChangeAudit;
+import fr.inra.oresing.workflow.cascade.config.ConfigEditService;
+import fr.inra.oresing.workflow.cascade.config.ConfigFieldRegistry;
+import fr.inra.oresing.workflow.cascade.config.SinkConcurrencyEstimator;
+import fr.inra.oresing.workflow.cascade.config.StrategyOptionsResolver;
 
 import java.util.List;
 import java.util.Map;
@@ -43,10 +53,12 @@ public class DashboardConfigController {
                 + "the rate-limit quotas , and the runtime state ( cascade version , "
                 + "Java version , virtual threads on/off , active workflow count ). "
                 + "Reserved to admin users.")
-    @ApiResponse(responseCode = "200", description = "Runtime configuration",
-        content = @Content(schema = @Schema(implementation = DashboardConfigDTO.class)))
-    @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
-    @ApiResponse(responseCode = "403", description = "User is not an admin")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Runtime configuration",
+            content = @Content(schema = @Schema(implementation = DashboardConfigDTO.class))),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
+        @ApiResponse(responseCode = "403", description = "User is not an admin")
+    })
     @GetMapping
     public ResponseEntity<DashboardConfigDTO> getConfig() {
         return ResponseEntity.ok(service.getConfig());
@@ -59,10 +71,12 @@ public class DashboardConfigController {
                 + "immédiatement ou au prochain workflow . Les fields cold "
                 + "( queue size , virtualThreads , tempDirs ) ne sont pas exposés ici : "
                 + "ils nécessitent un redémarrage . Réservé aux admins .")
-    @ApiResponse(responseCode = "200", description = "Patch appliqué")
-    @ApiResponse(responseCode = "400", description = "Valeur invalide ou hors plage")
-    @ApiResponse(responseCode = "401", description = "JWT absent ou invalide")
-    @ApiResponse(responseCode = "403", description = "Réservé aux admins")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Patch appliqué"),
+        @ApiResponse(responseCode = "400", description = "Valeur invalide ou hors plage"),
+        @ApiResponse(responseCode = "401", description = "JWT absent ou invalide"),
+        @ApiResponse(responseCode = "403", description = "Réservé aux admins")
+    })
     @PutMapping("/import")
     public ResponseEntity<ConfigEditService.PatchResult> patchImport(
             @RequestBody Map<String, Object> patch) {
@@ -114,7 +128,7 @@ public class DashboardConfigController {
     }
 
     private Map<String, Object> buildPreviewPayload(Map<String, Object> effective) {
-        var sinkEst = SinkConcurrencyEstimator.calculateEstimate(effective);
+        var sinkEst = SinkConcurrencyEstimator.estimate(effective);
         var options = strategyOptionsResolver.resolve(effective);
         return Map.of(
                 "snapshot", effective,
@@ -139,14 +153,11 @@ public class DashboardConfigController {
             java.util.NoSuchElementException.class
     })
     public ResponseEntity<Map<String, String>> handleConfigPatchError(RuntimeException ex) {
-        final String code;
-        if (ex instanceof UnsupportedOperationException) {
-            code = "FIELD_READ_ONLY";
-        } else if (ex instanceof java.util.NoSuchElementException) {
-            code = "FIELD_UNKNOWN";
-        } else {
-            code = "VALIDATION_ERROR";
-        }
+        String code = ex instanceof UnsupportedOperationException
+                ? "FIELD_READ_ONLY"
+                : ex instanceof java.util.NoSuchElementException
+                    ? "FIELD_UNKNOWN"
+                    : "VALIDATION_ERROR";
         return ResponseEntity.badRequest().body(Map.of(
                 "code", code,
                 "message", ex.getMessage() == null ? "" : ex.getMessage()));
@@ -161,7 +172,9 @@ public class DashboardConfigController {
             org.springframework.http.converter.HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, String>> handleBadJson(
             org.springframework.http.converter.HttpMessageNotReadableException ex) {
-        String msg = ex.getMostSpecificCause().getMessage();
+        String msg = ex.getMostSpecificCause() != null
+                ? ex.getMostSpecificCause().getMessage()
+                : ex.getMessage();
         return ResponseEntity.badRequest().body(Map.of(
                 "code", "BAD_REQUEST", "message", msg == null ? "" : msg));
     }

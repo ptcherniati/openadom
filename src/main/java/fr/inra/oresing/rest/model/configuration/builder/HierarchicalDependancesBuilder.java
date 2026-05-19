@@ -47,7 +47,6 @@ public record HierarchicalDependancesBuilder(
         );
     }
 
-    @SuppressWarnings("java:S1172")
     static SortedSet<Node> buildHierchicalDependances(
             Consumer<ValidationParams> buildErrorWithValidationParams,
             final Map<String, List<ReferenceChecker>> checkers,
@@ -85,7 +84,9 @@ public record HierarchicalDependancesBuilder(
                         }
                     });
         }
-        return Node.buildNode(nodes.values());
+        return Node.buildNode(
+                nodes.values(),
+                new Validation(buildErrorWithValidationParams, null, Map.of("domainTags", domainTags)));
     }
 
 

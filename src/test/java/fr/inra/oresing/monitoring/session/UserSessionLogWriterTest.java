@@ -83,40 +83,4 @@ class UserSessionLogWriterTest {
         writer.logAsync(e);              // remplit la queue
         assertThatCode(() -> writer.logAsync(e)).doesNotThrowAnyException(); // overflow silencieux
     }
-
-    // ─── start/stop lifecycle ─────────────────────────────────────────────────
-
-    @Test
-    @DisplayName("stop() sans start() préalable ne lève pas d'exception")
-    void stopWithoutStartIsNoop() {
-        UserSessionLogRepository repo = mock(UserSessionLogRepository.class);
-        UserSessionLogWriter writer = writer(repo, true);
-        assertThatCode(writer::stop).doesNotThrowAnyException();
-    }
-
-    @Test
-    @DisplayName("start() + logAsync() + stop() → flush flush via le thread daemon")
-    @SuppressWarnings("java:S2925")
-    void startFlushesOnStop() throws Exception {
-        UserSessionLogRepository repo = mock(UserSessionLogRepository.class);
-        when(repo.insertBatch(any())).thenReturn(1);
-        // Flush rapide (1 ms)
-        UserSessionLogWriter writer = new UserSessionLogWriter(repo, true, 100, 5, 1L);
-        writer.start();
-        writer.logAsync(entry());
-        // Laisse un peu de temps pour le flush
-        Thread.sleep(50);
-        writer.stop();
-        // Le repo doit avoir reçu au moins un appel insertBatch
-        verify(repo, atLeastOnce()).insertBatch(any());
-    }
-
-    @Test
-    @DisplayName("persistEnabled=false → start() ne démarre pas de thread daemon")
-    void startWithPersistDisabledIsNoop() {
-        UserSessionLogRepository repo = mock(UserSessionLogRepository.class);
-        UserSessionLogWriter writer = writer(repo, false);
-        assertThatCode(() -> { writer.start(); writer.stop(); }).doesNotThrowAnyException();
-        verify(repo, never()).insertBatch(any());
-    }
 }

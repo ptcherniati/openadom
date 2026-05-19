@@ -15,7 +15,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @Tag("core.config")
-@Tag("domain.model")
 @ExtendWith(MockitoExtension.class)
 class BuilderNodeTest {
 

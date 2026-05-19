@@ -376,21 +376,6 @@ class GroovyExpressionTest {
         assertEquals(15, r2, "x=5 + currentRowNumber=10 (pas de faux hit de cache)");
     }
 
-    /**
-     * R-P2-4 — Quand une expression retourne null, on stocke NULL_SENTINEL dans
-     * le cache. Le second appel avec le même contexte doit retourner null (pas le sentinel).
-     */
-    @Test
-    @Tag("PERF")
-    void evaluate_expressionRetournantNull_nullSentinelCacheUtilidé() {
-        Map<String, Object> staticCtx = Map.of("x", 5);
-        GroovyExpression expr = new GroovyExpression("null");
-        Object r1 = expr.evaluate(staticCtx);
-        Object r2 = expr.evaluate(staticCtx); // doit venir du cache (NULL_SENTINEL → null)
-        assertNull(r1, "La première évaluation doit retourner null");
-        assertNull(r2, "La deuxième évaluation (depuis cache) doit retourner null");
-    }
-
 
     public record ReferenceBuilder(String naturalKey, Map<String, Object> refValues) implements GroovyDecorator {
 

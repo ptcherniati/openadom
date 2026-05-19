@@ -14,7 +14,7 @@ import fr.inra.oresing.rest.model.configuration.ValidationError;
 import fr.inra.oresing.rest.reactive.*;
 import fr.inra.oresing.rest.services.AbstractIntegrationTest;
 import fr.inra.oresing.rest.services.ApplicationConfigurationService;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.*;
 import reactor.core.publisher.Flux;
@@ -35,13 +35,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.jupiter.api.Assertions.*;
 
+@Slf4j
 @org.junit.jupiter.api.Tag("SUITE")
 @org.junit.jupiter.api.Tag("core.config")
 @org.junit.jupiter.api.Tag("GENERATE_CYPRESS_FIXTURES")
 public class ApplicationConfigurationServiceTest extends AbstractIntegrationTest {
 
-    public static final Map<String, List<ReactiveResult>> testErrors = new HashMap<>();
-    protected TestConfigurationBuilder configurationInstance;
+    public static final Map<String, List<ReactiveResult>> errors = new HashMap<>();
+    protected TestConfigurationBuilder CONFIGURATION_INSTANCE;
 
     @AfterAll
     static void registerErrors() throws IOException {
@@ -52,7 +53,7 @@ public class ApplicationConfigurationServiceTest extends AbstractIntegrationTest
             return;
         }
         final JsonRowMapper jsonMapper = new JsonRowMapper<>();
-        final String errorsToJson = jsonMapper.toJson(testErrors);
+        final String errorsToJson = jsonMapper.toJson(errors);
         fr.inra.oresing.rest.fixtures.CypressFixtureWriter writer =
                 new fr.inra.oresing.rest.fixtures.CypressFixtureWriter(java.nio.file.Paths.get(baseDirProp));
         writer.write("ui/cypress/fixtures/applications/errors/errors.json", errorsToJson);
@@ -842,6 +843,9 @@ public class ApplicationConfigurationServiceTest extends AbstractIntegrationTest
                             assertEquals(ConfigurationException.UNKNOWN_COMPONENT_FOR_COMPONENT_NAME.getMessage(), validationError.getMessage());
                             assertEquals("OA_data > pem > OA_validations > reference > OA_components", validationError.getParam(("path")));
                             assertEquals("sites", validationError.getParam(("unknownComponent")));
+                            final List<String> expectedComponents = Arrays.stream(new String[]{"site_bassin", "date", "tel_experimental_site", "site", "bassin", "projet", "espece", "ordre_affichage", "chemin", "tel_experimental_network", "plateforme", "is_float_value", "tel_value"})
+                                    .collect(Collectors.toCollection(LinkedList::new));
+                            final Collection<String> givenComponents = (Collection<String>) validationError.getParam("knownComponents");
                         }
                 ),
                 new TestCase(
@@ -1186,7 +1190,7 @@ public class ApplicationConfigurationServiceTest extends AbstractIntegrationTest
     Stream<DynamicTest> yamlValidationTests() {
         return yamlTestCases().map(testCase ->
                 DynamicTest.dynamicTest(testCase.testName(), () -> {
-                    configurationInstance.builder(testCase.testName())
+                    CONFIGURATION_INSTANCE.builder(testCase.testName())
                             .withReplace(testCase.from(), testCase.to())
                             .test(testCase.assertion());
                 })
@@ -1195,14 +1199,14 @@ public class ApplicationConfigurationServiceTest extends AbstractIntegrationTest
 
     @Test
     void multiplesErrors() {
-        configurationInstance.builder("testReturnMultiplesErrors")
+        CONFIGURATION_INSTANCE.builder("testReturnMultiplesErrors")
                 .withReplace("  sites:", "  site:")
                 .test(errors -> assertTrue(errors.size() > 1));
     }
 
     @BeforeEach
     public void before() {
-        configurationInstance = new TestConfigurationBuilder();
+        CONFIGURATION_INSTANCE = new TestConfigurationBuilder();
     }
 
     @Test
@@ -1226,10 +1230,10 @@ public class ApplicationConfigurationServiceTest extends AbstractIntegrationTest
 
             // Tests avec différentes configurations
             try {
-                testConfiguration(eventHelper, "version: 0");
-                testConfiguration(eventHelper, "version: 1");
-                testConfiguration(eventHelper, "version: 2");
-                testConfiguration(eventHelper, "::");
+                testConfiguration(eventHelper, "version: 0", false);
+                testConfiguration(eventHelper, "version: 1", true);
+                testConfiguration(eventHelper, "version: 2", false);
+                testConfiguration(eventHelper, "::", false);
             } catch (IOException e) {
                 throw new OreSiTechnicalException(e.getMessage(), e);
             }
@@ -1276,7 +1280,7 @@ public class ApplicationConfigurationServiceTest extends AbstractIntegrationTest
         }
     }
 
-    private void testConfiguration(ReactiveEventHelper eventHelper, String config) throws IOException {
+    private void testConfiguration(ReactiveEventHelper eventHelper, String config, boolean expectedValidity) throws IOException {
         byte[] configBytes = config.getBytes(StandardCharsets.UTF_8);
         FileBomResolver fileBomResolver = FileBomResolver.of(new ByteArrayInputStream(configBytes));
         ApplicationConfigurationService.parseConfigurationBytes("", "",
@@ -1288,6 +1292,7 @@ public class ApplicationConfigurationServiceTest extends AbstractIntegrationTest
     }
 
     private class TestConfigurationBuilder {
+        private static TestConfigurationBuilder INSTANCE;
         String methodName;
         String path = Fixtures.getValidationApplicationConfigurationResourceName();
         YamlTransformer yamlTransformer = new YamlTransformer("", "");
@@ -1321,6 +1326,7 @@ public class ApplicationConfigurationServiceTest extends AbstractIntegrationTest
                 assert configurationFile != null;
                 final String yaml = IOUtils.toString(configurationFile, StandardCharsets.UTF_8);
                 final String wrongYaml = yamlTransformer.replace(yaml);
+                Exception exception;
 
                 final Object test = buildFluxRequestJDJson(fluxSink -> {
                     final ReactiveEventHelper eventHelper = new ReactiveEventHelper(fluxSink::next, "test");
@@ -1333,7 +1339,7 @@ public class ApplicationConfigurationServiceTest extends AbstractIntegrationTest
                 })
                         .flatMap(reactiveResult -> switch (reactiveResult) {
                             case final ReactiveTypeError re -> {
-                                testErrors
+                                errors
                                         .computeIfAbsent(methodName, k -> new LinkedList())
                                         .add(re);
                                 yield Flux.just((ValidationError) re.result());
@@ -1344,7 +1350,7 @@ public class ApplicationConfigurationServiceTest extends AbstractIntegrationTest
                         .map(fe -> {
                             try {
                                 useErrorsPredicate.accept(fe);
-                                return testErrors;
+                                return errors;
                             } catch (final Exception e) {
                                 return e;
                             }

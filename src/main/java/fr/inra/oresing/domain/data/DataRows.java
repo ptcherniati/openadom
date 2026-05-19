@@ -18,7 +18,7 @@ public class DataRows {
     List<String> patternColumnName;
     Ltree naturalKey;
     Ltree hierarchicalKey;
-    List<Map<String, FieldType<?>>> values;
+    List<Map<String, ? extends FieldType<?>>> values;
     List<Map<String, Map<String, RefsLinkedToValue>>> refsLinkedTo;
     Long totalRows = -1L;
     Long rowNumber = -1L;

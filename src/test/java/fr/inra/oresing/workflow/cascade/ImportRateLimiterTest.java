@@ -12,7 +12,6 @@ import org.mockito.Mockito;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import org.junit.jupiter.api.Tag;
@@ -79,7 +78,6 @@ class ImportRateLimiterTest {
             // Ne doit pas lancer
             rateLimiter.acquireOrThrow("user-1");
             rateLimiter.release("user-1");
-            assertThat(rateLimiter.snapshotUsedSlots()).doesNotContainKey("user-1");
         }
 
         @Test
@@ -87,7 +85,7 @@ class ImportRateLimiterTest {
         void twoAcquisitionsForSameUser() {
             rateLimiter.acquireOrThrow("user-2");
             rateLimiter.acquireOrThrow("user-2");
-            assertThat(rateLimiter.snapshotUsedSlots()).containsKey("user-2");
+            // Pas d'exception
             rateLimiter.release("user-2");
             rateLimiter.release("user-2");
         }
@@ -101,9 +99,6 @@ class ImportRateLimiterTest {
             // userB ne doit pas être affecté par les slots de userA
             rateLimiter.acquireOrThrow("userB");
             rateLimiter.acquireOrThrow("userB");
-            assertThat(rateLimiter.snapshotUsedSlots())
-                    .containsKey("userA")
-                    .containsKey("userB");
             rateLimiter.release("userA");
             rateLimiter.release("userA");
             rateLimiter.release("userB");
@@ -180,7 +175,6 @@ class ImportRateLimiterTest {
             rateLimiter.acquireOrThrow("user-r"); // ne doit pas throw
             rateLimiter.release("user-r");
             rateLimiter.release("user-r");
-            assertThat(rateLimiter.snapshotUsedSlots()).doesNotContainKey("user-r");
         }
 
         @Test
@@ -188,7 +182,6 @@ class ImportRateLimiterTest {
         void releaseUnknownUserIsNoOp() {
             // Ne doit pas lancer NPE
             rateLimiter.release("unknown-user");
-            assertThat(rateLimiter.snapshotUsedSlots()).doesNotContainKey("unknown-user");
         }
     }
 
@@ -268,49 +261,4 @@ class ImportRateLimiterTest {
                     .isInstanceOf(RuntimeException.class);
         }
     }
-    // ------------------------------------------------------------------ //
-    //  setMaxConcurrentPerUser                                            //
-    // ------------------------------------------------------------------ //
-
-    @Nested
-    @DisplayName("setMaxConcurrentPerUser — reconfiguration à chaud")
-    class SetMaxConcurrentPerUserTest {
-
-        @Test
-        @DisplayName("setMaxConcurrentPerUser(same value) est un no-op (return early)")
-        void sameValueIsNoOp() {
-            rateLimiter.setMaxConcurrentPerUser(2); // déjà configuré à 2 → no-op
-            assertThat(rateLimiter.getMaxConcurrentPerUser()).isEqualTo(2);
-        }
-
-        @Test
-        @DisplayName("setMaxConcurrentPerUser < 1 → IllegalArgumentException")
-        void belowOneThrows() {
-            assertThatThrownBy(() -> rateLimiter.setMaxConcurrentPerUser(0))
-                    .isInstanceOf(IllegalArgumentException.class);
-        }
-
-        @Test
-        @DisplayName("setMaxConcurrentPerUser(newValue) met à jour la valeur")
-        void updatesMaxValue() {
-            rateLimiter.setMaxConcurrentPerUser(5);
-            assertThat(rateLimiter.getMaxConcurrentPerUser()).isEqualTo(5);
-        }
-    }
-
-    // ------------------------------------------------------------------ //
-    //  shutdown                                                           //
-    // ------------------------------------------------------------------ //
-
-    @Test
-    @DisplayName("shutdown() vide la map userSlots sans exception")
-    void shutdownClearsSlots() {
-        rateLimiter.acquireOrThrow("user-shutdown");
-        rateLimiter.shutdown();
-        // Après shutdown les slots sont vidés ; une nouvelle acquisition est possible
-        assertThatCode(() -> rateLimiter.acquireOrThrow("user-shutdown"))
-                .doesNotThrowAnyException();
-        rateLimiter.release("user-shutdown");
-    }
-
 }

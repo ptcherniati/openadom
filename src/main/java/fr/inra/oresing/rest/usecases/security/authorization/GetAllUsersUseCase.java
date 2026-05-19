@@ -1,16 +1,16 @@
 package fr.inra.oresing.rest.usecases.security.authorization;
 
 import fr.inra.oresing.domain.OreSiUser;
-import fr.inra.oresing.rest.services.DefaultAuthorizationService;
+import fr.inra.oresing.rest.services.AuthorizationService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
 public class GetAllUsersUseCase {
-    private final DefaultAuthorizationService authorizationService;
+    private final AuthorizationService authorizationService;
 
-    public GetAllUsersUseCase(DefaultAuthorizationService authorizationService) {
+    public GetAllUsersUseCase(AuthorizationService authorizationService) {
         this.authorizationService = authorizationService;
     }
 

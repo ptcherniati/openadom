@@ -9,14 +9,12 @@ import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.*;
 
 @org.junit.jupiter.api.Tag("core.config")
-@Tag("domain.model")
 class ConfigurationTest {
 
     public static final JsonRowMapper MAPPER = new JsonRowMapper<ComponentDescription>();

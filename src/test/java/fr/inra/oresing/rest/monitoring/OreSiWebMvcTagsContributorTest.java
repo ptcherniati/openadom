@@ -12,6 +12,7 @@ import org.springframework.web.servlet.HandlerMapping;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests unitaires pour {@link OreSiWebMvcTagsContributor}.

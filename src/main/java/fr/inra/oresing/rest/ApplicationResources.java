@@ -2,15 +2,19 @@ package fr.inra.oresing.rest;
 
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.ApplicationInformation;
-import fr.inra.oresing.domain.application.SqlIdentifierUtils;
 import fr.inra.oresing.domain.data.DataFile;
 import fr.inra.oresing.domain.exceptions.application.BadLabelNameException;
 import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.exceptions.OreSiIOException;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
-import fr.inra.oresing.rest.model.rightsrequest.*;
+import fr.inra.oresing.rest.model.rightsrequest.CreateRightsRequestRequest;
+import fr.inra.oresing.rest.model.rightsrequest.GetRightsRequestResult;
+import fr.inra.oresing.rest.model.rightsrequest.RightsRequestInfos;
+import fr.inra.oresing.rest.model.rightsrequest.RightsRequestResult;
+import fr.inra.oresing.rest.model.rightsrequest.TreatRightsRequestRequest;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
+import fr.inra.oresing.domain.application.SqlIdentifierUtils;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.usecases.application.*;
 import fr.inra.oresing.rest.usecases.metadata.rightsrequest.CreateOrUpdateRightsRequestUseCase;
@@ -85,7 +89,6 @@ public class ApplicationResources {
         this.heavyExecutorService = heavyExecutorService;
     }
 
-    @SuppressWarnings("java:S3740")
     @PreAuthorize("isFullyAuthenticated()")
     @SecurityRequirement(name = "Bearer Authentication")
     @GetMapping(produces = MediaType.APPLICATION_NDJSON_VALUE)
@@ -96,7 +99,6 @@ public class ApplicationResources {
         return getApplicationsUseCase.execute(filters);
     }
 
-    @SuppressWarnings("java:S3740")
     @PreAuthorize("isAuthenticated()")
     @PostMapping(value = "/validate-configuration", produces = MediaType.APPLICATION_NDJSON_VALUE)
     public Flux<ReactiveResult> validateConfiguration(@RequestParam("file") final MultipartFile file) throws IOException {
@@ -115,7 +117,6 @@ public class ApplicationResources {
         });
     }
 
-    @SuppressWarnings("java:S3740")
     @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_APPLICATION_CREATE')")
     @PostMapping(value = "/{name}", produces = MediaType.APPLICATION_NDJSON_VALUE)
     @Parameter(examples = @ExampleObject(
@@ -163,7 +164,6 @@ public class ApplicationResources {
         return ResponseEntity.ok().build();
     }
 
-    @SuppressWarnings("java:S3740")
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
     @PostMapping(value = "/{nameOrId}/configuration", produces = MediaType.APPLICATION_NDJSON_VALUE)
     public Flux<ReactiveResult> changeConfiguration(@PathVariable("nameOrId") final String nameOrId,
@@ -188,7 +188,6 @@ public class ApplicationResources {
         });
     }
 
-    @SuppressWarnings("java:S3740")
     private Flux<ReactiveResult> buildFluxRequestNDJson(Consumer<FluxSink<ReactiveResult>> fluxSink) {
         final SecurityContext context = SecurityContextHolder.getContext();
         return Flux.create(sink -> {
@@ -197,7 +196,7 @@ public class ApplicationResources {
                     try {
                         SecurityContextHolder.setContext(context);
                         fluxSink.accept(sink);
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         // Without this log, any exception thrown inside the
                         // NDJSON producer is converted to a Flux error signal
                         // and the HTTP stream closes silently mid-way - the

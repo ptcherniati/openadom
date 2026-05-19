@@ -5,14 +5,14 @@ import java.util.List;
 import java.util.Map;
 
 public class StaticMapType {
-    final CollectionType<?, ?> type;
+    final CollectionType type;
 
-    StaticMapType(final CollectionType.MapType<?> type) {
+    StaticMapType(final CollectionType.MapType type) {
         super();
         this.type = type;
     }
 
-    StaticMapType(final CollectionType.ArrayType<?> type) {
+    StaticMapType(final CollectionType.ArrayType type) {
         super();
         this.type = type;
     }

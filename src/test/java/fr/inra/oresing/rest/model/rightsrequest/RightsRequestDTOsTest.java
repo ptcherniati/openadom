@@ -244,7 +244,7 @@ class RightsRequestDTOsTest {
             TreatRightsRequestRequest b = new TreatRightsRequestRequest(
                     "APPROVED", List.of(id), "c", "s", "b", false);
             assertThat(a).isEqualTo(b);
-            assertThat(a).hasSameHashCodeAs(b);
+            assertThat(a.hashCode()).isEqualTo(b.hashCode());
         }
     }
 

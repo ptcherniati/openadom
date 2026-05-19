@@ -3,22 +3,22 @@ package fr.inra.oresing.rest.security;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.domain.BinaryFile;
-import fr.inra.oresing.domain.BinaryFileInfos;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.authorization.LoginAdminResult;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomainEnum;
-import fr.inra.oresing.domain.exceptions.AuthenticationFailure;
 import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
-import fr.inra.oresing.domain.user.CreateUserRequest;
+import fr.inra.oresing.domain.exceptions.AuthenticationFailure;
+import fr.inra.oresing.domain.BinaryFileInfos;
 import fr.inra.oresing.persistence.JsonRowMapper;
+import fr.inra.oresing.domain.user.CreateUserRequest;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.data.publication.AuthorizationPublicationService;
 import fr.inra.oresing.rest.data.publication.StoreFile;
 import fr.inra.oresing.rest.exceptions.OreExceptionHandler;
+import fr.inra.oresing.domain.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -412,6 +412,11 @@ public class AuthorizationFilter extends GenericFilterBean {
             return null;
         }
         String jwtToken = authHeader.substring(7);
+        // Revocation check : un JWT inscrit dans la blacklist par un kick
+        // admin est rejete . On lance BadCredentialsException avec un
+        // message stable que writeJsonAuthError mappe en TOKEN_REVOKED ;
+        // le frontend ( interceptor axios global ) declenche alors la
+        // redirection vers la page de login .
         String tokenHash = fr.inra.oresing.monitoring.session.JwtBlacklistRegistry.hash(jwtToken);
         if (tokenHash != null && jwtBlacklist.contains(tokenHash)) {
             throw new BadCredentialsException("Token revoked by admin kick");

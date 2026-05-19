@@ -65,18 +65,16 @@ public sealed interface FieldType<T> extends SomethingToBeStoredAsJsonInDatabase
 
     SqlPrimitiveType getSqlType();
 
-    @SuppressWarnings("java:S1452")
-    CheckerValidationCheckResult<?> check(String value, LineChecker<?> lineChecker);
+    CheckerValidationCheckResult check(String value, LineChecker lineChecker);
 
     FieldType<T> copy();
 
     void serialize(JsonGenerator gen) throws IOException;
 
-    @SuppressWarnings("java:S1452")
-    default DataColumnValue<?, ?> transform(final LineChecker<?> lineChecker,
-                                       final DataColumnValue<?, ?> referenceColumnRawValue,
-                                       final DataColumn referenceColumn,
-                                       final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedToBuilder) {
+    default DataColumnValue transform(final LineChecker lineChecker,
+                                      final DataColumnValue referenceColumnRawValue,
+                                      final DataColumn referenceColumn,
+                                      final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedToBuilder) {
         return referenceColumnRawValue;
     }
 
@@ -90,8 +88,7 @@ public sealed interface FieldType<T> extends SomethingToBeStoredAsJsonInDatabase
         return toString();
     }
 
-    @SuppressWarnings("java:S1452")
-    default CheckerValidationCheckResult<?> postTreatment(CheckerValidationCheckResult<?> checkerValidationCheckResult) {
+    default CheckerValidationCheckResult postTreatment(CheckerValidationCheckResult checkerValidationCheckResult) {
         return checkerValidationCheckResult;
     }
 }

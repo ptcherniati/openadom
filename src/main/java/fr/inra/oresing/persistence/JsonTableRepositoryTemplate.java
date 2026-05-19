@@ -40,10 +40,22 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
     }
 
     private UnmodifiableIterator<List<T>> partition(final Stream<T> stream) {
+        // 7min19 pour 10
+        // 6min07 pour 30
+        // 6min15 pour 40
+        // 5min46 pour 50
+        // 5min48 pour 100
+        // 5min50 pour 500
+        // 6min21 pour 1000
+        // the SELECT CURRENT_USER round-trip per call was a leftover
+        // debug query - removed.
         return Iterators.partition(stream.iterator(), 50);
     }
 
     public List<UUID> storeAll(final Stream<T> stream) {
+        // two SELECT round-trips ( CURRENT_USER + per-entity login )
+        // removed. The login was assigned to a local that was never used ;
+        // the result was dead weight on the hot path of every storeAll().
         final String query = getUpsertQuery();
         final List<UUID> uuids = new LinkedList<>();
         partition(stream).forEachRemaining(entities -> {
@@ -52,15 +64,14 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
                     e.setId(UUID.randomUUID());
                 }
             });
+            //jsonRowMapper.getJsonMapper().setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CASE);
             final String json = jsonRowMapper.toJson(entities);
             try {
                 uuids.addAll(namedParameterJdbcTemplate.queryForList(
                         query, new MapSqlParameterSource("json", json), UUID.class));
             } catch (final Exception e) {
-                Pattern pattern = Pattern.compile(
-                        "new row violates row-level security policy for\\s+\"([^\"]+)\"",
-                        Pattern.DOTALL
-                );                Matcher matcher = pattern.matcher(Objects.requireNonNull(e.getMessage()));
+                Pattern pattern = Pattern.compile(".*new row violates row-level security policy for.*\"(.*)\".*", Pattern.DOTALL);
+                Matcher matcher = pattern.matcher(Objects.requireNonNull(e.getMessage()));
                 Matcher matcher2 = pattern.matcher(Objects.requireNonNull(e.getCause().getMessage()));
                 if (matcher.matches()) {
                     String table = matcher.group(1);

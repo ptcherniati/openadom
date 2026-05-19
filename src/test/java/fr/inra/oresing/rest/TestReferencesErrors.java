@@ -4,11 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.rest.services.AbstractIntegrationTest;
+import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.IsEqual;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
@@ -30,12 +29,11 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Slf4j
 @Tag("domain.model")
 @Tag("docker-required")
 @Tag("GENERATE_CYPRESS_FIXTURES")
 public class TestReferencesErrors extends AbstractIntegrationTest {
-
-    private static final Logger log = LoggerFactory.getLogger(TestReferencesErrors.class);
 
     public static final Map<String, String> responses = new HashMap<>();
     public static final String PASSWORD = "xxxxxxxx";

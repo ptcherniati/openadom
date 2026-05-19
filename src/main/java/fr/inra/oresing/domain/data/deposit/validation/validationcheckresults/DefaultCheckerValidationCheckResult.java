@@ -4,11 +4,12 @@ import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.domain.checker.CheckerTarget;
 import fr.inra.oresing.domain.checker.type.FieldType;
+import fr.inra.oresing.domain.checker.type.NullType;
 import lombok.Getter;
 
 import java.util.Map;
 
-public non-sealed class DefaultCheckerValidationCheckResult<T extends FieldType<?>> implements CheckerValidationCheckResult<T> {
+public non-sealed class DefaultCheckerValidationCheckResult implements CheckerValidationCheckResult {
 
     @Getter
     final ValidationLevel level;
@@ -19,10 +20,10 @@ public non-sealed class DefaultCheckerValidationCheckResult<T extends FieldType<
     @Getter
     final Map<String, Object> messageParams;
 
-    final T value;
+    final FieldType<?> value;
     final CheckerTarget target;
 
-    public DefaultCheckerValidationCheckResult(final CheckerValidationCheckResult<T> validationCheckResult) {
+    public DefaultCheckerValidationCheckResult(final CheckerValidationCheckResult validationCheckResult) {
         this(
                 validationCheckResult.level(),
                 validationCheckResult.message(),
@@ -32,7 +33,7 @@ public non-sealed class DefaultCheckerValidationCheckResult<T extends FieldType<
         );
     }
 
-    public DefaultCheckerValidationCheckResult(final ValidationLevel level, final String message, final Map<String, Object> messageParams, final CheckerTarget target, final T value) {
+    public DefaultCheckerValidationCheckResult(final ValidationLevel level, final String message, final Map<String, Object> messageParams, final CheckerTarget target, final FieldType<?> value) {
         super();
         this.level = level;
         this.message = message;
@@ -41,16 +42,16 @@ public non-sealed class DefaultCheckerValidationCheckResult<T extends FieldType<
         this.value = value;
     }
 
-    public static <T extends FieldType<?>> DefaultCheckerValidationCheckResult<T> success(final CheckerTarget target, final T value) {
-        return new DefaultCheckerValidationCheckResult<>(ValidationLevel.SUCCESS, null, null, target, value);
+    public static DefaultCheckerValidationCheckResult success(final CheckerTarget target, final FieldType<?> value) {
+        return new DefaultCheckerValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, value);
     }
 
-    public static <T extends FieldType<?>> DefaultCheckerValidationCheckResult<T> warn(final String message, final ImmutableMap<String, Object> messageParams, final CheckerTarget target, final T value) {
-        return new DefaultCheckerValidationCheckResult<>(ValidationLevel.WARN, message, messageParams, target, value);
+    public static DefaultCheckerValidationCheckResult warn(final String message, final ImmutableMap<String, Object> messageParams, final CheckerTarget target, final FieldType<?> value) {
+        return new DefaultCheckerValidationCheckResult(ValidationLevel.WARN, message, messageParams, target, value);
     }
 
-    public static <T extends FieldType<?>> DefaultCheckerValidationCheckResult<T> error(final String message, final Map<String, Object> messageParams, final CheckerTarget target) {
-        return new DefaultCheckerValidationCheckResult<>(ValidationLevel.ERROR, message, messageParams, target, null);
+    public static DefaultCheckerValidationCheckResult error(final String message, final Map<String, Object> messageParams, final CheckerTarget target) {
+        return new DefaultCheckerValidationCheckResult(ValidationLevel.ERROR, message, messageParams, target, NullType.INSTANCE);
     }
 
     @Override
@@ -74,7 +75,7 @@ public non-sealed class DefaultCheckerValidationCheckResult<T extends FieldType<
     }
 
     @Override
-    public T value() {
+    public FieldType<?> value() {
         return value;
     }
 }

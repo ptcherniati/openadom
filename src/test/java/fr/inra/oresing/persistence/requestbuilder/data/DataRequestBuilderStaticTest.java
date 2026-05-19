@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests unitaires pour les méthodes statiques de DataRequestBuilder (sans Spring / Docker).
  */
 @Tag("core.config")
-@Tag("domain.model")
 @DisplayName("DataRequestBuilder – méthodes utilitaires statiques")
 class DataRequestBuilderStaticTest {
 

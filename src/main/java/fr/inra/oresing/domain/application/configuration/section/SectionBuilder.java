@@ -1,8 +1,8 @@
 package fr.inra.oresing.domain.application.configuration.section;
-import fr.inra.oresing.domain.application.configuration.type.ConfigurationSchemaNodeType;
 
 import com.google.common.base.Predicate;
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
+import fr.inra.oresing.domain.application.configuration.type.ConfigurationSchemaNodeType;
 import fr.inra.oresing.domain.application.configuration.type.LabelDescription;
 import fr.inra.oresing.domain.application.configuration.type.StaticMapType;
 import fr.inra.oresing.domain.exceptions.application.SiOreConfigurationFormatException;
@@ -150,8 +150,7 @@ public class SectionBuilder {
         return this;
     }
 
-    @SuppressWarnings("java:S1452")
-    public Optional<ConfigurationSchemaNodeType<?>> findSchema(final String childLabel) {
+    public Optional<ConfigurationSchemaNodeType> findSchema(final String childLabel) {
         return switch (childLabel) {
             case "referenceScopesForFile" ->
                     Optional.of(StaticMapType.REFERENCE_SCOPES_FOR_FILE().type());
@@ -174,11 +173,11 @@ public class SectionBuilder {
             case ConfigurationSchemaNode.OA_COMPONENT_ADJACENTS ->
                     Optional.of(StaticMapType.PATTERN_COMPONENTS_ADJACENT().type());
             case null, default -> {
-                final Optional<ConfigurationSchemaNodeType<?>> first = getAllSections().stream()
+                final Optional<ConfigurationSchemaNodeType> first = getAllSections().stream()
                         .filter(section -> section.matches(childLabel))
                         .map(Section::type)
                         .filter(ConfigurationSchemaNodeType.class::isInstance)
-                        .<ConfigurationSchemaNodeType<?>>map(t -> (ConfigurationSchemaNodeType<?>) t)
+                        .map(ConfigurationSchemaNodeType.class::cast)
                         .findFirst();
                 yield first;
             }

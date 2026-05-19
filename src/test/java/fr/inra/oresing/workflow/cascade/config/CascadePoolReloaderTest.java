@@ -1,7 +1,6 @@
 package fr.inra.oresing.workflow.cascade.config;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.EnumMap;
@@ -15,7 +14,6 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("CascadePoolReloader")
-@Tag("domain.model")
 class CascadePoolReloaderTest {
 
     private CascadePoolReloader newReloaderWithRealTpe(ThreadPoolExecutor tpe) {
@@ -70,9 +68,7 @@ class CascadePoolReloaderTest {
         ExecutorService vt = Executors.newSingleThreadExecutor();   // not a TPE in this case is hard
         // Use something definitely not TPE :
         ExecutorService raw = new ExecutorService() {
-            @Override public void shutdown() {
-                // mock
-            }
+            @Override public void shutdown() {}
             @Override public java.util.List<Runnable> shutdownNow() { return java.util.List.of(); }
             @Override public boolean isShutdown() { return false; }
             @Override public boolean isTerminated() { return false; }
@@ -84,9 +80,7 @@ class CascadePoolReloaderTest {
             @Override public <T> java.util.List<java.util.concurrent.Future<T>> invokeAll(java.util.Collection<? extends java.util.concurrent.Callable<T>> tasks, long t, TimeUnit u) { throw new UnsupportedOperationException(); }
             @Override public <T> T invokeAny(java.util.Collection<? extends java.util.concurrent.Callable<T>> tasks) { throw new UnsupportedOperationException(); }
             @Override public <T> T invokeAny(java.util.Collection<? extends java.util.concurrent.Callable<T>> tasks, long t, TimeUnit u) { throw new UnsupportedOperationException(); }
-            @Override public void execute(Runnable command) {
-                // mock
-            }
+            @Override public void execute(Runnable command) {}
         };
         CascadePoolReloader r = new CascadePoolReloader(s -> raw);
 

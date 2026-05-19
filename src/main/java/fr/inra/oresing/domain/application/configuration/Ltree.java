@@ -1,6 +1,7 @@
 package fr.inra.oresing.domain.application.configuration;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import lombok.Value;
@@ -8,6 +9,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -30,13 +32,13 @@ public class Ltree implements Comparable<Ltree> {
      */
     public static final String SEPARATOR = ".";
     public static final String NULL_KEY = "NULL_KEY";
-    private static final Pattern LABEL_INVALID_CHARACTERS_REGEX = Pattern.compile("\\W");
-    private static final Pattern VALID_LABEL_REGEX = Pattern.compile("\\w+");
+    private static final Pattern LABEL_INVALID_CHARACTERS_REGEX = Pattern.compile("[^a-zA-Z0-9_]");
+    private static final Pattern VALID_LABEL_REGEX = Pattern.compile("[a-zA-Z0-9_]+");
     private static final Ltree EMPTY_LTREE_SINGLETON = new Ltree("");
-    private static final Set<String> knownSymbolCodes = Set.copyOf(IntStream.range(0, 0x3FF)
+    public static Set<String> KNOWN_SYMBOL_CODES = IntStream.range(0, 0x3FF)
             .filter(Character::isValidCodePoint)
             .filter(Character::isDefined)
-            .mapToObj(i -> Character.getName(i).replaceAll("[ -]", "")).collect(Collectors.toSet()));
+            .mapToObj(i -> Character.getName(i).replaceAll("[ -]", "")).collect(Collectors.toCollection(HashSet::new));
     String sql;
 
     private Ltree(final String sql) {
@@ -69,7 +71,7 @@ public class Ltree implements Comparable<Ltree> {
     }
 
     public static String escapeToLabel(String key, Set<String> knownSpecialCharacters) {
-        final Set<String> validPatterns = CollectionUtils.isNotEmpty(knownSpecialCharacters) ? knownSpecialCharacters : knownSymbolCodes;
+        final Set<String> validPatterns = CollectionUtils.isNotEmpty(knownSpecialCharacters) ? knownSpecialCharacters : KNOWN_SYMBOL_CODES;
         if (VALID_LABEL_REGEX.asMatchPredicate().test(key) && isEncodedString(key, validPatterns)) {
             return key;
         }
@@ -103,9 +105,9 @@ public class Ltree implements Comparable<Ltree> {
     }
 
     public static void checkLabelSyntax(final String label) {
-        if (label.length() > 256) throw new IllegalStateException(ExceptionMessage.TOO_LONG_LABEL.toMessage());
-        if (label.isEmpty()) throw new IllegalStateException(ExceptionMessage.NULL_LABEL.toMessage());
-        if (!VALID_LABEL_REGEX.matcher(label).matches()) throw new IllegalStateException(ExceptionMessage.INAPPROPRIATE_LABEL.toMessage());
+        Preconditions.checkState(label.length() <= 256, ExceptionMessage.TOO_LONG_LABEL.toMessage());
+        Preconditions.checkState(!label.isEmpty(), ExceptionMessage.NULL_LABEL.toMessage());
+        Preconditions.checkState(VALID_LABEL_REGEX.matcher(label).matches(), ExceptionMessage.INAPPROPRIATE_LABEL.toMessage(), label);
     }
 
     private static String escapeSymbolFromKeyComponent(final Character aChar) {
@@ -119,13 +121,9 @@ public class Ltree implements Comparable<Ltree> {
     }
 
     public static boolean isEncodedString(String label) {
-        return knownSymbolCodes.stream()
+        return KNOWN_SYMBOL_CODES.stream()
                 .parallel()
                 .anyMatch(label::contains);
-    }
-
-    public static Set<String> getKnownSymbolCodes() {
-        return knownSymbolCodes;
     }
 
     public static boolean isEncodedString(String label, Set<String> knownSpecialCharacters) {

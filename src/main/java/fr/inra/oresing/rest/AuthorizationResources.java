@@ -9,24 +9,29 @@ import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.additionalfiles.AuthorizationsAdditionalFilesResult;
 import fr.inra.oresing.domain.additionalfiles.OreSiAdditionalFileAuthorization;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.authorization.AuthorizationsResult;
-import fr.inra.oresing.domain.authorization.GetGrantableResult;
-import fr.inra.oresing.domain.authorization.LoginAdminResult;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationAdminUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationPersona;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ConnectedUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.OpenAdomAdmin;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
-import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
+import fr.inra.oresing.domain.authorization.ApplicationUserResult;
+import fr.inra.oresing.domain.authorization.AuthorizationParsed;
+import fr.inra.oresing.domain.authorization.AuthorizationsForUserResult;
+import fr.inra.oresing.domain.authorization.AuthorizationsResult;
+import fr.inra.oresing.domain.authorization.GetGrantableResult;
+import fr.inra.oresing.domain.authorization.LoginAdminResult;
+import fr.inra.oresing.domain.authorization.CurrentUserRolesResult;
+import fr.inra.oresing.domain.authorization.request.AuthorizationInput;
 import fr.inra.oresing.rest.model.authorization.*;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
-import fr.inra.oresing.rest.services.DefaultAuthorizationService;
+import fr.inra.oresing.rest.services.AuthorizationService;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.usecases.security.authorization.GetAdminAuthorizationsUseCase;
 import fr.inra.oresing.rest.usecases.security.authorization.GetApplicationAuthorizationsUseCase;
@@ -60,7 +65,6 @@ import java.util.*;
 public class AuthorizationResources {
 
     public static final String AUTHORIZATION_ID = "authorizationId";
-    public static final String APPLICATION = "'APPLICATION'";
     private final HealthEndpoint healthEndpoint;
     private final GetAdminAuthorizationsUseCase getAdminAuthorizationsUseCase;
     private final GetApplicationAuthorizationsUseCase getApplicationAuthorizationsUseCase;
@@ -126,7 +130,7 @@ public class AuthorizationResources {
             description = "Liste les utilisateurs avec leurs droits d'accès aux données au SI pour une application spécifique identifiée par son nom ou son UUID",
             tags = {"Autorisations"})
 
-    @PreAuthorize("hasPermission(" + APPLICATION + ", 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_READ')")
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_READ')")
     @GetMapping(value = "/applications/{nameOrId}/authorizationAdminForApplication", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<UserAuthorizationForApplication> getAdminAuthorizationsForApplication(@PathVariable("nameOrId") final String applicationNameOrId) {
         return getApplicationAuthorizationsUseCase.execute(applicationNameOrId);
@@ -292,7 +296,7 @@ public class AuthorizationResources {
             @ApiResponse(responseCode = "404", description = "Application non trouvée")
     })
     @Parameter(name = "nameOrId", description = "Nom ou ID de l'application", required = true)
-    @PreAuthorize("hasPermission(" + APPLICATION + ", 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @RequestMapping(
             method = {RequestMethod.POST, RequestMethod.PUT},
             value = "/applications/{nameOrId}/authorization",
@@ -329,7 +333,7 @@ public class AuthorizationResources {
             return ResponseEntity.created(URI.create(uri)).body(Map.of(AUTHORIZATION_ID, "null"));
 
         }
-        final DefaultAuthorizationService.Authorizations oreSiAuthorizations = serviceContainer.authorizationService()
+        final AuthorizationService.Authorizations oreSiAuthorizations = serviceContainer.authorizationService()
                 .addAuthorization(
                 application,
                 authorizationRequest
@@ -346,19 +350,19 @@ public class AuthorizationResources {
     }
 
     private void verifyMethod(String method, UUID uuid) {
-        if(RequestMethod.POST.name().equals(method) && uuid!=null) {
+        if(RequestMethod.POST.equals(method) && uuid!=null) {
              throw new OreSiTechnicalException(
                      ExceptionMessage.BAD_METHOD.toMessage()
              );
         }
-        if(RequestMethod.PUT.name().equals(method) && uuid==null) {
+        if(RequestMethod.PUT.equals(method) && uuid==null) {
              throw new OreSiTechnicalException(
                      ExceptionMessage.BAD_METHOD.toMessage()
              );
         }
     }
 
-    @PreAuthorize("hasPermission(" + APPLICATION + ", 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @GetMapping(value = "/applications/{nameOrId}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetAuthorizationResults> getAdminAuthorizationsForOpenAdom(@PathVariable("nameOrId") final String applicationNameOrId) {
         AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, OreSiApiRequestContext.getRequestUserId().toString());
@@ -367,13 +371,13 @@ public class AuthorizationResources {
         return ResponseEntity.ok(getAuthorizationResultsWithOwnRights1);
     }
 
-    @PreAuthorize("hasPermission(" + APPLICATION + ", 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @GetMapping(value = "/applications/{applicationNameOrId}/authorization/user/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public AuthorizationsResult getAuthorizationsForUser(@PathVariable(name = "applicationNameOrId") final String applicationNameOrId, @PathVariable(name = "userLoginOrId") final String userLoginOrId) {
         return serviceContainer.authorizationService().getAuthorizationsForUserAndPublic(applicationNameOrId, userLoginOrId);
     }
 
-    @PreAuthorize("hasPermission(" + APPLICATION + ", 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_DELETE')")
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_DELETE')")
     @DeleteMapping(value = "/applications/{nameOrId}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UUID> revokeAuthorization(
             @PathVariable("nameOrId") final String applicationNameOrId,
@@ -424,8 +428,10 @@ public class AuthorizationResources {
         return ResponseEntity.created(URI.create(uri)).body(Map.of(AUTHORIZATION_ID, authId.toString()));
     }
 
-    @PreAuthorize(" hasPermission(" + APPLICATION + ", 'APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE')")
-    @PutMapping(value = "applications/{applicationNameOrId}/applicationrole/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("""
+                hasPermission('APPLICATION', 'APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE')
+            """)
+    @PutMapping(value = "applications/{nameOrId}/applicationrole/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Add an authorization for a user",
             description = "This service allows adding a specific authorization for a given user.")
     @ApiResponses(value = {
@@ -448,16 +454,14 @@ public class AuthorizationResources {
                             @ExampleObject(name = "userId", value = "\"user123\"", description = "User ID"),
                             @ExampleObject(name = "userLogin", value = "\"john.doe\"", description = "User login")
                     }
-            )
-            @RequestParam(name = "userIdOrLogin") final String userIdOrLogin,
+            ) @RequestParam(name = "userIdOrLogin") final String userIdOrLogin,
 
             @Parameter(description = "The application name or ID (if applicable) for grant of applicationManager et userManager of the application",
                     examples = {
                             @ExampleObject(name = "applicationName", value = "\"SI_123\"", description = "Application name"),
                             @ExampleObject(name = "applicationId", value = "\"app-456\"", description = "Application ID")
                     }
-            )
-            @PathVariable(name = "applicationNameOrId", required = false) final String applicationNameOrId,
+            ) @RequestParam(name = "applicationNameOrId", required = false) final String applicationNameOrId,
 
             @Parameter(description = "The application pattern (if applicable) for grant of rôle applicationCreator",
                     examples = {
@@ -652,7 +656,7 @@ public class AuthorizationResources {
         );
     }
 
-    @PreAuthorize("hasPermission(" + APPLICATION + ", 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @GetMapping(value = "/applications/{nameOrId}/grantable", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetGrantableResult> getGrantable(@PathVariable("nameOrId") final String applicationNameOrId) {
         AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, OreSiApiRequestContext.getRequestUserId().toString());

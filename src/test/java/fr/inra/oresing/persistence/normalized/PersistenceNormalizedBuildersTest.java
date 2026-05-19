@@ -34,10 +34,9 @@ class PersistenceNormalizedBuildersTest {
         void joinsByNewline() {
             BuildIndexes b = new BuildIndexes(List.of("CREATE INDEX idx1;", "CREATE INDEX idx2;"));
             String result = b.buildIndexes();
-            assertThat(result)
-                    .contains("CREATE INDEX idx1;")
-                    .contains("CREATE INDEX idx2;")
-                    .contains("\n");
+            assertThat(result).contains("CREATE INDEX idx1;");
+            assertThat(result).contains("CREATE INDEX idx2;");
+            assertThat(result).contains("\n");
         }
 
         @Test
@@ -78,9 +77,9 @@ class PersistenceNormalizedBuildersTest {
             withNull.add("col2");
             SelectBuilder sb = new SelectBuilder(withNull);
             String result = sb.buildSelects();
-            assertThat(result).contains("col1")
-                    .contains("col2")
-                    .doesNotContain("null");
+            assertThat(result).contains("col1");
+            assertThat(result).contains("col2");
+            assertThat(result).doesNotContain("null");
         }
 
         @Test
@@ -120,11 +119,11 @@ class PersistenceNormalizedBuildersTest {
                     "myschema", "mytable",
                     Map.of("reftype1", List.of("reftype1_id")));
             String result = fk.buildForeignKeys();
-            assertThat(result).contains("ALTER TABLE")
-                    .contains("myschema_dn.mytable")
-                    .contains("reftype1__reftype1_id_fk")
-                    .contains("FOREIGN KEY")
-                    .contains("REFERENCES");
+            assertThat(result).contains("ALTER TABLE");
+            assertThat(result).contains("myschema_dn.mytable");
+            assertThat(result).contains("reftype1__reftype1_id_fk");
+            assertThat(result).contains("FOREIGN KEY");
+            assertThat(result).contains("REFERENCES");
         }
 
         @Test
@@ -141,8 +140,8 @@ class PersistenceNormalizedBuildersTest {
                     "s", "t",
                     Map.of("ref", List.of("col1", "col2")));
             String result = fk.buildForeignKeys();
-            assertThat(result).contains("col1")
-                    .contains("col2");
+            assertThat(result).contains("col1");
+            assertThat(result).contains("col2");
         }
 
         @Test
@@ -167,11 +166,11 @@ class PersistenceNormalizedBuildersTest {
                     "myschema", "mytable",
                     Map.of("otherref", List.of("col1")));
             String result = m.buildManyToMany();
-            assertThat(result).contains("CREATE TABLE")
-                    .contains("myschema_dn.mytable_otherref")
-                    .contains("mytable_id")
-                    .contains("otherref_id")
-                    .contains("INSERT INTO");
+            assertThat(result).contains("CREATE TABLE");
+            assertThat(result).contains("myschema_dn.mytable_otherref");
+            assertThat(result).contains("mytable_id");
+            assertThat(result).contains("otherref_id");
+            assertThat(result).contains("INSERT INTO");
         }
 
         @Test
@@ -203,9 +202,9 @@ class PersistenceNormalizedBuildersTest {
         void noTimescapeNoScope() {
             PoliciesBuilder pb = new PoliciesBuilder("s", "t", List.of(), Map.of());
             String result = pb.buildPolicies();
-            assertThat(result).contains("ALTER TABLE IF EXISTS s_dn.t")
-                    .contains("ENABLE ROW LEVEL SECURITY")
-                    .contains("true");
+            assertThat(result).contains("ALTER TABLE IF EXISTS s_dn.t");
+            assertThat(result).contains("ENABLE ROW LEVEL SECURITY");
+            assertThat(result).contains("true");
         }
 
         @Test
@@ -221,8 +220,8 @@ class PersistenceNormalizedBuildersTest {
         void withAuthorizationScope() {
             PoliciesBuilder pb = new PoliciesBuilder("s", "t", List.of(), Map.of("reftype1", "col1"));
             String result = pb.buildPolicies();
-            assertThat(result).contains("reftype1")
-                    .contains("col1_hk");
+            assertThat(result).contains("reftype1");
+            assertThat(result).contains("col1_hk");
         }
 
         @Test
@@ -231,9 +230,9 @@ class PersistenceNormalizedBuildersTest {
             PoliciesBuilder pb = new PoliciesBuilder(
                     "s", "t", List.of("ts"), Map.of("ref", "col"));
             String result = pb.buildPolicies();
-            assertThat(result).contains("timescope")
-                    .contains("ref")
-                    .contains("AND");
+            assertThat(result).contains("timescope");
+            assertThat(result).contains("ref");
+            assertThat(result).contains("AND");
         }
 
         @Test
@@ -303,8 +302,8 @@ class PersistenceNormalizedBuildersTest {
             Application app = makeApp("myapp");
             SchemaBuilder sb = new SchemaBuilder(List.of(sql), app);
             String schema = sb.buildSchema();
-            assertThat(schema).contains("drop schema if exists myapp_dn cascade")
-                    .contains("create schema myapp_dn");
+            assertThat(schema).contains("drop schema if exists myapp_dn cascade");
+            assertThat(schema).contains("create schema myapp_dn");
         }
 
         @Test
@@ -338,9 +337,9 @@ class PersistenceNormalizedBuildersTest {
                     Map.of());
             TableBuilder tb = new TableBuilder(sql);
             String result = tb.createTable();
-            assertThat(result).contains("create table")
-                    .contains("myapp_dn.myref")
-                    .contains("OWNER TO");
+            assertThat(result).contains("create table");
+            assertThat(result).contains("myapp_dn.myref");
+            assertThat(result).contains("OWNER TO");
         }
 
         @Test
@@ -356,8 +355,8 @@ class PersistenceNormalizedBuildersTest {
                     Map.of(),
                     Map.of());
             String result = new TableBuilder(sql).createTable();
-            assertThat(result).contains("colA")
-                    .contains("colB");
+            assertThat(result).contains("colA");
+            assertThat(result).contains("colB");
         }
 
         @Test
@@ -397,9 +396,9 @@ class PersistenceNormalizedBuildersTest {
             FromBuilder fb = new FromBuilder("s", List.of(),
                     List.of(new ReferenceJoin("joinTable", "joinCol")));
             String result = fb.buildFrom();
-            assertThat(result).contains("JSON_TABLE")
-                    .contains("refslinkedto")
-                    .contains("joinTable");
+            assertThat(result).contains("JSON_TABLE");
+            assertThat(result).contains("refslinkedto");
+            assertThat(result).contains("joinTable");
         }
 
         @Test

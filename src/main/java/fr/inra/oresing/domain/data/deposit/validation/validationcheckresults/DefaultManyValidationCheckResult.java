@@ -8,7 +8,6 @@ import fr.inra.oresing.domain.checker.type.*;
 import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.DataColumnMultipleValue;
 import fr.inra.oresing.domain.data.DataColumnValue;
-import fr.inra.oresing.domain.data.LinkedLines;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -19,7 +18,7 @@ import java.util.stream.Collectors;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheckResult> implements CheckerValidationCheckResult<ListType<FieldType<?>>>, ValidationCheckResult {
+public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheckResult> implements CheckerValidationCheckResult, ValidationCheckResult {
     ListType<FieldType<?>> value;
     CheckerTarget target;
 
@@ -29,31 +28,35 @@ public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheck
         this.target = target;
     }
 
-    @SuppressWarnings("unchecked")
     private static ListType<FieldType<?>> buildValueFromFieldType(final Collection<? extends ValidationCheckResult> validationsCheckresult) {
         if (CollectionUtils.isEmpty(validationsCheckresult)) {
             return new ListType<>(NullType.INSTANCE);
         }
-        final List<FieldType<?>> allValues = new ArrayList<>();
-        for (final ValidationCheckResult vcr : validationsCheckresult) {
-            if (vcr instanceof CheckerValidationCheckResult<?> cvr && cvr.value() instanceof FieldType<?> ft) {
-                allValues.add(ft);
-            }
-        }
-        if (allValues.isEmpty()) {
-            return new ListType<>(NullType.INSTANCE);
-        }
-        final ListType<FieldType<?>> result = new ListType<>(allValues.get(0));
-        result.getValue().addAll(allValues);
-        return result;
+        return validationsCheckresult.stream()
+                .findFirst()
+                .filter(CheckerValidationCheckResult.class::isInstance)
+                .map(CheckerValidationCheckResult.class::cast)
+                .map(CheckerValidationCheckResult::value)
+                .map((FieldType t) -> new ListType(t))
+                .map(lt -> {
+                            lt.getValue().addAll(
+                                    validationsCheckresult.stream()
+                                            .filter(CheckerValidationCheckResult.class::isInstance)
+                                            .map(CheckerValidationCheckResult.class::cast)
+                                            .map(CheckerValidationCheckResult::value)
+                                            .toList()
+                            );
+                            return lt;
+                        }
+                )
+                .orElse(new ListType(NullType.INSTANCE));
     }
 
     @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public DataColumnValue<?, ?> transform(final LineChecker<?> lineChecker, final DataColumnValue<?, ?> referenceColumnRawValue, final DataColumn dataColumn, final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo) {
+    public DataColumnValue transform(final LineChecker lineChecker, final DataColumnValue referenceColumnRawValue, final DataColumn dataColumn, final Map refsLinkedTo) {
         return switch (lineChecker.underlyingType()) {
-            case ReferenceType ignored -> new DataColumnMultipleValue<>(
-                    value().getValue().stream()
+            case ReferenceType ignored -> new DataColumnMultipleValue(
+                    ((List<FieldType<?>>) value().getValue()).stream()
                             .map(referenceType -> {
                                 referenceType.transform(lineChecker, referenceColumnRawValue, dataColumn, refsLinkedTo);
                                 return referenceType;
@@ -63,7 +66,7 @@ public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheck
                             .map(StringType::getStringTypeFromStringValue)
                             .toList()
             );
-            default -> new DataColumnMultipleValue<>(value().getValue());
+            default -> new DataColumnMultipleValue((List) value().getValue());
         };
     }
 
@@ -96,7 +99,7 @@ public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheck
         final Map<String, Object> messagesParams = new HashMap<>();
         for (final ValidationCheckResult validationCheckResult : this) {
             final Map<String, Object> map = validationCheckResult.messageParams();
-            map.forEach((key, value1) -> ((List<Object>) messagesParams
+            map.forEach((key, value1) -> ((List) messagesParams
                     .computeIfAbsent(key, k -> new LinkedList<>()))
                     .add(value1));
         }
@@ -105,7 +108,7 @@ public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheck
     }
 
     @Override
-    public ListType<FieldType<?>> value() {
+    public FieldType<?> value() {
         return value;
     }
 }

@@ -12,7 +12,7 @@ public abstract class ManyValuesStaticColumn extends Column {
 
     public static final String CSV_CELL_SEPARATOR = ",";
 
-    protected ManyValuesStaticColumn(final DataColumn referenceColumn, final ComponentPresenceConstraint presenceConstraint, final ComputedValueUsage computedValueUsage, TransformationConfiguration defaultValue) {
+    public ManyValuesStaticColumn(final DataColumn referenceColumn, final String headerForColumnn, final ComponentPresenceConstraint presenceConstraint, final ComputedValueUsage computedValueUsage, TransformationConfiguration defaultValue) {
         super(referenceColumn, presenceConstraint, computedValueUsage, defaultValue);
     }
 

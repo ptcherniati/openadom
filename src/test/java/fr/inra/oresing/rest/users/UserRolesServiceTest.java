@@ -66,6 +66,7 @@ class UserRolesServiceTest {
     @Mock private AuthenticationService authenticationService;
     @Mock private JdbcTemplate jdbcTemplate;
     @Mock private RoleGrantAuditRepository auditRepository;
+    @Mock private UserRolesAuditLogger auditLogger;
 
     private UserRolesService service;
 
@@ -73,7 +74,7 @@ class UserRolesServiceTest {
     void setUp() {
         service = new UserRolesService(
                 userRepository, applicationRepository, authenticationService,
-                jdbcTemplate, auditRepository);
+                jdbcTemplate, auditRepository, auditLogger);
     }
 
     // ---------------------------------------------------------------- //
@@ -571,7 +572,7 @@ class UserRolesServiceTest {
     // ---------------------------------------------------------------- //
 
     @Test
-    @DisplayName("grantRole appends a GRANT row in oa_audit.role_grant_audit")
+    @DisplayName("grantRole delegates to UserRolesAuditLogger.logGrant")
     void grantLogsAuditEntry() {
         asAdmin();
         OreSiUser alice = user(USER_ALICE, "alice", "alice@x", OreSiUser.OreSiUserStates.active);
@@ -581,13 +582,11 @@ class UserRolesServiceTest {
 
         service.grantRole(USER_ALICE, APP_ID_A, "applicationManager");
 
-        verify(auditRepository).logAction(
-                eq(USER_ALICE), eq("applicationManager"), eq(APP_ID_A),
-                eq(RoleGrantAudit.ACTION_GRANT), any());
+        verify(auditLogger).logGrant(USER_ALICE, "applicationManager", APP_ID_A);
     }
 
     @Test
-    @DisplayName("revokeRole appends a REVOKE row in oa_audit.role_grant_audit")
+    @DisplayName("revokeRole delegates to UserRolesAuditLogger.logRevoke")
     void revokeLogsAuditEntry() {
         asAdmin();
         OreSiUser alice = user(USER_ALICE, "alice", "alice@x", OreSiUser.OreSiUserStates.active);
@@ -597,24 +596,22 @@ class UserRolesServiceTest {
 
         service.revokeRole(USER_ALICE, APP_ID_A, "applicationManager");
 
-        verify(auditRepository).logAction(
-                eq(USER_ALICE), eq("applicationManager"), eq(APP_ID_A),
-                eq(RoleGrantAudit.ACTION_REVOKE), any());
+        verify(auditLogger).logRevoke(USER_ALICE, "applicationManager", APP_ID_A);
     }
 
     @Test
-    @DisplayName("audit failure does not block the underlying grant operation")
-    void grantContinuesOnAuditFailure() {
+    @DisplayName("auditLogger is invoked after the metier operation succeeds ( order matters )")
+    void grantAuditIsCalledAfterDelegation() {
         asAdmin();
         OreSiUser alice = user(USER_ALICE, "alice", "alice@x", OreSiUser.OreSiUserStates.active);
         when(userRepository.tryFindById(USER_ALICE)).thenReturn(Optional.of(alice));
         when(applicationRepository.findApplication(APP_ID_A))
                 .thenReturn(app(APP_ID_A, "appA"));
-        org.mockito.Mockito.doThrow(new RuntimeException("oa_audit down"))
-                .when(auditRepository).logAction(any(), anyString(), any(), anyString(), any());
 
-        // No exception thrown to the caller .
         service.grantRole(USER_ALICE, APP_ID_A, "applicationManager");
-        verify(authenticationService).addUserRightApplicationManager(eq(USER_ALICE), any());
+
+        org.mockito.InOrder inOrder = org.mockito.Mockito.inOrder(authenticationService, auditLogger);
+        inOrder.verify(authenticationService).addUserRightApplicationManager(eq(USER_ALICE), any());
+        inOrder.verify(auditLogger).logGrant(USER_ALICE, "applicationManager", APP_ID_A);
     }
 }

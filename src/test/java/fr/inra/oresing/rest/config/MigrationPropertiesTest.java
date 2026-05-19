@@ -15,7 +15,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * et l'accessibilité des propriétés via les getters/setters Lombok.
  */
 @Tag("core.config")
-@Tag("domain.model")
 @DisplayName("MigrationProperties")
 class MigrationPropertiesTest {
 

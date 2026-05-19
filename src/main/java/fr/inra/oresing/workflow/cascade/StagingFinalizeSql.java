@@ -4,7 +4,11 @@ import fr.inra.oresing.persistence.refref.RefrefRebuildSql;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -32,14 +36,6 @@ import java.util.stream.Collectors;
 public final class StagingFinalizeSql {
 
     private static final Logger log = LoggerFactory.getLogger(StagingFinalizeSql.class);
-
-    /** Functional interface used internally to execute a single SQL batch,
-     *  covering both {@link PreparedStatement} (filtered) and
-     *  {@link java.sql.Statement} (non-filtered) paths without duplicating the loop. */
-    @FunctionalInterface
-    private interface SqlBatchExecutor {
-        int execute() throws SQLException;
-    }
 
     /** Bulk-INSERT batch size ( rows ) . Override via {@code -Dapp.import.bulkInsertBatchSize=N} . */
     public static final int BULK_INSERT_BATCH_SIZE =
@@ -451,7 +447,8 @@ public final class StagingFinalizeSql {
                     try {
                         onBatchUpserted.accept((long) affected);
                     } catch (RuntimeException ignored) {
-                        log.debug("onBatchUpserted callback failed (best-effort, ignored): {}", ignored.getMessage());
+                        /* best effort : un consommateur fautif ne doit pas
+                           casser le UPSERT en cours */
                     }
                 }
                 if (log.isDebugEnabled()) {
@@ -607,6 +604,7 @@ public final class StagingFinalizeSql {
         throw enrichLockTimeoutError(lastFailure, batchNum, maxAttempts - 1,
                 totalUpsertedSoFar, correlationId, targetTableSqlId);
     }
+
     /**
      * Layer 5 : enrichit un {@link SQLException} batch UPSERT avec le contexte
      * diagnostic utile pour debug ( SQLSTATE original , batch , correlationId ,

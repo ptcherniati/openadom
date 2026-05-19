@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.groovy.predefined.script;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -17,13 +16,13 @@ public sealed interface ScriptConstantProvider permits BuildCompositeKey, BuildE
      * 100 lignes × ~48 expressions, cette boucle générait ~21 600 instanciations inutiles.
      * Avec ce tableau statique, le coût est nul après le chargement de la classe.
      */
-    List<ScriptConstantProvider> PROVIDERS = List.of(
+    ScriptConstantProvider[] PROVIDERS = {
             new BuildCompositeKey(),
             new BuildExceptionProvider(),
             new BuildManyCompositeKey(),
             new EscapeLabelProvider(),
             new NaturalKeyProvider()
-    );
+    };
 
     static void addAllToContext(Map<String, Object> context) {
         for (ScriptConstantProvider provider : PROVIDERS) {

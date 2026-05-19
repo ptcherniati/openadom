@@ -13,7 +13,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * de chaque pool d'exécuteur.
  */
 @Tag("core.config")
-@Tag("domain.model")
 @DisplayName("ExecutorProperties — valeurs par défaut et setters")
 class ExecutorPropertiesTest {
 

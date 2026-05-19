@@ -4,11 +4,11 @@ import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.ReferencedBinaryFiles;
 import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
-import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFileResult;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.data.DataFile;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.file.FileOrUUID;
+import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFileResult;
 
 import java.io.IOException;
 import java.util.List;

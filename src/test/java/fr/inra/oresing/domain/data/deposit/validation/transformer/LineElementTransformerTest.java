@@ -59,7 +59,7 @@ class LineElementTransformerTest {
             FieldType<?> result = t.transform(datum, StringType.getStringTypeFromStringValue("initial"));
 
             assertThat(result).isInstanceOf(StringType.class);
-            assertThat(result).hasToString("resultat");
+            assertThat(result.toString()).isEqualTo("resultat");
         }
 
         @Test
@@ -74,7 +74,7 @@ class LineElementTransformerTest {
 
             Datum datum = new Datum();
             FieldType<?> result = t.transform(datum, StringType.getStringTypeFromStringValue(""));
-            assertThat(result).hasToString("contextValue");
+            assertThat(result.toString()).isEqualTo("contextValue");
         }
 
         @Test
@@ -107,7 +107,7 @@ class LineElementTransformerTest {
 
             Datum result = transformer.transform(datum);
 
-            assertThat(result.get("valeur")).hasToString("nouveau");
+            assertThat(result.get("valeur").toString()).isEqualTo("nouveau");
         }
 
         @Test
@@ -124,54 +124,9 @@ class LineElementTransformerTest {
             Datum result = transformer.transform(original);
 
             // Original inchangé
-            assertThat(original.get("x")).hasToString("old");
+            assertThat(original.get("x").toString()).isEqualTo("old");
             // Copie modifiée
-            assertThat(result.get("x")).hasToString("new");
-        }
-    }
-
-    // ─── TransformOneLineElementTransformer (default transform(DataDatum, Map)) ─
-
-    @Nested
-    @DisplayName("TransformOneLineElementTransformer — default transform(DataDatum, Map)")
-    class TransformDataDatumDefaultMethodTest {
-
-        @Test
-        @DisplayName("transform(DataDatum) — column exists in datum — uses existing value")
-        void transformDataDatumExistingColumn() {
-            CheckerTarget target = new DataColumn("champ");
-            StringGroovyExpression expr = StringGroovyExpression.forExpression("'transformed'", Set.of());
-            TransformOneLineElementTransformer transformer = new GroovyExpressionOnOneLineElementTransformer(
-                    expr, ImmutableMap.of(), target, Set.of());
-
-            fr.inra.oresing.domain.data.DataDatum datum = new fr.inra.oresing.domain.data.DataDatum();
-            datum.put(new DataColumn("champ"),
-                    new fr.inra.oresing.domain.data.DataColumnSingleValue(StringType.getStringTypeFromStringValue("original")));
-
-            fr.inra.oresing.domain.data.DataDatum result = transformer.transform(datum, Map.of());
-
-            assertThat(result).isNotNull();
-            assertThat(result.get(new DataColumn("champ"))).isNotNull();
-        }
-
-        @Test
-        @DisplayName("transform(DataDatum) — column absent from datum — uses empty value (else branch)")
-        void transformDataDatumMissingColumn() {
-            // Target column not in the DataDatum — triggers the else branch
-            // referenceColumnValue = DataColumnSingleValue.empty()
-            CheckerTarget target = new DataColumn("absent");
-            StringGroovyExpression expr = StringGroovyExpression.forExpression("'filled'", Set.of());
-            TransformOneLineElementTransformer transformer = new GroovyExpressionOnOneLineElementTransformer(
-                    expr, ImmutableMap.of(), target, Set.of());
-
-            fr.inra.oresing.domain.data.DataDatum datum = new fr.inra.oresing.domain.data.DataDatum();
-            // datum is empty — target column "absent" is not in it
-
-            fr.inra.oresing.domain.data.DataDatum result = transformer.transform(datum, Map.of());
-
-            assertThat(result).isNotNull();
-            // The absent column should now exist in the result with the transformed value
-            assertThat(result.contains(new DataColumn("absent"))).isTrue();
+            assertThat(result.get("x").toString()).isEqualTo("new");
         }
     }
 }

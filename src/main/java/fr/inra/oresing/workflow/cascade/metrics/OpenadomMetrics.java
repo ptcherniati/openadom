@@ -103,35 +103,18 @@ public class OpenadomMetrics {
     // ========================================================================
 
     /**
-      * Donnees d'un import termine ( succes ou echec ) utilisees pour
-     * alimenter les metrics Prometheus.
-     *
-     * @param application      nom de l'application ( null -> "unknown" )
-     * @param dataType         type de reference/data ( null -> "unknown" )
-     * @param status           COMPLETED / FAILED / CANCELLED
-     * @param duration         duree totale de l'import
-     * @param recordsProcessed lignes traitees avec succes
-     * @param recordsFailed    lignes en erreur
-     * @param chunksProcessed  chunks cascade achevs
-     * @param fileSizeBytes    taille du fichier d'entree en octets
-     */
-    public record ImportMetricsData(String application, String dataType, String status,
-                                    Duration duration, long recordsProcessed, long recordsFailed,
-                                    int chunksProcessed, long fileSizeBytes) {}
-
-    /**
      * Enregistre la fin d'un import ( succes ou echec ).
+     *
+     * @param application     nom de l'application ( null -> "unknown" )
+     * @param dataType        type de reference/data ( null -> "unknown" )
+     * @param status          COMPLETED / FAILED / CANCELLED
+     * @param duration        duree totale de l'import
+     * @param recordsProcessed lignes traitees avec succes
+     * @param recordsFailed   lignes en erreur
+     * @param chunksProcessed chunks cascade achevs
+     * @param fileSizeBytes   taille du fichier d'entree en octets
      */
-    public void recordImportCompleted(ImportMetricsData data) {
-        recordImportCompleted(data.application(), data.dataType(), data.status(),
-                data.duration(), data.recordsProcessed(), data.recordsFailed(),
-                data.chunksProcessed(), data.fileSizeBytes());
-    }
-
-    /**
-     * Enregistre la fin d'un import ( succes ou echec ) — version interne a parametres disagregés.
-     */
-    private void recordImportCompleted(
+    public void recordImportCompleted(
             String application, String dataType, String status,
             Duration duration, long recordsProcessed, long recordsFailed,
             int chunksProcessed, long fileSizeBytes) {
@@ -218,28 +201,6 @@ public class OpenadomMetrics {
      * @since cascade 2.2.0 + workflow_log.failed_stage column
      */
     public void recordImportFailed(
-            String application, String dataType, String failedStage,
-            Duration duration, long recordsProcessed, long recordsFailed,
-            int chunksProcessed, long fileSizeBytes) {
-        recordImportFailed(
-                new ImportMetricsData(application, dataType, "FAILED",
-                        duration, recordsProcessed, recordsFailed, chunksProcessed, fileSizeBytes),
-                failedStage);
-    }
-
-    /**
-     * Enregistre un import en echec via {@link ImportMetricsData} (API recommandee).
-     *
-     * @param data        donnees de l'import
-     * @param failedStage etape cascade ayant echoue (SOURCE / TRANSFORM / SINK / …)
-     */
-    public void recordImportFailed(ImportMetricsData data, String failedStage) {
-        recordImportFailedInternal(data.application(), data.dataType(), failedStage,
-                data.duration(), data.recordsProcessed(), data.recordsFailed(),
-                data.chunksProcessed(), data.fileSizeBytes());
-    }
-
-    private void recordImportFailedInternal(
             String application, String dataType, String failedStage,
             Duration duration, long recordsProcessed, long recordsFailed,
             int chunksProcessed, long fileSizeBytes) {

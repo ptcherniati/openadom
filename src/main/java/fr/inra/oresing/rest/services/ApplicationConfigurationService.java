@@ -5,11 +5,11 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.domain.application.configuration.type.CheckerEnum;
 import fr.inra.oresing.domain.data.DataFile;
-import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.domain.file.FileBomResolver;
 import fr.inra.oresing.rest.MultiYaml;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.configuration.builder.ConfigurationBuilder;
 import fr.inra.oresing.rest.reactive.ReactiveEventHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -35,8 +35,8 @@ public class ApplicationConfigurationService {
     private ApplicationConfigurationService() {
     }
 
-    public static Application unzipConfiguration(final DataFile file, ReactiveEventHelper eventHelper, long maxBytesAllowed) throws IOException {
-        InputStream inputStream = MultiYaml.parseConfigurationBytes(file, maxBytesAllowed);
+    public static Application unzipConfiguration(final DataFile file, ReactiveEventHelper eventHelper) throws IOException {
+        InputStream inputStream = MultiYaml.parseConfigurationBytes(file);
         return ApplicationConfigurationService.parseConfigurationBytes(
                 "", "",
                 eventHelper,

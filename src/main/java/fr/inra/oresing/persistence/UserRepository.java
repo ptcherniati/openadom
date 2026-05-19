@@ -6,11 +6,11 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.domain.OreSiUser;
-import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -158,6 +158,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
     }
 
     public CurrentUserRoles getRolesForRole(final String role) {
+        final String roleParam = role == null ? "\"current_user\"()" : String.format("\"%s\"", role);
         RowMapper<CurrentUserRoles> rowMapper = (rs, rowNum) -> {
             final String currentUser = rs.getString("currentUser");
             final List<String> memberOf = Arrays.stream((String[]) rs.getArray("memberOf").getArray())
@@ -297,10 +298,9 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
     public void invalidateCharte(final UUID applicationId) {
         final String sql = """
                 update %s
-                set chartes = chartes - :applicationId::text
-                """.formatted(getTable().getSqlIdentifier());
-        getNamedParameterJdbcTemplate().update(sql,
-                new MapSqlParameterSource("applicationId", applicationId.toString()));
+                set chartes = chartes - '%s'
+                """.formatted(getTable().getSqlIdentifier(), applicationId.toString());
+        getNamedParameterJdbcTemplate().getJdbcTemplate().execute(sql);
     }
 
 }

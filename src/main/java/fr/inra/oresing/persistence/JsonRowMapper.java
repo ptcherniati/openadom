@@ -76,7 +76,6 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
         };
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     private static JsonSerializer<FieldType> getFieldTypeJsonSerializer() {
         return new JsonSerializer<>() {
             @Override
@@ -285,7 +284,7 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
                 BinaryFileDataset binaryFileDataset = value.copy();
                 final String dataName = OreSiApiRequestContext.getAuthenticationToken().getDataName();
                 final Application application = OreSiApiRequestContext.getAuthenticationToken().getApplicationPersona().application();
-                final DatePattern<?> submissionDatePattern = application.findSubmissionDatePattern(dataName);
+                final DatePattern submissionDatePattern = application.findSubmissionDatePattern(dataName);
                 String from = submissionDatePattern.dateToStandardFormat(value.getFrom());
                 binaryFileDataset.setFrom(from);
                 String to = submissionDatePattern.dateToStandardFormat(value.getTo());
@@ -312,20 +311,19 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
                 final String applicationName = OreSiApiRequestContext.getAuthenticationToken().getApplicationName();
                 final String dataName = OreSiApiRequestContext.getAuthenticationToken().getDataName();
                 final Application application = serviceContainer.applicationService().getApplication(applicationName);
-                final DatePattern<?> submissionDatePattern = application.findSubmissionDatePattern(dataName);
-                 String fromDate = node.findPath("from").asText();
-                 String toDate = node.findPath("to").asText();
-                 try {
-                     fromDate = submissionDatePattern.dateToStandardFormat(fromDate);
-                     toDate = submissionDatePattern.dateToStandardFormat(toDate);
-                 } catch (DateTimeParseException | UnsupportedTemporalTypeException ex) {
-                     //already in the format
-                 }
-                 String datatype = node.findPath("datatype").asText();
-                 String comment = node.findPath("comment").asText();
-                 final BinaryFileDataset binaryFileDataset = new BinaryFileDataset();
-                 binaryFileDataset.setFrom(fromDate);
-                 binaryFileDataset.setTo(toDate);
+                final DatePattern submissionDatePattern = application.findSubmissionDatePattern(dataName);
+                String fromDate = node.findPath("from").asText(), to_date = node.findPath("to").asText();
+                try {
+                    fromDate = submissionDatePattern.dateToStandardFormat(fromDate);
+                    to_date = submissionDatePattern.dateToStandardFormat(to_date);
+                } catch (DateTimeParseException | UnsupportedTemporalTypeException ex) {
+                    //already in the format
+                }
+                String datatype = node.findPath("datatype").asText();
+                String comment = node.findPath("comment").asText();
+                final BinaryFileDataset binaryFileDataset = new BinaryFileDataset();
+                binaryFileDataset.setFrom(fromDate);
+                binaryFileDataset.setTo(to_date);
                 binaryFileDataset.setDatatype(datatype);
                 binaryFileDataset.setComment(comment);
                 final Map<String, List<Ltree>> requiredAuthorizations = getJsonMapper()

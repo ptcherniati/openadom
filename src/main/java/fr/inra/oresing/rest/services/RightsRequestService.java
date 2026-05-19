@@ -5,20 +5,23 @@ import fr.inra.oresing.domain.OreSiAuthorization;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.RightRequestDescription;
-import fr.inra.oresing.domain.authorization.AuthorizationParsed;
-import fr.inra.oresing.domain.authorization.GetGrantableResult;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
-import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.rightsrequest.RightsRequest;
-import fr.inra.oresing.domain.rightsrequest.TreatmentDecision;
 import fr.inra.oresing.mail.rightsrequest.RightsRequestNotificationService;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.RightsRequestRepository;
 import fr.inra.oresing.persistence.RightsRequestSearchHelper;
 import fr.inra.oresing.persistence.UserRepository;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
+import fr.inra.oresing.domain.rightsrequest.TreatmentDecision;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
-import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
-import fr.inra.oresing.rest.model.rightsrequest.*;
+import fr.inra.oresing.domain.authorization.AuthorizationParsed;
+import fr.inra.oresing.domain.authorization.GetGrantableResult;
+import fr.inra.oresing.rest.model.rightsrequest.CreateRightsRequestRequest;
+import fr.inra.oresing.rest.model.rightsrequest.GetRightsRequestResult;
+import fr.inra.oresing.rest.model.rightsrequest.RightsRequestInfos;
+import fr.inra.oresing.rest.model.rightsrequest.RightsRequestResult;
+import fr.inra.oresing.rest.model.rightsrequest.TreatRightsRequestRequest;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -57,6 +60,10 @@ public class RightsRequestService {
         RightsRequestRepository rightsRequestRepository = repository.getRepository(app).rightsRequestRepository();
     }
 
+    /**
+     *
+     */
+    //TODO use params
     List<RightsRequest> findRightsRequests(final Application application, final RightsRequestInfos rightsRequestInfos) {
         RightsRequestSearchHelper rightsRequestSearchHelper = new RightsRequestSearchHelper(application, rightsRequestInfos);
         String where = rightsRequestSearchHelper.buildWhereRequest();
@@ -86,7 +93,7 @@ public class RightsRequestService {
 
     private RightsRequestResult getRightsRequestResult(final RightsRequest rightsRequest, final Application application) {
         Map<String, List<AuthorizationParsed>> authorizationsParsed = new HashMap<>();
-        DefaultAuthorizationService.authorizationsToParsedAuthorizations(
+        AuthorizationService.authorizationsToParsedAuthorizations(
                 List.of(rightsRequest.getRightsRequest()),
                 authorizationsParsed);
         return new RightsRequestResult(
@@ -152,7 +159,7 @@ public class RightsRequestService {
         OreSiAuthorization authorizations = Optional.of(createRightsRequestRequest)
                 .map(CreateRightsRequestRequest::rightsRequest)
                 .map(authorization -> {
-                    List<AuthorizationRequestError> errors = new ArrayList<>();
+                    List errors = new ArrayList<>();
                     AuthorizationRequest authorizationRequestToAuthorizationRequest = serviceContainer.authorizationService().createAuthorizationRequestToAuthorizationRequest(
                             authorization,
                             application,
@@ -169,6 +176,10 @@ public class RightsRequestService {
                 .orElse(null);
         rightsRequest.setRightsRequest(authorizations);
         rightsRequest.setUser(rightsRequest.getUser() == null ? OreSiApiRequestContext.getRequestUserId() : rightsRequest.getUser());
+        // Le payload `rightsRequest` du DTO est optionnel : si absent, `authorizations`
+        // vaut null ( cf. `.orElse(null)` ci-dessus ) et la demande est purement
+        // declarative. Dans ce cas, pas de propagation `oreSiUsers` a faire ;
+        // sinon NPE 500 systematique sur POST /rightsRequest sans corps complet.
         if (authorizations != null) {
             authorizations.setOreSiUsers(Set.of(rightsRequest.getUser()));
         }

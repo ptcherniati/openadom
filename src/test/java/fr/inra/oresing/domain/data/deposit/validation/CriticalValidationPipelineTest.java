@@ -245,9 +245,9 @@ class CriticalValidationPipelineTest {
                     .containsKey("lineNumber")
                     .containsKey("otherLines")
                     .containsKey("duplicateKey");
-            assertThat(r.messageParams()).containsEntry("file", "myFile.csv");
-            assertThat(r.messageParams()).containsEntry("lineNumber", 42L);
-            assertThat(r.messageParams()).containsEntry("duplicateKey", "root.child");
+            assertThat(r.messageParams().get("file")).isEqualTo("myFile.csv");
+            assertThat(r.messageParams().get("lineNumber")).isEqualTo(42L);
+            assertThat(r.messageParams().get("duplicateKey")).isEqualTo("root.child");
         }
 
         @Test
@@ -258,7 +258,7 @@ class CriticalValidationPipelineTest {
                     DuplicationLineValidationCheckResult.FileType.REFERENCES,
                     "f.csv", ValidationLevel.ERROR, Ltree.fromSql("k"), 5L, lines, COLUMN);
 
-            assertThat(r.messageParams()).containsEntry("otherLines", lines);
+            assertThat(r.messageParams().get("otherLines")).isEqualTo(lines);
         }
 
         @Test

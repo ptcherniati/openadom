@@ -35,7 +35,7 @@ public non-sealed class NullType implements FieldType<Void> {
     }
 
     @Override
-    public CheckerValidationCheckResult<NullType> check(final String value, final LineChecker<?> lineChecker) {
+    public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
         final CheckerTarget target = lineChecker.target();
         return DefaultCheckerValidationCheckResult.success(target, this);
     }
@@ -46,7 +46,7 @@ public non-sealed class NullType implements FieldType<Void> {
     }
 
     @Override
-    public NullType copy() {
+    public FieldType copy() {
         return this;
     }
 

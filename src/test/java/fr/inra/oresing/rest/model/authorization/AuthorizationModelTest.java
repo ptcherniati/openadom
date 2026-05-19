@@ -177,6 +177,7 @@ class AuthorizationModelTest {
         @Test
         @DisplayName("Record accessors return correct values")
         void accessors() {
+            UUID uid = UUID.randomUUID();
             Map<String, List<AuthorizationParsed>> userAuth = Map.of();
             Map<String, AuthorizationParsed> pubAuth = Map.of();
 

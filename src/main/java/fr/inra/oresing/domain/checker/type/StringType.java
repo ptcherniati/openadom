@@ -67,8 +67,8 @@ public non-sealed class StringType implements FieldType<String> {
     }
 
     @Override
-    public CheckerValidationCheckResult<StringType> check(final String value, final LineChecker<?> lineChecker) {
-        final CheckerValidationCheckResult<StringType> validationCheckResult;
+    public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
+        final CheckerValidationCheckResult validationCheckResult;
         final DataColumn target = lineChecker.target();
         if (predicate == null) {
             this.value = value;
@@ -137,7 +137,7 @@ public non-sealed class StringType implements FieldType<String> {
     }
 
     @Override
-    public StringType copy() {
+    public FieldType copy() {
         final StringType stringType = clone.get();
         stringType.value = value;
         return stringType;

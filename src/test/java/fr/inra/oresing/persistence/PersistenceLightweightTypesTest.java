@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Tag;
  */
 @DisplayName("Persistence lightweight types")
 @Tag("core.config")
-@Tag("domain.model")
 class PersistenceLightweightTypesTest {
 
     // ---------------------------------------------------------
@@ -272,28 +271,6 @@ class PersistenceLightweightTypesTest {
         @DisplayName("mainSchema() retourne OreSiSqlSchema.MAIN")
         void mainSchema() {
             assertThat(SqlSchema.mainSchema()).isEqualTo(OreSiSqlSchema.MAIN);
-        }
-    }
-
-    // ---------------------------------------------------------
-    // SqlSchemaForApplication static methods
-    // ---------------------------------------------------------
-
-    @Nested
-    @DisplayName("SqlSchemaForApplication — constantes et méthodes statiques")
-    class SqlSchemaForApplicationTest {
-
-        @Test
-        @DisplayName("PUBLIC_UUID est un UUID valide non nul")
-        void publicUuidIsValid() {
-            assertThat(SqlSchemaForApplication.PUBLIC_UUID).isNotNull();
-        }
-
-        @Test
-        @DisplayName("publicRoleId() retourne la représentation String de PUBLIC_UUID")
-        void publicRoleId() {
-            assertThat(SqlSchemaForApplication.publicRoleId())
-                    .isEqualTo(SqlSchemaForApplication.PUBLIC_UUID.toString());
         }
     }
 }

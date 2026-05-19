@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 
 @Tag("core.config")
-@Tag("domain.model")
 class DateCheckerTypeTest {
 
     @Test
