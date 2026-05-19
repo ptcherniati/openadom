@@ -33,6 +33,20 @@ import java.util.function.Consumer;
 @Slf4j
 public final class MergeFileDeferredRunner implements TransactionSynchronization {
 
+    /**
+     * Donnees de contexte du workflow MERGE_FILE (chemin du fichier,
+     * correlation ID et registry de progression).
+     */
+    public record WorkflowContext(Path mergedPath, Path processedDir,
+                                  UUID correlationId, WorkflowActiveRegistry registry) {}
+
+    /**
+     * Callbacks de cycle de vie : succes, echec post-commit, rollback.
+     */
+    public record Callbacks(Runnable onSuccess,
+                            Consumer<Throwable> onPostCommitFailure,
+                            Runnable onTxRolledBack) {}
+
     private final DataRepository         repository;
     private final WorkflowTempCleanup    tempCleanup;
     private final StoreAllPathSink       sink;
@@ -47,23 +61,18 @@ public final class MergeFileDeferredRunner implements TransactionSynchronization
     public MergeFileDeferredRunner(DataRepository repository,
                                    WorkflowTempCleanup tempCleanup,
                                    StoreAllPathSink sink,
-                                   Path mergedPath,
-                                   Path processedDir,
-                                   UUID correlationId,
-                                   WorkflowActiveRegistry registry,
-                                   Runnable onSuccess,
-                                   Consumer<Throwable> onPostCommitFailure,
-                                   Runnable onTxRolledBack) {
+                                   WorkflowContext ctx,
+                                   Callbacks callbacks) {
         this.repository          = repository;
         this.tempCleanup         = tempCleanup;
         this.sink                = sink;
-        this.mergedPath          = mergedPath;
-        this.processedDir        = processedDir;
-        this.correlationId       = correlationId;
-        this.registry            = registry;
-        this.onSuccess           = onSuccess;
-        this.onPostCommitFailure = onPostCommitFailure;
-        this.onTxRolledBack      = onTxRolledBack;
+        this.mergedPath          = ctx.mergedPath();
+        this.processedDir        = ctx.processedDir();
+        this.correlationId       = ctx.correlationId();
+        this.registry            = ctx.registry();
+        this.onSuccess           = callbacks.onSuccess();
+        this.onPostCommitFailure = callbacks.onPostCommitFailure();
+        this.onTxRolledBack      = callbacks.onTxRolledBack();
     }
 
     @Override

@@ -5,8 +5,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.AccessDeniedException;
@@ -14,6 +12,7 @@ import org.springframework.security.access.AccessDeniedException;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -63,7 +62,8 @@ class IntegrityServiceTest {
         when(authSvc.getCurrentUserRoles()).thenReturn(roles);
         when(roles.isOpenAdomAdmin()).thenReturn(false);
 
-        assertThatThrownBy(() -> service.reprocess(UUID.randomUUID()))
+        UUID reprocessId = UUID.randomUUID();
+        assertThatThrownBy(() -> service.reprocess(reprocessId))
                 .isInstanceOf(AccessDeniedException.class);
     }
 
@@ -75,7 +75,8 @@ class IntegrityServiceTest {
         when(authSvc.getCurrentUserRoles()).thenReturn(roles);
         when(roles.isOpenAdomAdmin()).thenReturn(false);
 
-        assertThatThrownBy(() -> service.deletePreview(UUID.randomUUID()))
+        UUID deletePreviewId = UUID.randomUUID();
+        assertThatThrownBy(() -> service.deletePreview(deletePreviewId))
                 .isInstanceOf(AccessDeniedException.class);
     }
 
@@ -87,7 +88,8 @@ class IntegrityServiceTest {
         when(authSvc.getCurrentUserRoles()).thenReturn(roles);
         when(roles.isOpenAdomAdmin()).thenReturn(false);
 
-        assertThatThrownBy(() -> service.deleteWorkflow(UUID.randomUUID()))
+        UUID deleteWorkflowId = UUID.randomUUID();
+        assertThatThrownBy(() -> service.deleteWorkflow(deleteWorkflowId))
                 .isInstanceOf(AccessDeniedException.class);
     }
 
@@ -109,19 +111,19 @@ class IntegrityServiceTest {
     @Test
     @DisplayName("invalidateCount avec arguments non-null ne lève pas d'exception")
     void invalidateCount_validArgs_doesNotThrow() {
-        service.invalidateCount("myapp", UUID.randomUUID());
+        assertThatCode(() -> service.invalidateCount("myapp", UUID.randomUUID())).doesNotThrowAnyException();
     }
 
     @Test
     @DisplayName("invalidateCount avec appSchema null ne lève pas d'exception")
     void invalidateCount_nullSchema_doesNotThrow() {
-        service.invalidateCount(null, UUID.randomUUID());
+        assertThatCode(() -> service.invalidateCount(null, UUID.randomUUID())).doesNotThrowAnyException();
     }
 
     @Test
     @DisplayName("invalidateCount avec binaryFileId null ne lève pas d'exception")
     void invalidateCount_nullFileId_doesNotThrow() {
-        service.invalidateCount("myapp", null);
+        assertThatCode(() -> service.invalidateCount("myapp", null)).doesNotThrowAnyException();
     }
 
     // ─── listIntegrity — computeStatus via mocked JdbcTemplate ───────────────

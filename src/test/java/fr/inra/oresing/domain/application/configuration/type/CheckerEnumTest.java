@@ -41,7 +41,7 @@ class CheckerEnumTest {
         @DisplayName("toString() retourne le même résultat que getName()")
         void toStringEqualsGetName() {
             for (CheckerEnum c : CheckerEnum.values()) {
-                assertThat(c.toString()).isEqualTo(c.getName());
+                assertThat(c).hasToString(c.getName());
             }
         }
 
@@ -63,9 +63,9 @@ class CheckerEnumTest {
         @Test
         @DisplayName("compareTo() suit l'ordre de déclaration")
         void compareTo() {
-            assertThat(CheckerEnum.OA_reference.compareTo(CheckerEnum.OA_float)).isNegative();
-            assertThat(CheckerEnum.OA_float.compareTo(CheckerEnum.OA_reference)).isPositive();
-            assertThat(CheckerEnum.OA_float.compareTo(CheckerEnum.OA_float)).isZero();
+            assertThat(CheckerEnum.OA_reference).isLessThan(CheckerEnum.OA_float);
+            assertThat(CheckerEnum.OA_float).isGreaterThan(CheckerEnum.OA_reference);
+            assertThat(CheckerEnum.OA_float).isEqualByComparingTo(CheckerEnum.OA_float);
         }
     }
 }

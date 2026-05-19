@@ -90,7 +90,7 @@ class OreSiRightOnApplicationRoleTest {
         OreSiRightOnApplicationRole r1 = OreSiRightOnApplicationRole.adminOn(a);
         OreSiRightOnApplicationRole r2 = OreSiRightOnApplicationRole.adminOn(a);
         assertThat(r1).isEqualTo(r2);
-        assertThat(r1.hashCode()).isEqualTo(r2.hashCode());
+        assertThat(r1).hasSameHashCodeAs(r2);
     }
 
     @Test

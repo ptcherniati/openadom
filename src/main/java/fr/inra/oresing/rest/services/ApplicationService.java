@@ -248,7 +248,6 @@ public class ApplicationService {
         }
         final String applicationName = application.getName();
         final Configuration newConfiguration = serviceContainer.applicationService().getApplication(applicationName).getConfiguration();
-        //TODO test à faire entre version ancienne et nouvelle
         final Version oldVersion = oldConfiguration.applicationDescription().version();
         final Version newVersion = newConfiguration.applicationDescription().version();
         final boolean bypass = migrationProperties.isBypassConfigurationCheck();
@@ -313,7 +312,7 @@ public class ApplicationService {
             // Cas mise à jour : on préserve la structure des données et des
             // fichiers additionnels de l'ancienne configuration ; ce contrat
             // existe pour les chemins en aval qui itèrent {@code Application#getData()}
-            // ( ex. {@code AuthorizationService} ). La levée de cette préservation
+            // ( ex. {@code DefaultAuthorizationService} ). La levée de cette préservation
             // pour les modifications structurelles ( renommage / suppression /
             // ajout de datatype , de composant , de naturalKey , de submission )
             // est traitée dans le chantier "datatype vide ⇒ tout autorisé"
@@ -404,6 +403,7 @@ public class ApplicationService {
         }
     }
 
+    @SuppressWarnings("java:S3740")
     public Flux<ReactiveResult> getApplications(final List<ApplicationInformation> filters) {
         return Mono.fromCallable(() -> {
                     // Charger les applications

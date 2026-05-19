@@ -51,12 +51,10 @@ public class DashboardController {
                 + "Admin users get the full list ; non-admin users only see their own workflows. "
                 + "Snapshots come from the in-memory WorkflowActiveRegistry , refreshed by the "
                 + "backend orchestrators on every progress event.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "List of active workflows ( possibly empty )",
-            content = @Content(schema = @Schema(implementation = DashboardWorkflowDTO.class))),
-        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
-        @ApiResponse(responseCode = "403", description = "User not authorised")
-    })
+    @ApiResponse(responseCode = "200", description = "List of active workflows ( possibly empty )",
+        content = @Content(schema = @Schema(implementation = DashboardWorkflowDTO.class)))
+    @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
+    @ApiResponse(responseCode = "403", description = "User not authorised")
     @GetMapping("/in-progress")
     public ResponseEntity<List<DashboardWorkflowDTO>> inProgress() {
         return ResponseEntity.ok(service.listInProgress());
@@ -67,11 +65,9 @@ public class DashboardController {
         description = "Paginated list of finished workflows from oa_audit.workflow_log. "
                 + "Admin users see every row ; non-admin users are filtered to their own "
                 + "workflows on the SQL side. Sorted by start_time DESC.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Page of history rows",
-            content = @Content(schema = @Schema(implementation = DashboardWorkflowDTO.Page.class))),
-        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
-    })
+    @ApiResponse(responseCode = "200", description = "Page of history rows",
+        content = @Content(schema = @Schema(implementation = DashboardWorkflowDTO.Page.class)))
+    @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
     @GetMapping("/history")
     public ResponseEntity<DashboardWorkflowDTO.Page> history(
             @Parameter(description = "Max number of rows returned ( 1-500 , default 100 )")
@@ -97,12 +93,10 @@ public class DashboardController {
                 + "falls back on oa_audit.workflow_log when the workflow has finished. "
                 + "Non-admin users can only fetch their own workflows ; others return 404 on "
                 + "purpose to prevent id enumeration.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Workflow detail",
-            content = @Content(schema = @Schema(implementation = DashboardWorkflowDTO.Detail.class))),
-        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
-        @ApiResponse(responseCode = "404", description = "No workflow with this correlation id , or not visible to this user")
-    })
+    @ApiResponse(responseCode = "200", description = "Workflow detail",
+        content = @Content(schema = @Schema(implementation = DashboardWorkflowDTO.Detail.class)))
+    @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
+    @ApiResponse(responseCode = "404", description = "No workflow with this correlation id , or not visible to this user")
     @GetMapping("/{correlationId}")
     public ResponseEntity<DashboardWorkflowDTO.Detail> detail(
             @Parameter(description = "Correlation id of the workflow ( UUID )")
@@ -119,12 +113,10 @@ public class DashboardController {
                 + "the running workflow . Powered by cascade 1.9.0 push events . Returns "
                 + "404 once the workflow has finished ( history endpoint exposes the final "
                 + "outcome ) .")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Pipeline snapshot",
-            content = @Content(schema = @Schema(implementation = PipelineDTO.class))),
-        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
-        @ApiResponse(responseCode = "404", description = "No active workflow with this id , or not visible to this user")
-    })
+    @ApiResponse(responseCode = "200", description = "Pipeline snapshot",
+        content = @Content(schema = @Schema(implementation = PipelineDTO.class)))
+    @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
+    @ApiResponse(responseCode = "404", description = "No active workflow with this id , or not visible to this user")
     @GetMapping("/{correlationId}/pipeline")
     public ResponseEntity<PipelineDTO> pipeline(
             @Parameter(description = "Correlation id of the workflow ( UUID )")
@@ -141,12 +133,10 @@ public class DashboardController {
                 + "en duree cascade ( emit chunks , debit fige a 100 % ) + duree finalize "
                 + "( UPSERT staging->final ou COPY merged.csv->final ) + duree rollback . "
                 + "Le frontend poll cet endpoint pendant que phase != COMPLETED / ROLLBACK_DONE .")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Snapshot du bloc CHARGEMENT FINAL",
-            content = @Content(schema = @Schema(implementation = FinalizeProgressDTO.class))),
-        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT"),
-        @ApiResponse(responseCode = "404", description = "No active workflow with this id , or not visible to this user")
-    })
+    @ApiResponse(responseCode = "200", description = "Snapshot du bloc CHARGEMENT FINAL",
+        content = @Content(schema = @Schema(implementation = FinalizeProgressDTO.class)))
+    @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
+    @ApiResponse(responseCode = "404", description = "No active workflow with this id , or not visible to this user")
     @GetMapping("/{correlationId}/finalize")
     public ResponseEntity<FinalizeProgressDTO> finalizeProgress(
             @Parameter(description = "Correlation id of the workflow ( UUID )")
@@ -162,11 +152,9 @@ public class DashboardController {
                 + "rollback , total rows attendues / arrivees / staging restant , debit "
                 + "finalize cumule . Sert au bloc permanent en tete de la page Live . "
                 + "Non-admin = ses propres workflows uniquement .")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Agregat ( meme structure quand 0 workflow ; champs a 0 )",
-            content = @Content(schema = @Schema(implementation = FinalizeAggregateDTO.class))),
-        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
-    })
+    @ApiResponse(responseCode = "200", description = "Agregat ( meme structure quand 0 workflow ; champs a 0 )",
+        content = @Content(schema = @Schema(implementation = FinalizeAggregateDTO.class)))
+    @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
     @GetMapping("/finalize/aggregate")
     public ResponseEntity<FinalizeAggregateDTO> finalizeAggregate() {
         return ResponseEntity.ok(service.finalizeAggregate());
@@ -178,11 +166,9 @@ public class DashboardController {
                 + "/ SINK / ORDERING ) : parallelism configure , taille queue , profondeur "
                 + "courante . Permet a oa-live d'afficher le pipeline avec workers en "
                 + "placeholder repos meme quand aucun workflow ne tourne .")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Snapshot pools cascade",
-            content = @Content(schema = @Schema(implementation = PipelinePoolsDTO.class))),
-        @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
-    })
+    @ApiResponse(responseCode = "200", description = "Snapshot pools cascade",
+        content = @Content(schema = @Schema(implementation = PipelinePoolsDTO.class)))
+    @ApiResponse(responseCode = "401", description = "Missing or invalid JWT")
     @GetMapping("/cascade/pools")
     public ResponseEntity<PipelinePoolsDTO> cascadePools() {
         return ResponseEntity.ok(service.cascadePools());
@@ -197,12 +183,10 @@ public class DashboardController {
         description = "Liste in-memory des sessions ACTIVE ( JWT non expire et "
                 + "user pas encore deconnecte ) . Reservee aux admins "
                 + "( openAdomAdmin ) ; les autres recoivent 403 .")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Liste des sessions actives",
-            content = @Content(schema = @Schema(implementation = SessionDTO.class))),
-        @ApiResponse(responseCode = "401", description = "JWT absent ou invalide"),
-        @ApiResponse(responseCode = "403", description = "Reserve aux admins")
-    })
+    @ApiResponse(responseCode = "200", description = "Liste des sessions actives",
+        content = @Content(schema = @Schema(implementation = SessionDTO.class)))
+    @ApiResponse(responseCode = "401", description = "JWT absent ou invalide")
+    @ApiResponse(responseCode = "403", description = "Reserve aux admins")
     @GetMapping("/sessions/active")
     public ResponseEntity<List<SessionDTO>> sessionsActive() {
         return ResponseEntity.ok(service.listActiveSessions());
@@ -213,12 +197,10 @@ public class DashboardController {
         description = "Pagination sur oa_audit.user_session_log . Filtres "
                 + "optionnels : userLogin partial-match , endReason exacte . "
                 + "Reservee aux admins .")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Page d'historique",
-            content = @Content(schema = @Schema(implementation = SessionDTO.Page.class))),
-        @ApiResponse(responseCode = "401", description = "JWT absent ou invalide"),
-        @ApiResponse(responseCode = "403", description = "Reserve aux admins")
-    })
+    @ApiResponse(responseCode = "200", description = "Page d'historique",
+        content = @Content(schema = @Schema(implementation = SessionDTO.Page.class)))
+    @ApiResponse(responseCode = "401", description = "JWT absent ou invalide")
+    @ApiResponse(responseCode = "403", description = "Reserve aux admins")
     @GetMapping("/sessions/history")
     public ResponseEntity<SessionDTO.Page> sessionsHistory(
             @Parameter(description = "Max rows ( 1-500 , default 100 )")
@@ -240,12 +222,10 @@ public class DashboardController {
                 + "l'utilisateur disparait de l'onglet Sessions Active de oa-live "
                 + "mais peut continuer a appeler les endpoints API tant que son token "
                 + "n'a pas expire . Reservee aux admins ( openAdomAdmin ) .")
-    @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "Session marquee deconnectee"),
-        @ApiResponse(responseCode = "401", description = "JWT absent ou invalide"),
-        @ApiResponse(responseCode = "403", description = "Reserve aux admins"),
-        @ApiResponse(responseCode = "404", description = "Session inconnue ou deja terminee")
-    })
+    @ApiResponse(responseCode = "204", description = "Session marquee deconnectee")
+    @ApiResponse(responseCode = "401", description = "JWT absent ou invalide")
+    @ApiResponse(responseCode = "403", description = "Reserve aux admins")
+    @ApiResponse(responseCode = "404", description = "Session inconnue ou deja terminee")
     @org.springframework.web.bind.annotation.PostMapping("/sessions/{sessionId}/disconnect")
     public ResponseEntity<Void> disconnectSession(
             @Parameter(description = "Identifiant interne de la session ( UUID )")
@@ -263,11 +243,9 @@ public class DashboardController {
         description = "Retourne les tokens JWT actuellement revoques par un kick admin . "
                 + "Capacite max 100 ; les tokens expires sont purges automatiquement . "
                 + "Reservee aux admins .")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Liste blacklist"),
-        @ApiResponse(responseCode = "401", description = "JWT absent ou invalide"),
-        @ApiResponse(responseCode = "403", description = "Reserve aux admins")
-    })
+    @ApiResponse(responseCode = "200", description = "Liste blacklist")
+    @ApiResponse(responseCode = "401", description = "JWT absent ou invalide")
+    @ApiResponse(responseCode = "403", description = "Reserve aux admins")
     @GetMapping("/blacklist")
     public ResponseEntity<List<fr.inra.oresing.monitoring.session.JwtBlacklistRegistry.Entry>> listBlacklist() {
         return ResponseEntity.ok(service.listBlacklist());
@@ -277,12 +255,10 @@ public class DashboardController {
         summary = "Retirer une entree blacklist",
         description = "Annule un kick admin : le JWT correspondant redevient valide "
                 + "( jusqu'a son expiration naturelle ) . Reserve aux admins .")
-    @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "Entree retiree"),
-        @ApiResponse(responseCode = "401", description = "JWT absent ou invalide"),
-        @ApiResponse(responseCode = "403", description = "Reserve aux admins"),
-        @ApiResponse(responseCode = "404", description = "Aucune entree avec ce hash")
-    })
+    @ApiResponse(responseCode = "204", description = "Entree retiree")
+    @ApiResponse(responseCode = "401", description = "JWT absent ou invalide")
+    @ApiResponse(responseCode = "403", description = "Reserve aux admins")
+    @ApiResponse(responseCode = "404", description = "Aucune entree avec ce hash")
     @DeleteMapping("/blacklist/{tokenHash}")
     public ResponseEntity<Void> removeBlacklistEntry(
             @Parameter(description = "Hash SHA-256 hex du token a deblacklister")
@@ -297,11 +273,9 @@ public class DashboardController {
         description = "Supprime toutes les entrees de la blacklist . Toutes les "
                 + "sessions revoquees redeviennent valides jusqu'a leur expiration "
                 + "JWT naturelle . Reserve aux admins .")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Nombre d'entrees vidées"),
-        @ApiResponse(responseCode = "401", description = "JWT absent ou invalide"),
-        @ApiResponse(responseCode = "403", description = "Reserve aux admins")
-    })
+    @ApiResponse(responseCode = "200", description = "Nombre d'entrees vidées")
+    @ApiResponse(responseCode = "401", description = "JWT absent ou invalide")
+    @ApiResponse(responseCode = "403", description = "Reserve aux admins")
     @DeleteMapping("/blacklist")
     public ResponseEntity<java.util.Map<String, Integer>> clearBlacklist() {
         int n = service.clearBlacklist();
@@ -330,25 +304,23 @@ public class DashboardController {
                 de corrélation.
                 """,
         tags = {"Dashboard"})
-    @ApiResponses({
-        @ApiResponse(responseCode = "200",
-            description = "Demande d'annulation acceptée. Le corps indique si "
-                    + "le drapeau a été posé pour la première fois (signalled=true) "
-                    + "ou si le workflow était déjà en cours d'annulation (false).",
-            content = @Content(
-                    schema = @Schema(implementation = DashboardService.CancelResult.class),
-                    examples = {
-                        @ExampleObject(name = "Première demande",
-                                value = "{\"signalled\": true}"),
-                        @ExampleObject(name = "Workflow déjà en cours d'annulation",
-                                value = "{\"signalled\": false}")
-                    })),
-        @ApiResponse(responseCode = "401",
-            description = "JWT absent ou invalide"),
-        @ApiResponse(responseCode = "404",
-            description = "Aucun workflow actif avec cet identifiant de corrélation, "
-                    + "ou le workflow n'est ni visible ni détenu par l'appelant")
-    })
+    @ApiResponse(responseCode = "200",
+        description = "Demande d'annulation acceptée. Le corps indique si "
+                + "le drapeau a été posé pour la première fois (signalled=true) "
+                + "ou si le workflow était déjà en cours d'annulation (false).",
+        content = @Content(
+                schema = @Schema(implementation = DashboardService.CancelResult.class),
+                examples = {
+                    @ExampleObject(name = "Premire demande",
+                            value = "{\"signalled\": true}"),
+                    @ExampleObject(name = "Workflow dj en cours d'annulation",
+                            value = "{\"signalled\": false}")
+                }))
+    @ApiResponse(responseCode = "401",
+        description = "JWT absent ou invalide")
+    @ApiResponse(responseCode = "404",
+        description = "Aucun workflow actif avec cet identifiant de corrélation, "
+                + "ou le workflow n'est ni visible ni détenu par l'appelant")
     @DeleteMapping("/{correlationId}")
     public ResponseEntity<DashboardService.CancelResult> cancel(
             @Parameter(

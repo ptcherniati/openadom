@@ -2,6 +2,7 @@ package fr.inra.oresing.domain.application.configuration.migration.rules;
 
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
+import fr.inra.oresing.domain.application.configuration.migration.action.MigrationAction;
 import fr.inra.oresing.domain.application.configuration.migration.change.ConfigurationChange;
 import fr.inra.oresing.domain.application.configuration.migration.change.DataAdded;
 import fr.inra.oresing.domain.application.configuration.migration.change.IgnorableChange;
@@ -79,7 +80,7 @@ class DataAddedRuleTest {
         rule.then(dataAdded, plan, context);
 
         assertThat(plan.postActions())
-                .extracting(action -> action.id())
+                .extracting(MigrationAction::id)
                 .anyMatch(id -> id.contains("sensor"));
     }
 }

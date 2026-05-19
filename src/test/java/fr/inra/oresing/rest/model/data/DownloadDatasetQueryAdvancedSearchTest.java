@@ -2,7 +2,7 @@ package fr.inra.oresing.rest.model.data;
 
 import fr.inra.oresing.domain.data.read.query.*;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
-import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import org.apache.commons.collections.CollectionUtils;
 import org.junit.jupiter.api.*;

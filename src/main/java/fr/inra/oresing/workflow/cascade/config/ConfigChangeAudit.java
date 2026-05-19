@@ -27,7 +27,7 @@ public class ConfigChangeAudit {
 
     private final Deque<Entry> entries = new LinkedList<>();
 
-    public synchronized void record(String adminLogin, String field,
+    public synchronized void addEntry(String adminLogin, String field,
                                     String oldValue, String newValue,
                                     Status status, String message) {
         Entry e = new Entry(

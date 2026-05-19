@@ -18,8 +18,6 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -140,8 +138,8 @@ class DownloadDatasetQueryTest {
         downloadDatasetQuery.setAuthorizationDescriptions(authorizationDescriptions);
         downloadDatasetQuery.setHorizontalDisplay(true);
         StandardDataDescription dataDescription = Mockito.mock(StandardDataDescription.class);
-        Mockito.doReturn(Optional.of(dataDescription)).when(application).findData(ArgumentMatchers.eq(DATATYPE_NAME));
-        Mockito.doReturn(true).when(application).existsData(ArgumentMatchers.eq(DATATYPE_NAME));
+        Mockito.doReturn(Optional.of(dataDescription)).when(application).findData(DATATYPE_NAME);
+        Mockito.doReturn(true).when(application).existsData(DATATYPE_NAME);
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery buildedDownloadDatasetQuery = DownloadDatasetQuery.build(downloadDatasetQuery);
         Assertions.assertEquals(application, buildedDownloadDatasetQuery.application());
         Assertions.assertEquals(DATATYPE_NAME, buildedDownloadDatasetQuery.dataName());
@@ -163,8 +161,8 @@ class DownloadDatasetQueryTest {
         final Set<ComponentOrderBy> componentOrderBy = buildComponentOrderBy();
         downloadDatasetQuery.setComponentOrderBy(componentOrderBy);
         StandardDataDescription dataDescription = Mockito.mock(StandardDataDescription.class);
-        Mockito.doReturn(Optional.of(dataDescription)).when(application).findData(ArgumentMatchers.eq(DATATYPE_NAME));
-        Mockito.doReturn(true).when(application).existsData(ArgumentMatchers.eq(DATATYPE_NAME));
+        Mockito.doReturn(Optional.of(dataDescription)).when(application).findData(DATATYPE_NAME);
+        Mockito.doReturn(true).when(application).existsData(DATATYPE_NAME);
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery buildedDownloadDatasetQuery = DownloadDatasetQuery.build(downloadDatasetQuery);
         Assertions.assertEquals(application, buildedDownloadDatasetQuery.application());
         Assertions.assertEquals(DATATYPE_NAME, buildedDownloadDatasetQuery.dataName());
@@ -174,7 +172,7 @@ class DownloadDatasetQueryTest {
         Assertions.assertTrue(buildedDownloadDatasetQuery.componentOrderBy().stream().map(fr.inra.oresing.domain.data.read.query.ComponentOrderBy::order).anyMatch(DataRepository.Order.ASC::equals));
         Assertions.assertTrue(buildedDownloadDatasetQuery.componentOrderBy().stream().map(fr.inra.oresing.domain.data.read.query.ComponentOrderBy::order).anyMatch(DataRepository.Order.DESC::equals));
         Assertions.assertEquals(DownloadDatasetQueryByRowId.class, buildedDownloadDatasetQuery.getClass());
-        Assertions.assertTrue(((DownloadDatasetQueryByRowId) buildedDownloadDatasetQuery).rowIds().stream().map(dataRowIds -> dataRowIds.id()).map(UUID::toString).allMatch(ROW_IDS::contains));
+        Assertions.assertTrue(((DownloadDatasetQueryByRowId) buildedDownloadDatasetQuery).rowIds().stream().map(DataRowIds::id).map(UUID::toString).allMatch(ROW_IDS::contains));
         Assertions.assertFalse(buildedDownloadDatasetQuery.horizontalDisplay());
     }
 
@@ -187,8 +185,8 @@ class DownloadDatasetQueryTest {
         final Set<ComponentOrderBy> componentOrderBy = buildComponentOrderBy();
         downloadDatasetQuery.setComponentOrderBy(componentOrderBy);
         StandardDataDescription dataDescription = Mockito.mock(StandardDataDescription.class);
-        Mockito.doReturn(Optional.of(dataDescription)).when(application).findData(ArgumentMatchers.eq(DATATYPE_NAME));
-        Mockito.doReturn(true).when(application).existsData(ArgumentMatchers.eq(DATATYPE_NAME));
+        Mockito.doReturn(Optional.of(dataDescription)).when(application).findData(DATATYPE_NAME);
+        Mockito.doReturn(true).when(application).existsData(DATATYPE_NAME);
         Map<String, ComponentDescription> componentDescription = new HashMap<>();
         componentDescription.put("basic", BASIC_COMPONENT);
         componentDescription.put("computed", COMPUTED_COMPONENT);
@@ -212,8 +210,8 @@ class DownloadDatasetQueryTest {
         StandardDataDescription dataDescription = Mockito.mock(StandardDataDescription.class);
         final Set<ComponentOrderBy> componentOrderBy = buildComponentOrderBy();
         downloadDatasetQuery.setComponentOrderBy(componentOrderBy);
-        Mockito.doReturn(Optional.of(dataDescription)).when(application).findData(ArgumentMatchers.eq(DATATYPE_NAME));
-        Mockito.doReturn(true).when(application).existsData(ArgumentMatchers.eq(DATATYPE_NAME));
+        Mockito.doReturn(Optional.of(dataDescription)).when(application).findData(DATATYPE_NAME);
+        Mockito.doReturn(true).when(application).existsData(DATATYPE_NAME);
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery buildedDownloadDatasetQuery = DownloadDatasetQuery.build(downloadDatasetQuery);
         Assertions.assertEquals(application, buildedDownloadDatasetQuery.application());
         Assertions.assertEquals(DATATYPE_NAME, buildedDownloadDatasetQuery.dataName());
@@ -228,7 +226,7 @@ class DownloadDatasetQueryTest {
 
     @Test
     void patternDefinitionCount() {
-        Mockito.doReturn(4L).when(application).patternDefinitionCount(Mockito.eq(DATATYPE_NAME));
+        Mockito.doReturn(4L).when(application).patternDefinitionCount(DATATYPE_NAME);
         final long patternDefinitionCount = downloadDatasetQuery.patternDefinitionCount();
         Assertions.assertEquals(4L, patternDefinitionCount);
     }

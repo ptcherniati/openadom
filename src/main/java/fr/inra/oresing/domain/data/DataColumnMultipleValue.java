@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.data;
 
-import com.google.common.base.Preconditions;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.ListType;
@@ -57,7 +56,7 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType<Fiel
 
     @Override
     public DataColumnValue<ListType<FieldType<?>>, FieldType<?>> transform(UnaryOperator<FieldType<?>> transformation) {
-        final ListType<FieldType<?>> fieldType = Optional.ofNullable((FieldType<?>) values)
+        final ListType<FieldType<?>> fieldType = Optional.ofNullable(values)
                 .map(transformation)
                 .filter(ListType.class::isInstance)
                 .map(t -> (ListType<FieldType<?>>) t)
@@ -91,12 +90,11 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType<Fiel
                 .map(Object::toString)
                 .toList();
         for (String value : cellValues) {
-            Preconditions.checkState(
-                    !value.contains(ManyValuesStaticColumn.CSV_CELL_SEPARATOR),
-                    ExceptionMessage.SEPARATOR_USING_IN_VALUE.toMessage(),
-                    value,
-                    ManyValuesStaticColumn.CSV_CELL_SEPARATOR
-            );
+            if (value.contains(ManyValuesStaticColumn.CSV_CELL_SEPARATOR)) {
+                throw new IllegalStateException(
+                        String.format(ExceptionMessage.SEPARATOR_USING_IN_VALUE.toMessage(), value, ManyValuesStaticColumn.CSV_CELL_SEPARATOR)
+                );
+            }
         }
         return String.join(ManyValuesStaticColumn.CSV_CELL_SEPARATOR, cellValues);
     }

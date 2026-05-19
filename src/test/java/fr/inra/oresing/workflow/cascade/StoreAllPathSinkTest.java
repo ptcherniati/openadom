@@ -95,8 +95,8 @@ class StoreAllPathSinkTest {
     void storeAll_exception_does_not_increment() {
         Path bad = Path.of("/tmp/bad.csv");
         when(repo.storeAll(eq(bad), any(), any())).thenThrow(new RuntimeException("DB down"));
-
-        assertThatThrownBy(() -> sink.write(chunkOf(0, bad)))
+        var chunk = chunkOf(0, bad);
+        assertThatThrownBy(() -> sink.write(chunk))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("DB down");
         assertThat(sink.getRowsWritten()).isZero();

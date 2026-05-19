@@ -150,6 +150,7 @@ public class SectionBuilder {
         return this;
     }
 
+    @SuppressWarnings("java:S1452")
     public Optional<ConfigurationSchemaNodeType<?>> findSchema(final String childLabel) {
         return switch (childLabel) {
             case "referenceScopesForFile" ->

@@ -224,11 +224,10 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
         final MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
         final List<String> where = new LinkedList<>();
 
-        if (Optional.ofNullable(binaryFileDataset)
-                .map(BinaryFileDataset::getRequiredAuthorizations)
-                .isPresent()) {
+        if (binaryFileDataset != null && binaryFileDataset.getRequiredAuthorizations() != null) {
+            Map<String, List<Ltree>> requiredAuthorizations = binaryFileDataset.getRequiredAuthorizations();
             for (final Map.Entry<String, List<Ltree>> entry :
-                    binaryFileDataset.getRequiredAuthorizations().entrySet()) {
+                    requiredAuthorizations.entrySet()) {
                 final String t = String.format(
                         "params #> '{\"binaryfiledataset\", \"requiredauthorizations\", \"%1$s\"}' " +
                         "@@ ('$ == \"'||:%1$s||'\"')::jsonpath",

@@ -244,9 +244,20 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
             }
         }
 
-        mockMvc.perform(get("/api/v1/applications/multiplicity/data/reference1/json")
+        final String reference1Data = mockMvc.perform(get("/api/v1/applications/multiplicity/data/reference1/json")
                         .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
-                .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[0].values.projets", hasItems(4, 5, 9))).andExpect(jsonPath("$.rows[0].values.names", hasItems("toto1.1", "toto1.2", "toto1.3"))).andExpect(jsonPath("$.rows[*].values[?(@.names==['toto1.1','toto1.2','toto1.3'])]", hasSize(1))).andExpect(jsonPath("$.rows[0].values.durations", hasItems(-4.5, 5.6, 3.2))).andExpect(jsonPath("$.rows[0].values.dates", hasItems("date:2014-01-20T00:00:00:dd/MM/yyyy", "date:2014-06-23T00:00:00:dd/MM/yyyy")));
+                .andExpect(status().is2xxSuccessful())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        final List<Map<String, Object>> reference1Rows = JsonPath.parse(reference1Data).read("$.rows");
+        assertThat(reference1Rows).anySatisfy(row -> {
+            final Map<String, Object> values = (Map<String, Object>) row.get("values");
+            assertThat((List<Integer>) values.get("projets")).containsExactlyInAnyOrder(4, 5, 9);
+            assertThat((List<String>) values.get("names")).containsExactlyInAnyOrder("toto1.1", "toto1.2", "toto1.3");
+            assertThat((List<Double>) values.get("durations")).containsExactlyInAnyOrder(-4.5, 5.6, 3.2);
+            assertThat((List<String>) values.get("dates")).containsExactlyInAnyOrder("date:2014-01-20T00:00:00:dd/MM/yyyy", "date:2014-06-23T00:00:00:dd/MM/yyyy");
+        });
         mockMvc.perform(get("/api/v1/applications/multiplicity/data/reference2/json")
                         .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
                 .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[*].values.reference1[*]", hasItems("toto__toto1", "toto__toto2", "tutu__tutu1", "tutu__tutu2")));
@@ -992,17 +1003,17 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
     @Test
     @Tag("SUITE")
     @Tag("app.recursivity")
-    public void testRecursivity() throws Exception {
+    void testRecursivity() throws Exception {
 
         final URL resource = getClass().getResource(Fixtures.getRecursivityApplicationConfigurationResourceName());
         try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "recursivity.yaml", "text/plain", in);
             //définition de l'application
             fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "recursivite");
-            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.jwt(), "recursivite", ""));
-            final String response = mockMvc.perform(get("/api/v1/applications/recursivite").param("filter", "ALL")
+            fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.jwt(), "recursivite", ""));
+            mockMvc.perform(get("/api/v1/applications/recursivite").param("filter", "ALL")
                             .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
-                    .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.data.taxon.componentDescriptions.proprietesDeTaxon.type", IsEqual.equalTo("DynamicComponent"))).andExpect(jsonPath("$.data.taxon.componentDescriptions.proprietesDeTaxon.reference", IsEqual.equalTo("proprietes_taxon"))).andExpect(jsonPath("$.data.taxon.componentDescriptions.proprietesDeTaxon.prefix", IsEqual.equalTo("pt_"))).andExpect(jsonPath("$.internationalization.data.taxon.components.proprietesDeTaxon.exportHeader.title.en", IsEqual.equalTo("Taxa properties"))).andReturn().getResponse().getContentAsString();
+                    .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.data.taxon.componentDescriptions.proprietesDeTaxon.type", IsEqual.equalTo("DynamicComponent"))).andExpect(jsonPath("$.data.taxon.componentDescriptions.proprietesDeTaxon.reference", IsEqual.equalTo("proprietes_taxon"))).andExpect(jsonPath("$.data.taxon.componentDescriptions.proprietesDeTaxon.prefix", IsEqual.equalTo("pt_"))).andExpect(jsonPath("$.internationalization.data.taxon.components.proprietesDeTaxon.exportHeader.title.en", IsEqual.equalTo("Taxa properties")));
 
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
@@ -1025,12 +1036,6 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
             mockMvc.perform(get("/api/v1/applications/recursivite/data/{refType}/json", "taxon")
                             .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
                     .andExpect(status().is2xxSuccessful());
-/*                    .andExpect(jsonPath("$..values.tel_S2_value", contains("7.2", "3.4", "2.1", "2.6", "2.5", "5.2", "3.9", "3.2", "1.2")))
-                    .andExpect(jsonPath("$..values.tel_S2_resolution", contains(3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2)))
-                    .andExpect(jsonPath("$..values.tel_S2_qualifier", contains(3, 3, 3, 3, 3, 3, 3, 3, 3)))
-                    .andExpect(jsonPath("$..values.tel_S2_variable", contains("annecy", "annecy", "annecy", "annecy", "annecy", "annecy", "annecy", "annecy", "annecy")))
-                    .andExpect(jsonPath("$.referenceTypeForReferencingColumns.tel_S2_variable", Is.is("site")));*/
-            //.andReturn().getResponse().getContentAsString();
 
         }
         // Ajout de taxon

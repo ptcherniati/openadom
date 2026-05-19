@@ -15,7 +15,9 @@ import java.util.Map;
  */
 public final class SinkConcurrencyEstimator {
 
-    private SinkConcurrencyEstimator() {}
+    private SinkConcurrencyEstimator() {
+        // Utility class
+    }
 
     public enum Mode {
         /** Sink force a 1 par contrainte de strategie ( PER_CONNECTION_TEMP sticky ) . */
@@ -26,7 +28,13 @@ public final class SinkConcurrencyEstimator {
         PARALLEL_POOL
     }
 
-    public record Estimate(Mode mode, int effectiveSinks, String explanation) {}
+    public record ConcurrencyEstimate(Mode mode, int effectiveSinks, String explanation) {}
+
+    private static final String SINK_MERGE_FILE = "MERGE_FILE";
+    private static final String STAGING_PER_CONNECTION_TEMP = "PER_CONNECTION_TEMP";
+    private static final String STAGING_SHARED_UNLOGGED = "SHARED_UNLOGGED";
+    private static final String STAGING_PER_WORKFLOW_TABLE = "PER_WORKFLOW_TABLE";
+    private static final String PIPELINE_PIPELINED = "PIPELINED";
 
     /**
      * Calcule l'estimation a partir d'une config courante .
@@ -34,43 +42,46 @@ public final class SinkConcurrencyEstimator {
      * @param effectiveConfig map { fieldName : value } typiquement issue
      *        de {@link ConfigFieldRegistry#snapshot()}
      */
-    public static Estimate estimate(Map<String, Object> effectiveConfig) {
+    public static ConcurrencyEstimate calculateEstimate(Map<String, Object> effectiveConfig) {
         String sink     = strOf(effectiveConfig, "sinkStrategy");
         String staging  = strOf(effectiveConfig, "stagingStrategy");
         String pipeline = strOf(effectiveConfig, "pipelineMode");
         int poolSink    = intOf(effectiveConfig, "pool.sink", 1);
 
-        if ("MERGE_FILE".equals(sink)) {
-            return new Estimate(Mode.SINGLE_INHERENT, 1,
+        if (SINK_MERGE_FILE.equals(sink)) {
+            return new ConcurrencyEstimate(Mode.SINGLE_INHERENT, 1,
                     "MERGE_FILE = sink séquentiel ( agrégateur fichier ) , "
                             + "1 thread quelles que soient les autres options .");
         }
-        if ("DIRECT_COPY".equals(sink) && "PER_CONNECTION_TEMP".equals(staging)) {
-            return new Estimate(Mode.SINGLE_FORCED, 1,
+        if ("DIRECT_COPY".equals(sink) && STAGING_PER_CONNECTION_TEMP.equals(staging)) {
+            return new ConcurrencyEstimate(Mode.SINGLE_FORCED, 1,
                     "DIRECT_COPY + PER_CONNECTION_TEMP = sticky connection unique , "
                             + "sinkParallelism forcé à 1 ( CascadeImportPipeline ) .");
         }
         if ("DIRECT_COPY".equals(sink)
-                && ("SHARED_UNLOGGED".equals(staging) || "PER_WORKFLOW_TABLE".equals(staging))) {
-            // Table UNLOGGED ( partagee ou dediee ) -> sink workers
-            // peuvent tourner en parallele avec autant de threads que
-            // pool.sink le permet . PipelineMode ( STAGED ou PIPELINED )
-            // n'influe pas sur le nombre de sink workers ; il influe
-            // sur le moment ou le sink demarre vs transform .
-            int n = Math.max(1, poolSink);
-            String stagingLabel = "SHARED_UNLOGGED".equals(staging)
-                    ? "SHARED_UNLOGGED" : "PER_WORKFLOW_TABLE";
-            String pipelineLabel = "PIPELINED".equals(pipeline) ? "PIPELINED" : "STAGED";
-            String why = pipelineLabel + " + " + stagingLabel + " = " + n
-                    + " sink thread" + (n > 1 ? "s" : "") + " ( pool.sink ) "
-                    + ( "PIPELINED".equals(pipeline)
-                        ? "; transform / sink en pipeline parallele via bounded queue ."
-                        : "; transform finit pour tous les chunks avant que le sink demarre ." );
-            return new Estimate(n > 1 ? Mode.PARALLEL_POOL : Mode.SINGLE_FORCED, n, why);
+                && (STAGING_SHARED_UNLOGGED.equals(staging) || STAGING_PER_WORKFLOW_TABLE.equals(staging))) {
+            return buildParallelEstimate(staging, pipeline, poolSink);
         }
         // fallback : MERGE_FILE-like ou config indéfinie
-        return new Estimate(Mode.SINGLE_INHERENT, 1,
+        return new ConcurrencyEstimate(Mode.SINGLE_INHERENT, 1,
                 "Configuration indéfinie ; sink supposé séquentiel ( 1 thread ) .");
+    }
+
+    private static ConcurrencyEstimate buildParallelEstimate(String staging, String pipeline, int poolSink) {
+        // Table UNLOGGED ( partagee ou dediee ) -> sink workers
+        // peuvent tourner en parallele avec autant de threads que
+        // pool.sink le permet . PipelineMode ( STAGED ou PIPELINED )
+        // n'influe pas sur le moment ou le sink demarre vs transform .
+        int n = Math.max(1, poolSink);
+        String stagingLabel = STAGING_SHARED_UNLOGGED.equals(staging)
+                ? STAGING_SHARED_UNLOGGED : STAGING_PER_WORKFLOW_TABLE;
+        String pipelineLabel = PIPELINE_PIPELINED.equals(pipeline) ? PIPELINE_PIPELINED : "STAGED";
+        String why = pipelineLabel + " + " + stagingLabel + " = " + n
+                + " sink thread" + (n > 1 ? "s" : "") + " ( pool.sink ) "
+                + (PIPELINE_PIPELINED.equals(pipeline)
+                ? "; transform / sink en pipeline parallele via bounded queue ."
+                : "; transform finit pour tous les chunks avant que le sink demarre .");
+        return new ConcurrencyEstimate(n > 1 ? Mode.PARALLEL_POOL : Mode.SINGLE_FORCED, n, why);
     }
 
     private static String strOf(Map<String, Object> m, String k) {

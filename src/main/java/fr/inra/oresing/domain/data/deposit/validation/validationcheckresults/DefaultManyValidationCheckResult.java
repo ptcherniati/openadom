@@ -44,7 +44,7 @@ public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheck
             return new ListType<>(NullType.INSTANCE);
         }
         final ListType<FieldType<?>> result = new ListType<>(allValues.get(0));
-        result.getValue().addAll(allValues.subList(1, allValues.size()));
+        result.getValue().addAll(allValues);
         return result;
     }
 
@@ -96,7 +96,7 @@ public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheck
         final Map<String, Object> messagesParams = new HashMap<>();
         for (final ValidationCheckResult validationCheckResult : this) {
             final Map<String, Object> map = validationCheckResult.messageParams();
-            map.forEach((key, value1) -> ((List) messagesParams
+            map.forEach((key, value1) -> ((List<Object>) messagesParams
                     .computeIfAbsent(key, k -> new LinkedList<>()))
                     .add(value1));
         }

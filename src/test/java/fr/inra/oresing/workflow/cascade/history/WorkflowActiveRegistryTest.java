@@ -81,7 +81,7 @@ class WorkflowActiveRegistryTest {
     }
 
     @Test
-    void list_is_sorted_by_start_time_desc() throws Exception {
+    void list_is_sorted_by_start_time_desc() {
         WorkflowActiveRegistry reg = new WorkflowActiveRegistry();
         UUID oldCid = UUID.randomUUID();
         UUID newCid = UUID.randomUUID();

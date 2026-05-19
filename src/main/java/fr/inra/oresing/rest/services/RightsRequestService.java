@@ -17,6 +17,7 @@ import fr.inra.oresing.persistence.RightsRequestRepository;
 import fr.inra.oresing.persistence.RightsRequestSearchHelper;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
+import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.rightsrequest.*;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -56,10 +57,6 @@ public class RightsRequestService {
         RightsRequestRepository rightsRequestRepository = repository.getRepository(app).rightsRequestRepository();
     }
 
-    /**
-     *
-     */
-    //TODO use params
     List<RightsRequest> findRightsRequests(final Application application, final RightsRequestInfos rightsRequestInfos) {
         RightsRequestSearchHelper rightsRequestSearchHelper = new RightsRequestSearchHelper(application, rightsRequestInfos);
         String where = rightsRequestSearchHelper.buildWhereRequest();
@@ -89,7 +86,7 @@ public class RightsRequestService {
 
     private RightsRequestResult getRightsRequestResult(final RightsRequest rightsRequest, final Application application) {
         Map<String, List<AuthorizationParsed>> authorizationsParsed = new HashMap<>();
-        AuthorizationService.authorizationsToParsedAuthorizations(
+        DefaultAuthorizationService.authorizationsToParsedAuthorizations(
                 List.of(rightsRequest.getRightsRequest()),
                 authorizationsParsed);
         return new RightsRequestResult(
@@ -155,7 +152,7 @@ public class RightsRequestService {
         OreSiAuthorization authorizations = Optional.of(createRightsRequestRequest)
                 .map(CreateRightsRequestRequest::rightsRequest)
                 .map(authorization -> {
-                    List errors = new ArrayList<>();
+                    List<AuthorizationRequestError> errors = new ArrayList<>();
                     AuthorizationRequest authorizationRequestToAuthorizationRequest = serviceContainer.authorizationService().createAuthorizationRequestToAuthorizationRequest(
                             authorization,
                             application,
@@ -172,10 +169,6 @@ public class RightsRequestService {
                 .orElse(null);
         rightsRequest.setRightsRequest(authorizations);
         rightsRequest.setUser(rightsRequest.getUser() == null ? OreSiApiRequestContext.getRequestUserId() : rightsRequest.getUser());
-        // Le payload `rightsRequest` du DTO est optionnel : si absent, `authorizations`
-        // vaut null ( cf. `.orElse(null)` ci-dessus ) et la demande est purement
-        // declarative. Dans ce cas, pas de propagation `oreSiUsers` a faire ;
-        // sinon NPE 500 systematique sur POST /rightsRequest sans corps complet.
         if (authorizations != null) {
             authorizations.setOreSiUsers(Set.of(rightsRequest.getUser()));
         }

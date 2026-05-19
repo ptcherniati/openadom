@@ -47,7 +47,7 @@ public class DashboardCompensationController {
     public ResponseEntity<List<CompensationLogEntry>> pending(
             @RequestParam(required = false, defaultValue = "100") int limit) {
         requireAdmin();
-        return ResponseEntity.ok(service.listPending(Math.max(1, Math.min(500, limit))));
+        return ResponseEntity.ok(service.listPending(Math.clamp(limit, 1, 500)));
     }
 
     @Operation(summary = "Liste des operations FAILED ( compensation a echoue , intervention humaine requise )")
@@ -55,7 +55,7 @@ public class DashboardCompensationController {
     public ResponseEntity<List<CompensationLogEntry>> failed(
             @RequestParam(required = false, defaultValue = "100") int limit) {
         requireAdmin();
-        return ResponseEntity.ok(service.listFailed(Math.max(1, Math.min(500, limit))));
+        return ResponseEntity.ok(service.listFailed(Math.clamp(limit, 1, 500)));
     }
 
     @Operation(summary = "Auto-fix : execute le handler avec smart-check ( recommande )",
@@ -73,11 +73,7 @@ public class DashboardCompensationController {
                     + "si l'op a en realite reussi . Reserve aux cas exceptionnels apres investigation manuelle .")
     @PostMapping("/{id}/force-compensate")
     public ResponseEntity<Map<String, Object>> forceCompensate(@PathVariable UUID id) {
-        requireAdmin();
-        // Pour le moment, force = auto-fix ( smart-check toujours actif pour proteger
-        // les donnees ) . Mode bypass complet a implementer si besoin reel .
-        boolean ok = service.compensateNow(id);
-        return ResponseEntity.ok(Map.of("compensated", ok, "id", id));
+        return autoFix(id);
     }
 
     @Operation(summary = "Marquer resolu : DELETE log row sans compensation",

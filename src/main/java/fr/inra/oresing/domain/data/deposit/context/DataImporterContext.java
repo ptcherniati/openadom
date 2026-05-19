@@ -201,6 +201,7 @@ public class DataImporterContext {
         return getDataDescription().separator();
     }
 
+    @SuppressWarnings("java:S1452")
     public ImmutableSet<LineChecker<? extends FieldType<?>>> getLineCheckers() {
         return ImmutableSet.copyOf(lineCheckers);
     }
@@ -208,6 +209,7 @@ public class DataImporterContext {
     /**
      * Dans le cas d'un référentiel récursif, le {@link ReferenceType} qui porte sur la colonne contenant des valeurs faisant référence à d'autres lignes du référentiel.
      */
+    @SuppressWarnings("java:S1452")
     public LineChecker<? extends FieldType<?>> getReferenceLineChecker() {
         Preconditions.checkState(isRecursive());
         return getLineCheckers().stream()

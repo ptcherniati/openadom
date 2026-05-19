@@ -256,18 +256,17 @@ class ConfigFieldTest {
     @Test
     @DisplayName("build() sans name lève IllegalStateException")
     void buildNoName() {
-        assertThrows(IllegalStateException.class,
-                () -> new ConfigField.Builder<Integer>()
-                        .type(ConfigField.Type.INT)
-                        .getter(() -> 1)
-                        .build());
+        ConfigField.Builder<Integer> builder = new ConfigField.Builder<Integer>()
+                .type(ConfigField.Type.INT)
+                .getter(() -> 1);
+        assertThrows(IllegalStateException.class, builder::build);
     }
 
     @Test
     @DisplayName("build() sans getter lève IllegalStateException")
     void buildNoGetter() {
-        assertThrows(IllegalStateException.class,
-                () -> ConfigField.intField("f").build());
+        ConfigField.Builder<Integer> builder = ConfigField.intField("f");
+        assertThrows(IllegalStateException.class, builder::build);
     }
 
     // ─── accesseurs divers ────────────────────────────────────────────────────

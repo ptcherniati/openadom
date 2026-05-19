@@ -21,7 +21,7 @@ import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
-import fr.inra.oresing.rest.services.AuthorizationService;
+import fr.inra.oresing.rest.services.DefaultAuthorizationService;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -148,7 +148,7 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     public AdditionalBinaryFileResult getAdditionalBinaryFileResult(AdditionalBinaryFile additionalBinaryFile) {
 
         Map<String, List<AuthorizationParsed>> authorizationsParsed = new HashMap<>();
-        AuthorizationService.authorizationsToParsedAuthorizations(
+        DefaultAuthorizationService.authorizationsToParsedAuthorizations(
                 additionalBinaryFile.getAssociates(),
                 authorizationsParsed);
         return new AdditionalBinaryFileResult(additionalBinaryFile, authorizationsParsed);

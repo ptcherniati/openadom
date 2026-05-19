@@ -66,7 +66,7 @@ public class DataValidator {
                                             lineChecker,
                                             referenceColumnRawValue,
                                             dataColumn,
-                                            (Map) refsLinkedTo);
+                                            refsLinkedTo);
                             List<DataColumn> patternOfColumn = Arrays.stream(dataColumn.column().split(Column.COLUMN_IN_COLUMN_SEPARATOR))
                                     .map(DataColumn::new)
                                     .toList();
@@ -150,6 +150,7 @@ public class DataValidator {
                 ));
     }
 
+    @SuppressWarnings("java:S1452")
     CheckerValidationCheckResult<?> testValues(RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker<? extends FieldType<?>> lineChecker, Map<String, Object> context, DataDatum referenceDatumBeforeChecking) {
         switch (lineChecker.transformer()) {
             case LineChecker.LineTransformer.ChainTransformersLineTransformer transformers -> {

@@ -56,8 +56,8 @@ class BinaryFileDatasetTest {
         bfd.setRequiredAuthorizations(authorizations);
 
         String str = bfd.toString();
-        assertThat(str).isNotNull();
-        assertThat(str).contains("species");
+        assertThat(str).isNotNull()
+                .contains("species");
     }
 
     @Test

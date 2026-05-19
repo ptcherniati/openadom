@@ -49,7 +49,7 @@ public class DataImporter {
 
 
     public static final String HIERARCHICALKEY_SEPARATOR = "K";
-    public static final Path ORESING_DATA = Path.of("oresing-data-");
+    public static final Path ORESING_DATA = Path.of("/tmp/oresing-data-");
     private static final int PRECOMPUTE_CACHE_THRESHOLD = 2;
     public static final String NOT_SPLITABLE_DATA_FOR_CHUNKED_TREATMENT = "notSplitableDataForChunkedTreatment_";
     public static final String DATA_FOR_CHUNKED_TREATMENT = "dataForChunkedTreatment_";
@@ -70,7 +70,7 @@ public class DataImporter {
         }
     }
 
-    public DataImporter(final AsynchroneFileImporterContext dataImporterContext) throws IOException {
+    public DataImporter(final AsynchroneFileImporterContext dataImporterContext) {
         this(dataImporterContext, null);
     }
 
@@ -80,7 +80,7 @@ public class DataImporter {
      * @param dataImporterContext contexte de l'import
      * @param importProperties    configuration (peut être {@code null} → valeurs par défaut utilisées)
      */
-    public DataImporter(final AsynchroneFileImporterContext dataImporterContext, final ImportProperties importProperties) throws IOException {
+    public DataImporter(final AsynchroneFileImporterContext dataImporterContext, final ImportProperties importProperties) {
         super();
         this.dataImporterContext = dataImporterContext;
         this.importProperties = importProperties;
@@ -158,6 +158,27 @@ public class DataImporter {
         final Iterator<CSVRecord> linesIterator = csvParser.iterator();
 
         // === Setup context ( ALWAYS executed ) ===
+        Map<String, ReferenceType> refTypeByColumnName = setupContext(linesIterator);
+
+        // === Body write ===
+        try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8)) {
+            if (skipCsvReencoding) {
+                writeBodyFast(linesIterator, writer);
+            } else {
+                writeBodySafe(linesIterator, writer, csvFormat);
+            }
+        }
+        // R-P2-3 : pré-warmer sélectif — compter les fréquences de chaque valeur
+        // par colonne référence, puis pré-calculer les valeurs vues ≥ THRESHOLD fois.
+        // Un seul passage sur le fichier temp (déjà en cache OS ou SSD).
+        if (!refTypeByColumnName.isEmpty()) {
+            prewarmReferenceCache(tempFile, refTypeByColumnName);
+        }
+
+        return tempFile;
+    }
+
+    private Map<String, ReferenceType> setupContext(Iterator<CSVRecord> linesIterator) {
         getDataImporterContext().dataHeaderReader().readHeader(linesIterator);
         getDataImporterContext().withPatternColumn();
         getDataImporterContext().setTransformedLineCheckers(getRecursionStrategy(),
@@ -180,45 +201,37 @@ public class DataImporter {
                 refTypeByColumnName.put(col, rt);
             }
         });
+        return refTypeByColumnName;
+    }
 
-        // === Body write ===
-        try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8)) {
-            if (skipCsvReencoding) {
-                // FAST path : trust the input format , avoid CSVPrinter overhead .
-                // Saves ~1-3 s on a 274k-line file . Hazardous if cells contain
-                // the delimiter / quotes / newlines : the body lines would be
-                // unparseable downstream . Use only when the source is known
-                // clean ( machine-generated exports , validated upstream ) .
-                final char sep = getDataImporterContext().contextConstants().dataConfiguration().separator();
-                while (linesIterator.hasNext()) {
-                    CSVRecord r = linesIterator.next();
-                    int n = r.size();
-                    for (int i = 0; i < n; i++) {
-                        if (i > 0) writer.write(sep);
-                        writer.write(r.get(i));
-                    }
-                    writer.newLine();
-                }
-            } else {
-                // SAFE path : re-encode via CSVPrinter ( default ) .
-                // #499 - quotes cells containing the delimiter , double
-                // quotes , or embedded newlines so the chunker downstream
-                // can split lines safely .
-                try (CSVPrinter printer = new CSVPrinter(writer, csvFormat)) {
-                    while (linesIterator.hasNext()) {
-                        printer.printRecord(linesIterator.next());
-                    }
-                }
+    private void writeBodyFast(Iterator<CSVRecord> linesIterator, BufferedWriter writer) throws IOException {
+        // FAST path : trust the input format , avoid CSVPrinter overhead .
+        // Saves ~1-3 s on a 274k-line file . Hazardous if cells contain
+        // the delimiter / quotes / newlines : the body lines would be
+        // unparseable downstream . Use only when the source is known
+        // clean ( machine-generated exports , validated upstream ) .
+        final char sep = getDataImporterContext().contextConstants().dataConfiguration().separator();
+        while (linesIterator.hasNext()) {
+            CSVRecord r = linesIterator.next();
+            int n = r.size();
+            for (int i = 0; i < n; i++) {
+                if (i > 0) writer.write(sep);
+                writer.write(r.get(i));
+            }
+            writer.newLine();
+        }
+    }
+
+    private void writeBodySafe(Iterator<CSVRecord> linesIterator, BufferedWriter writer, CSVFormat csvFormat) throws IOException {
+        // SAFE path : re-encode via CSVPrinter ( default ) .
+        // #499 - quotes cells containing the delimiter , double
+        // quotes , or embedded newlines so the chunker downstream
+        // can split lines safely .
+        try (CSVPrinter printer = new CSVPrinter(writer, csvFormat)) {
+            while (linesIterator.hasNext()) {
+                printer.printRecord(linesIterator.next());
             }
         }
-        // R-P2-3 : pré-warmer sélectif — compter les fréquences de chaque valeur
-        // par colonne référence, puis pré-calculer les valeurs vues ≥ THRESHOLD fois.
-        // Un seul passage sur le fichier temp (déjà en cache OS ou SSD).
-        if (!refTypeByColumnName.isEmpty()) {
-            prewarmReferenceCache(tempFile, refTypeByColumnName);
-        }
-
-        return tempFile;
     }
 
     /**

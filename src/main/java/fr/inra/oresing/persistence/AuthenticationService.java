@@ -12,6 +12,7 @@ import fr.inra.oresing.domain.authorization.LoginAdminResult;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.exceptions.AuthenticationFailure;
+import static fr.inra.oresing.domain.exceptions.AuthenticationFailure.*;
 import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.port.AuthenticationPort;
@@ -159,13 +160,13 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
             case "active" -> loginAdminResult;
             case "idle" -> {
                 sendValidationKey(userRepository.findByLogin(login).orElse(null));
-                throw new AuthenticationFailure(AuthenticationFailure.INACTIVE_ACCOUNT, loginAdminResult);
+                throw new AuthenticationFailure(INACTIVE_ACCOUNT, loginAdminResult);
             }
             case "pending" -> {
                 sendValidationKey(userRepository.findByLogin(login).orElse(null));
-                throw new AuthenticationFailure(AuthenticationFailure.PENDING_ACCOUNT, loginAdminResult);
+                throw new AuthenticationFailure(PENDING_ACCOUNT, loginAdminResult);
             }
-            default -> throw new AuthenticationFailure(AuthenticationFailure.CLOSED_ACCOUNT, loginAdminResult);
+            default -> throw new AuthenticationFailure(CLOSED_ACCOUNT, loginAdminResult);
 
         };
     }
@@ -183,12 +184,12 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
         return userRepository.findByLogin(login)
                 .filter(checkPassword)
                 .map(user -> toLoginResult(user, currentUserRoles))
-                .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_PASSWORD, (LoginAdminResult) null));
+                .orElseThrow(() -> new AuthenticationFailure(BAD_LOGIN_PASSWORD, (LoginAdminResult) null));
     }
 
     public void sendEmailValidation(final String loginOrEmail) throws AuthenticationFailure {
         OreSiUser oreSiUser = userRepository.findByLoginOrEmail(loginOrEmail)
-                .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_OR_EMAIL_PASSWORD, (LoginAdminResult) null));
+                .orElseThrow(() -> new AuthenticationFailure(BAD_LOGIN_OR_EMAIL_PASSWORD, (LoginAdminResult) null));
         String verificationKey = generateVerificationKey(oreSiUser);
         serviceContainer.emailService().sendEmailValidation(oreSiUser.getLogin(), oreSiUser.getEmail(), verificationKey, EmailService.MESSAGES.NEW_EMAIL);
     }
@@ -198,7 +199,7 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
         final Date updateDate = new Date();
         final OreSiUser oreSiUser = Optional.ofNullable(loginResult)
                 .map(user -> userRepository.setState(user.getId(), user.getAccountstate()))
-                .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.STATE_ERROR,
+                .orElseThrow(() -> new AuthenticationFailure(STATE_ERROR,
                         loginResult));
         final String verificationKey = generateVerificationKey(oreSiUser);
         userRepository.updateNewDate(oreSiUser, updateDate);
@@ -215,7 +216,7 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
         final Duration duration = Duration.between(updateDate, now);
         if (!verificationKey.equals(validationKey)) {
             sendValidationKey(oreSiUser1);
-            throw new AuthenticationFailure(AuthenticationFailure.BAD_VALIDATION_KEY, oreSiUser1);
+            throw new AuthenticationFailure(BAD_VALIDATION_KEY, oreSiUser1);
         }
         if (duration.compareTo(Duration.ofMinutes(10)) < 0) {
             setRoleAdmin();
@@ -224,7 +225,7 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
             setRoleForClient();
         } else {
             sendValidationKey(oreSiUser1);
-            throw new AuthenticationFailure(AuthenticationFailure.BAD_VALIDATION_KEY, oreSiUser1);
+            throw new AuthenticationFailure(BAD_VALIDATION_KEY, oreSiUser1);
         }
         userRepository.findById(oreSiUser1.getId());
     }
@@ -254,12 +255,12 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
     public CreateUserResult createUser(final String login, final String password, final String email) throws AuthenticationFailure {
         final Optional<OreSiUser> userByLogin = userRepository.findByLogin(login);
         if (userByLogin.isPresent()) {
-            throw new AuthenticationFailure(AuthenticationFailure.EXISTING_LOGIN,
+            throw new AuthenticationFailure(EXISTING_LOGIN,
                     userByLogin.orElse(null));
         } else {
             final Optional<OreSiUser> userByEmail = userRepository.findByEmail(email);
             if (userByEmail.isPresent()) {
-                throw new AuthenticationFailure(AuthenticationFailure.EXISTING_EMAIL,
+                throw new AuthenticationFailure(EXISTING_EMAIL,
                         userByEmail.orElse(null));
             }
         }
@@ -582,7 +583,7 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
                     String charte) ->
                     setCharteAsValidated(user, charte);
             case NotConnectedAuthentifiedClosedUser(LoginAdminResult loginAdminResult) ->
-                    throw new AuthenticationFailure(AuthenticationFailure.CLOSED_ACCOUNT, loginAdminResult);
+                    throw new AuthenticationFailure(CLOSED_ACCOUNT, loginAdminResult);
             case NotConnectedAuthentifiedIdleUser(OreSiUser user,
                                                   CreateUserRequest createUserRequest) ->
                     activeAccount(user, createUserRequest.getVerificationKey());
@@ -592,7 +593,7 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
             case NotConnectedAuthentifiedPendingUser(OreSiUser user) ->
                     sendValidationKey(user);
             case NotConnectedUnauthentifiedUser(CreateUserRequest createUserRequest) ->
-                    throw new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_OR_EMAIL_PASSWORD, createUserRequest);
+                    throw new AuthenticationFailure(BAD_LOGIN_OR_EMAIL_PASSWORD, createUserRequest);
             case NotConnectedUnauthentifiedUserForCreate _ -> null;
         };
     }
@@ -618,12 +619,12 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
 
     private OreSiUser updatePasswordLost(final OreSiUser loginResult, final CreateUserRequest createUserRequest) throws AuthenticationFailure, JsonProcessingException {
         final OreSiUser oreSiUser = Optional.ofNullable(loginResult)
-                .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_PASSWORD, (LoginAdminResult) null));
+                .orElseThrow(() -> new AuthenticationFailure(BAD_LOGIN_PASSWORD, (LoginAdminResult) null));
         validateValidationKey(oreSiUser, createUserRequest.getVerificationKey());
         final String verifiedPassword = Optional.ofNullable(createUserRequest.getNewPassword())
                 .filter(password -> !Strings.isNullOrEmpty(password))
                 .filter(password -> password.equals(createUserRequest.getNewPasswordConfirm()))
-                .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_PASSWORDS, (LoginAdminResult) null));
+                .orElseThrow(() -> new AuthenticationFailure(BAD_PASSWORDS, (LoginAdminResult) null));
         final String bcrypted = BCrypt.withDefaults().hashToString(bcryptCost, verifiedPassword.toCharArray());
         oreSiUser.setPassword(bcrypted);
         setRoleAdmin();
@@ -642,7 +643,7 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
             final String verifiedPassword = Optional.of(createUserRequest.getNewPassword())
                     .filter(password -> !Strings.isNullOrEmpty(password))
                     .filter(password -> password.equals(createUserRequest.getNewPasswordConfirm()))
-                    .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_PASSWORDS, (LoginAdminResult) null));
+                    .orElseThrow(() -> new AuthenticationFailure(BAD_PASSWORDS, (LoginAdminResult) null));
             final String bcrypted = BCrypt.withDefaults().hashToString(bcryptCost, verifiedPassword.toCharArray());
             user.setPassword(bcrypted);
         }

@@ -110,7 +110,7 @@ public class FileResources {
     private List<ReferencedBinaryFiles> getReferencedFiles(BinaryFile binaryFile) {
         if (Optional.ofNullable(binaryFile.getParams())
                 .stream().noneMatch(BinaryFileInfos::published)) {
-            return null;
+            return List.of();
         }
         return getReferencedBinaryFilesUseCase.execute(
                 binaryFile.getApplication(),

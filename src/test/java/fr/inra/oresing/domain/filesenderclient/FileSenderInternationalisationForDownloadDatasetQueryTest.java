@@ -5,7 +5,6 @@ import fr.inra.oresing.domain.application.configuration.ApplicationDescription;
 import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
-import fr.inra.oresing.domain.data.read.query.ComponentOrderBy;
 import fr.inra.oresing.domain.data.read.query.DownloadDatasetQueryNoFilter;
 import fr.inra.oresing.domain.data.read.query.OutPut;
 import org.junit.jupiter.api.DisplayName;
@@ -118,10 +117,6 @@ class FileSenderInternationalisationForDownloadDatasetQueryTest {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  mailMessagefor()
-    // ─────────────────────────────────────────────────────────────────────────
-
     @Nested
     @DisplayName("mailMessagefor()")
     class MailMessageforTest {
@@ -132,9 +127,9 @@ class FileSenderInternationalisationForDownloadDatasetQueryTest {
             FileSenderInternationalisationForDownloadDatasetQuery sender =
                     senderFor(mockAppWithDefaultLang(Locale.FRENCH), Locale.FRENCH);
             String mail = sender.mailMessagefor("http://example.com", 7);
-            assertThat(mail).contains("http://example.com");
-            assertThat(mail).contains("7");
-            assertThat(mail).contains("Vous pourrez");
+            assertThat(mail).contains("http://example.com")
+                    .contains("7")
+                    .contains("Vous pourrez");
         }
 
         @Test
@@ -143,9 +138,9 @@ class FileSenderInternationalisationForDownloadDatasetQueryTest {
             FileSenderInternationalisationForDownloadDatasetQuery sender =
                     senderFor(mockAppWithDefaultLang(Locale.FRENCH), Locale.ENGLISH);
             String mail = sender.mailMessagefor("http://link.com", 14);
-            assertThat(mail).contains("http://link.com");
-            assertThat(mail).contains("14");
-            assertThat(mail).contains("You can");
+            assertThat(mail).contains("http://link.com")
+                    .contains("14")
+                    .contains("You can");
         }
     }
 

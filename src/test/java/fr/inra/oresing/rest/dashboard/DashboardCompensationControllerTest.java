@@ -116,7 +116,8 @@ class DashboardCompensationControllerTest {
     @DisplayName("autoFix() non-admin → AccessDeniedException")
     void autoFixNonAdmin() {
         when(authenticationService.getCurrentUserRoles()).thenReturn(regular());
-        assertThatThrownBy(() -> controller.autoFix(UUID.randomUUID()))
+        UUID id = UUID.randomUUID();
+        assertThatThrownBy(() -> controller.autoFix(id))
                 .isInstanceOf(AccessDeniedException.class);
     }
 
@@ -150,7 +151,8 @@ class DashboardCompensationControllerTest {
     @DisplayName("markResolved() non-admin → AccessDeniedException")
     void markResolvedNonAdmin() {
         when(authenticationService.getCurrentUserRoles()).thenReturn(regular());
-        assertThatThrownBy(() -> controller.markResolved(UUID.randomUUID()))
+        UUID id = UUID.randomUUID();
+        assertThatThrownBy(() -> controller.markResolved(id))
                 .isInstanceOf(AccessDeniedException.class);
     }
 

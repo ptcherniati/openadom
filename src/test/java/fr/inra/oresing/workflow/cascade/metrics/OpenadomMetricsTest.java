@@ -42,8 +42,8 @@ class OpenadomMetricsTest {
         @Test
         @DisplayName("incrémente oa_import_total avec les bons tags")
         void incrementsImportTotal() {
-            metrics.recordImportCompleted("myApp", "dataX", "COMPLETED",
-                    Duration.ofSeconds(5), 1000, 0, 10, 2048L);
+            metrics.recordImportCompleted(new OpenadomMetrics.ImportMetricsData(
+                    "myApp", "dataX", "COMPLETED", Duration.ofSeconds(5), 1000L, 0L, 10, 2048L));
 
             Counter counter = registry.find("oa_import_total")
                     .tags("application", "myApp", "data_type", "dataX", "status", "COMPLETED")
@@ -55,8 +55,8 @@ class OpenadomMetricsTest {
         @Test
         @DisplayName("application null → tag 'unknown'")
         void nullApplicationBecomesUnknown() {
-            metrics.recordImportCompleted(null, "d", "COMPLETED",
-                    Duration.ofMillis(100), 0, 0, 0, 0L);
+            metrics.recordImportCompleted(new OpenadomMetrics.ImportMetricsData(
+                    null, "d", "COMPLETED", Duration.ofMillis(100), 0L, 0L, 0, 0L));
 
             Counter counter = registry.find("oa_import_total")
                     .tags("application", "unknown")
@@ -67,8 +67,8 @@ class OpenadomMetricsTest {
         @Test
         @DisplayName("recordsProcessed > 0 → counter records_processed_total alimenté")
         void recordsProcessedCounterFed() {
-            metrics.recordImportCompleted("app", "dt", "COMPLETED",
-                    Duration.ofSeconds(1), 500, 0, 0, 0L);
+            metrics.recordImportCompleted(new OpenadomMetrics.ImportMetricsData(
+                    "app", "dt", "COMPLETED", Duration.ofSeconds(1), 500L, 0L, 0, 0L));
 
             Counter r = registry.find("oa_import_records_processed_total")
                     .tags("application", "app", "data_type", "dt")
@@ -80,8 +80,8 @@ class OpenadomMetricsTest {
         @Test
         @DisplayName("recordsFailed > 0 → counter records_failed_total alimenté")
         void recordsFailedCounterFed() {
-            metrics.recordImportCompleted("app", "dt", "FAILED",
-                    Duration.ofSeconds(1), 0, 50, 0, 0L);
+            metrics.recordImportCompleted(new OpenadomMetrics.ImportMetricsData(
+                    "app", "dt", "FAILED", Duration.ofSeconds(1), 0L, 50L, 0, 0L));
 
             Counter r = registry.find("oa_import_records_failed_total")
                     .tags("application", "app", "data_type", "dt")
@@ -93,8 +93,8 @@ class OpenadomMetricsTest {
         @Test
         @DisplayName("fileSizeBytes > 0 → counter bytes_total alimenté")
         void bytesFed() {
-            metrics.recordImportCompleted("app", "dt", "COMPLETED",
-                    Duration.ofSeconds(1), 0, 0, 0, 4096L);
+            metrics.recordImportCompleted(new OpenadomMetrics.ImportMetricsData(
+                    "app", "dt", "COMPLETED", Duration.ofSeconds(1), 0L, 0L, 0, 4096L));
 
             Counter b = registry.find("oa_import_bytes_total")
                     .tags("application", "app", "data_type", "dt")

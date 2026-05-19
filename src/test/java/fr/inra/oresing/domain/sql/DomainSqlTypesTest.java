@@ -91,7 +91,7 @@ class DomainSqlTypesTest {
         @Test
         @DisplayName("Chaîne vide — retournée telle quelle (pas de guillemets)")
         void emptyString() {
-            assertThat(WithSqlIdentifier.escapeSqlIdentifier("")).isEqualTo("");
+            assertThat(WithSqlIdentifier.escapeSqlIdentifier("")).isEmpty();
         }
 
         @Test

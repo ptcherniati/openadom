@@ -174,8 +174,8 @@ class SqlIdentifierUtilsTest {
         @Test
         @DisplayName("Identifiant de 64 caractères → FieldNameTooLongForSqlFieldException")
         void tooLongThrows() {
-            String too_long = "a".repeat(64);
-            assertThatThrownBy(() -> SqlIdentifierUtils.IdentifierTest.forStringIdentifier(too_long))
+            String tooLong = "a".repeat(64);
+            assertThatThrownBy(() -> SqlIdentifierUtils.IdentifierTest.forStringIdentifier(tooLong))
                     .isInstanceOf(FieldNameTooLongForSqlFieldException.class);
         }
 
@@ -247,8 +247,9 @@ class SqlIdentifierUtilsTest {
                     .forNaturalKey()
                     .forId()
                     .testAndReturnIdentifier();
-            assertThat(result).isEqualTo("ab_naturalkey_id");
-            assertThat(result).hasSizeLessThanOrEqualTo(63);
+            assertThat(result)
+                    .isEqualTo("ab_naturalkey_id")
+                    .hasSizeLessThanOrEqualTo(63);
         }
     }
 
@@ -305,7 +306,6 @@ class SqlIdentifierUtilsTest {
         @DisplayName("Truncates to at most 63 chars for long identifier")
         void dynamicKeyTruncated() {
             // "a" repeated 50 chars + suffix _hierachicakKey + prefix _count = would exceed 63
-            String longId = "a".repeat(50);
             String result = SqlIdentifierUtils.IdentifierTest
                     .forStringIdentifier("ab")
                     .forDynamicReferenceHierachicakKey(1)

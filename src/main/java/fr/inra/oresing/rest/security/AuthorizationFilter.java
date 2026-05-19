@@ -412,11 +412,6 @@ public class AuthorizationFilter extends GenericFilterBean {
             return null;
         }
         String jwtToken = authHeader.substring(7);
-        // Revocation check : un JWT inscrit dans la blacklist par un kick
-        // admin est rejete . On lance BadCredentialsException avec un
-        // message stable que writeJsonAuthError mappe en TOKEN_REVOKED ;
-        // le frontend ( interceptor axios global ) declenche alors la
-        // redirection vers la page de login .
         String tokenHash = fr.inra.oresing.monitoring.session.JwtBlacklistRegistry.hash(jwtToken);
         if (tokenHash != null && jwtBlacklist.contains(tokenHash)) {
             throw new BadCredentialsException("Token revoked by admin kick");

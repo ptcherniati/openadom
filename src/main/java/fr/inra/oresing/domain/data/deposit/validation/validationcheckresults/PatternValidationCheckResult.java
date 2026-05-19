@@ -16,7 +16,7 @@ public record PatternValidationCheckResult(
         PatternType<?, ?> value
 ) implements CheckerValidationCheckResult<PatternType<?, ?>> {
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "java:S1452"})
     public static CheckerValidationCheckResult<PatternType<?, ?>> of(CheckerValidationCheckResult<?> checkerValidationCheckResult, PatternType<?, ?> patternType) {
         if (checkerValidationCheckResult.isError()) {
             return (CheckerValidationCheckResult<PatternType<?, ?>>) checkerValidationCheckResult;

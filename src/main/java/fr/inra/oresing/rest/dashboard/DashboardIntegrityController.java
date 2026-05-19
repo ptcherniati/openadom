@@ -33,8 +33,8 @@ public class DashboardIntegrityController {
             @RequestParam(required = false, defaultValue = "24") int lookbackHours,
             @RequestParam(required = false, defaultValue = "100") int limit) {
         return ResponseEntity.ok(integrityService.listIntegrity(
-                Math.max(1, Math.min(168, lookbackHours)),  // max 7 jours
-                Math.max(1, Math.min(500, limit))));
+                Math.clamp(lookbackHours, 1, 168),  // max 7 jours
+                Math.clamp(limit, 1, 500)));
     }
 
     @Operation(summary = "Re-execute UPSERT staging -> final pour 1 workflow ( v1 : non implemente )")

@@ -26,7 +26,7 @@ import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.model.authorization.*;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
-import fr.inra.oresing.rest.services.AuthorizationService;
+import fr.inra.oresing.rest.services.DefaultAuthorizationService;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.usecases.security.authorization.GetAdminAuthorizationsUseCase;
 import fr.inra.oresing.rest.usecases.security.authorization.GetApplicationAuthorizationsUseCase;
@@ -329,7 +329,7 @@ public class AuthorizationResources {
             return ResponseEntity.created(URI.create(uri)).body(Map.of(AUTHORIZATION_ID, "null"));
 
         }
-        final AuthorizationService.Authorizations oreSiAuthorizations = serviceContainer.authorizationService()
+        final DefaultAuthorizationService.Authorizations oreSiAuthorizations = serviceContainer.authorizationService()
                 .addAuthorization(
                 application,
                 authorizationRequest

@@ -103,18 +103,17 @@ public class StagingOrphanSweeper {
         int dropped = 0;
         for (String t : tables) {
             UUID cid = parseCorrelationId(t);
-            if (cid == null) continue;          // nom invalide , skip
-            if (activeCids.contains(cid)) continue; // workflow encore actif , skip
-
-            // table identifier deja contraint par le nom : pas de risque
-            // SQL injection ( on a verifie le pattern UUID + prefixe ) .
-            try {
-                String safeTable = assertSafeIdent(t);
-                jdbc.execute("DROP TABLE IF EXISTS oa_staging.\"" + safeTable + "\"");                dropped++;
-                log.info("StagingOrphanSweeper : DROP TABLE oa_staging.{} ( workflow inactif )", t);
-            } catch (RuntimeException dropErr) {
-                log.warn("StagingOrphanSweeper : DROP TABLE oa_staging.{} a echoue : {}",
-                        t, dropErr.getMessage());
+            if (cid != null && !activeCids.contains(cid)) {
+                // table identifier deja contraint par le nom : pas de risque
+                // SQL injection ( on a verifie le pattern UUID + prefixe ) .
+                try {
+                    String safeTable = assertSafeIdent(t);
+                    jdbc.execute("DROP TABLE IF EXISTS oa_staging.\"" + safeTable + "\"");                dropped++;
+                    log.info("StagingOrphanSweeper : DROP TABLE oa_staging.{} ( workflow inactif )", t);
+                } catch (RuntimeException dropErr) {
+                    log.warn("StagingOrphanSweeper : DROP TABLE oa_staging.{} a echoue : {}",
+                            t, dropErr.getMessage());
+                }
             }
         }
         return dropped;

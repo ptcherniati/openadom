@@ -89,6 +89,6 @@ class GroovyCacheKeyTest {
     @Test
     void equalsAvecTypeIncompatibleRetourneFaux() {
         var key = new GroovyCacheKey("expr", Map.of("a", "1"));
-        assertNotEquals(key, "not a GroovyCacheKey");
+        assertNotEquals("not a GroovyCacheKey", key);
     }
 }

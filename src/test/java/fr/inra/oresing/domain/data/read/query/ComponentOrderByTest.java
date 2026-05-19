@@ -1,10 +1,8 @@
 package fr.inra.oresing.domain.data.read.query;
 
-import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.MapType;
 import fr.inra.oresing.domain.checker.type.StringType;
-import fr.inra.oresing.domain.data.RefsLinked;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -38,7 +36,8 @@ class ComponentOrderByTest {
         @Test
         @DisplayName("null componentKey lève une exception")
         void nullComponentKeyThrows() {
-            assertThatThrownBy(() -> new ComponentOrderBy(null, DataRepository.Order.ASC, new ComponentTextType()))
+            ComponentTextType textType = new ComponentTextType();
+            assertThatThrownBy(() -> new ComponentOrderBy(null, DataRepository.Order.ASC, textType))
                     .isInstanceOf(RuntimeException.class);
         }
 

@@ -378,7 +378,9 @@ public class AuthenticationResources {
                 .filter(NotConnectedUser.class::isInstance)
                 .map(NotConnectedUser.class::cast)
                 .orElse(null);
-        assert notConnectedUser != null;
+        if (notConnectedUser == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
         final OreSiUser oreSiUser = authenticationService.updateUser(notConnectedUser);
         final String uri = UriUtils.encodePath("/users/" + Optional.ofNullable(oreSiUser)
                         .map(OreSiUser::getId)

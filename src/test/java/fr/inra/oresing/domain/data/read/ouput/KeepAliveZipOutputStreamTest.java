@@ -11,6 +11,7 @@ import java.util.zip.ZipInputStream;
 import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 /**
  * Tests unitaires purs de {@link KeepAliveZipOutputStream} — aucun contexte Spring.
@@ -27,7 +28,7 @@ class KeepAliveZipOutputStreamTest {
         try (KeepAliveZipOutputStream zip = new KeepAliveZipOutputStream(baos)) {
             assertThat(zip).isNotNull();
         }
-        assertThat(baos.size()).isGreaterThan(0);
+        assertThat(baos.size()).isPositive();
     }
 
     @Test
@@ -94,7 +95,6 @@ class KeepAliveZipOutputStreamTest {
         KeepAliveZipOutputStream zip = new KeepAliveZipOutputStream(baos);
         zip.close();
         // Second close is safe (timer is already cancelled)
-        // ZipOutputStream.close() can throw if already closed in some implementations,
-        // but KeepAliveZipOutputStream only cancels the timer on the first close
+        assertDoesNotThrow(zip::close);
     }
 }

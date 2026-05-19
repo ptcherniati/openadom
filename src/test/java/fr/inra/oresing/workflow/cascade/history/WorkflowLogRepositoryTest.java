@@ -11,7 +11,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -58,7 +57,7 @@ class WorkflowLogRepositoryTest {
         @DisplayName("insertBatch(null) retourne 0 sans appeler le jdbcTemplate")
         void nullReturnsZero() {
             int result = repo.insertBatch(null);
-            assertThat(result).isEqualTo(0);
+            assertThat(result).isZero();
             verify(jdbcTemplate, never()).batchUpdate(any(String.class), any(), anyInt(), any());
         }
 
@@ -66,7 +65,7 @@ class WorkflowLogRepositoryTest {
         @DisplayName("insertBatch(empty) retourne 0 sans appeler le jdbcTemplate")
         void emptyReturnsZero() {
             int result = repo.insertBatch(Collections.emptyList());
-            assertThat(result).isEqualTo(0);
+            assertThat(result).isZero();
             verify(jdbcTemplate, never()).batchUpdate(any(String.class), any(), anyInt(), any());
         }
 
@@ -178,7 +177,7 @@ class WorkflowLogRepositoryTest {
         when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), anyInt()))
                 .thenReturn(null);
         int result = repo.markZombies(5);
-        assertThat(result).isEqualTo(0);
+        assertThat(result).isZero();
     }
 
     @Test
@@ -196,7 +195,7 @@ class WorkflowLogRepositoryTest {
     @DisplayName("deleteOlderThan(0) retourne 0 sans appeler le jdbcTemplate")
     void deleteOlderThanZeroReturnsZero() {
         int result = repo.deleteOlderThan(0);
-        assertThat(result).isEqualTo(0);
+        assertThat(result).isZero();
         verify(jdbcTemplate, never()).update(any(String.class), (Object[]) any());
     }
 
@@ -204,7 +203,7 @@ class WorkflowLogRepositoryTest {
     @DisplayName("deleteOlderThan(-1) retourne 0 sans appeler le jdbcTemplate")
     void deleteOlderThanNegativeReturnsZero() {
         int result = repo.deleteOlderThan(-1);
-        assertThat(result).isEqualTo(0);
+        assertThat(result).isZero();
         verify(jdbcTemplate, never()).update(any(String.class), (Object[]) any());
     }
 

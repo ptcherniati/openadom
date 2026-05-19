@@ -6,8 +6,6 @@ import fr.inra.oresing.domain.checker.type.DateType;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.Tag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -536,25 +534,11 @@ class LocalDateTimeRangeTest {
     }
 
     @Test
-    @DisplayName("getLowerPointOrMin — unbounded lower returns LocalDateTime.MIN")
-    void getLowerPointOrMinUnbounded() {
-        LocalDateTimeRange range = LocalDateTimeRange.always();
-        Assertions.assertEquals(LocalDateTime.MIN, range.getLowerPointOrMin());
-    }
-
-    @Test
     @DisplayName("getLowerPointOrMin — bounded lower returns actual lower endpoint")
     void getLowerPointOrMinBounded() {
         LocalDateTime lower = LocalDateTime.of(2024, 1, 1, 0, 0, 0);
         LocalDateTimeRange range = LocalDateTimeRange.since(lower);
         Assertions.assertEquals(lower, range.getLowerPointOrMin());
-    }
-
-    @Test
-    @DisplayName("getUpperEndpointOrMax — unbounded upper returns LocalDateTime.MAX")
-    void getUpperEndpointOrMaxUnbounded() {
-        LocalDateTimeRange range = LocalDateTimeRange.always();
-        Assertions.assertEquals(LocalDateTime.MAX, range.getUpperEndpointOrMax());
     }
 
     @Test

@@ -568,7 +568,7 @@ public class PrivilegeAccessorDomainTest {
                                                 assessorName + " ?",
                                                 () -> {
                                                     try {
-                                                        Object result = ((M) method).methodCall().apply(assessor);
+                                                        ((M) method).methodCall().apply(assessor);
                                                         System.out.println("ATTENTION: L'assessor " + assessorName +
                                                                            " peut accéder à " + ((M) method).name() +
                                                                            " mais n'était pas explicitement listé comme autorisé");

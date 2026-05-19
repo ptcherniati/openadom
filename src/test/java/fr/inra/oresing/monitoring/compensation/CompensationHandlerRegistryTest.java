@@ -52,7 +52,7 @@ class CompensationHandlerRegistryTest {
     @DisplayName("constructeur avec liste vide est valide (size = 0)")
     void emptyHandlers() {
         CompensationHandlerRegistry registry = new CompensationHandlerRegistry(List.of());
-        assertThat(registry.size()).isEqualTo(0);
+        assertThat(registry.size()).isZero();
     }
 
     @Test
@@ -60,8 +60,8 @@ class CompensationHandlerRegistryTest {
     void duplicateTypeThrows() {
         CompensationHandler h1 = handler("DUPLICATE");
         CompensationHandler h2 = handler("DUPLICATE");
-
-        assertThatThrownBy(() -> new CompensationHandlerRegistry(List.of(h1, h2)))
+        List<CompensationHandler> handlers = List.of(h1, h2);
+        assertThatThrownBy(() -> new CompensationHandlerRegistry(handlers))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("DUPLICATE");
     }

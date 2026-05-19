@@ -217,7 +217,7 @@ class AuthorizationInputDomainTest {
                     LocalDateTimeRange.always(),
                     EnumSet.of(OperationType.extraction)
             );
-            AuthorizationInput result = input.withRestrictionWithDependants("myData", __ -> false);
+            AuthorizationInput result = input.withRestrictionWithDependants("myData", ignored -> false);
             assertThat(result.getOperationTypes()).contains(OperationType.extraction);
         }
 
@@ -229,7 +229,7 @@ class AuthorizationInputDomainTest {
                     LocalDateTimeRange.always(),
                     EnumSet.of(OperationType.depot)
             );
-            AuthorizationInput result = input.withRestrictionWithDependants("myData", __ -> true);
+            AuthorizationInput result = input.withRestrictionWithDependants("myData", ignored -> true);
             assertThat(result.getOperationTypes())
                     .contains(OperationType.depot, OperationType.publication,
                               OperationType.delete, OperationType.extraction);
@@ -243,7 +243,7 @@ class AuthorizationInputDomainTest {
                     LocalDateTimeRange.always(),
                     EnumSet.of(OperationType.depot)
             );
-            AuthorizationInput result = input.withRestrictionWithDependants("myData", __ -> false);
+            AuthorizationInput result = input.withRestrictionWithDependants("myData", ignored -> false);
             assertThat(result.getOperationTypes())
                     .contains(OperationType.depot, OperationType.publication, OperationType.extraction);
         }
@@ -254,7 +254,7 @@ class AuthorizationInputDomainTest {
             AuthorizationInput input = new AuthorizationInput();
             input.getOperationTypes().add(null);
             input.getOperationTypes().add(OperationType.extraction);
-            AuthorizationInput result = input.withRestrictionWithDependants("myData", __ -> false);
+            AuthorizationInput result = input.withRestrictionWithDependants("myData", ignored -> false);
             assertThat(result.getOperationTypes()).contains(OperationType.extraction);
         }
 
@@ -266,7 +266,7 @@ class AuthorizationInputDomainTest {
                     LocalDateTimeRange.always(),
                     EnumSet.of(OperationType.delete)
             );
-            AuthorizationInput result = input.withRestrictionWithDependants("myData", __ -> true);
+            AuthorizationInput result = input.withRestrictionWithDependants("myData", ignored -> true);
             assertThat(result.getOperationTypes())
                     .contains(OperationType.depot, OperationType.publication, OperationType.delete, OperationType.extraction);
         }
@@ -277,7 +277,7 @@ class AuthorizationInputDomainTest {
             Map<String, List<Ltree>> auths = new HashMap<>();
             LocalDateTimeRange scope = LocalDateTimeRange.always();
             AuthorizationInput input = new AuthorizationInput(auths, scope, EnumSet.of(OperationType.extraction));
-            AuthorizationInput result = input.withRestrictionWithDependants("myData", __ -> false);
+            AuthorizationInput result = input.withRestrictionWithDependants("myData", ignored -> false);
             assertThat(result.getRequiredAuthorizations()).isSameAs(auths);
             assertThat(result.getTimeScope()).isEqualTo(scope);
         }

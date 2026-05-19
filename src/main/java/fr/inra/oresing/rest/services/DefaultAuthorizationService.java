@@ -50,22 +50,31 @@ import org.springframework.util.MultiValueMap;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomainEnum.DATA_ACCESS;
 
 @Slf4j
-@Component
+@Component("authorizationService")
 @Transactional(readOnly = true)
-public class AuthorizationService implements fr.inra.oresing.domain.services.authorization.AuthorizationService {
+public class DefaultAuthorizationService implements fr.inra.oresing.domain.services.authorization.AuthorizationService {
 
     private final SqlService db;
     private final OreSiRepository repository;
     private final UserRepository userRepository;
     private ServiceContainer serviceContainer;
+    /** Auto-référence via proxy Spring pour honorer @Transactional sur les appels internes. */
+    private DefaultAuthorizationService self;
 
-    public AuthorizationService(
+    @org.springframework.beans.factory.annotation.Autowired
+    @org.springframework.context.annotation.Lazy
+    public void setSelf(DefaultAuthorizationService self) {
+        this.self = self;
+    }
+
+    public DefaultAuthorizationService(
             SqlService db,
             ServiceContainer serviceContainer,
             OreSiRepository repository,
@@ -129,13 +138,6 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
                                         columDescription.getValue().internationalization()
                                 )))
         );
-    }
-
-    // Méthode utilitaire pour vérifier si un Ltree en contient un autre ou est égal
-    private static boolean isLtreeContainedOrEqual(String containerLtree, String containedLtree) {
-        // Dans PostgreSQL, 'a.b' @> 'a.b.c' est vrai (a.b contient a.b.c)
-        // et 'a.b' @> 'a.b' est aussi vrai (égalité)
-        return containerLtree.equals(containedLtree) || containedLtree.startsWith(containerLtree + ".");
     }
 
     public static void authorizationsToParsedAuthorizations(
@@ -626,10 +628,9 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         );
     }
 
-    public ImmutableSet<GetAuthorizationAdditionalFilesResult> getAdditionalFilesuthorizations(final String applicationNameOrId, final AuthorizationsAdditionalFilesResult authorizationsForUser, final MultiValueMap<String, String> params) {
+    public ImmutableSet<GetAuthorizationAdditionalFilesResult> getAdditionalFilesuthorizations(final String applicationNameOrId, final MultiValueMap<String, String> params) {
         final Application application = repository.application().findApplication(applicationNameOrId);
         final AuthorizationAdditionalFilesRepository authorizationRepository = repository.getRepository(application).authorizationAdditionalFiles();
-        List<OreSiAdditionalFileAuthorization> publicAuthorizations = authorizationRepository.findPublicAuthorizations();
         final long offset = Optional.ofNullable(params)
                 .map(map -> map.get("offset"))
                 .map(l -> l.isEmpty() ? "0" : l.getFirst())
@@ -655,14 +656,12 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
                         (user == null || oreSiReferenceAuthorization.getOreSiUsers().stream().anyMatch(uuid -> uuid.toString().equals(user)))
                         && (authorizationId == null || oreSiReferenceAuthorization.getId().toString().equals(authorizationId))
                 )
-                .map(oreSiAuthorization -> toGetAdditionalFilesAuthorizationResult(oreSiAuthorization, publicAuthorizations, authorizationsForUser))
+                .map(oreSiAuthorization -> toGetAdditionalFilesAuthorizationResult(oreSiAuthorization))
                 .collect(ImmutableSet.toImmutableSet());
     }
 
     private GetAuthorizationAdditionalFilesResult toGetAdditionalFilesAuthorizationResult(
-            final OreSiAdditionalFileAuthorization oreSiAuthorization,
-            final List<OreSiAdditionalFileAuthorization> publicAuthorizations,
-            final AuthorizationsAdditionalFilesResult authorizationsForUser) {
+            final OreSiAdditionalFileAuthorization oreSiAuthorization) {
         final List<OreSiUser> all = userRepository.findAll();
         return new GetAuthorizationAdditionalFilesResult(
                 oreSiAuthorization.getId(),
@@ -760,7 +759,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
                 .map(Map::keySet)
                 .map(application::findDependentNodes)
                 .ifPresent(dependantsNodes::addAll);
-        Function<String, Boolean> isVersionningStrategy = application::strategyIsVersionning;
+        Predicate<String> isVersionningStrategy = application::strategyIsVersionning;
         return Objects.requireNonNull(createAuthorizationRequest)
                 .addRequiredOperationTypes(isVersionningStrategy)
                 .addDependantAuthorizations(dependantsNodes);
@@ -851,7 +850,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         AuthorizationsForApplicationUser authorizations = getAuthorizationsForApplicationUser(application);
         GetGrantableResult grantable = getGrantable(
                 application.getName(),
-                getAuthorizationsForUserAndPublic(
+                self.getAuthorizationsForUserAndPublic(
                         application.getName(),
                         serviceContainer.authenticationService().getCurrentUserRoles().userLogin()
                 )

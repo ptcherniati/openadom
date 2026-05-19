@@ -49,7 +49,7 @@ class DashboardConfigDtoTest {
         DashboardConfigDTO.RateLimitConfig cfg = new DashboardConfigDTO.RateLimitConfig(3, 5, 0L, slots);
         assertThat(cfg.maxConcurrentImportsPerUser()).isEqualTo(3);
         assertThat(cfg.maxConcurrentExtractionsPerUser()).isEqualTo(5);
-        assertThat(cfg.extractionAcquireTimeoutSeconds()).isEqualTo(0L);
+        assertThat(cfg.extractionAcquireTimeoutSeconds()).isZero();
         assertThat(cfg.usedImportSlotsByUser()).containsEntry("user1", 2);
     }
 

@@ -1,7 +1,7 @@
 package fr.inra.oresing.rest.usecases.security.authorization;
 
 import fr.inra.oresing.domain.OreSiUser;
-import fr.inra.oresing.rest.services.AuthorizationService;
+import fr.inra.oresing.rest.services.DefaultAuthorizationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ import static org.mockito.Mockito.when;
 class GetAllUsersUseCaseTest {
 
     @Mock
-    private AuthorizationService authorizationService;
+    private DefaultAuthorizationService authorizationService;
 
     private GetAllUsersUseCase useCase;
 

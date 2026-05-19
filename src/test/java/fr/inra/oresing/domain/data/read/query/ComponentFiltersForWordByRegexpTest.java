@@ -21,51 +21,42 @@ class ComponentFiltersForWordByRegexpTest {
     @Test
     @DisplayName("Cas nominal : componentKey non-null, filtres non-vides → OK")
     void validConstruction() {
-        ComponentFiltersForWordByRegexp record = new ComponentFiltersForWordByRegexp(
+        ComponentFiltersForWordByRegexp entry = new ComponentFiltersForWordByRegexp(
                 "myComponent",
                 List.of("pattern1", "pattern2"),
                 Multiplicity.ONE);
-        assertThat(record.componentKey()).isEqualTo("myComponent");
-        assertThat(record.filters()).hasSize(2);
+        assertThat(entry.componentKey()).isEqualTo("myComponent");
+        assertThat(entry.filters()).hasSize(2);
     }
 
     @Test
     @DisplayName("componentKey null → BadDownloadDatasetQuery")
     void nullComponentKeyThrows() {
-        assertThatThrownBy(() -> new ComponentFiltersForWordByRegexp(
-                null,
-                List.of("p"),
-                Multiplicity.ONE))
+        List<String> filters = List.of("p");
+        assertThatThrownBy(() -> new ComponentFiltersForWordByRegexp(null, filters, Multiplicity.ONE))
                 .isInstanceOf(BadDownloadDatasetQuery.class);
     }
 
     @Test
     @DisplayName("filters null → BadDownloadDatasetQuery")
     void nullFiltersThrows() {
-        assertThatThrownBy(() -> new ComponentFiltersForWordByRegexp(
-                "key",
-                null,
-                Multiplicity.ONE))
+        assertThatThrownBy(() -> new ComponentFiltersForWordByRegexp("key", null, Multiplicity.ONE))
                 .isInstanceOf(BadDownloadDatasetQuery.class);
     }
 
     @Test
     @DisplayName("filters vide → BadDownloadDatasetQuery")
     void emptyFiltersThrows() {
-        assertThatThrownBy(() -> new ComponentFiltersForWordByRegexp(
-                "key",
-                List.of(),
-                Multiplicity.ONE))
+        List<String> emptyFilters = List.of();
+        assertThatThrownBy(() -> new ComponentFiltersForWordByRegexp("key", emptyFilters, Multiplicity.ONE))
                 .isInstanceOf(BadDownloadDatasetQuery.class);
     }
 
     @Test
     @DisplayName("filtre contenant une chaîne vide → BadDownloadDatasetQuery")
     void emptyStringInFiltersThrows() {
-        assertThatThrownBy(() -> new ComponentFiltersForWordByRegexp(
-                "key",
-                List.of("valid", ""),
-                Multiplicity.ONE))
+        List<String> filtersWithEmpty = List.of("valid", "");
+        assertThatThrownBy(() -> new ComponentFiltersForWordByRegexp("key", filtersWithEmpty, Multiplicity.ONE))
                 .isInstanceOf(BadDownloadDatasetQuery.class);
     }
 
@@ -76,10 +67,10 @@ class ComponentFiltersForWordByRegexpTest {
         List<String> filtersWithNull = new java.util.ArrayList<>();
         filtersWithNull.add("valid");
         filtersWithNull.add(null);
-        ComponentFiltersForWordByRegexp record = new ComponentFiltersForWordByRegexp(
+        ComponentFiltersForWordByRegexp entry = new ComponentFiltersForWordByRegexp(
                 "key",
                 filtersWithNull,
                 Multiplicity.MANY);
-        assertThat(record.filters()).hasSize(2);
+        assertThat(entry.filters()).hasSize(2);
     }
 }

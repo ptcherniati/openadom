@@ -103,7 +103,7 @@ class DomainExceptionsExtendedTest {
         void noRightOnTableForPublishFromExceptionWithNullParams() {
             var src = new SiOreIllegalArgumentException("x", null);
             var ex = SiOreIllegalArgumentException.noRightOnTableForPublishOrUnpublish(src);
-            assertThat(ex.getParams().get(SiOreIllegalArgumentException.TABLE)).isEqualTo(SiOreIllegalArgumentException.NOT_GIVEN);
+            assertThat(ex.getParams()).containsEntry(SiOreIllegalArgumentException.TABLE, SiOreIllegalArgumentException.NOT_GIVEN);
         }
     }
 

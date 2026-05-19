@@ -36,7 +36,8 @@ class DataVersioningResultTest {
     @Test
     @DisplayName("dataId null → NullPointerException")
     void dataIdNullThrows() {
-        assertThatThrownBy(() -> new DataVersioningResult(null, List.of(), "/uri", null))
+        List<ApplicationResult.DataSynthesis> emptyList = List.of();
+        assertThatThrownBy(() -> new DataVersioningResult(null, emptyList, "/uri", null))
                 .isInstanceOf(NullPointerException.class);
     }
 

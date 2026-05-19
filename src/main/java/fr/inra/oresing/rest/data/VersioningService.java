@@ -42,12 +42,12 @@ public class VersioningService {
     private final ServiceContainer serviceContainer;
     private final OreSiRepository repository;
     private final UserRepository userRepository;
-    private final JsonRowMapper jsonRowMapper;
+    private final JsonRowMapper<?> jsonRowMapper;
     private final fr.inra.oresing.monitoring.compensation.CompensationLogService compensationLogService;
     private final PlatformTransactionManager txManager;
 
     public VersioningService(ServiceContainer serviceContainer, OreSiRepository repository,
-                             UserRepository userRepository, JsonRowMapper jsonRowMapper,
+                             UserRepository userRepository, JsonRowMapper<?> jsonRowMapper,
                              fr.inra.oresing.monitoring.compensation.CompensationLogService compensationLogService,
                              PlatformTransactionManager txManager) {
         this.serviceContainer = serviceContainer;
@@ -115,7 +115,7 @@ public class VersioningService {
                 UUID userIdForCompLog = OreSiApiRequestContext.getRequestUserId();
                 String userLoginForCompLog = serviceContainer.authenticationService()
                         .getCurrentUserRoles().userLogin();
-                compId = compensationLogService.record(
+                compId = compensationLogService.logPending(
                         fr.inra.oresing.monitoring.compensation.handlers.BinaryFileCompensationHandler.OP_TYPE,
                         application.getName(),    // target_schema = nom application
                         "binaryfile",
@@ -329,16 +329,5 @@ public class VersioningService {
         return repository.getRepository(application).binaryFile();
     }
 
-    private void unPublishVersions(final Application application, final Set<BinaryFile> filesToStore, final String dataType) {
-        filesToStore.forEach(f -> {
-            dataRepository(application).removeByFileId(f.getId());
-            f.markAsPublished(false);
-            binaryFileRepository(application).store(f);
-            serviceContainer.synthesisService().buildSynthesis(application.getName(), dataType, null);
-        });
-        if (dataType != null) {
-            serviceContainer.synthesisService().buildSynthesis(application.getName(), dataType, null);
-        }
-    }
 
 }

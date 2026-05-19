@@ -91,11 +91,12 @@ class UserSessionLogWriterTest {
     void stopWithoutStartIsNoop() {
         UserSessionLogRepository repo = mock(UserSessionLogRepository.class);
         UserSessionLogWriter writer = writer(repo, true);
-        assertThatCode(() -> writer.stop()).doesNotThrowAnyException();
+        assertThatCode(writer::stop).doesNotThrowAnyException();
     }
 
     @Test
     @DisplayName("start() + logAsync() + stop() → flush flush via le thread daemon")
+    @SuppressWarnings("java:S2925")
     void startFlushesOnStop() throws Exception {
         UserSessionLogRepository repo = mock(UserSessionLogRepository.class);
         when(repo.insertBatch(any())).thenReturn(1);

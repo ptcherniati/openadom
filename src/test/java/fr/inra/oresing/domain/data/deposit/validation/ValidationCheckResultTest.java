@@ -66,8 +66,8 @@ class ValidationCheckResultTest {
                     .containsKey("lineNumber")
                     .containsKey("otherLines")
                     .containsKey("duplicateKey");
-            assertThat(result.messageParams().get("file")).isEqualTo("data.csv");
-            assertThat(result.messageParams().get("lineNumber")).isEqualTo(5L);
+            assertThat(result.messageParams()).containsEntry("file", "data.csv");
+            assertThat(result.messageParams()).containsEntry("lineNumber", 5L);
         }
 
         @Test

@@ -15,7 +15,7 @@ import java.util.UUID;
  *
  * <p>Methodes principales :
  * <ul>
- *   <li>{@link #record} : INSERT row PENDING ( a appeler avant l'op risquee )</li>
+ *   <li>{@link #logPending} : INSERT row PENDING ( a appeler avant l'op risquee )</li>
  *   <li>{@link #confirm} : DELETE row apres succes</li>
  *   <li>{@link #compensateNow} : execute le handler immediatement
  *       ( cleanup synchrone dans un finally )</li>
@@ -43,26 +43,35 @@ public class CompensationLogService {
      * @return l'UUID de la row inseree , a passer ensuite a {@link #confirm}
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public UUID record(String operationType,
+    public UUID logPending(String operationType,
                        String targetSchema, String targetTable, String targetId,
                        UUID correlationId, UUID userId, String userLogin,
                        Map<String, Object> payload,
                        int ttlMinutes) {
+        return doRecord(operationType, targetSchema, targetTable, targetId, correlationId, userId, userLogin, payload, ttlMinutes);
+    }
+
+    /** Default TTL ( 240 min ) . */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public UUID logPending(String operationType,
+                       String targetSchema, String targetTable, String targetId,
+                       UUID correlationId, UUID userId, String userLogin,
+                       Map<String, Object> payload) {
+        return doRecord(operationType, targetSchema, targetTable, targetId,
+                correlationId, userId, userLogin, payload,
+                CompensationLogEntry.DEFAULT_TTL_MINUTES);
+    }
+
+    private UUID doRecord(String operationType,
+                         String targetSchema, String targetTable, String targetId,
+                         UUID correlationId, UUID userId, String userLogin,
+                         Map<String, Object> payload,
+                         int ttlMinutes) {
         UUID id = repository.recordPending(operationType,
                 targetSchema, targetTable, targetId,
                 correlationId, userId, userLogin, payload, ttlMinutes);
         log.debug("CompensationLog recorded : {} for {}.{}/{}", id, targetSchema, targetTable, targetId);
         return id;
-    }
-
-    /** Default TTL ( 240 min ) . */
-    public UUID record(String operationType,
-                       String targetSchema, String targetTable, String targetId,
-                       UUID correlationId, UUID userId, String userLogin,
-                       Map<String, Object> payload) {
-        return record(operationType, targetSchema, targetTable, targetId,
-                correlationId, userId, userLogin, payload,
-                CompensationLogEntry.DEFAULT_TTL_MINUTES);
     }
 
     /**

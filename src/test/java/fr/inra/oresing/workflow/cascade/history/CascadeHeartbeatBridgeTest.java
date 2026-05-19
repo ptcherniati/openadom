@@ -52,7 +52,7 @@ class CascadeHeartbeatBridgeTest {
 
         bridge.onWorkflowAlive(ev);
 
-        verify(repo, times(1)).beat(eq(corr));
+        verify(repo, times(1)).beat(corr);
     }
 
     @Test

@@ -25,7 +25,7 @@ class SinkConcurrencyEstimatorTest {
     @Test
     @DisplayName("MERGE_FILE always serial inherent")
     void mergeFile() {
-        var e = SinkConcurrencyEstimator.estimate(base());
+        var e = SinkConcurrencyEstimator.calculateEstimate(base());
         assertEquals(SinkConcurrencyEstimator.Mode.SINGLE_INHERENT, e.mode());
         assertEquals(1, e.effectiveSinks());
     }
@@ -35,7 +35,7 @@ class SinkConcurrencyEstimatorTest {
     void directCopyPerConn() {
         Map<String, Object> m = base();
         m.put("sinkStrategy", "DIRECT_COPY");
-        var e = SinkConcurrencyEstimator.estimate(m);
+        var e = SinkConcurrencyEstimator.calculateEstimate(m);
         assertEquals(SinkConcurrencyEstimator.Mode.SINGLE_FORCED, e.mode());
         assertEquals(1, e.effectiveSinks());
     }
@@ -48,7 +48,7 @@ class SinkConcurrencyEstimatorTest {
         m.put("stagingStrategy", "SHARED_UNLOGGED");
         m.put("pipelineMode", "STAGED");
         m.put("pool.sink", 8);
-        var e = SinkConcurrencyEstimator.estimate(m);
+        var e = SinkConcurrencyEstimator.calculateEstimate(m);
         assertEquals(SinkConcurrencyEstimator.Mode.PARALLEL_POOL, e.mode());
         assertEquals(8, e.effectiveSinks());
     }
@@ -61,7 +61,7 @@ class SinkConcurrencyEstimatorTest {
         m.put("stagingStrategy", "SHARED_UNLOGGED");
         m.put("pipelineMode", "PIPELINED");
         m.put("pool.sink", 6);
-        var e = SinkConcurrencyEstimator.estimate(m);
+        var e = SinkConcurrencyEstimator.calculateEstimate(m);
         assertEquals(SinkConcurrencyEstimator.Mode.PARALLEL_POOL, e.mode());
         assertEquals(6, e.effectiveSinks());
     }
@@ -74,7 +74,7 @@ class SinkConcurrencyEstimatorTest {
         m.put("stagingStrategy", "PER_WORKFLOW_TABLE");
         m.put("pipelineMode", "PIPELINED");
         m.put("pool.sink", 4);
-        var e = SinkConcurrencyEstimator.estimate(m);
+        var e = SinkConcurrencyEstimator.calculateEstimate(m);
         assertEquals(SinkConcurrencyEstimator.Mode.PARALLEL_POOL, e.mode());
         assertEquals(4, e.effectiveSinks());
     }
@@ -86,7 +86,7 @@ class SinkConcurrencyEstimatorTest {
         m.put("sinkStrategy", "DIRECT_COPY");
         m.put("stagingStrategy", "SHARED_UNLOGGED");
         m.put("pool.sink", 1);
-        var e = SinkConcurrencyEstimator.estimate(m);
+        var e = SinkConcurrencyEstimator.calculateEstimate(m);
         assertEquals(SinkConcurrencyEstimator.Mode.SINGLE_FORCED, e.mode());
         assertEquals(1, e.effectiveSinks());
     }
@@ -99,7 +99,7 @@ class SinkConcurrencyEstimatorTest {
         m.put("stagingStrategy", "PER_WORKFLOW_TABLE");
         m.put("pipelineMode", "STAGED");
         m.put("pool.sink", 3);
-        var e = SinkConcurrencyEstimator.estimate(m);
+        var e = SinkConcurrencyEstimator.calculateEstimate(m);
         assertEquals(SinkConcurrencyEstimator.Mode.PARALLEL_POOL, e.mode());
         assertEquals(3, e.effectiveSinks());
         assertTrue(e.explanation().contains("STAGED"));
@@ -110,7 +110,7 @@ class SinkConcurrencyEstimatorTest {
     void fallbackUndefinedConfig() {
         Map<String, Object> m = new HashMap<>();
         // Pas de sinkStrategy défini → null → fallback
-        var e = SinkConcurrencyEstimator.estimate(m);
+        var e = SinkConcurrencyEstimator.calculateEstimate(m);
         assertEquals(SinkConcurrencyEstimator.Mode.SINGLE_INHERENT, e.mode());
         assertEquals(1, e.effectiveSinks());
         assertNotNull(e.explanation());
@@ -121,7 +121,7 @@ class SinkConcurrencyEstimatorTest {
     void fallbackUnknownStrategy() {
         Map<String, Object> m = base();
         m.put("sinkStrategy", "UNKNOWN_STRATEGY");
-        var e = SinkConcurrencyEstimator.estimate(m);
+        var e = SinkConcurrencyEstimator.calculateEstimate(m);
         assertEquals(SinkConcurrencyEstimator.Mode.SINGLE_INHERENT, e.mode());
         assertEquals(1, e.effectiveSinks());
     }
@@ -134,7 +134,7 @@ class SinkConcurrencyEstimatorTest {
         m.put("stagingStrategy", "SHARED_UNLOGGED");
         m.put("pipelineMode", "PIPELINED");
         m.put("pool.sink", "5");   // String, pas Integer
-        var e = SinkConcurrencyEstimator.estimate(m);
+        var e = SinkConcurrencyEstimator.calculateEstimate(m);
         assertEquals(5, e.effectiveSinks());
     }
 
@@ -146,7 +146,7 @@ class SinkConcurrencyEstimatorTest {
         m.put("stagingStrategy", "SHARED_UNLOGGED");
         m.put("pipelineMode", "PIPELINED");
         m.put("pool.sink", "not-a-number");
-        var e = SinkConcurrencyEstimator.estimate(m);
+        var e = SinkConcurrencyEstimator.calculateEstimate(m);
         // intOf fallback = 1 → Math.max(1,1) = 1 → SINGLE_FORCED
         assertEquals(1, e.effectiveSinks());
     }

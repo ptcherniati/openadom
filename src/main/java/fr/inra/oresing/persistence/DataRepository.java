@@ -65,7 +65,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         // kv.value='LPF' OR t.refvalues @> '{"esp_nom":"ALO"}'::jsonb
         String cond = params.entrySet().stream().flatMap(e -> {
                     final String k = e.getKey();
-                    if (StringUtils.equalsAnyIgnoreCase(k, "_row_id_")) {
+                    if ("_row_id_".equalsIgnoreCase(k)) {
                         final java.util.List<String> values = e.getValue();
                         if (values.isEmpty()) {
                             return Stream.empty();
@@ -81,7 +81,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                 .collect(Collectors.joining(", "));
                         return Stream.of("array[id]::uuid[] <@ array[" + collect + "]::uuid[]");
                     }
-                    if (StringUtils.equalsAnyIgnoreCase(k, "_row_key_")) {
+                    if ("_row_key_".equalsIgnoreCase(k)) {
                         // Bind each key value as a named parameter to prevent SQL injection.
                         final String collect = e.getValue().stream()
                                 .map(v -> {
@@ -95,7 +95,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         }
                         return Stream.ofNullable(String.format(" (naturalKey in (%1$s) or hierarchicalKey in (%1$s)) ", collect));
                     }
-                    if (StringUtils.equalsAnyIgnoreCase(k, "any")) {
+                    if ("any".equalsIgnoreCase(k)) {
                         return e.getValue().stream().map(v -> {
                             final String arg = "arg" + i.getAndIncrement();
                             paramSource.addValue(arg, v);
@@ -188,13 +188,11 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         // Phase 1 : MERGE_LOCAL ( la concatenation est faite par cascade
         // collector AVANT cet appel ; on emit l'event juste pour aligner
         // l'UI sur la prochaine etape ) .
-        try { onPhaseChange.accept("MERGE_LOCAL"); } catch (RuntimeException ignored) { /* best effort */ }
+        tryAcceptPhase(onPhaseChange, "MERGE_LOCAL");
 
-        Long upserted = getNamedParameterJdbcTemplate().getJdbcTemplate().execute(
+        return getNamedParameterJdbcTemplate().getJdbcTemplate().execute(
                 (ConnectionCallback<Long>) connection -> {
-                    // setAutoCommit jamais restaure par l'ancien code + 4
-                    // Statement createStatement() sans try-with-resources
-                    // ( leak ). Restoration en finally.
+                    // ...
                     final boolean originalAutoCommit = connection.getAutoCommit();
                     connection.setAutoCommit(false);
                     boolean committed = false;
@@ -209,7 +207,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         // Phase 2 : TEMP_LOAD ( COPY merged.csv -> referencevalue_import ) .
                         // Cote UI : indeterminate ( 1 statement Postgres , pas de
                         // progress incremental observable ) .
-                        try { onPhaseChange.accept("TEMP_LOAD"); } catch (RuntimeException ignored) { /* best effort */ }
+                        tryAcceptPhase(onPhaseChange, "TEMP_LOAD");
                         long copiedRows;
                         long copyStart = System.nanoTime();
                         try (BufferedReader reader = Files.newBufferedReader(finalCsvFile, StandardCharsets.UTF_8)) {
@@ -310,7 +308,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         // Cote UI : determinate via {@code onBatchUpserted} qui propage
                         // le rowcount par batch au consommateur ( typiquement
                         // {@code StoreAllPathSink} -> {@code WorkflowActiveRegistry.addFinalRows} ) .
-                        try { onPhaseChange.accept("UPSERT_FINAL"); } catch (RuntimeException ignored) { /* best effort */ }
+                        tryAcceptPhase(onPhaseChange, "UPSERT_FINAL");
                         long insertStart = System.nanoTime();
                         long totalUpserted = 0L;
                         int batchCount = 0;
@@ -322,12 +320,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                 }
                                 totalUpserted += affected;
                                 batchCount++;
-                                try {
-                                    onBatchUpserted.accept(affected);
-                                } catch (RuntimeException ignored) {
-                                    /* best effort : un consommateur fautif ne doit pas
-                                       casser le UPSERT en cours */
-                                }
+                                tryAcceptBatch(onBatchUpserted, affected);
                             }
                         }
                         long insertMs = (System.nanoTime() - insertStart) / 1_000_000L;
@@ -362,7 +355,24 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         }
                     }
                 });
-        return upserted;
+    }
+
+    /** Appelle {@code consumer.accept(phase)} en avalant silencieusement les RuntimeException (best-effort). */
+    private static void tryAcceptPhase(java.util.function.Consumer<String> consumer, String phase) {
+        try {
+            consumer.accept(phase);
+        } catch (RuntimeException ignored) {
+            // best effort
+        }
+    }
+
+    /** Appelle {@code consumer.accept(value)} en avalant silencieusement les RuntimeException (best-effort). */
+    private static void tryAcceptBatch(java.util.function.LongConsumer consumer, long value) {
+        try {
+            consumer.accept(value);
+        } catch (RuntimeException ignored) {
+            // best effort : un consommateur fautif ne doit pas casser l'UPSERT en cours
+        }
     }
 
 
@@ -1180,7 +1190,10 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         );
     }
 
-    @Deprecated(forRemoval = true) // migré vers domain.repository.data.DataRepository.Order
+    /**
+     * @deprecated Migré vers {@code fr.inra.oresing.domain.repository.data.DataRepository.Order}.
+     */
+    @Deprecated(forRemoval = true)
     public enum Order {
         ASC, DESC
     }

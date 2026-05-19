@@ -233,7 +233,6 @@ class AuthorizationPublicationServiceTest {
         BinaryFileInfos params = new BinaryFileInfos(bfd).markAsPublished(true);
         bf.setParams(params);
         svc.binaryFile = bf;
-        // publishIsAsked=false, unPublishIsAsked = !false && published == true → true
 
         assertThat(svc.fileMustBeJustStored()).isFalse();
     }

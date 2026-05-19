@@ -65,7 +65,8 @@ class BinaryFileCompensationHandlerTest {
     void schemaNull() {
         JdbcTemplate jdbc = mock(JdbcTemplate.class);
         BinaryFileCompensationHandler handler = new BinaryFileCompensationHandler(jdbc);
-        assertThatThrownBy(() -> handler.compensate(entryWithSchema(null)))
+        var entry = entryWithSchema(null);
+        assertThatThrownBy(() -> handler.compensate(entry))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Invalid target_schema");
     }
@@ -75,7 +76,8 @@ class BinaryFileCompensationHandlerTest {
     void schemaMalicious() {
         JdbcTemplate jdbc = mock(JdbcTemplate.class);
         BinaryFileCompensationHandler handler = new BinaryFileCompensationHandler(jdbc);
-        assertThatThrownBy(() -> handler.compensate(entryWithSchema("oa_data; DROP TABLE")))
+        var entry = entryWithSchema("oa_data; DROP TABLE");
+        assertThatThrownBy(() -> handler.compensate(entry))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -136,7 +138,8 @@ class BinaryFileCompensationHandlerTest {
     void schemaMajuscules() {
         JdbcTemplate jdbc = mock(JdbcTemplate.class);
         BinaryFileCompensationHandler handler = new BinaryFileCompensationHandler(jdbc);
-        assertThatThrownBy(() -> handler.compensate(entryWithSchema("OA_DATA")))
+        var entry = entryWithSchema("OA_DATA");
+        assertThatThrownBy(() -> handler.compensate(entry))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

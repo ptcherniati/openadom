@@ -39,7 +39,7 @@ class SimpleDomainGrantedAuthorityTest {
         SimpleDomainGrantedAuthority a1 = new SimpleDomainGrantedAuthority("ROLE_A");
         SimpleDomainGrantedAuthority a2 = new SimpleDomainGrantedAuthority("ROLE_A");
         assertThat(a1).isEqualTo(a2);
-        assertThat(a1.hashCode()).isEqualTo(a2.hashCode());
+        assertThat(a1).hasSameHashCodeAs(a2);
     }
 
     @Test

@@ -246,8 +246,9 @@ class NodeBuildTest {
                 new TreeSet<>(), new TreeSet<>(Set.of("ghost")), 2, false);
 
         // On ne passe que 'orphan', pas 'ghost' → le parent est introuvable
+        List<BuilderNode> nodes = List.of(orphan);
         assertThrows(IllegalArgumentException.class,
-                () -> Node.buildNode(List.of(orphan)),
+                () -> Node.buildNode(nodes),
                 "Un nœud dont le parent (champ BuilderNode.parent) est introuvable " +
                         "doit lever IllegalArgumentException");
     }

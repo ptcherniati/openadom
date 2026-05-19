@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -54,7 +55,7 @@ class StagingCleanupHandlerTest {
     @DisplayName("smart-check : refuse cleanup si workflow encore IN_PROGRESS")
     void refuses_cleanup_if_workflow_in_progress() {
         UUID corrId = UUID.randomUUID();
-        when(jdbc.queryForObject(anyString(), eq(String.class), eq(corrId)))
+        when(jdbc.queryForObject(anyString(), eq(String.class), any()))
                 .thenReturn("IN_PROGRESS");
 
         CompensationLogEntry entry = entry(corrId, "SHARED_UNLOGGED",
@@ -74,7 +75,7 @@ class StagingCleanupHandlerTest {
     @DisplayName("SHARED_UNLOGGED : DELETE WHERE correlation_id quand workflow FAILED")
     void shared_unlogged_deletes_rows_by_correlation_id() {
         UUID corrId = UUID.randomUUID();
-        when(jdbc.queryForObject(anyString(), eq(String.class), eq(corrId)))
+        when(jdbc.queryForObject(anyString(), eq(String.class), any()))
                 .thenReturn("FAILED");
         when(jdbc.update(anyString(), eq(corrId.toString()))).thenReturn(42);
 
@@ -84,15 +85,15 @@ class StagingCleanupHandlerTest {
         handler.compensate(entry);
 
         verify(jdbc, times(1)).update(
-                eq("DELETE FROM oa_staging.referencevalue_import_shared WHERE correlation_id = ?::uuid"),
-                eq(corrId.toString()));
+                "DELETE FROM oa_staging.referencevalue_import_shared WHERE correlation_id = ?::uuid",
+                corrId.toString());
     }
 
     @Test
     @DisplayName("PER_WORKFLOW_TABLE : DROP TABLE IF EXISTS quand workflow CANCELLED")
     void per_workflow_table_drops_dedicated_table() {
         UUID corrId = UUID.randomUUID();
-        when(jdbc.queryForObject(anyString(), eq(String.class), eq(corrId)))
+        when(jdbc.queryForObject(anyString(), eq(String.class), any()))
                 .thenReturn("CANCELLED");
 
         CompensationLogEntry entry = entry(corrId, "PER_WORKFLOW_TABLE",
@@ -101,7 +102,7 @@ class StagingCleanupHandlerTest {
         handler.compensate(entry);
 
         verify(jdbc, times(1)).execute(
-                eq("DROP TABLE IF EXISTS oa_staging.referencevalue_import_abc12345"));
+                "DROP TABLE IF EXISTS oa_staging.referencevalue_import_abc12345");
     }
 
     @Test
@@ -132,7 +133,7 @@ class StagingCleanupHandlerTest {
     @DisplayName("payload sans stagingStrategy : fallback DELETE ( safest )")
     void missing_payload_falls_back_to_delete() {
         UUID corrId = UUID.randomUUID();
-        when(jdbc.queryForObject(anyString(), eq(String.class), eq(corrId)))
+        when(jdbc.queryForObject(anyString(), eq(String.class), any()))
                 .thenReturn("FAILED");
         when(jdbc.update(anyString(), eq(corrId.toString()))).thenReturn(0);
 
@@ -146,15 +147,15 @@ class StagingCleanupHandlerTest {
         handler.compensate(entry);
 
         verify(jdbc, times(1)).update(
-                eq("DELETE FROM oa_staging.referencevalue_import_shared WHERE correlation_id = ?::uuid"),
-                eq(corrId.toString()));
+                "DELETE FROM oa_staging.referencevalue_import_shared WHERE correlation_id = ?::uuid",
+                corrId.toString());
     }
 
     @Test
     @DisplayName("stagingStrategy inconnu leve IllegalArgumentException")
     void unknown_strategy_throws() {
         UUID corrId = UUID.randomUUID();
-        when(jdbc.queryForObject(anyString(), eq(String.class), eq(corrId)))
+        when(jdbc.queryForObject(anyString(), eq(String.class), any()))
                 .thenReturn("FAILED");
 
         CompensationLogEntry entry = entry(corrId, "EXOTIC_NEW_STRATEGY",
@@ -169,7 +170,7 @@ class StagingCleanupHandlerTest {
     @DisplayName("workflow_log inconnu ( null status ) : continue le cleanup")
     void null_status_proceeds_with_cleanup() {
         UUID corrId = UUID.randomUUID();
-        when(jdbc.queryForObject(anyString(), eq(String.class), eq(corrId)))
+        when(jdbc.queryForObject(anyString(), eq(String.class), any()))
                 .thenReturn(null);
         when(jdbc.update(anyString(), eq(corrId.toString()))).thenReturn(0);
 

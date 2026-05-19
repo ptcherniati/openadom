@@ -65,11 +65,11 @@ public final class StoreAllPathSink implements Sink<Path>, RowCountingSink {
     private final boolean deferToCaller;
 
     /**
-     * Path capte en mode {@link #deferToCaller} . Volatile pour la
+     * Path capte en mode {@link #deferToCaller} . AtomicReference pour la
      * visibilite cross-thread ( sink-1 ecrit , caller-thread lit ) .
      * Consomme une fois via {@link #takeDeferredMergedPath()} .
      */
-    private volatile Path deferredMergedPath;
+    private final AtomicReference<Path> deferredMergedPath = new AtomicReference<>();
 
     /**
      * correlationId du workflow en cours . Capte au {@code setup} ;
@@ -137,7 +137,7 @@ public final class StoreAllPathSink implements Sink<Path>, RowCountingSink {
     @Override
     public void setup(String correlationId) {
         rowsWritten.set(0L);
-        deferredMergedPath = null;
+        deferredMergedPath.set(null);
         UUID corr = parseUuid(correlationId);
         currentCorrelationId.set(corr);
     }
@@ -160,7 +160,7 @@ public final class StoreAllPathSink implements Sink<Path>, RowCountingSink {
             // Capture seulement ; le caller invoquera storeAll en afterCommit
             // sur sa propre connexion ( evite le deadlock sink-1 vs caller
             // outer-tx sur les row-locks de la table finale ) .
-            deferredMergedPath = mergedFile;
+            deferredMergedPath.set(mergedFile);
             return;
         }
 
@@ -185,8 +185,7 @@ public final class StoreAllPathSink implements Sink<Path>, RowCountingSink {
      * {@code TransactionSynchronization.afterCommit()} ) .
      */
     public java.util.Optional<Path> takeDeferredMergedPath() {
-        Path p = deferredMergedPath;
-        deferredMergedPath = null;
+        Path p = deferredMergedPath.getAndSet(null);
         return java.util.Optional.ofNullable(p);
     }
 

@@ -38,11 +38,12 @@ class ScriptProvidersTest {
         void addAllToContextBindsAllProviders() {
             Map<String, Object> ctx = new java.util.HashMap<>();
             ScriptConstantProvider.addAllToContext(ctx);
-            assertThat(ctx).containsKey("OA_buildCompositeKey");
-            assertThat(ctx).containsKey("OA_buildException");
-            assertThat(ctx).containsKey("OA_buildManyCompositeKey");
-            assertThat(ctx).containsKey("OA_escapeLabel");
-            assertThat(ctx).containsKey("OA_naturalKeyBuilder");
+            assertThat(ctx)
+                    .containsKey("OA_buildCompositeKey")
+                    .containsKey("OA_buildException")
+                    .containsKey("OA_buildManyCompositeKey")
+                    .containsKey("OA_escapeLabel")
+                    .containsKey("OA_naturalKeyBuilder");
         }
 
         @Test
@@ -88,8 +89,9 @@ class ScriptProvidersTest {
         void emptyInMiddleReplacedByNullKey() {
             List<String> values = List.of("a", "", "b");
             String result = BuildCompositeKey.buildNaturelKeyFromLabels(values);
-            assertThat(result).contains(Ltree.NULL_KEY);
-            assertThat(result).contains(SEP);
+            assertThat(result)
+                    .contains(Ltree.NULL_KEY)
+                    .contains(SEP);
         }
 
         @Test

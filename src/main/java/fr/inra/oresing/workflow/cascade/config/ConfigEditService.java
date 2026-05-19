@@ -56,7 +56,7 @@ public class ConfigEditService {
         List<String> blocking = applyRules(effective, ConsistencyRule.Severity.BLOCKING);
         if (!blocking.isEmpty()) {
             String msg = String.join(" ; ", blocking);
-            audit.record(admin, "(patch validation)", null,
+            audit.addEntry(admin, "(patch validation)", null,
                     patch.toString(),
                     ConfigChangeAudit.Status.REJECTED, msg);
             throw new IllegalArgumentException(msg);
@@ -66,13 +66,14 @@ public class ConfigEditService {
         for (Map.Entry<String, Object> e : patch.entrySet()) {
             String field = e.getKey();
             Object value = e.getValue();
-            if (value == null) continue;
-            // Aplatir poolParallelism : si value est une Map, la pousse field-by-field
-            if ("poolParallelism".equals(field) && value instanceof Map<?, ?> nested) {
-                applyNestedPoolMap(admin, nested, changes);
-                continue;
+            if (value != null) {
+                // Aplatir poolParallelism : si value est une Map, la pousse field-by-field
+                if ("poolParallelism".equals(field) && value instanceof Map<?, ?> nested) {
+                    applyNestedPoolMap(admin, nested, changes);
+                } else {
+                    applyOne(admin, field, value, changes);
+                }
             }
-            applyOne(admin, field, value, changes);
         }
         // Apres mutation : on re-evalue les WARNING sur l'etat reel pour
         // refleter les changements committed ( ex. directWriteParallel
@@ -125,7 +126,7 @@ public class ConfigEditService {
         try {
             ConfigField.Mutation<?> m = registry.apply(field, value);
             if (m.changed()) {
-                audit.record(admin, field, m.oldString(), m.newString(),
+                audit.addEntry(admin, field, m.oldString(), m.newString(),
                         ConfigChangeAudit.Status.APPLIED, null);
                 changes.add(new Change(field, m.oldString(), m.newString()));
             }
@@ -133,7 +134,7 @@ public class ConfigEditService {
                 | UnsupportedOperationException
                 | IllegalArgumentException
                 | IllegalStateException ex) {
-            audit.record(admin, field, null,
+            audit.addEntry(admin, field, null,
                     value == null ? null : value.toString(),
                     ConfigChangeAudit.Status.REJECTED, ex.getMessage());
             throw ex;

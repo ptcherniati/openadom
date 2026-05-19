@@ -160,7 +160,7 @@ public class ImportRateLimiter {
      * Quota maximum d'imports concurrents par utilisateur.
      * Lecture seule , exposé pour le dashboard de configuration.
      */
-    public int getMaxConcurrentPerUser() {
+    public synchronized int getMaxConcurrentPerUser() {
         return maxConcurrentPerUser;
     }
 

@@ -10,7 +10,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.Instant;
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,7 +38,7 @@ class UserSessionLogRepositoryTest {
     void insertBatchNull() {
         UserSessionLogRepository repo = new UserSessionLogRepository(jdbcTemplate);
         int n = repo.insertBatch(null);
-        assertThat(n).isEqualTo(0);
+        assertThat(n).isZero();
         verifyNoInteractions(jdbcTemplate);
     }
 
@@ -48,7 +47,7 @@ class UserSessionLogRepositoryTest {
     void insertBatchEmpty() {
         UserSessionLogRepository repo = new UserSessionLogRepository(jdbcTemplate);
         int n = repo.insertBatch(Collections.emptyList());
-        assertThat(n).isEqualTo(0);
+        assertThat(n).isZero();
         verifyNoInteractions(jdbcTemplate);
     }
 
@@ -59,7 +58,7 @@ class UserSessionLogRepositoryTest {
     void deleteOlderThanZero() {
         UserSessionLogRepository repo = new UserSessionLogRepository(jdbcTemplate);
         int n = repo.deleteOlderThan(0);
-        assertThat(n).isEqualTo(0);
+        assertThat(n).isZero();
         verifyNoInteractions(jdbcTemplate);
     }
 
@@ -68,7 +67,7 @@ class UserSessionLogRepositoryTest {
     void deleteOlderThanNegative() {
         UserSessionLogRepository repo = new UserSessionLogRepository(jdbcTemplate);
         int n = repo.deleteOlderThan(-1);
-        assertThat(n).isEqualTo(0);
+        assertThat(n).isZero();
         verifyNoInteractions(jdbcTemplate);
     }
 

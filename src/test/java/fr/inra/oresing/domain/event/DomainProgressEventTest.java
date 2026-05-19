@@ -46,7 +46,7 @@ class DomainProgressEventTest {
         DomainProgressEvent e1 = new DomainProgressEvent(0.3);
         DomainProgressEvent e2 = new DomainProgressEvent(0.3);
         assertThat(e1).isEqualTo(e2);
-        assertThat(e1.hashCode()).isEqualTo(e2.hashCode());
+        assertThat(e1).hasSameHashCodeAs(e2);
     }
 
     @Test

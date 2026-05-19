@@ -59,7 +59,7 @@ class LineElementTransformerTest {
             FieldType<?> result = t.transform(datum, StringType.getStringTypeFromStringValue("initial"));
 
             assertThat(result).isInstanceOf(StringType.class);
-            assertThat(result.toString()).isEqualTo("resultat");
+            assertThat(result).hasToString("resultat");
         }
 
         @Test
@@ -74,7 +74,7 @@ class LineElementTransformerTest {
 
             Datum datum = new Datum();
             FieldType<?> result = t.transform(datum, StringType.getStringTypeFromStringValue(""));
-            assertThat(result.toString()).isEqualTo("contextValue");
+            assertThat(result).hasToString("contextValue");
         }
 
         @Test
@@ -107,7 +107,7 @@ class LineElementTransformerTest {
 
             Datum result = transformer.transform(datum);
 
-            assertThat(result.get("valeur").toString()).isEqualTo("nouveau");
+            assertThat(result.get("valeur")).hasToString("nouveau");
         }
 
         @Test
@@ -124,9 +124,9 @@ class LineElementTransformerTest {
             Datum result = transformer.transform(original);
 
             // Original inchangé
-            assertThat(original.get("x").toString()).isEqualTo("old");
+            assertThat(original.get("x")).hasToString("old");
             // Copie modifiée
-            assertThat(result.get("x").toString()).isEqualTo("new");
+            assertThat(result.get("x")).hasToString("new");
         }
     }
 

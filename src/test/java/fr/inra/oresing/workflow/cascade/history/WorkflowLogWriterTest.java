@@ -3,7 +3,6 @@ package fr.inra.oresing.workflow.cascade.history;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.time.Duration;
 import java.time.Instant;

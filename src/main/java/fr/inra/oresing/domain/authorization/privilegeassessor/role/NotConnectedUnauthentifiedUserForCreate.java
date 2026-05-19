@@ -9,7 +9,7 @@ import java.util.List;
 
 public record NotConnectedUnauthentifiedUserForCreate() implements NotConnectedUser {
     @Override
-    public Collection<? extends DomainGrantedAuthority> getAuthorities() {
+    public Collection<DomainGrantedAuthority> getAuthorities() {
         // Autorisation spécifique pour la création de compte
         return List.of(new SimpleDomainGrantedAuthority(SecurityRole.ROLE_UNAUTHENTIFIED_UPDATE_USER_VALUE));
     }

@@ -85,6 +85,7 @@ public class ApplicationResources {
         this.heavyExecutorService = heavyExecutorService;
     }
 
+    @SuppressWarnings("java:S3740")
     @PreAuthorize("isFullyAuthenticated()")
     @SecurityRequirement(name = "Bearer Authentication")
     @GetMapping(produces = MediaType.APPLICATION_NDJSON_VALUE)
@@ -95,6 +96,7 @@ public class ApplicationResources {
         return getApplicationsUseCase.execute(filters);
     }
 
+    @SuppressWarnings("java:S3740")
     @PreAuthorize("isAuthenticated()")
     @PostMapping(value = "/validate-configuration", produces = MediaType.APPLICATION_NDJSON_VALUE)
     public Flux<ReactiveResult> validateConfiguration(@RequestParam("file") final MultipartFile file) throws IOException {
@@ -113,6 +115,7 @@ public class ApplicationResources {
         });
     }
 
+    @SuppressWarnings("java:S3740")
     @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_APPLICATION_CREATE')")
     @PostMapping(value = "/{name}", produces = MediaType.APPLICATION_NDJSON_VALUE)
     @Parameter(examples = @ExampleObject(
@@ -160,6 +163,7 @@ public class ApplicationResources {
         return ResponseEntity.ok().build();
     }
 
+    @SuppressWarnings("java:S3740")
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
     @PostMapping(value = "/{nameOrId}/configuration", produces = MediaType.APPLICATION_NDJSON_VALUE)
     public Flux<ReactiveResult> changeConfiguration(@PathVariable("nameOrId") final String nameOrId,
@@ -184,6 +188,7 @@ public class ApplicationResources {
         });
     }
 
+    @SuppressWarnings("java:S3740")
     private Flux<ReactiveResult> buildFluxRequestNDJson(Consumer<FluxSink<ReactiveResult>> fluxSink) {
         final SecurityContext context = SecurityContextHolder.getContext();
         return Flux.create(sink -> {
@@ -192,7 +197,7 @@ public class ApplicationResources {
                     try {
                         SecurityContextHolder.setContext(context);
                         fluxSink.accept(sink);
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         // Without this log, any exception thrown inside the
                         // NDJSON producer is converted to a Flux error signal
                         // and the HTTP stream closes silently mid-way - the

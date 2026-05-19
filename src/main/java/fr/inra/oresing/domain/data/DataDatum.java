@@ -72,6 +72,7 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
                         .anyMatch(registerColumn -> registerColumn.equals(column));
     }
 
+    @SuppressWarnings("java:S1452")
     public DataColumnValue<?, ?> get(final DataColumn column) {
         Preconditions.checkArgument(
                 contains(column),
@@ -99,6 +100,7 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
     }
 
     @Override
+    @SuppressWarnings("java:S1452")
     public ImmutableMap<String, FieldType<?>> toJsonForDatabase() {
         final Map<String, FieldType<?>> map = new LinkedHashMap<>();
         for (final Map.Entry<DataColumn, DataColumnValue<?, ?>> entry : values.entrySet()) {
@@ -174,11 +176,13 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
     /**
      * Étant donné une colonne, l'ensemble des valeurs qui doivent être subir transformation et computationChecker
      */
+    @SuppressWarnings("java:S1452")
     public FieldType<?> getValuesToCheck(final DataColumn column) {
         return get(column).getValuesToCheck();
     }
 
     @Override
+    @SuppressWarnings("java:S1452")
     public Map<String, FieldType<?>> toJsonForFrontend() {
         final Map<String, FieldType<?>> map = new LinkedHashMap<>();
         for (final Map.Entry<DataColumn, DataColumnValue<?, ?>> entry : values.entrySet()) {
@@ -209,6 +213,7 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
         );
     }
 
+    @SuppressWarnings("java:S1452")
     public Map<DataColumn, DataColumnValue<?, ?>> values() {
         return values;
     }

@@ -29,7 +29,7 @@ class ListTypeExtendedTest {
         ListType<StringType> lt = ListType.getListTypeFromListValue(List.of(
                 StringType.getStringTypeFromStringValue("a"),
                 StringType.getStringTypeFromStringValue("b")));
-        assertThat(lt.toString()).isEqualTo("a,b");
+        assertThat(lt).hasToString("a,b");
     }
 
     @Test
@@ -53,7 +53,7 @@ class ListTypeExtendedTest {
         lt.serialize(node, MAPPER, "items");
         assertThat(node.has("items")).isTrue();
         assertThat(node.get("items").isArray()).isTrue();
-        assertThat(node.get("items").size()).isEqualTo(1);
+        assertThat(node.get("items")).hasSize(1);
     }
 
     @Test
@@ -93,7 +93,7 @@ class ListTypeExtendedTest {
                 List.of(StringType.getStringTypeFromStringValue("nested")));
         ArrayNode parent = MAPPER.createArrayNode();
         lt.serializeAddArray(parent);
-        assertThat(parent.size()).isEqualTo(1);
+        assertThat(parent).hasSize(1);
         assertThat(parent.get(0).isArray()).isTrue();
     }
 

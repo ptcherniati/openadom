@@ -344,38 +344,6 @@ public class OreSiResources {
     }
 
     /**
-     * Helper : construit et soumet async un {@link WorkflowLogEntry}
-     * pour une extraction. Best-effort : erreurs UUID loguees puis
-     * swallowed , ne casse pas le streaming.
-     */
-    private void logExtractionEvent(
-            String workflowType, String userId,
-            String applicationName, String dataType, String resourceName,
-            Instant startedAt, Duration duration, String status, long bytesTotal,
-            String fatalError) {
-        try {
-            workflowLogWriter.logAsync(new WorkflowLogEntry(
-                    java.util.UUID.randomUUID(),
-                    workflowType,
-                    java.util.UUID.fromString(userId),
-                    resolveCurrentLogin(),
-                    applicationName,
-                    dataType,
-                    resourceName,
-                    startedAt,
-                    startedAt.plus(duration),
-                    duration,
-                    status,
-                    0L, 0L, 0,
-                    bytesTotal,
-                    java.util.List.of(),
-                    fatalError));
-        } catch (IllegalArgumentException e) {
-            log.warn("Format UUID utilisateur invalide , skip log extraction [userId={}]", userId);
-        }
-    }
-
-    /**
      * Best-effort resolution of the caller login from the current request
      * context. Returns null if no user is bound to the thread , in which
      * case the dashboard falls back to showing the UUID alone.
@@ -510,6 +478,9 @@ public class OreSiResources {
     public ResponseEntity<List<BinaryFileResult>> getFilesOnRepository(@PathVariable("nameOrId") final String nameOrId,
                                                                        @PathVariable("dataType") final String dataType,
                                                                        @JsonParam("repositoryId") final BinaryFileDataset binaryFileDataset) {
+        if (binaryFileDataset == null) {
+            return ResponseEntity.badRequest().build();
+        }
         Optional.ofNullable(binaryFileDataset)
                 .ifPresent(binaryFileDataset1 -> binaryFileDataset1.setIfNotPresentDatatype(dataType));
         Map<UUID, UserDescriptionResult> users = getAllUsersUseCase.execute()
@@ -585,7 +556,7 @@ public class OreSiResources {
                 filename = binaryFile.getName();
                 body = outputStream -> FileCopyUtils.copy(inputStream, outputStream);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new OreSiIOException(e.getMessage(), e);
             }
 
             return ResponseEntity.ok()
@@ -597,13 +568,6 @@ public class OreSiResources {
         }
     }
 
-    private Flux<ReactiveResult> getApplications(final String[] filter) {
-        final List<ApplicationInformation> filters = Arrays.stream(filter)
-                .map(ApplicationInformation::valueOf)
-                .toList();
-
-        return getApplicationsUseCase.execute(filters);
-    }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping(value = "/validate-configuration", produces = MediaType.APPLICATION_NDJSON_VALUE)
@@ -633,41 +597,6 @@ public class OreSiResources {
         });
     }
 
-        private Flux<ReactiveResult> createApplication(final String name,
-                               final String comment,
-                               final MultipartFile file) throws BadApplicationConfigurationException {
-        DataFile dataFile = null;
-        try {
-            final File physicalFileOrCopy = getPhysicalFileOrCopy(file);
-            dataFile = file == null ? null : new DataFile(physicalFileOrCopy, (long) file.getInputStream().available(), file.getOriginalFilename());
-        } catch (IOException e) {
-            throw OreSiIOException.ORE_SI_IOEXCEPTION_CANT_LOAD_FILE();
-        }
-        if (!SqlIdentifierUtils.IdentifierTest.identifierForApplicationName(name)) {
-            //TODO test à faire
-            throw new BadLabelNameException(BadLabelNameException.LabelType.APPLICATION, name);
-        }
-        DataFile finalDataFile = dataFile;
-        return buildFluxRequestNDJson(fluxSink -> {
-            try {
-                createApplicationUseCase.execute(fluxSink::next, name, finalDataFile, comment);
-                fluxSink.complete();
-            } catch (Exception technicalException) {
-                fluxSink.error(technicalException);
-            }
-        });
-    }
-
-    private ApplicationResult getApplication(final String nameOrId, final String[] filter) {
-        final Application application = getApplicationOrAccordingToRightsUseCase.execute(nameOrId);
-        return buildOpenAdomUseCase.execute(application, filter);
-    }
-
-    private ResponseEntity<StreamingResponseBody> getConfiguration(final String nameOrId) {
-        final Application application = getApplicationUseCase.execute(nameOrId);
-        final UUID configFileId = application.getConfigFile();
-        return getFile(nameOrId, configFileId);
-    }
 
     private Flux<ReactiveResult> changeConfiguration(final String nameOrId,
                                                      final MultipartFile file,
@@ -697,19 +626,6 @@ public class OreSiResources {
         });
     }
 
-    /**
-     * Liste toutes les valeurs possibles pour un type de referenciel
-     *
-     * @param nameOrId l'id ou le nom de l'application
-     * @return un tableau de chaine
-     */
-        private ResponseEntity<GetRightsRequestResult> listRightsRequest(
-            final String nameOrId,
-            final RightsRequestInfos rightsRequestInfos) {
-        final GetRightsRequestResult list = findRightsRequestUseCase.execute(nameOrId, rightsRequestInfos);
-        return okResponse(list);
-    }
-
     private ResponseEntity<?> createRightsRequest(final String nameOrId,
                                                   final CreateRightsRequestRequest createRightsRequestRequest) {
         final UUID fileUUID = createOrUpdateRightsRequestUseCase.execute(createRightsRequestRequest, nameOrId);
@@ -724,67 +640,6 @@ public class OreSiResources {
      * référentiels).
      */
 
-    private ResponseEntity<List<String>> listNameReferences(String nameOrId) {
-        String[] filter = {ApplicationInformation.ALL.name()};
-        final ApplicationResult application = getApplication(nameOrId, filter);
-
-        return okResponse(application.getOrderedReferences());
-    }
-
-    /**
-     * Liste toutes les valeurs possibles pour un type de referenciel
-     *
-     * @param nameOrId l'id ou le nom de l'application
-     * @param refType  le type du referenciel
-     * @return un tableau de chaine
-     */
-    private ResponseEntity<GetReferenceResult> listDataForColumn(
-            final String nameOrId,
-            final String refType,
-            final MultiValueMap<String, String> params) {
-        final List<DataValue> list = findReferenceUseCase.execute(nameOrId, refType, params);
-
-        final Map<String, Map<String, LineChecker>> checkedFormatColumns = getFormatCheckedUseCase.execute(nameOrId, refType);
-        Set<String> listOfReferenceIds = list.stream()
-                .map(DataValue::getReferenceType)
-                .collect(Collectors.toSet());
-        final Map<Ltree, List<DataValue>> requiredReferencesValues = getReferenceDisplaysByIdUseCase.execute(
-            getApplicationOrAccordingToRightsUseCase.execute(nameOrId),
-            listOfReferenceIds);
-        Map<String, LineChecker> referenceLineCheckers = checkedFormatColumns.get(ReferenceType.class.getSimpleName());
-        Map<String, String> referenceTypeForReferencingColumns =
-                Optional.ofNullable(checkedFormatColumns.get(ReferenceType.class.getSimpleName()))
-                        .map(checkedFormatColumn -> checkedFormatColumn.entrySet()
-                                .stream()
-                                .collect(Collectors.toMap(
-                                                Map.Entry::getKey,
-                                                e -> Optional.of(e)
-                                                        .map(Map.Entry::getValue)
-                                                        .map(LineChecker::underlyingType)
-                                                        .filter(ReferenceType.class::isInstance)
-                                                        .map(c -> (ReferenceType) c)
-                                                        .map(ReferenceType::getRefType)
-                                                        .orElse("erreur")
-                                        )
-                                )
-                        )
-                        .orElseGet(LinkedHashMap::new);
-        final ImmutableSet<GetReferenceResult.ReferenceValue> referenceValues = list.stream()
-                .map(referenceValue ->
-                        new GetReferenceResult.ReferenceValue(
-                                referenceValue.getId().toString(),
-                                referenceValue.getPatternColumnName(),
-                                referenceValue.getHierarchicalKey().getSql(),
-                                referenceValue.getNaturalKey().getSql(),
-                                referenceValue.getRefValues().toJsonForFrontend(),
-                                referenceValue.getRefsLinkedTo(),
-                                referenceValue.getReferencingreferences()
-                        )
-                )
-                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetReferenceResult.ReferenceValue::commparingValue)));
-        return okResponse(new GetReferenceResult(referenceValues,
-                referenceTypeForReferencingColumns));
-    }
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/data/{refType}/csv", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -937,25 +792,6 @@ public class OreSiResources {
         return okResponse(allDataNames);
     }
 
-    /**
-     * Liste toutes les valeurs possibles pour un type de referenciel
-     *
-     * @param nameOrId           l'id ou le nom de l'application
-     * @param additionalFileName le type du referenciel
-     * @return un tableau de chaine
-     */
-    private ResponseEntity<GetAdditionalFilesResult> listAdditionalFilesNames(
-            final String nameOrId,
-            final String additionalFileName,
-            AdditionalFilesInfos additionalFilesInfos) {
-        if (additionalFilesInfos == null) {
-            additionalFilesInfos = new AdditionalFilesInfos();
-        }
-        additionalFilesInfos.setFiletype(additionalFilesInfos.getFiletype() == null ? additionalFileName : additionalFilesInfos.getFiletype());
-        final GetAdditionalFilesResult list = findAdditionalFileUseCase.execute(nameOrId, additionalFilesInfos);
-        return okResponse(list);
-    }
-
     @GetMapping(value = "/applications/{nameOrId}/additionalFiles", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     @Operation(description = "Get a additionalFiles with their description using search params", summary = "Returns a zip containing additional files and their description")
     public ResponseEntity<StreamingResponseBody> getAdditionalFilesNamesZip(
@@ -1046,27 +882,6 @@ public class OreSiResources {
                 .body(streamResponseBody);
     }
 
-    private ResponseEntity<String> removeAdditionalFiles(
-            final String nameOrId,
-            final AdditionalFilesInfos additionalFilesInfos) throws
-            BadAdditionalFileParamsSearchException {
-        final List<UUID> deletedFiles = deleteAdditionalFilesUseCase.execute(nameOrId, additionalFilesInfos);
-        if (deletedFiles != null && !deletedFiles.isEmpty()) {
-            return okResponse(deletedFiles.stream().map(UUID::toString).collect(Collectors.joining(LIST_DELIMITER)));
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    private ResponseEntity<UUID> createAdditionalFile(final String nameOrId,
-                                                       final String additionalFileName,
-                                                       final MultipartFile file,
-                                                       final CreateAdditionalFileRequest createAdditionalFileRequest) {
-        final UUID fileUUID = createOrUpdateAdditionalFileUseCase.execute(createAdditionalFileRequest, additionalFileName, nameOrId, file);
-        return okResponse(fileUUID);
-
-
-    }
 
     /**
      * export as JSON
@@ -1356,46 +1171,8 @@ public class OreSiResources {
         }
     }
 
-    private static void removeRepository(Path finalTempZipDirectory) {
-        if (Files.exists(finalTempZipDirectory)) {
-            try (Stream<Path> walk = Files.walk(finalTempZipDirectory)) {
-                walk.sorted(Comparator.reverseOrder())
-                        .forEach(path -> {
-                            try {
-                                Files.delete(path);
-                            } catch (IOException e) {
-                                log.error(IO_DELETE_ERROR, e);
-                            }
-                        });
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-        }
-    }
 
 
-    private void addErrorFileToZip(Path zipDirectoryPath, Exception e) throws IOException {
-        Path errorFilePath = zipDirectoryPath.resolve(FILE_ERROR);
-
-        try (BufferedWriter writer = Files.newBufferedWriter(errorFilePath, StandardCharsets.UTF_8)) {
-            String errorMessage = switch (OreSiResources.getDefaultLocale().getLanguage()) {
-                case FR -> IO_UPOAD_ERROR_FR;
-                case EN -> IO_UPOAD_ERROR_EN;
-                default -> IO_UPOAD_ERROR_EN;
-            };
-            writer.write(errorMessage);
-            writer.newLine();
-            writer.write(e.getMessage());
-            writer.newLine();
-
-            // Écrire la stack trace
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
-            writer.write(sw.toString());
-        }
-    }
 
     private fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery buildDownloadDatasetQuery(
             DownloadDatasetQuery downloadDatasetQuery, final String applicationNameOrID, final String dataType, boolean loadExample) {
@@ -1423,37 +1200,6 @@ public class OreSiResources {
         }
     }
 
-    private ResponseEntity<?> getSynthesis(final String nameOrId,
-                                           final String dataType) {
-        try {
-            final Map<String, List<OreSiSynthesis>> synthesis = getSynthesisUseCase.execute(nameOrId, dataType);
-            final String uri = UriUtils.encodePath(String.format("/applications/%s/synthesis/%s", nameOrId, dataType), Charset.defaultCharset());
-            Map<String, List<SynthesisResult>> synthesisResults = synthesis.entrySet()
-                    .stream()
-                    .collect(Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    e -> e.getValue().stream().map(SynthesisResult::new).toList()
-                            )
-                    );
-            return ResponseEntity.created(URI.create(uri)).body(synthesisResults);
-        } catch (final InvalidDatasetContentException e) {
-            final List<CsvRowValidationCheckResult> errors = e.getErrors();
-            return badRequestResponse(errors);
-        }
-    }
-
-    private ResponseEntity<?> getSynthesis(final String nameOrId,
-                                           final String dataType,
-                                           final String variable) {
-        try {
-            final Map<String, List<OreSiSynthesis>> synthesis = getSynthesisWithVariableUseCase.execute(nameOrId, dataType, variable);
-            final String uri = UriUtils.encodePath(String.format("/applications/%s/synthesis/%s/%s", nameOrId, dataType, variable), Charset.defaultCharset());
-            return ResponseEntity.created(URI.create(uri)).body(synthesis);
-        } catch (final InvalidDatasetContentException e) {
-            final List<CsvRowValidationCheckResult> errors = e.getErrors();
-            return badRequestResponse(errors);
-        }
-    }
 
     private ResponseEntity<?> buidSynthesis(final String nameOrId,
                                             final String dataType,
@@ -1468,10 +1214,6 @@ public class OreSiResources {
         }
     }
 
-    private ResponseEntity<?> buidSynthesis(final String nameOrId,
-                                            final String dataType) {
-        return buidSynthesis(nameOrId, dataType, null);
-    }
     private StreamingResponseBody getStreamingResponseBody(Flux<ReactiveResult> reactiveResultFlux) {
         return outputStream -> {
             reactiveResultFlux
@@ -1488,12 +1230,13 @@ public class OreSiResources {
     }
 
     // --- Méthodes utilitaires pour factoriser les réponses HTTP ---
-    private <T> ResponseEntity<T> okResponse(T body) {
-        return ResponseEntity.ok(body);
-    }
 
     private ResponseEntity<Void> okResponse() {
         return ResponseEntity.ok().build();
+    }
+
+    private <T> ResponseEntity<T> okResponse(T body) {
+        return ResponseEntity.ok(body);
     }
 
     private ResponseEntity<Void> notFoundResponse() {

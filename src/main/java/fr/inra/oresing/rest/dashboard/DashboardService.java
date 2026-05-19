@@ -54,12 +54,15 @@ public class DashboardService {
 
     /**
      * Optional : PoolReloader peut etre absent en mode test sans cascade
-     * WorkflowPoolRegistry . Field injection volontaire car
-     * {@link lombok.RequiredArgsConstructor} generera un ctor obligatoire
-     * sur les final fields ; ici on veut required=false .
+     * WorkflowPoolRegistry . Setter injection car required=false incompatible
+     * avec {@link lombok.RequiredArgsConstructor} (ctor obligatoire sur les final fields).
      */
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
     private fr.inra.oresing.workflow.cascade.config.PoolReloader poolReloader;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setPoolReloader(fr.inra.oresing.workflow.cascade.config.PoolReloader poolReloader) {
+        this.poolReloader = poolReloader;
+    }
     private final fr.inra.oresing.monitoring.session.UserSessionRegistry sessionRegistry;
     private final fr.inra.oresing.monitoring.session.UserSessionLogRepository sessionLogRepository;
     private final fr.inra.oresing.monitoring.session.UserSessionLogWriter sessionLogWriter;
@@ -527,15 +530,9 @@ public class DashboardService {
         Instant rollbackStart = phase != null ? phase.rollbackStartedAt() : null;
         Instant rollbackEnd = phase != null ? phase.rollbackFinishedAt() : null;
 
-        long cascadeDur = cascadeStart == null ? 0L
-                : Duration.between(cascadeStart,
-                        cascadeEnd != null ? cascadeEnd : now).toMillis();
-        long finalizeDur = finalizeStart == null ? 0L
-                : Duration.between(finalizeStart,
-                        finalizeEnd != null ? finalizeEnd : now).toMillis();
-        long rollbackDur = rollbackStart == null ? 0L
-                : Duration.between(rollbackStart,
-                        rollbackEnd != null ? rollbackEnd : now).toMillis();
+        long cascadeDur = durationMs(cascadeStart, cascadeEnd, now);
+        long finalizeDur = durationMs(finalizeStart, finalizeEnd, now);
+        long rollbackDur = durationMs(rollbackStart, rollbackEnd, now);
 
         long cascadeTput = cascadeDur > 0
                 ? (snap.recordsProcessed() * 1000L / cascadeDur) : 0L;
@@ -548,18 +545,6 @@ public class DashboardService {
         // Compteurs in-memory ( pas de SQL count par poll ) maintenus
         // par WorkflowActiveRegistry sur cascade events sink chunk written .
         //
-        // Strategy-specific :
-        //   DIRECT_COPY : sink emet onSinkChunkWritten avec recordsWritten ;
-        //                 le compteur registry.stagingRows reflete les
-        //                 rows reellement ecrites en staging DB . On NE
-        //                 fallback PAS sur recordsProcessed ( ca refleterait
-        //                 transform output , pas sink output -> Phase A bar
-        //                 avancerait avant que sink ait ecrit quoi que ce
-        //                 soit -> incoherence avec la table workers SINK ) .
-        //   MERGE_FILE  : sink filesystem inline , cascade n'emet pas
-        //                 d'events sink chunk -> registry.stagingRows reste
-        //                 a 0 . On fallback sur snap.recordsProcessed pour
-        //                 afficher quand meme une progression .
         long stagingRowsWritten;
         boolean isDirectCopy = strategy != null && "DIRECT_COPY".equals(strategy.sinkStrategy());
         if (isDirectCopy) {
@@ -673,6 +658,11 @@ public class DashboardService {
         }
         return new DashboardWorkflowDTO.Detail(
                 summary, rs.getString("fatal_error"), errors, metadata);
+    }
+
+    private static long durationMs(Instant start, Instant end, Instant now) {
+        if (start == null) return 0L;
+        return Duration.between(start, end != null ? end : now).toMillis();
     }
 
     private static java.time.Instant toInstant(Timestamp t) {

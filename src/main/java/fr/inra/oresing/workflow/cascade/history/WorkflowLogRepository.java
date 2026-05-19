@@ -71,8 +71,7 @@ public class WorkflowLogRepository {
         if (entries == null || entries.isEmpty()) {
             return 0;
         }
-        int[][] results = jdbcTemplate.batchUpdate(INSERT_SQL, entries, entries.size(),
-                (PreparedStatement ps, WorkflowLogEntry e) -> bindEntry(ps, e));
+        int[][] results = jdbcTemplate.batchUpdate(INSERT_SQL, entries, entries.size(), this::bindEntry);
         int inserted = 0;
         for (int[] batch : results) {
             for (int r : batch) {

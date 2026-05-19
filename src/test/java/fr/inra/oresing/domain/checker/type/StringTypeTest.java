@@ -43,7 +43,6 @@ class StringTypeTest {
     @Test
     @DisplayName("serialize(gen) avec valeur null → writeNull")
     void serializeGenNullValue() throws IOException {
-        StringType st = new StringType(null);
         // valeur par défaut = "" ; forcer null par reflection-free hack :
         // on utilise getStringTypeFromStringValue("") pour avoir un StringType valide
         // puis on teste serialize via un ByteArrayOutputStream
@@ -88,10 +87,10 @@ class StringTypeTest {
         gen.writeEndObject();
         gen.close();
         String json = baos.toString();
-        assertThat(json).contains("myKey");
-        // Jackson échappe les caractères de contrôle dans la sortie JSON
-        // (ex: newline → la séquence JSON \n, tab → \t, etc.)
-        assertThat(json).isNotEmpty();
+        assertThat(json).contains("myKey")
+                // Jackson échappe les caractères de contrôle dans la sortie JSON
+                // (ex: newline → la séquence JSON \n, tab → \t, etc.)
+                .isNotEmpty();
     }
 
     @Test
@@ -186,7 +185,7 @@ class StringTypeTest {
     void hashCodeConsistency() {
         StringType a = StringType.getStringTypeFromStringValue("z");
         StringType b = StringType.getStringTypeFromStringValue("z");
-        assertThat(a.hashCode()).isEqualTo(b.hashCode());
+        assertThat(a).hasSameHashCodeAs(b);
     }
 
     @Test
@@ -214,7 +213,7 @@ class StringTypeTest {
         ObjectMapper mapper = new ObjectMapper();
         com.fasterxml.jackson.databind.node.ArrayNode arr = mapper.createArrayNode();
         st.serializeAddArray(arr);
-        assertThat(arr.size()).isEqualTo(1);
+        assertThat(arr).hasSize(1);
         assertThat(arr.get(0).asText()).isEqualTo("item");
     }
 
@@ -235,7 +234,7 @@ class StringTypeTest {
     @DisplayName("toString() retourne la valeur")
     void toStringReturnsValue() {
         StringType st = StringType.getStringTypeFromStringValue("abc");
-        assertThat(st.toString()).isEqualTo("abc");
+        assertThat(st).hasToString("abc");
     }
 
     // ─────────────────────────────────────────────────────────────────

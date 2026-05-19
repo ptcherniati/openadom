@@ -15,7 +15,7 @@ public interface DomainUserDetails {
     /**
      * @return les autorités accordées à cet utilisateur
      */
-    default Collection<? extends DomainGrantedAuthority> getAuthorities() {
+    default Collection<DomainGrantedAuthority> getAuthorities() {
         return List.of();
     }
 

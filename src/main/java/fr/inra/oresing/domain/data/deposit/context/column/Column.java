@@ -291,6 +291,7 @@ public abstract class Column implements Comparable<Column> {
         return presenceConstraint.isExpected();
     }
 
+    @SuppressWarnings("java:S1452")
     public abstract Optional<DataColumnValue<?, ?>> computeValue(DataDatum referenceDatum);
 
     @Override

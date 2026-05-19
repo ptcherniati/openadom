@@ -226,8 +226,8 @@ class RightsRequestNotificationServiceTest {
         service.notifyRequestSubmitted(application, UUID.randomUUID(), requester, "ok", Locale.FRENCH);
 
         // Vérifie que les 2 lookups portent bien sur les rôles de CETTE application
-        verify(userRepository).findUsersGrantedRole(eq(adminRoleName()));
-        verify(userRepository).findUsersGrantedRole(eq(userManagerRoleName()));
+        verify(userRepository).findUsersGrantedRole(adminRoleName());
+        verify(userRepository).findUsersGrantedRole(userManagerRoleName());
         // Et qu'aucun autre rôle n'a été interrogé
         verify(userRepository, times(2)).findUsersGrantedRole(any());
     }

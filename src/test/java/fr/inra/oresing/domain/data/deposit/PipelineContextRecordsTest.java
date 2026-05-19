@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.data.deposit;
 
-import com.google.common.collect.ImmutableList;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.data.DataDatum;
 import fr.inra.oresing.domain.data.LinkedLines;
@@ -13,6 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,14 +39,14 @@ class PipelineContextRecordsTest {
 
         Ltree naturalKey = Ltree.fromSqlWithoutCheck("root");
         Ltree hierarchicalKey = Ltree.fromSqlWithoutCheck("root");
-        KeysAndReferenceDatumAfterChecking record = new KeysAndReferenceDatumAfterChecking(
+        KeysAndReferenceDatumAfterChecking entry = new KeysAndReferenceDatumAfterChecking(
                 refDatum, naturalKey, hierarchicalKey, "col");
 
-        assertThat(record.getLineNumber()).isEqualTo(42L);
-        assertThat(record.referenceDatumAfterChecking()).isSameAs(refDatum);
-        assertThat(record.naturalKey()).isEqualTo(naturalKey);
-        assertThat(record.hierarchicalKey()).isEqualTo(hierarchicalKey);
-        assertThat(record.patternColumnName()).isEqualTo("col");
+        assertThat(entry.getLineNumber()).isEqualTo(42L);
+        assertThat(entry.referenceDatumAfterChecking()).isSameAs(refDatum);
+        assertThat(entry.naturalKey()).isEqualTo(naturalKey);
+        assertThat(entry.hierarchicalKey()).isEqualTo(hierarchicalKey);
+        assertThat(entry.patternColumnName()).isEqualTo("col");
     }
 
     @Test
@@ -67,13 +67,13 @@ class PipelineContextRecordsTest {
     void referenceDatumAfterCheckingDirectConstruction() {
         DataDatum before = new DataDatum();
         DataDatum after = new DataDatum();
-        ReferenceDatumAfterChecking record = new ReferenceDatumAfterChecking(
-                99L, "col", before, after, Map.of(), ImmutableList.of());
+        ReferenceDatumAfterChecking entry = new ReferenceDatumAfterChecking(
+                99L, "col", before, after, Map.of(), List.of());
 
-        assertThat(record.lineNumber()).isEqualTo(99L);
-        assertThat(record.patternColumnName()).isEqualTo("col");
-        assertThat(record.referenceDatumBeforeChecking()).isSameAs(before);
-        assertThat(record.referenceDatumAfterChecking()).isSameAs(after);
-        assertThat(record.errors()).isEmpty();
+        assertThat(entry.lineNumber()).isEqualTo(99L);
+        assertThat(entry.patternColumnName()).isEqualTo("col");
+        assertThat(entry.referenceDatumBeforeChecking()).isSameAs(before);
+        assertThat(entry.referenceDatumAfterChecking()).isSameAs(after);
+        assertThat(entry.errors()).isEmpty();
     }
 }

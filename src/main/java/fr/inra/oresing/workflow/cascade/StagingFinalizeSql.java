@@ -196,21 +196,29 @@ public final class StagingFinalizeSql {
                             + ") ON COMMIT DROP");
         }
 
-        String snapshotRefRefSql = "INSERT INTO refref_pending(referenceid, referencesby)"
-                + " SELECT DISTINCT (s.data->>'" + idJsonPath + "')::uuid AS referenceid,"
-                + "                 referencesby::uuid                  AS referencesby"
-                + " FROM " + stagingTable + " s, JSON_TABLE("
-                + "     s.data, '$.refslinkedto.*.*.*.uuids' COLUMNS ("
-                + "         NESTED PATH '$[*]' COLUMNS(referencesby TEXT PATH '$')"
-                + "     )"
-                + " ) as joins"
-                + (filtered ? " WHERE s.correlation_id = ?" : "");
         if (filtered) {
+            String snapshotRefRefSql = "INSERT INTO refref_pending(referenceid, referencesby)"
+                    + " SELECT DISTINCT (s.data->>'" + idJsonPath + "')::uuid AS referenceid,"
+                    + "                 referencesby::uuid                  AS referencesby"
+                    + " FROM " + stagingTable + " s, JSON_TABLE("
+                    + "     s.data, '$.refslinkedto.*.*.*.uuids' COLUMNS ("
+                    + "         NESTED PATH '$[*]' COLUMNS(referencesby TEXT PATH '$')"
+                    + "     )"
+                    + " ) as joins"
+                    + " WHERE s.correlation_id = ?";
             try (PreparedStatement ps = connection.prepareStatement(snapshotRefRefSql)) {
                 ps.setObject(1, UUID.fromString(correlationId));
                 ps.executeUpdate();
             }
         } else {
+            String snapshotRefRefSql = "INSERT INTO refref_pending(referenceid, referencesby)"
+                    + " SELECT DISTINCT (s.data->>'" + idJsonPath + "')::uuid AS referenceid,"
+                    + "                 referencesby::uuid                  AS referencesby"
+                    + " FROM " + stagingTable + " s, JSON_TABLE("
+                    + "     s.data, '$.refslinkedto.*.*.*.uuids' COLUMNS ("
+                    + "         NESTED PATH '$[*]' COLUMNS(referencesby TEXT PATH '$')"
+                    + "     )"
+                    + " ) as joins";
             try (Statement stmt = connection.createStatement()) {
                 stmt.executeUpdate(snapshotRefRefSql);
             }
@@ -218,8 +226,8 @@ public final class StagingFinalizeSql {
 
         String deleteRefRefSql = "DELETE FROM " + schemaName + ".reference_reference"
                 + " WHERE referenceid IN ( SELECT referenceid FROM refref_pending )";
-        try (PreparedStatement ps = connection.prepareStatement(deleteRefRefSql)) {
-            ps.executeUpdate();
+        try (Statement stmt = connection.createStatement()) {
+            stmt.executeUpdate(deleteRefRefSql);
         }
 
         // 3) Batched UPSERT into target table : DELETE batch from staging RETURNING data ,
@@ -272,25 +280,26 @@ public final class StagingFinalizeSql {
         // otherwise ( PER_CONNECTION_TEMP , no parameter needed ) .
         // This avoids the Sonar S4174 "PreparedStatement has no parameters" warning
         // while keeping the loop body identical between both paths .
-        final Statement batchStmt;
         final SqlBatchExecutor batchExecutor;
-        if (filtered) {
-            PreparedStatement ps = connection.prepareStatement(batchInsertSql);
-            if (UPSERT_BATCH_TIMEOUT_SECONDS > 0) {
-                ps.setQueryTimeout(UPSERT_BATCH_TIMEOUT_SECONDS);
+        try (Statement batchStmt = filtered
+                ? connection.prepareStatement(batchInsertSql)
+                : connection.createStatement()) {
+            if (filtered) {
+                PreparedStatement ps = (PreparedStatement) batchStmt;
+                if (UPSERT_BATCH_TIMEOUT_SECONDS > 0) {
+                    ps.setQueryTimeout(UPSERT_BATCH_TIMEOUT_SECONDS);
+                }
+                UUID corrUuid = UUID.fromString(correlationId);
+                batchExecutor = () -> {
+                    ps.setObject(1, corrUuid);
+                    return ps.executeUpdate();
+                };
+            } else {
+                if (UPSERT_BATCH_TIMEOUT_SECONDS > 0) {
+                    batchStmt.setQueryTimeout(UPSERT_BATCH_TIMEOUT_SECONDS);
+                }
+                batchExecutor = () -> batchStmt.executeUpdate(batchInsertSql);
             }
-            UUID corrUuid = UUID.fromString(correlationId);
-            batchExecutor = () -> { ps.setObject(1, corrUuid); return ps.executeUpdate(); };
-            batchStmt = ps;
-        } else {
-            Statement stmt = connection.createStatement();
-            if (UPSERT_BATCH_TIMEOUT_SECONDS > 0) {
-                stmt.setQueryTimeout(UPSERT_BATCH_TIMEOUT_SECONDS);
-            }
-            batchExecutor = () -> stmt.executeUpdate(batchInsertSql);
-            batchStmt = stmt;
-        }
-        try (Statement ignored = batchStmt) {
             int batchNum = 0;
             long totalAffected = 0L;
             while (stagingPrev > 0) {
@@ -300,9 +309,8 @@ public final class StagingFinalizeSql {
                 if (affected > 0) {
                     try {
                         onBatchUpserted.accept((long) affected);
-                    } catch (RuntimeException _) {
-                        /* best effort : un consommateur fautif ne doit pas
-                           casser le UPSERT en cours */
+                    } catch (RuntimeException ignored) {
+                        log.debug("onBatchUpserted callback failed (best-effort, ignored): {}", ignored.getMessage());
                     }
                 }
 
@@ -335,8 +343,8 @@ public final class StagingFinalizeSql {
         // UUIDs existent dans referencevalue ( bulk UPSERT vient de finir ) .
         String insertRefRefSql = "INSERT INTO " + schemaName + ".reference_reference(referenceid, referencesby)"
                 + " SELECT referenceid, referencesby FROM refref_pending";
-        try (PreparedStatement ps = connection.prepareStatement(insertRefRefSql)) {
-            int refrefInserted = ps.executeUpdate();
+        try (Statement stmt = connection.createStatement()) {
+            int refrefInserted = stmt.executeUpdate(insertRefRefSql);
             log.info("StagingFinalize : reference_reference rebuilt with {} link(s)", refrefInserted);
         }
     }
@@ -352,9 +360,8 @@ public final class StagingFinalizeSql {
      */
     private static long countStagingRows(Connection conn, String stagingTable,
                                          String correlationId, boolean filtered) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM " + stagingTable
-                + (filtered ? " WHERE correlation_id = ?" : "");
         if (filtered) {
+            String sql = "SELECT COUNT(*) FROM " + stagingTable + " WHERE correlation_id = ?";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setObject(1, UUID.fromString(correlationId));
                 try (ResultSet rs = ps.executeQuery()) {
@@ -362,6 +369,7 @@ public final class StagingFinalizeSql {
                 }
             }
         } else {
+            String sql = "SELECT COUNT(*) FROM " + stagingTable;
             try (Statement stmt = conn.createStatement();
                  ResultSet rs = stmt.executeQuery(sql)) {
                 return rs.next() ? rs.getLong(1) : 0L;

@@ -115,22 +115,22 @@ public final class CascadeSinkFactory {
                     + "cannot build StagingPostgresSink");
         }
         // FK-violation fix : cascade ouvre sa propre Connection via
-        // {@code dataSource.getConnection()} . Sans wrapping , cette
+        // dataSource.getConnection() . Sans wrapping , cette
         // connection ne fait PAS partie de la transaction Spring
-        // {@code @Transactional} courante . Resultat : les rows
-        // {@code binaryfile} fraichement INSERT-ees par
-        // {@code StoreFile.loadOrCreateFile} ne sont pas visibles cote
+        // @Transactional courante . Resultat : les rows
+        // binaryfile fraichement INSERT-ees par
+        // StoreFile.loadOrCreateFile ne sont pas visibles cote
         // cascade ( pas encore commit-ees ) , et le UPSERT vers
-        // {@code referencevalue} echoue avec la FK
-        // {@code referencevalue_binaryfile_fkey} .
+        // referencevalue echoue avec la FK
+        // referencevalue_binaryfile_fkey .
         //
-        // {@link TransactionAwareDataSourceProxy} renvoie une connection
+        // TransactionAwareDataSourceProxy renvoie une connection
         // qui :
         //   - delegue a la connection bound a la tx Spring courante si
         //     une tx est active ,
-        //   - ignore les appels {@code commit / rollback / setAutoCommit}
+        //   - ignore les appels commit / rollback / setAutoCommit
         //     ( Spring les gere a l'exit du @Transactional ) ,
-        //   - ignore le {@code close} ( la connection retourne au pool a
+        //   - ignore le close ( la connection retourne au pool a
         //     la fin de la tx ) .
         //
         // Net effet : cascade rejoint la tx Spring de createData /

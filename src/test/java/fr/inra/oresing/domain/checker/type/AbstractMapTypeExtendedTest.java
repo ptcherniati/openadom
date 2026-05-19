@@ -230,7 +230,7 @@ class AbstractMapTypeExtendedTest {
 
         ArrayNode arrayNode = MAPPER.createArrayNode();
         mt.serializeAddArray(arrayNode);
-        assertThat(arrayNode.size()).isEqualTo(1);
+        assertThat(arrayNode).hasSize(1);
     }
 
     // ─────────────────────────────────────────────────────────────────

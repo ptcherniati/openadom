@@ -83,7 +83,7 @@ public class DataService {
     @Setter
     ServiceContainer serviceContainer;
     private final OreSiRepository repo;
-    private final JsonRowMapper jsonRowMapper;
+    private final JsonRowMapper<?> jsonRowMapper;
     private final OreSiRepository repository;
     private final FileRepository fileRepository;
     private final PlatformTransactionManager transactionManager;
@@ -98,7 +98,7 @@ public class DataService {
 
     public DataService(
             OreSiRepository repo,
-            JsonRowMapper jsonRowMapper,
+            JsonRowMapper<?> jsonRowMapper,
             OreSiRepository repository,
             FileRepository fileRepository,
             ServiceContainer serviceContainer,
@@ -211,7 +211,7 @@ public class DataService {
                             indexedByHierarchicalKeyReferenceValues.put(referenceValue.getNaturalKey(), referenceValue);
                             parentKeyColumn.ifPresent(presentParentKeyColumn -> {
                                 DataDatum referenceDatum = referenceValue.getRefValues();
-                                DataColumnValue referenceColumnValue = referenceDatum.get(presentParentKeyColumn);
+                                DataColumnValue<?, ?> referenceColumnValue = referenceDatum.get(presentParentKeyColumn);
                                 Preconditions.checkState(referenceColumnValue instanceof DataColumnSingleValue);
                                 String parentHierarchicalKeyAsString = ((DataColumnSingleValue) referenceColumnValue).getValue().toString();
                                 if (!parentHierarchicalKeyAsString.isEmpty()) {
@@ -233,7 +233,7 @@ public class DataService {
         final DataRepository referenceValueRepository = getReferenceValueRepository(application);
         final Configuration configuration = application.getConfiguration();
         final CheckerFactory checkerFactory = new CheckerFactory(referenceValueRepository);
-        Function<String, List<DataValue>> getDatavaluesByReference = reference -> referenceValueRepository.findAllByReferenceType(reference);
+        Function<String, List<DataValue>> getDatavaluesByReference = referenceValueRepository::findAllByReferenceType;
         PublishContext.PublishContextBuilder publishContextBuilder = new PublishContext.PublishContextBuilder(application, dataName, fileOrUUID, getDatavaluesByReference);
         final ImmutableSet<LineChecker<?>> lineCheckers = checkerFactory.getCheckers(application, dataName,
                 publishContextBuilder);
@@ -756,8 +756,6 @@ private PlatformTransactionManager transactionManager;
             }
             case BundleReport bundleReport -> {
                 try {
-                    Locale locale = bundleReport.locale();
-
                     String applicationName = bundleReport.application().getName();
 
                     String subject = bundleReport.title();

@@ -72,7 +72,7 @@ class StagingOrphanSweeperTest {
 
         int dropped = makeSweeper(jdbc, reg).sweepPerWorkflowTables();
 
-        assertThat(dropped).isEqualTo(0);
+        assertThat(dropped).isZero();
         verify(jdbc, never()).execute(anyString());
     }
 
@@ -92,7 +92,7 @@ class StagingOrphanSweeperTest {
 
         int dropped = makeSweeper(jdbc, reg).sweepPerWorkflowTables();
 
-        assertThat(dropped).isEqualTo(0);
+        assertThat(dropped).isZero();
         verify(jdbc, never()).execute(anyString());
     }
 
@@ -126,7 +126,7 @@ class StagingOrphanSweeperTest {
 
         int dropped = makeSweeper(jdbc, reg).sweepPerWorkflowTables();
 
-        assertThat(dropped).isEqualTo(0); // DROP failed, not counted
+        assertThat(dropped).isZero(); // DROP failed, not counted
     }
 
     @Test
@@ -139,7 +139,7 @@ class StagingOrphanSweeperTest {
 
         int dropped = makeSweeper(jdbc, reg).sweepPerWorkflowTables();
 
-        assertThat(dropped).isEqualTo(0);
+        assertThat(dropped).isZero();
         verify(jdbc, never()).execute(anyString());
     }
 
@@ -156,7 +156,7 @@ class StagingOrphanSweeperTest {
 
         int deleted = makeSweeper(jdbc, reg).sweepSharedUnlogged();
 
-        assertThat(deleted).isEqualTo(0);
+        assertThat(deleted).isZero();
         verify(jdbc, never()).update(anyString(), any(Object[].class));
     }
 
@@ -182,7 +182,7 @@ class StagingOrphanSweeperTest {
 
         int deleted = makeSweeper(jdbc, reg).sweepSharedUnlogged();
 
-        assertThat(deleted).isEqualTo(0);
+        assertThat(deleted).isZero();
     }
 
     // ───────────────────────────────────────────────────────────────────────────

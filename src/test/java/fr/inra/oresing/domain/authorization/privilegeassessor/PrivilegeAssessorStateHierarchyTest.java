@@ -39,8 +39,7 @@ class PrivilegeAssessorStateHierarchyTest {
     @DisplayName("PrivilegeApplicationDomain implémente la hiérarchie application domain")
     void privilegeApplicationDomainHierarchy() {
         assertThat(PrivilegeAssessorStateApplicationDomain.class)
-                .isAssignableTo(PrivilegeAssessorStateDomain.class);
-        assertThat(PrivilegeAssessorStateApplicationDomain.class)
+                .isAssignableTo(PrivilegeAssessorStateDomain.class)
                 .isAssignableTo(PrivilegeAssessorState.class);
     }
 
