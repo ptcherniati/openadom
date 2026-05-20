@@ -1736,13 +1736,19 @@ private PlatformTransactionManager transactionManager;
         }
 
         // 2. Pour chaque colonne filtrable opt-in :
-        //    - __FILTER_LIST__  -> valeurs distinctes complètes ( DISTINCT )
-        //    - __FILTER_TEXT__  -> uniquement le drapeau hasEmpty ( EXISTS ) ,
-        //      values reste vide. Permet au front de conditionner le bouton
-        //      "(vide)" sans payer le coût d'un DISTINCT inutile.
+        //    - __FILTER_LIST__   -> valeurs distinctes complètes ( DISTINCT )
+        //    - __FILTER_TEXT__   -> uniquement le drapeau hasEmpty ( EXISTS )
+        //    - ReferenceChecker  -> drapeau hasEmpty seulement ( les options
+        //      viennent de la table dimension via FilterList ci-dessus ;
+        //      hasEmpty conditionne le bouton "+ (vide)" cf. §5.7 de
+        //      FILTER_TEXT_LIST.md ) . Pour DRY , on réutilise exactement
+        //      la même méthode `getColumnHasEmpty` que pour FILTER_TEXT :
+        //      la requête EXISTS est agnostique au type de la colonne
+        //      ( elle teste null dans le JSON , indépendamment du checker ) .
         application.findData(refType).ifPresent(dataDescription ->
                 dataDescription.componentDescriptions().values().stream()
-                        .filter(c -> c.isFilterableAsList() || c.isFilterableAsText())
+                        .filter(c -> c.isFilterableAsList() || c.isFilterableAsText()
+                                || c.findReferenceCheckerType().isPresent())
                         .forEach(component -> {
                             try {
                                 final var multiplicity = component.checker() != null
@@ -1752,6 +1758,10 @@ private PlatformTransactionManager transactionManager;
                                     result.add(dataRepo.getColumnDistinctValues(
                                             refType, component.componentKey(), multiplicity));
                                 } else {
+                                    // Couvre à la fois FILTER_TEXT et ReferenceChecker :
+                                    // seul `hasEmpty` est nécessaire ; `values` reste
+                                    // vide ( pour les FK les options viennent déjà
+                                    // de la FilterList du refType lié ) .
                                     result.add(dataRepo.getColumnHasEmpty(
                                             refType, component.componentKey(), multiplicity));
                                 }
