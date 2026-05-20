@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Tests unitaires purs des types {@code domain.sql} — aucune dépendance Spring ni base.
@@ -89,9 +90,11 @@ class DomainSqlTypesTest {
         }
 
         @Test
-        @DisplayName("Chaîne vide — retournée telle quelle (pas de guillemets)")
+        @DisplayName("Chaîne vide — lève IllegalArgumentException (identifiant SQL invalide)")
         void emptyString() {
-            assertThat(WithSqlIdentifier.escapeSqlIdentifier("")).isEqualTo("");
+            assertThatThrownBy(() -> WithSqlIdentifier.escapeSqlIdentifier(""))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage(WithSqlIdentifier.ERR_BLANK);
         }
 
         @Test
