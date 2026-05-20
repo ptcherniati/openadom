@@ -115,6 +115,26 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
 
+    /**
+     * Rate limit dépassé sur l'endpoint {@code GET /filters} . Map vers
+     * HTTP 429 Too Many Requests avec payload structuré pour permettre
+     * au frontend d'afficher un message clair " trop de requêtes ,
+     * veuillez patienter " plutôt qu'une erreur générique .
+     */
+    @ExceptionHandler(fr.inra.oresing.rest.data.FilterListRateLimiter.FilterListRateLimitExceededException.class)
+    public ResponseEntity<Map<String, Object>> handle(
+            final fr.inra.oresing.rest.data.FilterListRateLimiter.FilterListRateLimitExceededException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of(
+                "code",          "FILTER_LIST_RATE_LIMIT_EXCEEDED",
+                "message",       ex.getMessage(),
+                "userId",        String.valueOf(ex.getUserId()),
+                "currentCount",  ex.getCurrentCount(),
+                "maxAllowed",    ex.getMaxAllowed(),
+                "windowSeconds", ex.getWindowSeconds(),
+                "timestamp",     Instant.now().toString()));
+    }
+
+
     @ExceptionHandler(AuthenticationFailure.class)
     public ResponseEntity<String> handle(final AuthenticationFailure eee) {
         return switch (eee.getMessage()) {

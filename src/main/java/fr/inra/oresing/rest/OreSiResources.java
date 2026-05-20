@@ -230,6 +230,15 @@ public class OreSiResources {
     private final OpenadomMetrics metrics;
     private final WorkflowLogWriter workflowLogWriter;
     private final fr.inra.oresing.workflow.extraction.ExtractionLifecycle extractionLifecycle;
+
+    /**
+     * Rate limiter sliding-window pour /filters . Injecté en field
+     * @Autowired pour éviter de toucher le constructor géant ( ~80
+     * dépendances ) . Le service est singleton stateless ( hormis son
+     * {@code ConcurrentHashMap} interne ) , l'injection field est sûre .
+     */
+    @org.springframework.beans.factory.annotation.Autowired
+    private fr.inra.oresing.rest.data.FilterListRateLimiter filterListRateLimiter;
     Executor fastExecutor;
     Executor normalExecutor;
     Executor heavyExecutor;
@@ -1264,6 +1273,18 @@ public class OreSiResources {
             @PathVariable("dataType") final String dataName,
             @RequestParam(defaultValue = "false") boolean refresh,
             @RequestHeader(value = HttpHeaders.IF_NONE_MATCH, required = false) final String ifNoneMatch) {
+        // Rate limit avant tout travail : empêche un user spammeur de
+        // saturer le pool Hikari ou le CPU backend en multipliant les
+        // appels /filters avec refType différents ( singleflight ne
+        // dédupe que les requêtes pour la MÊME clé ; un spam de N
+        // refType différents = N computes parallèles ) . Throw 429 si
+        // quota dépassé , identifié par l'userId courant ( null en mode
+        // anonymous = pas de rate-limit appliqué ) .
+        String currentUserId = serviceContainer.authenticationService().getCurrentUserRoles() != null
+                ? String.valueOf(serviceContainer.authenticationService().getCurrentUserRoles().userId())
+                : null;
+        filterListRateLimiter.acquireOrThrow(currentUserId);
+
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
         // Si refresh=true , on invalide le cache pour forcer un rechargement depuis la base.
         // L'ETag change après recompute car le payload a changé , donc 304 sera systématiquement
