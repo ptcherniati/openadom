@@ -131,7 +131,8 @@ class CacheAdminResourcesUnitTest {
         Map<String, Object> filterList = (Map<String, Object>) body.get("filterList");
         assertEquals(true, filterList.get("enabled"));
         assertEquals(50, filterList.get("maxEntries"));
-        assertEquals(0, filterList.get("ttlMinutes"));
+        // ttlMinutes harmonise en long depuis le refacto cacheEntryStats
+        assertEquals(0L, filterList.get("ttlMinutes"));
         assertEquals(12, filterList.get("entries"));
 
         @SuppressWarnings("unchecked")

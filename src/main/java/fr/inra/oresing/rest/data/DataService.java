@@ -1480,6 +1480,24 @@ private PlatformTransactionManager transactionManager;
     }
 
     /**
+     * Observabilité : timestamp du dernier remplissage du cache filterList ,
+     * ou {@code null} si jamais ecrit / invalidateAll . Affiche par l'UI
+     * admin pour la colonne "Derniere mise a jour" .
+     */
+    public java.time.Instant getFilterListCacheLastWriteAt() {
+        return filterListCache == null ? null : filterListCache.lastWriteAt();
+    }
+
+    /**
+     * Observabilité : timestamp du dernier remplissage du cache
+     * checkedFormatComponents , ou {@code null} si jamais ecrit /
+     * invalidateAll .
+     */
+    public java.time.Instant getCheckedFormatComponentsCacheLastWriteAt() {
+        return checkedFormatComponentsCache == null ? null : checkedFormatComponentsCache.lastWriteAt();
+    }
+
+    /**
      * Observabilité : taille mémoire approximative du cache filterList
      * via sérialisation Jackson . À appeler uniquement depuis un
      * endpoint admin ( CacheSizeEstimator ) , pas en hot path .

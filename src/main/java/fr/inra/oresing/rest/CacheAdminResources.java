@@ -241,29 +241,47 @@ public class CacheAdminResources {
     public ResponseEntity<Map<String, Object>> cacheStats() {
         DataService dataService = serviceContainer.dataService();
         AuthorizationService authorizationService = serviceContainer.authorizationService();
-        return ResponseEntity.ok(Map.of(
-                "filterList", Map.of(
-                        "enabled", dataService.isFilterListCacheEnabled(),
-                        "maxEntries", dataService.getFilterListCacheMaxEntries(),
-                        "ttlMinutes", 0,
-                        "entries", dataService.getFilterListCacheSize()
-                ),
-                "authorizationScopes", Map.of(
-                        "enabled", authorizationService.isAuthorizationScopesCacheEnabled(),
-                        "maxEntries", authorizationService.getAuthorizationScopesCacheMaxEntries(),
-                        "ttlMinutes", authorizationService.getAuthorizationScopesCacheTtlMinutes(),
-                        "entries", authorizationService.getAuthorizationScopesCacheSize()
-                ),
-                "checkedFormatComponents", Map.of(
-                        "enabled", dataService.isCheckedFormatComponentsCacheEnabled(),
-                        "maxEntries", dataService.getCheckedFormatComponentsCacheMaxEntries(),
-                        "ttlMinutes", dataService.getCheckedFormatComponentsCacheTtlMinutes(),
-                        "entries", dataService.getCheckedFormatComponentsCacheSize()
-                ),
-                "frontEtagDefaults", Map.of(
-                        "maxEntries", dataService.getFrontEtagCacheMaxEntries(),
-                        "maxBytesMb", dataService.getFrontEtagCacheMaxBytesMb()
-                )
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("filterList", cacheEntryStats(
+                dataService.isFilterListCacheEnabled(),
+                dataService.getFilterListCacheMaxEntries(),
+                0,
+                dataService.getFilterListCacheSize(),
+                dataService.getFilterListCacheLastWriteAt()));
+        body.put("authorizationScopes", cacheEntryStats(
+                authorizationService.isAuthorizationScopesCacheEnabled(),
+                authorizationService.getAuthorizationScopesCacheMaxEntries(),
+                authorizationService.getAuthorizationScopesCacheTtlMinutes(),
+                authorizationService.getAuthorizationScopesCacheSize(),
+                authorizationService.getAuthorizationScopesCacheLastWriteAt()));
+        body.put("checkedFormatComponents", cacheEntryStats(
+                dataService.isCheckedFormatComponentsCacheEnabled(),
+                dataService.getCheckedFormatComponentsCacheMaxEntries(),
+                dataService.getCheckedFormatComponentsCacheTtlMinutes(),
+                dataService.getCheckedFormatComponentsCacheSize(),
+                dataService.getCheckedFormatComponentsCacheLastWriteAt()));
+        body.put("frontEtagDefaults", Map.of(
+                "maxEntries", dataService.getFrontEtagCacheMaxEntries(),
+                "maxBytesMb", dataService.getFrontEtagCacheMaxBytesMb()
         ));
+        return ResponseEntity.ok(body);
+    }
+
+    /**
+     * Builder homogene d'une entree stats avec le champ {@code lastUpdatedAt}
+     * ( ISO instant ou null si jamais ecrit ) . Centralise le mapping pour
+     * que tous les caches memoire exposent la meme forme dans la reponse
+     * JSON ( DRY ) .
+     */
+    private static Map<String, Object> cacheEntryStats(boolean enabled, int maxEntries,
+                                                       long ttlMinutes, int entries,
+                                                       java.time.Instant lastWriteAt) {
+        Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("enabled", enabled);
+        m.put("maxEntries", maxEntries);
+        m.put("ttlMinutes", ttlMinutes);
+        m.put("entries", entries);
+        m.put("lastUpdatedAt", lastWriteAt != null ? lastWriteAt.toString() : null);
+        return m;
     }
 }

@@ -583,6 +583,15 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
     }
 
     /**
+     * Observabilité : timestamp du dernier remplissage du cache scopes ,
+     * ou {@code null} si jamais ecrit / invalidateAll . Affiche par l'UI
+     * admin colonne "Derniere mise a jour" .
+     */
+    public java.time.Instant getAuthorizationScopesCacheLastWriteAt() {
+        return scopesCache == null ? null : scopesCache.lastWriteAt();
+    }
+
+    /**
      * Observabilité : taille mémoire approximative du cache scopes via
      * sérialisation Jackson . Appelée uniquement par CacheSizeEstimator
      * sur demande admin , pas en hot path .

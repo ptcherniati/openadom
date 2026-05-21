@@ -51,6 +51,13 @@ public class MemoryCache<K, V> {
     private volatile long ttlMinutes;
 
     /**
+     * Timestamp ( ms epoch ) du dernier {@link #put} ayant modifie le cache .
+     * {@code 0} = jamais ecrit depuis demarrage / invalidation totale .
+     * Sert a l'observabilite ( affiche "Derniere MAJ" dans l'UI admin ) .
+     */
+    private volatile long lastWriteAtMs = 0L;
+
+    /**
      * @param name        nom du cache , utilisé en log uniquement
      * @param maxEntries  capacité max ; >= 1
      * @param ttlMinutes  TTL en minutes ; {@code <= 0} = pas d'expiration auto
@@ -86,7 +93,19 @@ public class MemoryCache<K, V> {
                     .min(Comparator.comparingLong(e -> e.getValue().timestamp()))
                     .ifPresent(oldest -> map.remove(oldest.getKey()));
         }
-        map.put(key, new Entry<>(value, System.currentTimeMillis()));
+        long now = System.currentTimeMillis();
+        map.put(key, new Entry<>(value, now));
+        lastWriteAtMs = now;
+    }
+
+    /**
+     * Timestamp du dernier {@link #put} ayant modifie ce cache , ou
+     * {@code null} si jamais ecrit depuis demarrage / invalidateAll() .
+     * Affiche par l'UI admin pour indiquer "Derniere mise a jour" .
+     */
+    public java.time.Instant lastWriteAt() {
+        long t = lastWriteAtMs;
+        return t == 0L ? null : java.time.Instant.ofEpochMilli(t);
     }
 
     /** Retire une entrée par clé. */
@@ -111,6 +130,10 @@ public class MemoryCache<K, V> {
     public void invalidateAll() {
         int sizeBefore = map.size();
         map.clear();
+        // Reset le timestamp "Derniere MAJ" : un cache vide n'a plus de
+        // notion de "dernier remplissage" coherent ; remettre a 0 ferme le
+        // contrat de lastWriteAt() = "depuis demarrage / invalidation totale" .
+        lastWriteAtMs = 0L;
         if (sizeBefore > 0) log.info("MemoryCache[{}] : cache entier vidé ( {} entrées )", name, sizeBefore);
     }
 
