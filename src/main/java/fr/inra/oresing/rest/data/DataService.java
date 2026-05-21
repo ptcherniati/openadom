@@ -1626,21 +1626,24 @@ private PlatformTransactionManager transactionManager;
     private fr.inra.oresing.cache.MemoryCache<String, FilterListValue> filterListCache;
 
     /**
-     * Singleflight pattern : empêche le cache stampede sur cache miss
-     * concurrent . Lorsque N requêtes /filters arrivent en parallèle
-     * pour la même clé sur un cache froid ( boot backend , après
-     * refresh ) , seule la PREMIÈRE exécute le {@code computeFilterListEntries}
-     * coûteux ( EXISTS + DISTINCT par colonne FK + serialize JSON ;
-     * 1-5s typique ) . Les N-1 autres attendent la {@code CompletableFuture}
-     * déjà en cours et reçoivent le même résultat ( ~0ms en plus de
-     * l'attente ) . Économise N-1 requêtes SQL identiques + connexions
-     * Hikari simultanées sur la même clé .
+     * Singleflight pattern : empeche le cache stampede sur cache miss
+     * concurrent . Lorsque N requetes /filters arrivent en parallele
+     * pour la meme cle sur un cache froid ( boot backend , apres
+     * refresh ) , seule la PREMIERE execute le
+     * {@code computeFilterListEntries} couteux ( EXISTS + DISTINCT par
+     * colonne FK + serialize JSON ; 1-5s typique ) . Les N-1 autres
+     * attendent la Future deja en cours et recoivent le meme resultat
+     * ( ~0ms en plus de l'attente ) . Economise N-1 requetes SQL
+     * identiques + connexions Hikari simultanees sur la meme cle .
      *
-     * <p>L'entrée est retirée du map dès la fin du compute ( succès ou
-     * échec ) pour permettre le retry au prochain cache miss .
+     * <p>Implementation deleguee a {@link fr.inra.oresing.cache.SingleflightCache} ,
+     * helper generique unit-teste isolement . Slot cleanup post-compute
+     * garantissant le retry sur prochain miss ( cf piege historique
+     * {@code computeIfAbsent + remove inside lambda} documente dans la
+     * classe ) .
      */
-    private final java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.CompletableFuture<FilterListValue>>
-            inFlightFilterListBuilds = new java.util.concurrent.ConcurrentHashMap<>();
+    private final fr.inra.oresing.cache.SingleflightCache<String, FilterListValue> filterListInFlight =
+            new fr.inra.oresing.cache.SingleflightCache<>();
 
     @jakarta.annotation.PostConstruct
     void initFilterListCache() {
@@ -1685,80 +1688,11 @@ private PlatformTransactionManager transactionManager;
         }
 
         // Cache miss : singleflight pour empecher le cache stampede .
-        return loadViaSingleflight(application, refType, cacheKey);
-    }
-
-    /**
-     * Pattern singleflight via {@link java.util.concurrent.ConcurrentHashMap#putIfAbsent} :
-     * un seul thread compute par cle , les autres attendent son resultat .
-     * Slot retiree APRES completion ( succes ou echec ) pour qu'un futur
-     * cache miss puisse declencher un nouveau compute .
-     *
-     * <p><b>Piege historique evite</b> : le pattern
-     * <code>computeIfAbsent + remove dans le mapper</code> ne fonctionne PAS .
-     * {@code ConcurrentHashMap} appelle le mapper AVANT de placer la valeur
-     * retournee dans le map ; le {@code remove(key)} depuis le mapper agit
-     * alors sur une cle qui n'est pas encore presente -&gt; no-op . Resultat :
-     * la slot reste figee a vie , et un compute partiel ( cf. champ
-     * {@code failedComponents} de {@link FilterListComputeResult} ) etait
-     * sercved en boucle apres eviction du {@code filterListCache} .
-     * Le bug se manifestait sur la prod par l'apparition / disparition
-     * aleatoire des filtres "Point de mesure" , "swc_var_id" , etc. apres
-     * un compute partiel pendant une saturation transitoire du pool Hikari .
-     */
-    private FilterListResult loadViaSingleflight(Application application, String refType, String cacheKey) {
-        final java.util.concurrent.CompletableFuture<FilterListValue> ourCf =
-                new java.util.concurrent.CompletableFuture<>();
-        final java.util.concurrent.CompletableFuture<FilterListValue> existing =
-                inFlightFilterListBuilds.putIfAbsent(cacheKey, ourCf);
-
-        if (existing != null) {
-            // Follower : on attend le resultat du leader ( pas de SQL emis ) .
-            return awaitFollower(existing, cacheKey);
-        }
-        return runAsLeader(application, refType, cacheKey, ourCf);
-    }
-
-    /**
-     * Branche leader : execute le compute , peuple le cache si complet ,
-     * propage le resultat aux followers via la Future , puis nettoie la slot .
-     */
-    private FilterListResult runAsLeader(Application application, String refType, String cacheKey,
-                                         java.util.concurrent.CompletableFuture<FilterListValue> ourCf) {
-        log.info("filterList cache miss for {} , loading from database ( singleflight leader )", cacheKey);
+        log.info("filterList cache miss for {} , loading from database ( singleflight )", cacheKey);
         if (cacheMetrics != null) cacheMetrics.recordFilterListMiss();
-        try {
-            FilterListValue value = computeAndMaybeCache(application, refType, cacheKey);
-            ourCf.complete(value);
-            return toFilterListResult(value);
-        } catch (Throwable t) {
-            ourCf.completeExceptionally(t);
-            if (t instanceof RuntimeException re) throw re;
-            throw new RuntimeException("filterList compute failed for " + cacheKey, t);
-        } finally {
-            // Atomic remove only-if-same : on retire la slot uniquement
-            // si elle est encore notre Future . Garantit qu'on ne supprime
-            // pas par megarde une Future poussee par un autre thread apres
-            // notre completion ( cas theorique , mais correctness > optim ) .
-            inFlightFilterListBuilds.remove(cacheKey, ourCf);
-        }
-    }
-
-    /**
-     * Branche follower : pas de SQL emis , on attend le resultat du leader .
-     * Propage proprement les exceptions checked vers le caller .
-     */
-    private FilterListResult awaitFollower(java.util.concurrent.CompletableFuture<FilterListValue> future, String cacheKey) {
-        try {
-            return toFilterListResult(future.get());
-        } catch (java.util.concurrent.ExecutionException e) {
-            Throwable cause = e.getCause() != null ? e.getCause() : e;
-            if (cause instanceof RuntimeException re) throw re;
-            throw new RuntimeException("filterList compute failed for " + cacheKey, cause);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("filterList wait interrupted for " + cacheKey, e);
-        }
+        FilterListValue value = filterListInFlight.load(cacheKey,
+                () -> computeAndMaybeCache(application, refType, cacheKey));
+        return toFilterListResult(value);
     }
 
     /**
@@ -1770,9 +1704,10 @@ private PlatformTransactionManager transactionManager;
      * <p>Decision motivee par le bug observe sur la prod : un seul SQL
      * de colonne ayant timeout pendant un publish concurrent suffisait
      * a polluer le cache pour des heures , masquant les filtres de
-     * plusieurs referentiels a la fois .
+     * plusieurs referentiels a la fois ( "Point de mesure" , "swc_var_id"
+     * disparaissaient apres un compute partiel sous charge ) .
      */
-    private FilterListValue computeAndMaybeCache(Application application, String refType, String cacheKey) {
+    FilterListValue computeAndMaybeCache(Application application, String refType, String cacheKey) {
         FilterListComputeResult computed = computeFilterListEntries(application, refType);
         if (computed.isComplete()) {
             return serializeAndCache(cacheKey, computed.entries());
@@ -1792,8 +1727,11 @@ private PlatformTransactionManager transactionManager;
      * de composants ayant silencieusement echoue ( SQL timeout , pool
      * saturation , RLS deny ) pour permettre au caller de decider du
      * caching ( cf {@link #computeAndMaybeCache} ) .
+     *
+     * <p>Package-private pour permettre les tests unitaires sans exposer
+     * inutilement le detail interne au reste du code .
      */
-    private record FilterListComputeResult(List<FilterListEntry> entries, int failedComponents) {
+    record FilterListComputeResult(List<FilterListEntry> entries, int failedComponents) {
         boolean isComplete() {
             return failedComponents == 0;
         }
