@@ -8,6 +8,8 @@ import fr.inra.oresing.workflow.cascade.cache.ReferencevalueCacheFormat;
 import fr.inra.oresing.workflow.cascade.cache.ReferencevalueCacheWriter;
 import fr.inra.oresing.workflow.cascade.config.PublishProperties;
 import fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository;
+import fr.inra.oresing.workflow.cascade.metrics.ProcessedCacheCaptureMetrics;
+import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
@@ -58,16 +60,19 @@ public class CacheCaptureService {
     private final ConfigHashService configHashService;
     private final PublishProperties publishProperties;
     private final WorkflowLogRepository workflowLogRepository;
+    private final ProcessedCacheCaptureMetrics captureMetrics;
 
     @Autowired
     public CacheCaptureService(OreSiRepository repository,
                                 ConfigHashService configHashService,
                                 PublishProperties publishProperties,
-                                @Nullable WorkflowLogRepository workflowLogRepository) {
+                                @Nullable WorkflowLogRepository workflowLogRepository,
+                                @Nullable ProcessedCacheCaptureMetrics captureMetrics) {
         this.repository = repository;
         this.configHashService = configHashService;
         this.publishProperties = publishProperties;
         this.workflowLogRepository = workflowLogRepository;
+        this.captureMetrics = captureMetrics;
     }
 
     /**
@@ -91,11 +96,15 @@ public class CacheCaptureService {
     public void captureCacheAsync(Application application, UUID fileId, String dataName, UUID correlationId) {
         log.info("[cache-capture-async] entry : fileId={} dataName={} correlationId={} captureEnabled={}",
                 fileId, dataName, correlationId, publishProperties.isCaptureProcessedEnabled());
-        if (!publishProperties.isCaptureProcessedEnabled()) {
-            log.warn("[cache-capture-async] skip - captureProcessedEnabled=false for fileId={}", fileId);
-            return;
-        }
+
+        final Timer.Sample sample = (captureMetrics != null) ? captureMetrics.startSample() : null;
+        ProcessedCacheCaptureMetrics.Outcome outcome = ProcessedCacheCaptureMetrics.Outcome.FAILED;
         try {
+            if (!publishProperties.isCaptureProcessedEnabled()) {
+                log.warn("[cache-capture-async] skip - captureProcessedEnabled=false for fileId={}", fileId);
+                outcome = ProcessedCacheCaptureMetrics.Outcome.SKIPPED_DISABLED;
+                return;
+            }
             BinaryFileRepository bfRepo = repository.getRepository(application).binaryFile();
             String currentHash = configHashService.computeHash(application, dataName).orElse(null);
             long existingCacheSize;
@@ -114,6 +123,7 @@ public class CacheCaptureService {
                     && currentHash.equals(storedHash);
             if (cacheUpToDate) {
                 log.info("[cache-capture-async] skip - cache up to date for fileId={}", fileId);
+                outcome = ProcessedCacheCaptureMetrics.Outcome.SKIPPED_UP_TO_DATE;
                 return;
             }
             if (workflowLogRepository != null && correlationId != null) {
@@ -124,14 +134,31 @@ public class CacheCaptureService {
                 out.write(ReferencevalueCacheFormat.buildHeader());
                 ReferencevalueCacheWriter.writeCache(captureConn, schemaName, fileId, out);
             });
+            // Captured size devient mesurable : on l'enregistre dans la
+            // distribution `oa_processed_cache_capture_bytes` pour aider au
+            // dimensionnement du stockage Large Object .
+            if (captureMetrics != null) {
+                try {
+                    long bytes = bfRepo.findProcessedSize(fileId);
+                    captureMetrics.recordBytes(bytes);
+                } catch (RuntimeException ex) {
+                    log.debug("[cache-capture-async] post-capture findProcessedSize failed : {}", ex.getMessage());
+                }
+            }
             log.info("[cache-capture-async] cache captured for fileId={} ( FAST path armed for next republish )", fileId);
             if (currentHash != null && !currentHash.equals(storedHash)) {
                 bfRepo.updateConfigHash(fileId, currentHash);
                 log.info("[cache-capture-async] configHash updated for fileId={}", fileId);
             }
+            outcome = ProcessedCacheCaptureMetrics.Outcome.SUCCESS;
         } catch (RuntimeException ex) {
             log.warn("[cache-capture-async] failed for fileId={} : {} ( non-critical , FAST path will fall back to cascade )",
                     fileId, ex.getMessage());
+            outcome = ProcessedCacheCaptureMetrics.Outcome.FAILED;
+        } finally {
+            if (captureMetrics != null && sample != null) {
+                captureMetrics.stop(sample, outcome);
+            }
         }
     }
 }
