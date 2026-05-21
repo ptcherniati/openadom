@@ -3,6 +3,7 @@ package fr.inra.oresing.workflow.cascade.preparation;
 import fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository;
 import fr.inrae.ore.cascade.model.interceptor.preparation.PreparationInterceptorContext;
 import org.junit.jupiter.api.BeforeEach;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import java.time.Instant;
@@ -74,8 +75,7 @@ class PreparationPhaseListenerInterceptorTest {
         // silently no-op without throwing , so the preparator workflow
         // is never broken by an observability misconfiguration .
         PreparationPhaseListenerInterceptor empty = new PreparationPhaseListenerInterceptor(null);
-        empty.onSubPhase(UUID.randomUUID().toString(), "PHASE_Y", Instant.now());
-        // No exception , no verify needed
+        assertDoesNotThrow(() -> empty.onSubPhase(UUID.randomUUID().toString(), "PHASE_Y", Instant.now()));
     }
 
     @Test

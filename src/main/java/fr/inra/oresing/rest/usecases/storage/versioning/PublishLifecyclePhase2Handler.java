@@ -728,38 +728,6 @@ public class PublishLifecyclePhase2Handler {
         return rowCount;
     }
 
-    /**
-     * Pre-counts the {@code referencevalue} rows attached to the binaryfile
-     * being unpublished / deleted and publishes the total to
-     * {@link fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry
-     * #setRecordsTotal} . This lets oa-live switch the "Lignes" column from
-     * "0 / -" to "X / X" and turn the progress bar from indeterminate to
-     * determinate IMMEDIATELY , before the potentially long DELETE on huge
-     * datasets . SELECT count(*) cost ~ms via the
-     * {@code referencevalue_binaryfile_idx} btree ( V14 ) .
-     *
-     * <p>Best-effort : any RuntimeException is swallowed and logged
-     * ( UI display is a quality-of-life feature , not a correctness
-     * requirement ; failing the precount must not abort the unpublish ) .
-     *
-     * @return rows counted ( 0 if the count failed or fileId had no rows )
-     */
-    private long preCountAndPublishRecordsTotal(DataRepository dataRepo,
-                                                PublishLifecycleEvent ev,
-                                                String callerTag) {
-        try {
-            long n = dataRepo.countByFileId(ev.fileId());
-            if (workflowActiveRegistry != null) {
-                workflowActiveRegistry.setRecordsTotal(ev.correlationId(), n);
-            }
-            log.info("{} : {} row(s) for fileId={}", callerTag, n, ev.fileId());
-            return n;
-        } catch (RuntimeException ex) {
-            log.warn("{} : countByFileId failed ( non-critical ) : {}",
-                    callerTag, ex.getMessage());
-            return 0L;
-        }
-    }
 
     /**
      * DELETE des rows referencevalue ( si le fichier etait publie ) + DELETE

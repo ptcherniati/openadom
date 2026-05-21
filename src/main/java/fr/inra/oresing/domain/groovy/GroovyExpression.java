@@ -6,9 +6,9 @@ import fr.inra.oresing.domain.groovy.exception.GroovyException;
 import fr.inra.oresing.domain.groovy.predefined.script.ScriptConstantProvider;
 
 import javax.script.*;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 public non-sealed class GroovyExpression implements Expression<Object> {
@@ -56,8 +56,11 @@ public non-sealed class GroovyExpression implements Expression<Object> {
      * n'est conservee . Donc reutiliser le scratch au prochain appel est safe :
      * les anciennes closures sont devenues unreachable .
      */
+    // Le scratch est intentionnellement réutilisé entre appels sur le même thread (R-P2 perf).
+    // scratch.clear() est appelé au début de chaque evaluate() — la valeur est toujours fraîche.
+    @SuppressWarnings("java:S5164")
     private static final ThreadLocal<java.util.HashMap<String, Object>> EVAL_SCRATCH =
-            ThreadLocal.withInitial(() -> new java.util.HashMap<>(32));
+            ThreadLocal.withInitial(() -> HashMap.newHashMap(32));
 
     // ─── R-P2-4 : cache des résultats d'évaluation Groovy ───────────────────
     // Clé : contexte d'entrée (Map<String,Object>) — même entrée → même sortie

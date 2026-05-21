@@ -120,15 +120,4 @@ public class LargeObjectOrphanSweeper {
         return results.size();
     }
 
-    /**
-     * Defensive identifier quoting : enforces the same pattern as
-     * {@code AdminSystemResources.quoteIdent} to prevent SQL injection on
-     * application names that should always be safe identifiers anyway .
-     */
-    private static String quoteIdent(String schemaName) {
-        if (schemaName == null || !schemaName.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
-            return null;
-        }
-        return "\"" + schemaName + "\"";
-    }
 }

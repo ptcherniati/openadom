@@ -21,14 +21,9 @@ import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.domain.exceptions.ExceptionMessage;
-import fr.inra.oresing.domain.authorization.ApplicationUserResult;
-import fr.inra.oresing.domain.authorization.AuthorizationParsed;
-import fr.inra.oresing.domain.authorization.AuthorizationsForUserResult;
 import fr.inra.oresing.domain.authorization.AuthorizationsResult;
 import fr.inra.oresing.domain.authorization.GetGrantableResult;
 import fr.inra.oresing.domain.authorization.LoginAdminResult;
-import fr.inra.oresing.domain.authorization.CurrentUserRolesResult;
-import fr.inra.oresing.domain.authorization.request.AuthorizationInput;
 import fr.inra.oresing.rest.model.authorization.*;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.services.AuthorizationService;
@@ -350,12 +345,12 @@ public class AuthorizationResources {
     }
 
     private void verifyMethod(String method, UUID uuid) {
-        if(RequestMethod.POST.equals(method) && uuid!=null) {
+        if(RequestMethod.POST.name().equals(method) && uuid!=null) {
              throw new OreSiTechnicalException(
                      ExceptionMessage.BAD_METHOD.toMessage()
              );
         }
-        if(RequestMethod.PUT.equals(method) && uuid==null) {
+        if(RequestMethod.PUT.name().equals(method) && uuid==null) {
              throw new OreSiTechnicalException(
                      ExceptionMessage.BAD_METHOD.toMessage()
              );
@@ -441,6 +436,7 @@ public class AuthorizationResources {
             @ApiResponse(responseCode = "404", description = "User or role not found")
     })
     public ResponseEntity<OreSiUser> addAuthorizationManagerForApplications(
+            @PathVariable(name = "nameOrId") final String nameOrId,
             @Parameter(description = "The role to add", required = true,
                     examples = {
                             @ExampleObject(name = "applicationManager", value = "\"applicationManager\"", description = "Application manager role"),
@@ -469,7 +465,7 @@ public class AuthorizationResources {
                     }
             ) @RequestParam(name = "applicationPattern", required = false) final List<String> applicationPattern
     ) throws JsonProcessingException {
-        return addAuthorization(role, userIdOrLogin, applicationNameOrId, applicationPattern);
+        return addAuthorization(role, userIdOrLogin, applicationNameOrId != null ? applicationNameOrId : nameOrId, applicationPattern);
     }
 
 

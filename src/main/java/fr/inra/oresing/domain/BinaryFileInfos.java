@@ -1,7 +1,6 @@
 package fr.inra.oresing.domain;
 
 
-import fr.inra.oresing.domain.BinaryFileDataset;
 
 import java.util.Optional;
 import java.util.UUID;

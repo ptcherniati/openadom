@@ -1,5 +1,4 @@
 package fr.inra.oresing.domain;
-import fr.inra.oresing.domain.BinaryFileInfos;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -23,7 +22,7 @@ public class BinaryFile extends OreSiEntity {
      * pour ne pas alourdir les requetes courantes ( fileData / params ) .
      * {@code null} pour fichiers pre-feature ou si capture desactivee .
      */
-    private InputStream processedData;
+    private transient InputStream processedData;
     private Long processedSize;
     private java.time.LocalDateTime processedAt;
 

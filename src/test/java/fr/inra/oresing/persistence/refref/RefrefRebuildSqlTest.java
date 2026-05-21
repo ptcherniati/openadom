@@ -52,20 +52,16 @@ class RefrefRebuildSqlTest {
 
     @Test
     void populateSource_without_filter_omits_where_clause() throws Exception {
-        PreparedStatement ps = mock(PreparedStatement.class);
-        when(cn.prepareStatement(anyString())).thenReturn(ps);
-
         RefrefRebuildSql.populateSource(cn, "referencevalue_import", null);
 
         ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
-        verify(cn).prepareStatement(sqlCaptor.capture());
+        verify(stmt).executeUpdate(sqlCaptor.capture());
         String sql = sqlCaptor.getValue();
 
         assertThat(sql).contains("INSERT INTO refref_source");
         assertThat(sql).contains("FROM referencevalue_import s");
         assertThat(sql).doesNotContain("WHERE s.correlation_id");
-        verify(ps, never()).setObject(anyInt(), any());
-        verify(ps).executeUpdate();
+        verify(cn, never()).prepareStatement(anyString());
     }
 
     @Test

@@ -116,10 +116,10 @@ public class NaturalKeyPreScanService {
             if (presentColumns.isEmpty()) {
                 return Collections.emptyMap();
             }
-            for (CSVRecord record : parser) {
+            for (CSVRecord csvRow : parser) {
                 rowsScanned++;
                 for (String col : presentColumns) {
-                    String value = record.get(col);
+                    String value = csvRow.get(col);
                     if (value == null) continue;
                     String trimmed = value.strip();
                     if (trimmed.isEmpty()) continue;
@@ -152,15 +152,15 @@ public class NaturalKeyPreScanService {
     /** Concatene N colonnes d'une ligne avec un separateur ( utile pour
      *  composer la naturalkey self-ref a partir de plusieurs colonnes du
      *  CSV , equivalent au composite naturalKey du config datatype ) . */
-    public static String composeCompositeNaturalKey(CSVRecord record,
+    public static String composeCompositeNaturalKey(CSVRecord csvRow,
                                                     java.util.List<String> columns,
                                                     String separator) {
-        if (record == null || columns == null || columns.isEmpty()) {
+        if (csvRow == null || columns == null || columns.isEmpty()) {
             return "";
         }
         return columns.stream()
                 .map(col -> {
-                    String v = record.isMapped(col) ? record.get(col) : "";
+                    String v = csvRow.isMapped(col) ? csvRow.get(col) : "";
                     return v == null ? "" : v.strip();
                 })
                 .collect(Collectors.joining(separator));
@@ -331,9 +331,9 @@ public class NaturalKeyPreScanService {
                 iterator.next();
             }
             while (iterator.hasNext()) {
-                CSVRecord record = iterator.next();
+                CSVRecord csvRow = iterator.next();
                 rowsScanned++;
-                String composed = composeCompositeNaturalKey(record, naturalKeyColumns, separator);
+                String composed = composeCompositeNaturalKey(csvRow, naturalKeyColumns, separator);
                 if (composed == null) {
                     continue;
                 }
@@ -382,7 +382,7 @@ public class NaturalKeyPreScanService {
                 firstRead = false;
                 int c = delegate.read();
                 if (c == -1) return -1;
-                if (c != '﻿') {
+                if (c != '\uFEFF') {
                     buffered = c;
                 }
             }

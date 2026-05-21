@@ -2,8 +2,8 @@ package fr.inra.oresing.workflow.cascade.history;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -50,8 +50,7 @@ class WorkflowLogWriterTest {
     void logAsyncNull() {
         WorkflowLogRepository repo = mock(WorkflowLogRepository.class);
         WorkflowLogWriter writer = writerNotStarted(repo);
-        // Ne doit pas lever d'exception
-        writer.logAsync(null);
+        assertDoesNotThrow(() -> writer.logAsync(null));
     }
 
     // ─── recordStart ─────────────────────────────────────────────────────────

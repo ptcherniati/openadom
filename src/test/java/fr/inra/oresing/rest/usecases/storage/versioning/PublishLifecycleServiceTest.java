@@ -74,7 +74,7 @@ class PublishLifecycleServiceTest {
     @Mock private AuthenticationService     authenticationService;
     @Mock private Application               application;
 
-    private final PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator(null);
+    private final PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator();
     private final ConfigHashService configHashService = new ConfigHashService();
     private PublishLifecycleService service;
 
@@ -82,7 +82,7 @@ class PublishLifecycleServiceTest {
     void setUp() {
         service = new PublishLifecycleService(
                 serviceContainer, oreSiRepository,
-                workflowLogWriter, workflowLogRepository, events, coordinator, configHashService);
+                workflowLogWriter, workflowLogRepository, events, configHashService);
 
         // Lenient : ces stubs sont utilises par la plupart des tests mais
         // pas tous ( ex le test reject_* sort tot apres acquisition advisory lock

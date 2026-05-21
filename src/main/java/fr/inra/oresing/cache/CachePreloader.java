@@ -126,7 +126,7 @@ public class CachePreloader {
             // l'applique ici via {@link #withSecurityContext} pour propager
             // l'authentification HTTP appelante à chaque task du pool .
             final SecurityContext capturedSecurityCtx = SecurityContextHolder.getContext();
-            int effectiveParallelism = Math.max(1, Math.min(parallelism, dataNames.size() + 1));
+            int effectiveParallelism = Math.clamp(parallelism, 1, dataNames.size() + 1);
             ExecutorService pool = Executors.newFixedThreadPool(effectiveParallelism, r -> {
                 Thread t = new Thread(r, "cache-preload-" + application.getName());
                 t.setDaemon(true);
@@ -179,7 +179,7 @@ public class CachePreloader {
                 errors.get(),
                 durationMs,
                 parallel,
-                parallel ? Math.max(1, Math.min(parallelism, dataNames.size() + 1)) : 1
+                parallel ? Math.clamp(parallelism, 1, dataNames.size() + 1) : 1
         );
         log.info("CachePreloader {} : {} dataNames , {} ms , filterList={} checkedFormat={} refFiles={} errors={} ( parallel={} )",
                 application.getName(), dataNames.size(), durationMs,

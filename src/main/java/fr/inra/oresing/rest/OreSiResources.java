@@ -190,7 +190,6 @@ public class OreSiResources {
     private final CreateDataUseCase createDataUseCase;
     private final GetFileWithDataUseCase getFileWithDataUseCase;
     private final GetFilesOnRepositoryUseCase getFilesOnRepositoryUseCase;
-    private final GetReferencedBinaryFilesUseCase getReferencedBinaryFilesUseCase;
     private final GetStoreFileUseCase getStoreFileUseCase;
     private final PublishLifecycleService publishLifecycleService;
     private final GetSynthesisUseCase getSynthesisUseCase;
@@ -287,7 +286,6 @@ public class OreSiResources {
             GetDataColumnUseCase getDataColumnUseCase,
             GetFileWithDataUseCase getFileWithDataUseCase,
             GetFilesOnRepositoryUseCase getFilesOnRepositoryUseCase,
-            GetReferencedBinaryFilesUseCase getReferencedBinaryFilesUseCase,
             FindDataUseCase findDataUseCase,
             GetCheckedFormatComponentsUseCase getCheckedFormatComponentsUseCase,
             DeleteDataUseCase deleteDataUseCase,
@@ -343,7 +341,6 @@ public class OreSiResources {
         this.getDataColumnUseCase = getDataColumnUseCase;
         this.getFileWithDataUseCase = getFileWithDataUseCase;
         this.getFilesOnRepositoryUseCase = getFilesOnRepositoryUseCase;
-        this.getReferencedBinaryFilesUseCase = getReferencedBinaryFilesUseCase;
         this.findDataUseCase = findDataUseCase;
         this.getCheckedFormatComponentsUseCase = getCheckedFormatComponentsUseCase;
         this.deleteDataUseCase = deleteDataUseCase;
@@ -362,37 +359,6 @@ public class OreSiResources {
         this.extractionLifecycle = extractionLifecycle;
     }
 
-    /**
-     * Helper : construit et soumet async un {@link WorkflowLogEntry}
-     * pour une extraction. Best-effort : erreurs UUID loguees puis
-     * swallowed , ne casse pas le streaming.
-     */
-    private void logExtractionEvent(
-            String workflowType, String userId,
-            String applicationName, String dataType, String resourceName,
-            Instant startedAt, Duration duration, String status, long bytesTotal,
-            String fatalError) {
-        try {
-            workflowLogWriter.logAsync(new WorkflowLogEntry(
-                    java.util.UUID.randomUUID(),
-                    workflowType,
-                    java.util.UUID.fromString(userId),
-                    resolveCurrentLogin(),
-                    applicationName,
-                    dataType,
-                    resourceName,
-                    startedAt,
-                    startedAt.plus(duration),
-                    duration,
-                    status,
-                    0L, 0L, 0,
-                    bytesTotal,
-                    java.util.List.of(),
-                    fatalError));
-        } catch (IllegalArgumentException e) {
-            log.warn("Format UUID utilisateur invalide , skip log extraction [userId={}]", userId);
-        }
-    }
 
     /**
      * Best-effort resolution of the caller login from the current request

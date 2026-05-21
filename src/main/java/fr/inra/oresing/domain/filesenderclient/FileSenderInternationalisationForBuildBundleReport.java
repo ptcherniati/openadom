@@ -3,7 +3,6 @@ package fr.inra.oresing.domain.filesenderclient;
 import fr.inra.oresing.domain.application.configuration.ApplicationDescription;
 import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
-import fr.inra.oresing.domain.filesenderclient.BuildBundleReport;
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.Locale;

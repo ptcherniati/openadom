@@ -97,6 +97,7 @@ public class WorkflowActiveRegistry implements WorkflowListener {
      * modal in oa-live ( "list of chunks loaded into DB" ) .
      */
     private static final int SINK_CHUNKS_WINDOW = 1000;
+    private static final String STATUS_RUNNING = "RUNNING";
     private final ConcurrentMap<UUID, java.util.Deque<SinkChunkRecord>> sinkChunksByCid =
             new ConcurrentHashMap<>();
 
@@ -602,7 +603,7 @@ public class WorkflowActiveRegistry implements WorkflowListener {
 
     private static WorkerSnapshot buildWorkerSnapshot(String name, List<ChunkSnapshot> entries) {
         ChunkSnapshot running = entries.stream()
-                .filter(c -> "RUNNING".equals(c.status()))
+                .filter(c -> STATUS_RUNNING.equals(c.status()))
                 .findFirst().orElse(null);
 
         ChunkSnapshot lastFinished = entries.stream()
@@ -640,7 +641,7 @@ public class WorkflowActiveRegistry implements WorkflowListener {
                 .max(Comparator.naturalOrder())
                 .orElse(null);
 
-        String status        = running != null ? "RUNNING" : "IDLE";
+        String status        = running != null ? STATUS_RUNNING : "IDLE";
         Integer currentChunk = running != null ? running.chunkIndex() : null;
         long curProcessed    = running != null ? running.recordsProcessed() : 0L;
         long curTotal        = running != null ? running.recordsTotal()     : 0L;
@@ -737,7 +738,7 @@ public class WorkflowActiveRegistry implements WorkflowListener {
                 .computeIfAbsent(corrId, k -> new ConcurrentHashMap<>())
                 .put(e.chunkIndex(), new ChunkSnapshot(
                         e.chunkIndex(),
-                        "RUNNING",
+                        STATUS_RUNNING,
                         0L,
                         e.recordsExpected(),
                         e.workerName(),
@@ -840,7 +841,7 @@ public class WorkflowActiveRegistry implements WorkflowListener {
                                           long nowMs) {
         if (workers == null) return;
         for (StageWorkerStat w : workers.values()) {
-            if (!"RUNNING".equals(w.status)) continue;
+            if (!STATUS_RUNNING.equals(w.status)) continue;
             if (w.lastActivity == null) continue;
             if (nowMs - w.lastActivity.toEpochMilli() > STALE_RUNNING_RESET_MS) {
                 w.status = "IDLE";
@@ -862,7 +863,7 @@ public class WorkflowActiveRegistry implements WorkflowListener {
         StageWorkerStat w = sourceWorkersByCid
                 .computeIfAbsent(corrId, k -> new ConcurrentHashMap<>())
                 .computeIfAbsent(e.workerName(), n -> new StageWorkerStat());
-        w.status = "RUNNING";
+        w.status = STATUS_RUNNING;
         w.lastActivity = e.time();
     }
 
@@ -890,7 +891,7 @@ public class WorkflowActiveRegistry implements WorkflowListener {
         StageWorkerStat w = sinkWorkersByCid
                 .computeIfAbsent(corrId, k -> new ConcurrentHashMap<>())
                 .computeIfAbsent(e.workerName(), n -> new StageWorkerStat());
-        w.status = "RUNNING";
+        w.status = STATUS_RUNNING;
         w.currentChunk = e.chunkIndex();
         w.lastActivity = e.time();
     }

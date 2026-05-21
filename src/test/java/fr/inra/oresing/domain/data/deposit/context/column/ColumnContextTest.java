@@ -1,6 +1,6 @@
 package fr.inra.oresing.domain.data.deposit.context.column;
 
-import com.google.common.collect.ImmutableList;
+import java.util.List;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import org.junit.jupiter.api.DisplayName;
@@ -27,7 +27,7 @@ class ColumnContextTest {
         @Test
         @DisplayName("constructeur canonique stocke les trois champs")
         void canonicalConstructor() {
-            ImmutableList<String> headers = ImmutableList.of("a", "b", "c");
+            List<String> headers = List.of("a", "b", "c");
             ContextHeader h = new ContextHeader(1, "b", headers);
             assertThat(h.columnIndex()).isEqualTo(1);
             assertThat(h.columnHeader()).isEqualTo("b");
@@ -37,7 +37,7 @@ class ColumnContextTest {
         @Test
         @DisplayName("constructeur secondaire calcule columnIndex via indexOf")
         void secondaryConstructorComputesIndex() {
-            ImmutableList<String> headers = ImmutableList.of("x", "y", "z");
+            List<String> headers = List.of("x", "y", "z");
             ContextHeader h = new ContextHeader("y", headers);
             assertThat(h.columnIndex()).isEqualTo(1);
             assertThat(h.columnHeader()).isEqualTo("y");
@@ -47,7 +47,7 @@ class ColumnContextTest {
         @Test
         @DisplayName("constructeur secondaire : premier élément -> index 0")
         void secondaryConstructorFirstElement() {
-            ImmutableList<String> headers = ImmutableList.of("alpha", "beta");
+            List<String> headers = List.of("alpha", "beta");
             ContextHeader h = new ContextHeader("alpha", headers);
             assertThat(h.columnIndex()).isEqualTo(0);
         }
@@ -55,7 +55,7 @@ class ColumnContextTest {
         @Test
         @DisplayName("constructeur secondaire : dernier élément -> bon index")
         void secondaryConstructorLastElement() {
-            ImmutableList<String> headers = ImmutableList.of("a", "b", "c", "d");
+            List<String> headers = List.of("a", "b", "c", "d");
             ContextHeader h = new ContextHeader("d", headers);
             assertThat(h.columnIndex()).isEqualTo(3);
         }
@@ -63,7 +63,7 @@ class ColumnContextTest {
         @Test
         @DisplayName("constructeur secondaire : colonne absente -> index -1")
         void secondaryConstructorAbsentColumn() {
-            ImmutableList<String> headers = ImmutableList.of("a", "b");
+            List<String> headers = List.of("a", "b");
             ContextHeader h = new ContextHeader("missing", headers);
             assertThat(h.columnIndex()).isEqualTo(-1);
         }
@@ -71,7 +71,7 @@ class ColumnContextTest {
         @Test
         @DisplayName("record equality")
         void equality() {
-            ImmutableList<String> h = ImmutableList.of("a", "b");
+            List<String> h = List.of("a", "b");
             ContextHeader x = new ContextHeader("a", h);
             ContextHeader y = new ContextHeader("a", h);
             assertThat(x).isEqualTo(y);
@@ -81,7 +81,7 @@ class ColumnContextTest {
         @Test
         @DisplayName("toString() ne lève pas d'exception")
         void toStringDoesNotThrow() {
-            ImmutableList<String> h = ImmutableList.of("col");
+            List<String> h = List.of("col");
             ContextHeader ctx = new ContextHeader("col", h);
             assertThat(ctx.toString()).isNotNull();
         }

@@ -27,6 +27,9 @@ import java.util.*;
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BinaryFileRepository extends JsonTableInApplicationSchemaRepositoryTemplate<BinaryFile> implements fr.inra.oresing.domain.repository.file.BinaryFileRepository {
 
+    private static final String PARAM_DATATYPE = "datatype";
+    private static final String SQL_SELECT_PROCESSED_DATA = "SELECT processed_data FROM %s WHERE id = ?::uuid";
+
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -97,7 +100,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
         return new java.util.HashSet<>(getNamedParameterJdbcTemplate().queryForList(
                 query,
                 new MapSqlParameterSource()
-                        .addValue("datatype", dataType)
+                        .addValue(PARAM_DATATYPE, dataType)
                         .addValue("binaryfileIds", binaryfileIds),
                 String.class
         )).stream().map(UUID::fromString).collect(java.util.stream.Collectors.toSet());
@@ -156,7 +159,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
         return getNamedParameterJdbcTemplate().query(
                 query,
                 new MapSqlParameterSource()
-                        .addValue("datatype",dataType)
+                        .addValue(PARAM_DATATYPE,dataType)
                         .addValue("binaryfileIds", binaryfileIds),
                 new JsonRowMapper<ReferencedBinaryFiles>()
         );
@@ -187,7 +190,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
                 query,
                 new MapSqlParameterSource()
                         .addValue("application", getApplication().getId())
-                        .addValue("datatype", binaryFileDataset.getDatatype())
+                        .addValue(PARAM_DATATYPE, binaryFileDataset.getDatatype())
                         .addValue("from", binaryFileDataset.getFrom())
                         .addValue("to", binaryFileDataset.getTo())
                         .addValue("requiredAuthorizations", getJsonRowMapper().toJson(binaryFileDataset.getRequiredAuthorizations())),
@@ -320,7 +323,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
                         ) != tsrange(coalesce(:from::timestamp, '-infinity')::timestamp, coalesce(:to::timestamp, 'infinity')::timestamp))
                     """;
             where.add(t);
-            assert binaryFileDataset != null;
+            Objects.requireNonNull(binaryFileDataset, "binaryFileDataset must not be null");
             mapSqlParameterSource.addValue("from", binaryFileDataset.getFrom());
             mapSqlParameterSource.addValue("to", binaryFileDataset.getTo());
         } else {
@@ -469,7 +472,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
      * avant d'invoquer pour eviter un stream inutile .
      */
     public InputStream streamProcessedData(UUID fileId) {
-        String query = "SELECT processed_data FROM %s WHERE id = ?::uuid"
+        String query = SQL_SELECT_PROCESSED_DATA
                 .formatted(getTable().getSqlIdentifier());
         Long oid = jdbcTemplate.queryForObject(query, Long.class, fileId.toString());
         if (oid == null) {
@@ -485,7 +488,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
      * @deprecated use {@link #streamProcessedData(UUID)} ; the chunkBytes
      *             parameter is silently ignored since the V13 LO migration .
      */
-    @Deprecated
+    @Deprecated(since = "2.x", forRemoval = true)
     public InputStream streamProcessedData(UUID fileId, int chunkBytes) {
         return streamProcessedData(fileId);
     }
@@ -496,17 +499,22 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
             org.postgresql.PGConnection pgConn = conn.unwrap(org.postgresql.PGConnection.class);
             org.postgresql.largeobject.LargeObjectManager lom = pgConn.getLargeObjectAPI();
             org.postgresql.largeobject.LargeObject lo = lom.open(oid, org.postgresql.largeobject.LargeObjectManager.READ);
-            // Wrap the LO InputStream to also close the LO + release the
-            // connection back to the pool when the caller closes the stream .
-            return new java.io.FilterInputStream(lo.getInputStream()) {
-                @Override
-                public void close() throws java.io.IOException {
-                    try { super.close(); } finally {
-                        try { lo.close(); } catch (java.sql.SQLException ignored) { /* best-effort */ }
-                        org.springframework.jdbc.datasource.DataSourceUtils.releaseConnection(conn, jdbcTemplate.getDataSource());
+            try {
+                // Wrap the LO InputStream to also close the LO + release the
+                // connection back to the pool when the caller closes the stream .
+                return new java.io.FilterInputStream(lo.getInputStream()) {
+                    @Override
+                    public void close() throws java.io.IOException {
+                        try { super.close(); } finally {
+                            try { lo.close(); } catch (java.sql.SQLException ignored) { /* best-effort */ }
+                            org.springframework.jdbc.datasource.DataSourceUtils.releaseConnection(conn, jdbcTemplate.getDataSource());
+                        }
                     }
-                }
-            };
+                };
+            } catch (Exception ex) {
+                try { lo.close(); } catch (java.sql.SQLException ignored) { /* best-effort cleanup */ }
+                throw ex;
+            }
         } catch (java.sql.SQLException e) {
             throw new RuntimeException("Failed to open Large Object oid=" + oid + " : " + e.getMessage(), e);
         }
@@ -801,7 +809,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
         tx.setPropagationBehavior(
                 org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         tx.executeWithoutResult(status -> {
-            String selectOid = "SELECT processed_data FROM %s WHERE id = ?::uuid"
+            String selectOid = SQL_SELECT_PROCESSED_DATA
                     .formatted(getTable().getSqlIdentifier());
             Long oid = jdbcTemplate.queryForObject(selectOid, Long.class, fileId.toString());
             if (oid != null && oid > 0) {

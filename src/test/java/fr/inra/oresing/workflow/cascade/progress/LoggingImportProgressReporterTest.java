@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -65,26 +66,25 @@ class LoggingImportProgressReporterTest {
         @Test
         @DisplayName("onTotalLinesKnown enregistre le total sans lever d'exception")
         void totalLinesKnownDoesNotThrow() {
-            reporter.onTotalLinesKnown("id-1", 1000L);
-            // pas d'exception → test OK
+            assertDoesNotThrow(() -> reporter.onTotalLinesKnown("id-1", 1000L));
         }
 
         @Test
         @DisplayName("onLinesProcessed affiche la barre (pas d'exception pour valeurs normales)")
         void progressBarRenderedWithoutException() {
             reporter.onTotalLinesKnown("id-1", 1000L);
-            reporter.onLinesProcessed("id-1", 250);
-            reporter.onLinesProcessed("id-1", 250);
-            reporter.onLinesProcessed("id-1", 500);
-            // 1000/1000 = 100% — ne doit pas lever d'exception (filled >= BAR_WIDTH)
+            assertDoesNotThrow(() -> {
+                reporter.onLinesProcessed("id-1", 250);
+                reporter.onLinesProcessed("id-1", 250);
+                reporter.onLinesProcessed("id-1", 500);
+            });
         }
 
         @Test
         @DisplayName("onTotalLinesKnown avec 0 lignes ne cause pas de division par zéro")
         void zeroTotalLinesNoDivisionByZero() {
             reporter.onTotalLinesKnown("id-zero", 0L);
-            reporter.onLinesProcessed("id-zero", 10);
-            // pas d'exception
+            assertDoesNotThrow(() -> reporter.onLinesProcessed("id-zero", 10));
         }
     }
 
@@ -114,8 +114,7 @@ class LoggingImportProgressReporterTest {
             reporter.release("id-1");
 
             // après release, onLinesProcessed ne doit plus voir le grandTotal
-            // (pas de NullPointerException, barre absente)
-            reporter.onLinesProcessed("id-1", 50);
+            assertDoesNotThrow(() -> reporter.onLinesProcessed("id-1", 50));
         }
 
         @Test
@@ -143,7 +142,7 @@ class LoggingImportProgressReporterTest {
         @DisplayName("L'implémentation no-op de onTotalLinesKnown ne lève pas d'exception")
         void defaultOnTotalLinesKnownIsNoOp() {
             ImportProgressReporter noop = (cid, delta) -> { /* no-op */ };
-            noop.onTotalLinesKnown("id-1", 100L); // méthode default
+            assertDoesNotThrow(() -> noop.onTotalLinesKnown("id-1", 100L));
         }
     }
 }

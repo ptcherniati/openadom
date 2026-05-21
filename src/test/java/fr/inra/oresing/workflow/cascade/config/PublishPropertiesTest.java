@@ -69,7 +69,7 @@ class PublishPropertiesTest {
 
     @Test
     void emptyOverride_hasNoFields() {
-        CascadeRuntimeOverride empty = CascadeRuntimeOverride.empty();
+        CascadeRuntimeOverride empty = CascadeRuntimeOverride.noOverride();
         assertThat(empty.pipelineMode()).isNull();
         assertThat(empty.sinkStrategy()).isNull();
         assertThat(empty.stagingStrategy()).isNull();

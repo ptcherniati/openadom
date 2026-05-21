@@ -77,6 +77,8 @@ public class BuildCacheService {
                 t.setDaemon(true);
                 return t;
             });
+
+    private static final String KEY_DATA_NAME = "dataName";
     /**
      * Self-injection lazy : permet d'appeler {@link #runBuildAsync} via le
      * proxy Spring ( contournement self-invocation @Async gotcha ) . Sans
@@ -131,20 +133,22 @@ public class BuildCacheService {
             org.springframework.jdbc.core.JdbcTemplate metaJdbc =
                     new org.springframework.jdbc.core.JdbcTemplate(
                             repository.getRepository(application).data().getDataSource());
-            Map<String, String> meta = metaJdbc.queryForObject(
+            final Map<String, String> meta;
+            try {
+                meta = metaJdbc.queryForObject(
                     "SELECT name AS file_name , "
                   + "       (params -> 'binaryfiledataset' ->> 'datatype') AS data_name "
                   + "  FROM " + schemaIdent + " WHERE id = ?::uuid",
                     (rs, n) -> Map.of(
                             "fileName", rs.getString("file_name") == null ? "" : rs.getString("file_name"),
-                            "dataName", rs.getString("data_name") == null ? "" : rs.getString("data_name")),
+                            KEY_DATA_NAME, rs.getString("data_name") == null ? "" : rs.getString("data_name")),
                     fileId.toString());
-            if (meta == null) {
+            } catch (org.springframework.dao.EmptyResultDataAccessException ex) {
                 throw new IllegalArgumentException(
-                        "Binary file %s not found in application %s".formatted(fileId, applicationName));
+                        "Binary file %s not found in application %s".formatted(fileId, applicationName), ex);
             }
             fileName = meta.get("fileName");
-            dataName = meta.get("dataName").isEmpty() ? null : meta.get("dataName");
+            dataName = meta.get(KEY_DATA_NAME).isEmpty() ? null : meta.get(KEY_DATA_NAME);
             if (dataName == null) {
                 throw new IllegalArgumentException(
                         "Binary file %s in application %s has no datatype ( params.binaryfiledataset.datatype null ) , cannot build cache"
@@ -275,7 +279,7 @@ public class BuildCacheService {
             }
             coordinator.releaseCancellation(correlationId);
             heartbeatHandle.cancel(false);
-            try { lock.unlock(); } catch (IllegalMonitorStateException ignored) { /* not held */ }
+            if (lock.isHeldByCurrentThread()) { lock.unlock(); }
             log.info("BUILD_CACHE end : correlationId={} status={} durationMs={}",
                     correlationId, finalStatus, duration.toMillis());
         }

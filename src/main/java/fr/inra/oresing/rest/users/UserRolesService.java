@@ -61,13 +61,21 @@ public class UserRolesService {
     private static final Pattern APP_ROLE_PATTERN =
             Pattern.compile("(.*)_(applicationManager|userManager|reader|writer)");
 
+    private static final String ROLE_APPLICATION_MANAGER = "applicationManager";
+    private static final String ROLE_USER_MANAGER = "userManager";
+    private static final String ROLE_READER = "reader";
+    private static final String ROLE_WRITER = "writer";
+    private static final String ROLE_OPEN_ADOM_ADMIN = "openAdomAdmin";
+    private static final String ERR_UNKNOWN_GLOBAL_ROLE = "Unknown global role: ";
+    private static final String ERR_UNKNOWN_APPLICATION_ROLE = "Unknown application role: ";
+
     /** Application-scoped role names allowed by the grant/revoke endpoints. */
     private static final Set<String> APP_SCOPED_ROLES =
-            Set.of("applicationManager", "userManager", "reader", "writer");
+            Set.of(ROLE_APPLICATION_MANAGER, ROLE_USER_MANAGER, ROLE_READER, ROLE_WRITER);
 
     /** Global role names allowed by the grant/revoke endpoints. */
     private static final Set<String> GLOBAL_ROLES =
-            Set.of("openAdomAdmin", "userManager");
+            Set.of(ROLE_OPEN_ADOM_ADMIN, ROLE_USER_MANAGER);
 
     private final UserRepository userRepository;
     private final ApplicationRepository applicationRepository;
@@ -278,8 +286,8 @@ public class UserRolesService {
                 .anyMatch(role -> {
                     var m = APP_ROLE_PATTERN.matcher(role);
                     return m.matches()
-                            && ("applicationManager".equals(m.group(2))
-                                || "userManager".equals(m.group(2)));
+                            && (ROLE_APPLICATION_MANAGER.equals(m.group(2))
+                                || ROLE_USER_MANAGER.equals(m.group(2)));
                 });
         if (!isAnyManager) {
             throw new AccessDeniedException(
@@ -314,12 +322,12 @@ public class UserRolesService {
         if (applicationId == null) {
             if (!GLOBAL_ROLES.contains(roleName)) {
                 throw new IllegalArgumentException(
-                        "Unknown global role: " + roleName + " (expected one of " + GLOBAL_ROLES + ")");
+                        ERR_UNKNOWN_GLOBAL_ROLE + roleName + " (expected one of " + GLOBAL_ROLES + ")");
             }
         } else {
             if (!APP_SCOPED_ROLES.contains(roleName)) {
                 throw new IllegalArgumentException(
-                        "Unknown application role: " + roleName + " (expected one of " + APP_SCOPED_ROLES + ")");
+                        ERR_UNKNOWN_APPLICATION_ROLE + roleName + " (expected one of " + APP_SCOPED_ROLES + ")");
             }
         }
     }
@@ -427,44 +435,44 @@ public class UserRolesService {
 
     private void grantGlobalRole(UUID userId, String roleName) {
         switch (roleName) {
-            case "openAdomAdmin" -> authenticationService.addUserRightopenAdomAdmin(userId);
-            case "userManager" -> {
+            case ROLE_OPEN_ADOM_ADMIN -> authenticationService.addUserRightopenAdomAdmin(userId);
+            case ROLE_USER_MANAGER -> {
                 // No global userManager helper exists; this case is reserved for future
                 // expansion of the global scope. We refuse explicitly to avoid silent
                 // no-ops that would mislead admins.
                 throw new IllegalArgumentException(
                         "Global userManager grant is not supported; grant per application");
             }
-            default -> throw new IllegalArgumentException("Unknown global role: " + roleName);
+            default -> throw new IllegalArgumentException(ERR_UNKNOWN_GLOBAL_ROLE + roleName);
         }
     }
 
     private void grantApplicationRole(UUID userId, Application application, String roleName) {
         switch (roleName) {
-            case "applicationManager" -> authenticationService.addUserRightApplicationManager(userId, application);
-            case "userManager" -> authenticationService.addUserRightUserManager(userId, application);
-            case "reader" -> grantRawRole(userId, buildAppRoleSqlName(application.getId(), "reader"));
-            case "writer" -> grantRawRole(userId, buildAppRoleSqlName(application.getId(), "writer"));
-            default -> throw new IllegalArgumentException("Unknown application role: " + roleName);
+            case ROLE_APPLICATION_MANAGER -> authenticationService.addUserRightApplicationManager(userId, application);
+            case ROLE_USER_MANAGER -> authenticationService.addUserRightUserManager(userId, application);
+            case ROLE_READER -> grantRawRole(userId, buildAppRoleSqlName(application.getId(), ROLE_READER));
+            case ROLE_WRITER -> grantRawRole(userId, buildAppRoleSqlName(application.getId(), ROLE_WRITER));
+            default -> throw new IllegalArgumentException(ERR_UNKNOWN_APPLICATION_ROLE + roleName);
         }
     }
 
     private void revokeGlobalRole(UUID userId, String roleName) {
         switch (roleName) {
-            case "openAdomAdmin" -> authenticationService.deleteUserRightopenAdomAdmin(userId);
-            case "userManager" -> throw new IllegalArgumentException(
+            case ROLE_OPEN_ADOM_ADMIN -> authenticationService.deleteUserRightopenAdomAdmin(userId);
+            case ROLE_USER_MANAGER -> throw new IllegalArgumentException(
                     "Global userManager revoke is not supported; revoke per application");
-            default -> throw new IllegalArgumentException("Unknown global role: " + roleName);
+            default -> throw new IllegalArgumentException(ERR_UNKNOWN_GLOBAL_ROLE + roleName);
         }
     }
 
     private void revokeApplicationRole(UUID userId, Application application, String roleName) {
         switch (roleName) {
-            case "applicationManager" -> authenticationService.deleteUserRightApplicationManager(userId, application);
-            case "userManager" -> authenticationService.deleteUserRightUserManager(userId, application);
-            case "reader" -> revokeRawRole(userId, buildAppRoleSqlName(application.getId(), "reader"));
-            case "writer" -> revokeRawRole(userId, buildAppRoleSqlName(application.getId(), "writer"));
-            default -> throw new IllegalArgumentException("Unknown application role: " + roleName);
+            case ROLE_APPLICATION_MANAGER -> authenticationService.deleteUserRightApplicationManager(userId, application);
+            case ROLE_USER_MANAGER -> authenticationService.deleteUserRightUserManager(userId, application);
+            case ROLE_READER -> revokeRawRole(userId, buildAppRoleSqlName(application.getId(), ROLE_READER));
+            case ROLE_WRITER -> revokeRawRole(userId, buildAppRoleSqlName(application.getId(), ROLE_WRITER));
+            default -> throw new IllegalArgumentException(ERR_UNKNOWN_APPLICATION_ROLE + roleName);
         }
     }
 
@@ -645,7 +653,7 @@ public class UserRolesService {
         Set<String> managedAppIds = caller.memberOf().stream()
                 .map(APP_ROLE_PATTERN::matcher)
                 .filter(java.util.regex.Matcher::matches)
-                .filter(m -> "applicationManager".equals(m.group(2)))
+                .filter(m -> ROLE_APPLICATION_MANAGER.equals(m.group(2)))
                 .map(m -> m.group(1))
                 .collect(Collectors.toSet());
         if (managedAppIds.isEmpty()) {

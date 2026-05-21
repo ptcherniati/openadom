@@ -1,11 +1,7 @@
 package fr.inra.oresing.rest.usecases.storage.versioning;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
-
-import fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -77,20 +73,7 @@ public class PublishLifecycleCoordinator {
      */
     private final ConcurrentMap<UUID, UUID> parentByChildImport = new ConcurrentHashMap<>();
 
-    /**
-     * Optional - used to persist {@code metadata.parentCorrelationId} on the
-     * child IMPORT workflow_log row at register time . Persistence lets the
-     * audit history endpoint hide cascade child rows that exist only for
-     * accounting purposes , so a single publish surfaces as 1 row in the
-     * UI instead of 2 ( parent PUBLISH + cascade IMPORT child ) .
-     * {@code @Nullable} : harmless if absent ( tests , minimal Spring
-     * contexts ) - the in-memory mapping above still works .
-     */
-    private final WorkflowLogRepository workflowLogRepository;
-
-    @Autowired
-    public PublishLifecycleCoordinator(@Nullable WorkflowLogRepository workflowLogRepository) {
-        this.workflowLogRepository = workflowLogRepository;
+    public PublishLifecycleCoordinator() {
     }
 
     // ------------------------------------------------------------

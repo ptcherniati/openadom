@@ -54,6 +54,11 @@ import java.util.Map;
 @SecurityRequirement(name = "Bearer Authentication")
 public class CacheAdminResources {
 
+    private static final String KEY_TTL_MINUTES = "ttlMinutes";
+    private static final String KEY_ENABLED = "enabled";
+    private static final String KEY_MAX_ENTRIES = "maxEntries";
+    private static final String KEY_ENTRIES = "entries";
+
     private final ServiceContainer serviceContainer;
     private final fr.inra.oresing.cache.CacheSizeEstimator cacheSizeEstimator;
     private final fr.inra.oresing.cache.CachePreloader cachePreloader;
@@ -109,7 +114,7 @@ public class CacheAdminResources {
         body.put("bytesByCache", report.bytesByCache());
         body.put("computedAt", report.computedAt().toString());
         body.put("durationMs", report.durationMs());
-        body.put("ttlMinutes", cacheSizeEstimator.ttlMinutes());
+        body.put(KEY_TTL_MINUTES, cacheSizeEstimator.ttlMinutes());
         body.put("totalBytes", report.bytesByCache().values().stream().mapToLong(Long::longValue).sum());
         return ResponseEntity.ok(body);
     }

@@ -41,6 +41,8 @@ import java.util.Optional;
 @Slf4j
 public class OreExceptionHandler extends ResponseEntityExceptionHandler {
 
+    private static final String KEY_MESSAGE = "message";
+
     // Ajoutez cette méthode pour les erreurs Spring Security
     @ExceptionHandler(AccessDeniedException.class)
     public ErrorResponse handleAccessDenied(AccessDeniedException ex) {
@@ -78,13 +80,13 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Map<String, String>> handle(final BadCredentialsException ex) {
         String code = ex.getCause() instanceof ExpiredJwtException ? "TOKEN_EXPIRED" : "TOKEN_INVALID";
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("code", code, "message", String.valueOf(ex.getMessage())));
+                .body(Map.of("code", code, KEY_MESSAGE, String.valueOf(ex.getMessage())));
     }
 
     @ExceptionHandler(AuthenticationCredentialsNotFoundException.class)
     public ResponseEntity<Map<String, String>> handle(final AuthenticationCredentialsNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("code", "TOKEN_INVALID", "message", String.valueOf(ex.getMessage())));
+                .body(Map.of("code", "TOKEN_INVALID", KEY_MESSAGE, String.valueOf(ex.getMessage())));
     }
 
     @ExceptionHandler(SiOreIllegalArgumentException.class)
@@ -106,7 +108,7 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
             final fr.inra.oresing.rest.usecases.storage.versioning.WorkflowAlreadyInProgressException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                 "code",                 "WORKFLOW_ALREADY_IN_PROGRESS",
-                "message",              ex.getMessage(),
+                KEY_MESSAGE,              ex.getMessage(),
                 "activeCorrelationId",  String.valueOf(ex.activeCorrelationId()),
                 "activeWorkflowType",   String.valueOf(ex.activeWorkflowType()),
                 "activeUserLogin",      ex.activeUserLogin() == null ? "" : ex.activeUserLogin(),

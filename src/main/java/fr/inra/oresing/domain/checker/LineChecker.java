@@ -20,8 +20,6 @@ import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.*;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.ManyChecker, LineChecker.OneChecker {
 
@@ -229,7 +227,7 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
                     final Map<String, Object> perCallCtx = PER_CALL_CONTEXT.get();
                     final Map<String, Object> evalCtx = somethingThatCanProvideEvaluationContext.getEvaluationContext();
                     final int sizeHint = (perCallCtx == null ? 0 : perCallCtx.size()) + evalCtx.size();
-                    final Map<String, Object> result = new java.util.HashMap<>(sizeHint > 0 ? sizeHint : 4);
+                    final Map<String, Object> result = HashMap.newHashMap(sizeHint > 0 ? sizeHint : 4);
                     if (perCallCtx != null) result.putAll(perCallCtx);
                     result.putAll(evalCtx);  // evalCtx wins on conflict ( prev (v1,v2)->v2 semantic )
 

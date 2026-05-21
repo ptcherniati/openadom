@@ -175,6 +175,7 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
     /**
      * Étant donné une colonne, l'ensemble des valeurs qui doivent être subir transformation et computationChecker
      */
+    @SuppressWarnings("java:S1452")
     public FieldType<?> getValuesToCheck(final DataColumn column) {
         return get(column).getValuesToCheck();
     }

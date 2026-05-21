@@ -65,6 +65,7 @@ import java.util.stream.Stream;
 public class BundleResources {
 
     // ── constantes ──────────────────────────────────────────────────────────
+    private static final String ERROR_TYPE_LOADING = "ERROR_LOADING_DATA";
     private static final String TMP = "/tmp";
     private static final String BUNDLE_NAME = "%s-%s-upload-bundle";
     private static final DateTimeFormatter TIMESTAMP_FORMATER = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
@@ -130,7 +131,7 @@ public class BundleResources {
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
     @GetMapping(value = "/applications/{nameOrId}/upload-bundle")
-    public ResponseEntity<?> getUploadBundle(
+    public ResponseEntity<Object> getUploadBundle(
             @PathVariable("nameOrId") String nameOrId,
             @RequestParam(value = "withData", required = false, defaultValue = "false") boolean withData,
             @RequestParam(value = "locale", required = false) Locale locale,
@@ -228,13 +229,13 @@ public class BundleResources {
 
             boolean completedSuccessfully = false;
             try {
-                ObjectMapper mapper = new ObjectMapper();
+                ObjectMapper objectMapper = new ObjectMapper();
                 File finalZipFile = zipFile;
                 AtomicReference<Map<String, List<String>>> manifest = new AtomicReference<>();
                 readEntryUseCase.execute(zipFile, DataService.MANIFEST_JSON,
                         manifestStream -> {
                             try {
-                                manifest.set(mapper.readValue(manifestStream,
+                                manifest.set(objectMapper.readValue(manifestStream,
                                         new TypeReference<Map<String, List<String>>>() {}));
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
@@ -247,7 +248,7 @@ public class BundleResources {
                 readEntryUseCase.execute(zipFile, DataService.REFERENCES_JSON,
                         referencesStream -> {
                             try {
-                                references.set(mapper.readValue(referencesStream,
+                                references.set(objectMapper.readValue(referencesStream,
                                         new TypeReference<Map<String, List<String>>>() {}));
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
@@ -334,7 +335,7 @@ public class BundleResources {
                                             registerReactiveResult.add(new ReactiveTypeError(
                                                     Map.of(PARAM_DATA_NAME, dataName,
                                                            PARAM_FILE_NAME, fileName,
-                                                           "errorType", "ERROR_LOADING_DATA")), true);
+                                                           "errorType", ERROR_TYPE_LOADING)), true);
                                         } catch (Exception ignored) {}
                                     }
                                         mono.success();
@@ -478,7 +479,7 @@ public class BundleResources {
                 log.error("Erreur IO lors du chargement de {}/{}: {}", dataName, fileName, e.getMessage(), e);
                 final ReactiveTypeError reactiveTypeError = new ReactiveTypeError(
                         Map.of(PARAM_DATA_NAME, dataName, PARAM_FILE_NAME, fileName,
-                                "errorType", "ERROR_LOADING_DATA"));
+                                "errorType", ERROR_TYPE_LOADING));
                 registerReactiveResult.add(reactiveTypeError, true);
                 // Ne pas re-throw : l'erreur est déjà signalée côté frontend, on continue avec les autres fichiers
             } catch (RuntimeException e) {
@@ -486,7 +487,7 @@ public class BundleResources {
                 log.error("Erreur inattendue lors du chargement de {}/{}: {}", dataName, fileName, e.getMessage(), e);
                 final ReactiveTypeError reactiveTypeError = new ReactiveTypeError(
                         Map.of(PARAM_DATA_NAME, dataName, PARAM_FILE_NAME, fileName,
-                                "errorType", "ERROR_LOADING_DATA"));
+                                "errorType", ERROR_TYPE_LOADING));
                 registerReactiveResult.add(reactiveTypeError, true);
                 // Ne pas re-throw : évite de terminer prématurément le flux NDJSON
             }

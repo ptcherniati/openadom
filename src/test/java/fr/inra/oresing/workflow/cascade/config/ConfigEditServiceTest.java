@@ -13,14 +13,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -43,7 +39,6 @@ class ConfigEditServiceTest {
     private ConfigFieldRegistry  registry;
     private ConfigChangeAudit    audit;
     private ConfigEditService    service;
-    private ThreadPoolExecutor   tpe;
 
     @BeforeEach
     void setUp() {

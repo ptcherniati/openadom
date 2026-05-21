@@ -107,7 +107,9 @@ public class Ltree implements Comparable<Ltree> {
     public static void checkLabelSyntax(final String label) {
         Preconditions.checkState(label.length() <= 256, ExceptionMessage.TOO_LONG_LABEL.toMessage());
         Preconditions.checkState(!label.isEmpty(), ExceptionMessage.NULL_LABEL.toMessage());
-        Preconditions.checkState(VALID_LABEL_REGEX.matcher(label).matches(), ExceptionMessage.INAPPROPRIATE_LABEL.toMessage(), label);
+        if (!VALID_LABEL_REGEX.matcher(label).matches()) {
+            throw new IllegalStateException(ExceptionMessage.INAPPROPRIATE_LABEL.toMessage() + " : " + label);
+        }
     }
 
     private static String escapeSymbolFromKeyComponent(final Character aChar) {

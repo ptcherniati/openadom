@@ -612,37 +612,6 @@ public class WorkflowLogRepository {
         return n != null ? n : 0;
     }
 
-    /**
-     * Args ordonnes pour {@link #INSERT_SQL} a passer a
-     * {@code jdbcTemplate.queryForObject} . Mirror de {@link #bindEntry} .
-     * Utilise pour le path single-entry ( recordEnd terminal ) ou
-     * batchUpdate sur SELECT laisse la connexion idle in tx .
-     */
-    private Object[] extractEntryArgs(WorkflowLogEntry e) {
-        Duration d = e.duration();
-        return new Object[] {
-            e.correlationId(),
-            e.workflowType(),
-            e.userId(),
-            e.userLogin(),
-            e.applicationName(),
-            e.dataType(),
-            e.resourceName(),
-            Timestamp.from(e.startTime()),
-            e.endTime() != null ? Timestamp.from(e.endTime()) : null,
-            d != null ? d.toMillis() : null,
-            e.status(),
-            e.recordsProcessed(),
-            e.recordsFailed(),
-            e.chunksProcessed(),
-            e.bytesTotal(),
-            serializeErrors(e.errors()),
-            e.fatalError(),
-            serializeMetadata(e.metadata()),
-            e.failedStage(),
-            e.finalCount()
-        };
-    }
 
     private void bindEntry(PreparedStatement ps, WorkflowLogEntry e) throws SQLException {
         ps.setObject(1, e.correlationId());

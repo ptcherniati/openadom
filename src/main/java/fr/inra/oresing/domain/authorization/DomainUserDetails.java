@@ -15,6 +15,7 @@ public interface DomainUserDetails {
     /**
      * @return les autorités accordées à cet utilisateur
      */
+    @SuppressWarnings("java:S1452")
     default Collection<? extends DomainGrantedAuthority> getAuthorities() {
         return List.of();
     }

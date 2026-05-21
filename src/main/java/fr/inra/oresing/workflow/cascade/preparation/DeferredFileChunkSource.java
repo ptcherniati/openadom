@@ -8,6 +8,7 @@ import fr.inrae.ore.cascade.model.workflow.WorkflowConfig;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.OptionalInt;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -56,11 +57,11 @@ public final class DeferredFileChunkSource implements Source<Path> {
     private final Path             chunksDir;
     private final int              fallbackChunkSizeLines;
 
-    /** Resolved lazily by onWorkflowStart , null avant . Volatile pour
+    /** Resolved lazily by onWorkflowStart , null avant . AtomicReference pour
      *  visibilite cross-thread ( cascade peut appeler read sur un worker
      *  different du thread qui a fait onWorkflowStart , mais via une
      *  synchronisation explicite cote executor ) . */
-    private volatile FileChunkSource delegate;
+    private final AtomicReference<FileChunkSource> delegateRef = new AtomicReference<>();
 
     /**
      * @param sourceName             nom logique pour les events cascade
@@ -87,11 +88,12 @@ public final class DeferredFileChunkSource implements Source<Path> {
 
     @Override
     public void onWorkflowStart(WorkflowConfig config) {
-        if (delegate != null) {
+        FileChunkSource current = delegateRef.get();
+        if (current != null) {
             // Idempotence defensive : si cascade appelle onWorkflowStart
             // plusieurs fois ( ne devrait pas , mais le contrat lifecycle
             // n'interdit pas ) on re-resoud pas , on delegate .
-            delegate.onWorkflowStart(config);
+            current.onWorkflowStart(config);
             return;
         }
         Path resolved = pathSupplier.get();
@@ -101,8 +103,9 @@ public final class DeferredFileChunkSource implements Source<Path> {
                             + sourceName
                             + " ; ensure the preparator sets the AtomicReference inside prepare(ctx)");
         }
-        delegate = new FileChunkSource(resolved, chunksDir, fallbackChunkSizeLines);
-        delegate.onWorkflowStart(config);
+        FileChunkSource created = new FileChunkSource(resolved, chunksDir, fallbackChunkSizeLines);
+        delegateRef.set(created);
+        created.onWorkflowStart(config);
     }
 
     @Override
@@ -129,23 +132,26 @@ public final class DeferredFileChunkSource implements Source<Path> {
             throw new IllegalArgumentException(
                     "fallbackChunkSizeLines must be > 0 ( got " + fallbackChunkSizeLines + " )");
         }
-        if (delegate != null) {
-            delegate.validate();
+        FileChunkSource current = delegateRef.get();
+        if (current != null) {
+            current.validate();
         }
     }
 
     @Override
     public long estimatedRecordCount() {
-        return delegate != null ? delegate.estimatedRecordCount() : -1L;
+        FileChunkSource d = delegateRef.get();
+        return d != null ? d.estimatedRecordCount() : -1L;
     }
 
     @Override
     public OptionalInt estimatedTotalChunks() {
-        return delegate != null ? delegate.estimatedTotalChunks() : OptionalInt.empty();
+        FileChunkSource d = delegateRef.get();
+        return d != null ? d.estimatedTotalChunks() : OptionalInt.empty();
     }
 
     private FileChunkSource requireDelegate() {
-        FileChunkSource d = delegate;
+        FileChunkSource d = delegateRef.get();
         if (d == null) {
             throw new IllegalStateException(
                     "DeferredFileChunkSource.read() called before onWorkflowStart() : "
