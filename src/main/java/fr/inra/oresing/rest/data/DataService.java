@@ -1916,6 +1916,11 @@ private PlatformTransactionManager transactionManager;
     public void invalidateFilterListCache(final Application application, final String refType) {
         String cacheKey = application.getName() + "::" + refType;
         if (filterListCache != null) filterListCache.invalidate(cacheKey);
+        // Drop la slot singleflight si presente : sans ca , un compute en
+        // cours ( ou une slot residuelle d'avant le fix de cleanup ) restait
+        // figee et continuait a servir un payload eventuellement stale apres
+        // l'invalidation du MemoryCache .
+        filterListInFlight.invalidate(cacheKey);
         log.info("filterList cache invalidated for {}", cacheKey);
         // Idem que refreshFilterListCache : on aligne les invalidations
         // pour ne jamais servir un arbre / un set de checkers stale après
@@ -1934,7 +1939,12 @@ private PlatformTransactionManager transactionManager;
         if (appName == null || filterListCache == null) return;
         final String prefix = appName + "::";
         int removed = filterListCache.invalidateMatching(k -> k.startsWith(prefix));
-        log.info("filterList cache invalidated for app {} ( {} entries )", appName, removed);
+        // Symetrie : drop aussi les slots singleflight de cette app
+        // ( sans ca , un compute residuel resurface apres eviction du
+        // MemoryCache et masque les nouvelles donnees ) .
+        int removedInFlight = filterListInFlight.invalidateMatching(k -> k.startsWith(prefix));
+        log.info("filterList cache invalidated for app {} ( {} cache entries , {} in-flight slots )",
+                appName, removed, removedInFlight);
         if (cacheMetrics != null) cacheMetrics.recordFilterListInvalidate();
     }
 
@@ -1943,7 +1953,8 @@ private PlatformTransactionManager transactionManager;
      */
     public void invalidateAllFilterListCaches() {
         if (filterListCache != null) filterListCache.invalidateAll();
-        log.info("All filterList caches invalidated");
+        int removedInFlight = filterListInFlight.invalidateAll();
+        log.info("All filterList caches invalidated ( {} in-flight slots dropped )", removedInFlight);
     }
 
     public void readEntry(File zipBundleFile, String entryName, Consumer<InputStream> consumer) throws IOException {

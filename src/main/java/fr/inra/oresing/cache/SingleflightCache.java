@@ -132,4 +132,55 @@ public final class SingleflightCache<K, V> {
     public int inFlightCount() {
         return inFlight.size();
     }
+
+    /**
+     * Drop the in-flight slot for {@code key} if any . Useful when the
+     * caller knows the cached compute is stale ( e.g. invalidation flow
+     * called from a {@code /cache/refresh} admin endpoint ) and wants to
+     * guarantee the next {@link #load} triggers a fresh compute instead
+     * of returning the still-completed Future from a previous round .
+     *
+     * <p>Safe to call concurrently with {@link #load} : if a compute is
+     * mid-flight , this just races with the cleanup in {@code load}'s
+     * finally block . The {@code Future} held by current callers is
+     * unaffected ; they receive the in-progress result as usual .
+     *
+     * @return {@code true} if a slot was removed , {@code false} otherwise .
+     */
+    public boolean invalidate(K key) {
+        return inFlight.remove(key) != null;
+    }
+
+    /**
+     * Drop ALL in-flight slots . Useful for global cache invalidation
+     * ( admin endpoint flushing all caches ) or after a config change
+     * that would invalidate every cached compute . Same safety
+     * guarantees as {@link #invalidate(Object)} .
+     *
+     * @return number of slots removed .
+     */
+    public int invalidateAll() {
+        int size = inFlight.size();
+        inFlight.clear();
+        return size;
+    }
+
+    /**
+     * Drop every in-flight slot whose key matches the predicate . Used
+     * for prefix-scoped invalidation ( e.g. {@code key -> key.startsWith("app::")} )
+     * symmetric to {@code MemoryCache.invalidateMatching} . Iteration is
+     * weakly-consistent ( ConcurrentHashMap semantic ) : entries created
+     * during iteration may or may not be considered .
+     *
+     * @return number of slots removed .
+     */
+    public int invalidateMatching(java.util.function.Predicate<K> keyPredicate) {
+        int removed = 0;
+        for (K key : inFlight.keySet()) {
+            if (keyPredicate.test(key) && inFlight.remove(key) != null) {
+                removed++;
+            }
+        }
+        return removed;
+    }
 }

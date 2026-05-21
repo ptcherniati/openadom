@@ -236,6 +236,109 @@ class SingleflightCacheTest {
     //  Metrics                                                             //
     // ------------------------------------------------------------------ //
 
+    // ------------------------------------------------------------------ //
+    //  Invalidation                                                        //
+    // ------------------------------------------------------------------ //
+
+    @Test
+    void invalidateRemovesIdleSlotIfPresent() {
+        SingleflightCache<String, Integer> cache = new SingleflightCache<>();
+        // Apres un load complete , la slot est nettoyee automatiquement -
+        // donc invalidate retourne false ( pas de slot a retirer ) . Le
+        // contrat reste utile pour les cas ou un compute long est en
+        // cours et le caller veut court-circuiter .
+        cache.load("k", () -> 1);
+        assertThat(cache.invalidate("k")).isFalse();
+        assertThat(cache.invalidate("nonexistent")).isFalse();
+    }
+
+    @Test
+    void invalidateDropsInFlightSlotMidCompute() throws Exception {
+        SingleflightCache<String, Integer> cache = new SingleflightCache<>();
+        CountDownLatch enter = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+
+        ExecutorService pool = Executors.newSingleThreadExecutor();
+        try {
+            pool.submit(() -> cache.load("k", () -> {
+                enter.countDown();
+                try { release.await(); }
+                catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                return 1;
+            }));
+            enter.await(1, TimeUnit.SECONDS);
+            assertThat(cache.inFlightCount()).isEqualTo(1);
+            assertThat(cache.invalidate("k")).isTrue();
+            assertThat(cache.inFlightCount()).isZero();
+            release.countDown();
+        } finally {
+            pool.shutdown();
+            pool.awaitTermination(2, TimeUnit.SECONDS);
+        }
+    }
+
+    @Test
+    void invalidateMatchingDropsOnlySelectedSlots() throws Exception {
+        SingleflightCache<String, Integer> cache = new SingleflightCache<>();
+        CountDownLatch enter = new CountDownLatch(3);
+        CountDownLatch release = new CountDownLatch(1);
+
+        ExecutorService pool = Executors.newFixedThreadPool(3);
+        try {
+            pool.submit(() -> cache.load("appA::ts", () -> { enter.countDown();
+                try { release.await(); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                return 1; }));
+            pool.submit(() -> cache.load("appA::pem", () -> { enter.countDown();
+                try { release.await(); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                return 2; }));
+            pool.submit(() -> cache.load("appB::ts", () -> { enter.countDown();
+                try { release.await(); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                return 3; }));
+            enter.await(2, TimeUnit.SECONDS);
+            assertThat(cache.inFlightCount()).isEqualTo(3);
+
+            int removed = cache.invalidateMatching(k -> k.startsWith("appA::"));
+            assertThat(removed).isEqualTo(2);
+            assertThat(cache.inFlightCount()).isEqualTo(1);   // appB::ts reste
+
+            release.countDown();
+        } finally {
+            pool.shutdown();
+            pool.awaitTermination(2, TimeUnit.SECONDS);
+        }
+    }
+
+    @Test
+    void invalidateAllDropsEverySlot() throws Exception {
+        SingleflightCache<String, Integer> cache = new SingleflightCache<>();
+        CountDownLatch enter = new CountDownLatch(2);
+        CountDownLatch release = new CountDownLatch(1);
+
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            pool.submit(() -> cache.load("a", () -> {
+                enter.countDown();
+                try { release.await(); }
+                catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                return 1;
+            }));
+            pool.submit(() -> cache.load("b", () -> {
+                enter.countDown();
+                try { release.await(); }
+                catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                return 2;
+            }));
+            enter.await(1, TimeUnit.SECONDS);
+            assertThat(cache.inFlightCount()).isEqualTo(2);
+            assertThat(cache.invalidateAll()).isEqualTo(2);
+            assertThat(cache.inFlightCount()).isZero();
+            release.countDown();
+        } finally {
+            pool.shutdown();
+            pool.awaitTermination(2, TimeUnit.SECONDS);
+        }
+    }
+
     @Test
     void inFlightCountReflectsActiveComputes() throws Exception {
         SingleflightCache<String, Integer> cache = new SingleflightCache<>();
