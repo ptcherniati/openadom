@@ -985,12 +985,21 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     public java.time.Instant recomputeReferencevalueCountStats() {
         final String schema = getTable().schema().getSqlIdentifier();
         final String source = getTable().getSqlIdentifier();
-        // TRUNCATE + INSERT dans une seule transaction pour atomicite :
+        // DELETE + INSERT dans une seule transaction pour atomicite :
         // pendant la duree du recompute , les lectures voient soit l'ancien
         // etat ( si la transaction n'est pas encore committee ) soit le
         // nouveau. Pas d'etat intermediaire incoherent visible.
+        //
+        // Pourquoi DELETE plutot que TRUNCATE : TRUNCATE prend un lock
+        // ACCESS EXCLUSIVE sur la table , bloquant toute lecture concurrente
+        // pendant la duree de la transaction ( 2-5 min sur 200M rows ) .
+        // DELETE prend des row locks ( ROW EXCLUSIVE sur la table , partage )
+        // : les lecteurs MVCC continuent de voir l'ancien snapshot sans
+        // attendre . Trade-off : DELETE est legerement plus lent que TRUNCATE
+        // sur les vides ( table d'agregats ~milliers de lignes max ) , mais
+        // le gain en disponibilite de lecture vaut largement le surcout .
         getNamedParameterJdbcTemplate().getJdbcTemplate().execute(
-                "TRUNCATE TABLE " + schema + ".referencevalue_count_stats");
+                "DELETE FROM " + schema + ".referencevalue_count_stats");
         getNamedParameterJdbcTemplate().getJdbcTemplate().execute(String.format("""
                 INSERT INTO %1$s.referencevalue_count_stats (referencetype, line_count, updated_at)
                 SELECT referencetype, count(*), now()

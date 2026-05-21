@@ -9,8 +9,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import org.junit.jupiter.api.Tag;
 
 /**
@@ -346,6 +348,95 @@ class ReactiveTypesTest {
             helper.pushProgress(0.5);
             ReactiveEventHelper child = helper.withSubLabel("x");
             assertThat(child.getProgress()).isEqualTo(0.5);
+        }
+
+        // ------------------------------------------------------------------ //
+        // Robustesse emission ( Task #307 )                                    //
+        // ------------------------------------------------------------------ //
+        // Quand le subscriber Reactor a disparu ( Flux annule , HTTP client
+        // deconnecte , pool heavy sature ) , sink.accept() peut lever une
+        // exception . Le helper doit avaler cette exception pour ne pas
+        // faire echouer le commit metier , et l'enregistrer en DEBUG .
+        // Tests sur chaque push* : aucune exception ne doit propager .
+
+        /**
+         * Fixture : sink qui leve systematiquement RuntimeException ,
+         * simulant un subscriber disparu / un pool sature .
+         */
+        private Consumer<ReactiveResult> failingSink() {
+            return event -> {
+                throw new RuntimeException("subscriber gone (simulated)");
+            };
+        }
+
+        @Test
+        void pushProgressSwallowsExceptionWhenSinkFails() {
+            ReactiveEventHelper helper = new ReactiveEventHelper(failingSink());
+            assertThatCode(() -> helper.pushProgress(0.0)).doesNotThrowAnyException();
+            assertThatCode(() -> helper.pushProgress(0.5)).doesNotThrowAnyException();
+            // L'etat interne ( currentProgress ) doit etre maintenu meme si
+            // l'emission echoue : un re-essai ulterieur partira de la bonne base .
+            assertThat(helper.getProgress()).isEqualTo(0.5);
+        }
+
+        @Test
+        void incrementAndPushSwallowsExceptionWhenSinkFails() {
+            ReactiveEventHelper helper = new ReactiveEventHelper(failingSink());
+            assertThatCode(() -> helper.incrementAndPush(p -> p + 0.25))
+                    .doesNotThrowAnyException();
+            assertThat(helper.getProgress()).isEqualTo(0.25);
+        }
+
+        @Test
+        void pushMessageSwallowsExceptionWhenSinkFails() {
+            ReactiveEventHelper helper = new ReactiveEventHelper(failingSink());
+            assertThatCode(() -> helper.pushMessage("step1")).doesNotThrowAnyException();
+            assertThatCode(() -> helper.pushMessage("step2", Map.of("k", "v")))
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        void pushResultSwallowsExceptionWhenSinkFails() {
+            ReactiveEventHelper helper = new ReactiveEventHelper(failingSink());
+            assertThatCode(() -> helper.pushResult("anyResult")).doesNotThrowAnyException();
+        }
+
+        @Test
+        void pushErrorSwallowsExceptionWhenSinkFails() {
+            ReactiveEventHelper helper = new ReactiveEventHelper(failingSink());
+            assertThatCode(() -> helper.pushError(new IOException("io")))
+                    .doesNotThrowAnyException();
+            assertThatCode(() -> helper.pushError(new IllegalStateException("generic")))
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        void completeSwallowsExceptionWhenSinkFails() {
+            ReactiveEventHelper helper = new ReactiveEventHelper(failingSink());
+            assertThatCode(helper::complete).doesNotThrowAnyException();
+            assertThat(helper.getProgress()).isEqualTo(1.0);
+        }
+
+        /**
+         * Cas mixte : un sink qui echoue UNE fois puis fonctionne . Le
+         * helper doit continuer a pouvoir emettre apres la defaillance
+         * ( pas d'etat interne casse , pas d'arret de l'emission ) .
+         */
+        @Test
+        void helperRecoversAfterTransientSinkFailure() {
+            List<ReactiveResult> captured = new ArrayList<>();
+            int[] failCount = {1};
+            Consumer<ReactiveResult> flakySink = event -> {
+                if (failCount[0]-- > 0) {
+                    throw new RuntimeException("transient");
+                }
+                captured.add(event);
+            };
+            ReactiveEventHelper helper = new ReactiveEventHelper(flakySink);
+            helper.pushProgress(0.1);   // echoue ( avale )
+            helper.pushProgress(0.2);   // passe
+            helper.pushMessage("ok");   // passe
+            assertThat(captured).hasSize(2);
         }
     }
 }

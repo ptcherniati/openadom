@@ -1615,6 +1615,23 @@ private PlatformTransactionManager transactionManager;
      */
     private fr.inra.oresing.cache.MemoryCache<String, FilterListValue> filterListCache;
 
+    /**
+     * Singleflight pattern : empêche le cache stampede sur cache miss
+     * concurrent . Lorsque N requêtes /filters arrivent en parallèle
+     * pour la même clé sur un cache froid ( boot backend , après
+     * refresh ) , seule la PREMIÈRE exécute le {@code computeFilterListEntries}
+     * coûteux ( EXISTS + DISTINCT par colonne FK + serialize JSON ;
+     * 1-5s typique ) . Les N-1 autres attendent la {@code CompletableFuture}
+     * déjà en cours et reçoivent le même résultat ( ~0ms en plus de
+     * l'attente ) . Économise N-1 requêtes SQL identiques + connexions
+     * Hikari simultanées sur la même clé .
+     *
+     * <p>L'entrée est retirée du map dès la fin du compute ( succès ou
+     * échec ) pour permettre le retry au prochain cache miss .
+     */
+    private final java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.CompletableFuture<FilterListValue>>
+            inFlightFilterListBuilds = new java.util.concurrent.ConcurrentHashMap<>();
+
     @jakarta.annotation.PostConstruct
     void initFilterListCache() {
         this.filterListCache = new fr.inra.oresing.cache.MemoryCache<>(
@@ -1664,12 +1681,46 @@ private PlatformTransactionManager transactionManager;
             return new FilterListResult(cached.json(), cached.etag());
         }
 
-        // Cache miss : exécuter la requête SQL , sérialiser , stocker.
-        log.info("filterList cache miss for {}, loading from database", cacheKey);
-        if (cacheMetrics != null) cacheMetrics.recordFilterListMiss();
-        List<FilterListEntry> entries = computeFilterListEntries(application, refType);
-        FilterListValue stored = serializeAndCache(cacheKey, entries);
-        return new FilterListResult(stored.json(), stored.etag());
+        // Cache miss : singleflight pour empêcher le cache stampede . Si
+        // une autre requête est déjà en train de calculer la même clé ,
+        // on attend son résultat au lieu de relancer un compute parallèle .
+        // computeIfAbsent garantit qu'un seul thread crée la Future ; les
+        // autres récupèrent la Future déjà présente .
+        final java.util.concurrent.CompletableFuture<FilterListValue> future =
+                inFlightFilterListBuilds.computeIfAbsent(cacheKey, key -> {
+                    log.info("filterList cache miss for {} , loading from database ( singleflight leader )", key);
+                    if (cacheMetrics != null) cacheMetrics.recordFilterListMiss();
+                    final java.util.concurrent.CompletableFuture<FilterListValue> cf = new java.util.concurrent.CompletableFuture<>();
+                    try {
+                        List<FilterListEntry> entries = computeFilterListEntries(application, refType);
+                        FilterListValue stored = serializeAndCache(key, entries);
+                        cf.complete(stored);
+                    } catch (Throwable t) {
+                        cf.completeExceptionally(t);
+                    } finally {
+                        // Retire IMPÉRATIVEMENT l'entrée du map après le compute
+                        // ( succès ou échec ) pour permettre le retry au prochain
+                        // cache miss . Sans ce remove , une exception bloquerait
+                        // tout futur compute sur cette clé .
+                        inFlightFilterListBuilds.remove(key);
+                    }
+                    return cf;
+                });
+
+        // Followers : la Future existait déjà (un autre thread a pris la
+        // pole position) , on attend son résultat . Aucune nouvelle requête
+        // SQL n'est émise pour cette clé .
+        try {
+            FilterListValue stored = future.get();
+            return new FilterListResult(stored.json(), stored.etag());
+        } catch (java.util.concurrent.ExecutionException e) {
+            Throwable cause = e.getCause() != null ? e.getCause() : e;
+            if (cause instanceof RuntimeException re) throw re;
+            throw new RuntimeException("filterList compute failed for " + cacheKey, cause);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("filterList wait interrupted for " + cacheKey, e);
+        }
     }
 
     /**
@@ -1726,13 +1777,19 @@ private PlatformTransactionManager transactionManager;
         }
 
         // 2. Pour chaque colonne filtrable opt-in :
-        //    - __FILTER_LIST__  -> valeurs distinctes complètes ( DISTINCT )
-        //    - __FILTER_TEXT__  -> uniquement le drapeau hasEmpty ( EXISTS ) ,
-        //      values reste vide. Permet au front de conditionner le bouton
-        //      "(vide)" sans payer le coût d'un DISTINCT inutile.
+        //    - __FILTER_LIST__   -> valeurs distinctes complètes ( DISTINCT )
+        //    - __FILTER_TEXT__   -> uniquement le drapeau hasEmpty ( EXISTS )
+        //    - ReferenceChecker  -> drapeau hasEmpty seulement ( les options
+        //      viennent de la table dimension via FilterList ci-dessus ;
+        //      hasEmpty conditionne le bouton "+ (vide)" cf. §5.7 de
+        //      FILTER_TEXT_LIST.md ) . Pour DRY , on réutilise exactement
+        //      la même méthode `getColumnHasEmpty` que pour FILTER_TEXT :
+        //      la requête EXISTS est agnostique au type de la colonne
+        //      ( elle teste null dans le JSON , indépendamment du checker ) .
         application.findData(refType).ifPresent(dataDescription ->
                 dataDescription.componentDescriptions().values().stream()
-                        .filter(c -> c.isFilterableAsList() || c.isFilterableAsText())
+                        .filter(c -> c.isFilterableAsList() || c.isFilterableAsText()
+                                || c.findReferenceCheckerType().isPresent())
                         .forEach(component -> {
                             try {
                                 final var multiplicity = component.checker() != null
@@ -1742,6 +1799,10 @@ private PlatformTransactionManager transactionManager;
                                     result.add(dataRepo.getColumnDistinctValues(
                                             refType, component.componentKey(), multiplicity));
                                 } else {
+                                    // Couvre à la fois FILTER_TEXT et ReferenceChecker :
+                                    // seul `hasEmpty` est nécessaire ; `values` reste
+                                    // vide ( pour les FK les options viennent déjà
+                                    // de la FilterList du refType lié ) .
                                     result.add(dataRepo.getColumnHasEmpty(
                                             refType, component.componentKey(), multiplicity));
                                 }
