@@ -1655,64 +1655,92 @@ private PlatformTransactionManager transactionManager;
      *         endpoint
      */
     public FilterListResult getFilterListResult(final Application application, final String refType) {
-        String cacheKey = application.getName() + "::" + refType;
+        final String cacheKey = application.getName() + "::" + refType;
 
-        // Cache désactivé via openadom.cache.filter-list.enabled : on bypass
-        // intégralement ( pas de lecture cache, pas d'écriture cache ). Utile
-        // pour debug stale-data ou benchmarking comparatif des temps SQL.
-        // L'ETag reste calculé pour préserver la sémantique HTTP côté browser.
+        // Cache desactive via openadom.cache.filter-list.enabled : on bypass
+        // integralement ( pas de lecture cache , pas d'ecriture cache ) .
+        // Utile pour debug stale-data ou benchmarking comparatif des temps SQL .
         if (!filterListCacheEnabled) {
-            log.debug("filterList cache disabled, computing directly for {}", cacheKey);
-            List<FilterListEntry> entries = computeFilterListEntries(application, refType);
-            try {
-                String json = cacheObjectMapper.writeValueAsString(entries);
-                return new FilterListResult(json, computeEtag(json));
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to serialize filterList JSON for " + cacheKey, e);
-            }
+            log.debug("filterList cache disabled , computing directly for {}", cacheKey);
+            return toFilterListResult(serializeOnly(
+                    computeFilterListEntries(application, refType).entries()));
         }
 
+        // Cache hit : retourner le JSON deja serialise + ETag stocke ( ~0ms ) .
         FilterListValue cached = filterListCache.get(cacheKey);
-
-        // Cache hit : retourner le JSON déjà sérialisé + ETag stocké (0ms)
         if (cached != null) {
             log.debug("filterList cache hit for {}", cacheKey);
             if (cacheMetrics != null) cacheMetrics.recordFilterListHit();
-            return new FilterListResult(cached.json(), cached.etag());
+            return toFilterListResult(cached);
         }
 
-        // Cache miss : singleflight pour empêcher le cache stampede . Si
-        // une autre requête est déjà en train de calculer la même clé ,
-        // on attend son résultat au lieu de relancer un compute parallèle .
-        // computeIfAbsent garantit qu'un seul thread crée la Future ; les
-        // autres récupèrent la Future déjà présente .
-        final java.util.concurrent.CompletableFuture<FilterListValue> future =
-                inFlightFilterListBuilds.computeIfAbsent(cacheKey, key -> {
-                    log.info("filterList cache miss for {} , loading from database ( singleflight leader )", key);
-                    if (cacheMetrics != null) cacheMetrics.recordFilterListMiss();
-                    final java.util.concurrent.CompletableFuture<FilterListValue> cf = new java.util.concurrent.CompletableFuture<>();
-                    try {
-                        List<FilterListEntry> entries = computeFilterListEntries(application, refType);
-                        FilterListValue stored = serializeAndCache(key, entries);
-                        cf.complete(stored);
-                    } catch (Throwable t) {
-                        cf.completeExceptionally(t);
-                    } finally {
-                        // Retire IMPÉRATIVEMENT l'entrée du map après le compute
-                        // ( succès ou échec ) pour permettre le retry au prochain
-                        // cache miss . Sans ce remove , une exception bloquerait
-                        // tout futur compute sur cette clé .
-                        inFlightFilterListBuilds.remove(key);
-                    }
-                    return cf;
-                });
+        // Cache miss : singleflight pour empecher le cache stampede .
+        return loadViaSingleflight(application, refType, cacheKey);
+    }
 
-        // Followers : la Future existait déjà (un autre thread a pris la
-        // pole position) , on attend son résultat . Aucune nouvelle requête
-        // SQL n'est émise pour cette clé .
+    /**
+     * Pattern singleflight via {@link java.util.concurrent.ConcurrentHashMap#putIfAbsent} :
+     * un seul thread compute par cle , les autres attendent son resultat .
+     * Slot retiree APRES completion ( succes ou echec ) pour qu'un futur
+     * cache miss puisse declencher un nouveau compute .
+     *
+     * <p><b>Piege historique evite</b> : le pattern
+     * <code>computeIfAbsent + remove dans le mapper</code> ne fonctionne PAS .
+     * {@code ConcurrentHashMap} appelle le mapper AVANT de placer la valeur
+     * retournee dans le map ; le {@code remove(key)} depuis le mapper agit
+     * alors sur une cle qui n'est pas encore presente -&gt; no-op . Resultat :
+     * la slot reste figee a vie , et un compute partiel ( cf. champ
+     * {@code failedComponents} de {@link FilterListComputeResult} ) etait
+     * sercved en boucle apres eviction du {@code filterListCache} .
+     * Le bug se manifestait sur la prod par l'apparition / disparition
+     * aleatoire des filtres "Point de mesure" , "swc_var_id" , etc. apres
+     * un compute partiel pendant une saturation transitoire du pool Hikari .
+     */
+    private FilterListResult loadViaSingleflight(Application application, String refType, String cacheKey) {
+        final java.util.concurrent.CompletableFuture<FilterListValue> ourCf =
+                new java.util.concurrent.CompletableFuture<>();
+        final java.util.concurrent.CompletableFuture<FilterListValue> existing =
+                inFlightFilterListBuilds.putIfAbsent(cacheKey, ourCf);
+
+        if (existing != null) {
+            // Follower : on attend le resultat du leader ( pas de SQL emis ) .
+            return awaitFollower(existing, cacheKey);
+        }
+        return runAsLeader(application, refType, cacheKey, ourCf);
+    }
+
+    /**
+     * Branche leader : execute le compute , peuple le cache si complet ,
+     * propage le resultat aux followers via la Future , puis nettoie la slot .
+     */
+    private FilterListResult runAsLeader(Application application, String refType, String cacheKey,
+                                         java.util.concurrent.CompletableFuture<FilterListValue> ourCf) {
+        log.info("filterList cache miss for {} , loading from database ( singleflight leader )", cacheKey);
+        if (cacheMetrics != null) cacheMetrics.recordFilterListMiss();
         try {
-            FilterListValue stored = future.get();
-            return new FilterListResult(stored.json(), stored.etag());
+            FilterListValue value = computeAndMaybeCache(application, refType, cacheKey);
+            ourCf.complete(value);
+            return toFilterListResult(value);
+        } catch (Throwable t) {
+            ourCf.completeExceptionally(t);
+            if (t instanceof RuntimeException re) throw re;
+            throw new RuntimeException("filterList compute failed for " + cacheKey, t);
+        } finally {
+            // Atomic remove only-if-same : on retire la slot uniquement
+            // si elle est encore notre Future . Garantit qu'on ne supprime
+            // pas par megarde une Future poussee par un autre thread apres
+            // notre completion ( cas theorique , mais correctness > optim ) .
+            inFlightFilterListBuilds.remove(cacheKey, ourCf);
+        }
+    }
+
+    /**
+     * Branche follower : pas de SQL emis , on attend le resultat du leader .
+     * Propage proprement les exceptions checked vers le caller .
+     */
+    private FilterListResult awaitFollower(java.util.concurrent.CompletableFuture<FilterListValue> future, String cacheKey) {
+        try {
+            return toFilterListResult(future.get());
         } catch (java.util.concurrent.ExecutionException e) {
             Throwable cause = e.getCause() != null ? e.getCause() : e;
             if (cause instanceof RuntimeException re) throw re;
@@ -1720,6 +1748,44 @@ private PlatformTransactionManager transactionManager;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("filterList wait interrupted for " + cacheKey, e);
+        }
+    }
+
+    /**
+     * Compute + serialise le payload ; ecrit le cache UNIQUEMENT si le
+     * compute est complet ( aucune colonne en echec ) . Un compute partiel
+     * est retourne au caller mais NON memoise , de sorte que la prochaine
+     * requete declenchera un nouveau compute potentiellement complet .
+     *
+     * <p>Decision motivee par le bug observe sur la prod : un seul SQL
+     * de colonne ayant timeout pendant un publish concurrent suffisait
+     * a polluer le cache pour des heures , masquant les filtres de
+     * plusieurs referentiels a la fois .
+     */
+    private FilterListValue computeAndMaybeCache(Application application, String refType, String cacheKey) {
+        FilterListComputeResult computed = computeFilterListEntries(application, refType);
+        if (computed.isComplete()) {
+            return serializeAndCache(cacheKey, computed.entries());
+        }
+        log.warn("filterList compute partial for {} ( {} component(s) failed ) - skipping cache write , next request will retry",
+                cacheKey, computed.failedComponents());
+        return serializeOnly(computed.entries());
+    }
+
+    /** Mapping homogene cache value -&gt; resultat public . */
+    private static FilterListResult toFilterListResult(FilterListValue value) {
+        return new FilterListResult(value.json(), value.etag());
+    }
+
+    /**
+     * Resultat brut du compute pour un (app, refType) . Capture le nombre
+     * de composants ayant silencieusement echoue ( SQL timeout , pool
+     * saturation , RLS deny ) pour permettre au caller de decider du
+     * caching ( cf {@link #computeAndMaybeCache} ) .
+     */
+    private record FilterListComputeResult(List<FilterListEntry> entries, int failedComponents) {
+        boolean isComplete() {
+            return failedComponents == 0;
         }
     }
 
@@ -1763,29 +1829,34 @@ private PlatformTransactionManager transactionManager;
      * échouer l'endpoint complet ( on préfère afficher la dropdown vide à
      * un blocage UI ).
      */
-    private List<FilterListEntry> computeFilterListEntries(
+    private FilterListComputeResult computeFilterListEntries(
             final Application application, final String refType) {
-        final List<FilterListEntry> result = new java.util.ArrayList<>();
+        final List<FilterListEntry> entries = new java.util.ArrayList<>();
+        final int[] failed = { 0 };   // mutable counter pour fermeture lambda
         final var dataRepo = repository.getRepository(application).data();
 
-        // 1. Filtres référence ( historique - inchangé )
+        // 1. Filtres reference ( historique - inchange )
         final List<FilterList> filterLists = dataRepo.getFilterList(refType)
                 .collectList()
                 .block();
         if (filterLists != null) {
-            result.addAll(filterLists);
+            entries.addAll(filterLists);
         }
 
         // 2. Pour chaque colonne filtrable opt-in :
-        //    - __FILTER_LIST__   -> valeurs distinctes complètes ( DISTINCT )
+        //    - __FILTER_LIST__   -> valeurs distinctes completes ( DISTINCT )
         //    - __FILTER_TEXT__   -> uniquement le drapeau hasEmpty ( EXISTS )
         //    - ReferenceChecker  -> drapeau hasEmpty seulement ( les options
         //      viennent de la table dimension via FilterList ci-dessus ;
         //      hasEmpty conditionne le bouton "+ (vide)" cf. §5.7 de
-        //      FILTER_TEXT_LIST.md ) . Pour DRY , on réutilise exactement
-        //      la même méthode `getColumnHasEmpty` que pour FILTER_TEXT :
-        //      la requête EXISTS est agnostique au type de la colonne
-        //      ( elle teste null dans le JSON , indépendamment du checker ) .
+        //      FILTER_TEXT_LIST.md ) . Pour DRY , on reutilise exactement
+        //      la meme methode `getColumnHasEmpty` que pour FILTER_TEXT :
+        //      la requete EXISTS est agnostique au type de la colonne
+        //      ( elle teste null dans le JSON , independamment du checker ) .
+        //
+        // Tout echec ( SQL timeout , pool saturation , RLS deny ... ) est
+        // compte dans `failed` ; le caller decide si le resultat partiel
+        // doit etre cache ou non ( cf computeAndMaybeCache ) .
         application.findData(refType).ifPresent(dataDescription ->
                 dataDescription.componentDescriptions().values().stream()
                         .filter(c -> c.isFilterableAsList() || c.isFilterableAsText()
@@ -1796,23 +1867,24 @@ private PlatformTransactionManager transactionManager;
                                         ? component.checker().multiplicity()
                                         : fr.inra.oresing.domain.checker.Multiplicity.ONE;
                                 if (component.isFilterableAsList()) {
-                                    result.add(dataRepo.getColumnDistinctValues(
+                                    entries.add(dataRepo.getColumnDistinctValues(
                                             refType, component.componentKey(), multiplicity));
                                 } else {
-                                    // Couvre à la fois FILTER_TEXT et ReferenceChecker :
-                                    // seul `hasEmpty` est nécessaire ; `values` reste
-                                    // vide ( pour les FK les options viennent déjà
-                                    // de la FilterList du refType lié ) .
-                                    result.add(dataRepo.getColumnHasEmpty(
+                                    // Couvre a la fois FILTER_TEXT et ReferenceChecker :
+                                    // seul `hasEmpty` est necessaire ; `values` reste
+                                    // vide ( pour les FK les options viennent deja
+                                    // de la FilterList du refType lie ) .
+                                    entries.add(dataRepo.getColumnHasEmpty(
                                             refType, component.componentKey(), multiplicity));
                                 }
                             } catch (Exception e) {
-                                log.warn("Failed to load filter metadata for {}::{} - dropdown / hasEmpty defaults",
+                                failed[0]++;
+                                log.warn("Failed to load filter metadata for {}::{} - will NOT cache partial result",
                                         refType, component.componentKey(), e);
                             }
                         }));
 
-        return result;
+        return new FilterListComputeResult(entries, failed[0]);
     }
 
     /**
@@ -1822,16 +1894,25 @@ private PlatformTransactionManager transactionManager;
      * relire le cache.
      */
     private FilterListValue serializeAndCache(String cacheKey, List<FilterListEntry> list) {
+        FilterListValue value = serializeOnly(list);
+        // LRU eviction + put geres par MemoryCache.put en interne .
+        filterListCache.put(cacheKey, value);
+        return value;
+    }
+
+    /**
+     * Serialise la liste en JSON + ETag SANS ecrire au cache .
+     * Utilise pour les chemins ou la memoisation est indesirable :
+     *  - cache desactive ( {@code openadom.cache.filter-list.enabled=false} )
+     *  - compute partiel ( cf {@link #computeAndMaybeCache} )
+     * Fallback paylod vide en cas d'echec de serialisation - jamais cache .
+     */
+    private FilterListValue serializeOnly(List<FilterListEntry> list) {
         try {
             String json = cacheObjectMapper.writeValueAsString(list);
-            FilterListValue value = new FilterListValue(json, computeEtag(json));
-            // LRU eviction + put gérés par MemoryCache.put en interne.
-            filterListCache.put(cacheKey, value);
-            return value;
+            return new FilterListValue(json, computeEtag(json));
         } catch (Exception e) {
-            log.error("Failed to serialize filterList for {}", cacheKey, e);
-            // Fallback : retourner un payload vide non-cached pour ne pas
-            // polluer le cache d'une entrée bidon.
+            log.error("Failed to serialize filterList", e);
             return new FilterListValue("[]", computeEtag("[]"));
         }
     }
@@ -1852,9 +1933,18 @@ private PlatformTransactionManager transactionManager;
         // L'opération reste asynchrone via Mono.fromCallable + boundedElastic.
         reactor.core.publisher.Mono.fromCallable(() -> computeFilterListEntries(application, refType))
                 .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
-                .doOnNext(entries -> {
-                    serializeAndCache(cacheKey, entries);
-                    log.info("filterList cache refreshed for {}", cacheKey);
+                .doOnNext(computed -> {
+                    if (computed.isComplete()) {
+                        serializeAndCache(cacheKey, computed.entries());
+                        log.info("filterList cache refreshed for {}", cacheKey);
+                    } else {
+                        // Refresh partiel : on conserve l'ancien cache plutot
+                        // que de l'ecraser par un payload incomplet ( meme
+                        // motivation que computeAndMaybeCache ) . Prochain
+                        // depot / publication declenchera un nouveau refresh .
+                        log.warn("filterList refresh partial for {} ( {} component(s) failed ) - keeping previous cache entry",
+                                cacheKey, computed.failedComponents());
+                    }
                 })
                 .doOnError(error -> log.warn(
                         "Failed to refresh filterList cache for {}::{}",
