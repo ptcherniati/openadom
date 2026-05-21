@@ -571,6 +571,95 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
      *               {@code ReferencevalueCacheWriter.writeCache} .
      */
     public void storeProcessedDataDirectCopy(UUID fileId, DirectCopyWriter writer) {
+        // ------------------------------------------------------------------
+        // FUITE DE TRANSACTIONS APRES IMPORT - fix 2026-05-21 :
+        //
+        // L'ancienne implementation passait au callback `writer` une connexion
+        // ET un OutputStream backed par `LargeObject.getOutputStream()` sur
+        // la MEME connexion . Le callback emet alors un
+        // `COPY ( SELECT ... ) TO STDOUT ( FORMAT BINARY )` qui place la
+        // connexion en mode COPY tandis que CopyManager flush ses bytes
+        // dans `lo.getOutputStream().write(...)` , qui envoie un `lo_write`
+        // fastpath sur la MEME connexion .
+        //
+        // Resultat : interblocage protocolaire ( PG ne peut pas servir le
+        // fastpath en mode COPY ) -> CopyManager buffer rempli -> TCP send
+        // buffer cote serveur sature -> `wait_event = ClientWrite` indefini ,
+        // xmin epingle , autovacuum bloque , `oa_staging.*` bloat .
+        //
+        // Fix : 2 phases avec connexions DISTINCTES via temp file
+        // intermediaire :
+        //  - Phase 1 ( conn A , autoCommit ) : COPY TO STDOUT -> temp file ;
+        //  - Phase 2 ( conn B , tx REQUIRES_NEW ) : temp file -> Large Object
+        //    + UPDATE binaryfile.processed_data = oid .
+        // La temp file est borne en taille ( meme taille que le LO final ) et
+        // supprimee dans le finally meme en cas d'echec . Pas de threads ni
+        // de PipedStream a synchroniser .
+        // ------------------------------------------------------------------
+        java.io.File tempFile = createCacheTempFile(fileId);
+        try {
+            captureCopyToTempFile(writer, tempFile);
+            persistTempFileToLargeObject(fileId, tempFile);
+        } catch (java.sql.SQLException | java.io.IOException ex) {
+            throw new RuntimeException("storeProcessedDataDirectCopy failed : " + ex.getMessage(), ex);
+        } finally {
+            if (tempFile != null && tempFile.exists() && !tempFile.delete()) {
+                tempFile.deleteOnExit();
+            }
+        }
+    }
+
+    private static java.io.File createCacheTempFile(UUID fileId) {
+        try {
+            java.io.File f = java.io.File.createTempFile("oa-processed-cache-" + fileId + "-", ".bin");
+            f.deleteOnExit();   // filet de securite si le JVM crash avant le finally
+            return f;
+        } catch (java.io.IOException ex) {
+            throw new RuntimeException("Cannot create temp file for processed_data capture : " + ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Phase 1 : emet le COPY sur une connexion fraiche en autoCommit et
+     * dump le payload binaire dans {@code tempFile} . La connexion utilisee
+     * ici n'a AUCUNE interaction avec le Large Object - elle ne sert qu'au
+     * COPY TO STDOUT . Une fois ferme , la connexion est rendue au pool .
+     */
+    private void captureCopyToTempFile(DirectCopyWriter writer, java.io.File tempFile)
+            throws java.sql.SQLException, java.io.IOException {
+        javax.sql.DataSource ds = jdbcTemplate.getDataSource();
+        if (ds == null) {
+            throw new IllegalStateException("jdbcTemplate dataSource is null");
+        }
+        try (java.sql.Connection conn = ds.getConnection();
+             java.io.OutputStream out = new java.io.BufferedOutputStream(
+                     new java.io.FileOutputStream(tempFile))) {
+            boolean previousAutoCommit = conn.getAutoCommit();
+            try {
+                // autoCommit : COPY TO STDOUT n'a pas besoin de tx applicative ;
+                // PG ouvre une implicit tx pour le snapshot read et la ferme
+                // a la fin du COPY . Evite de tenir une tx longue qui
+                // epinglerait xmin si le drain prenait du temps .
+                if (!previousAutoCommit) conn.setAutoCommit(true);
+                writer.write(conn, out);
+            } finally {
+                if (conn.getAutoCommit() != previousAutoCommit) {
+                    try { conn.setAutoCommit(previousAutoCommit); }
+                    catch (java.sql.SQLException ignored) { /* connection going back to pool */ }
+                }
+            }
+        }
+    }
+
+    /**
+     * Phase 2 : tx REQUIRES_NEW sur une connexion separee . Unlink eventuel
+     * de l'ancien oid , creation du nouveau Large Object , stream du
+     * {@code tempFile} dans le LO , puis UPDATE atomique de
+     * {@code binaryfile.processed_data} / {@code processed_size} /
+     * {@code processed_at} . Cette tx peut sans risque emettre des
+     * {@code lo_write} fastpath car la connexion n'est PAS en mode COPY .
+     */
+    private void persistTempFileToLargeObject(UUID fileId, java.io.File tempFile) {
         org.springframework.transaction.support.TransactionTemplate tx =
                 new org.springframework.transaction.support.TransactionTemplate(
                         new org.springframework.jdbc.datasource.DataSourceTransactionManager(jdbcTemplate.getDataSource()));
@@ -582,39 +671,57 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
                 org.postgresql.PGConnection pgConn = conn.unwrap(org.postgresql.PGConnection.class);
                 org.postgresql.largeobject.LargeObjectManager lom = pgConn.getLargeObjectAPI();
 
-                // 1 . unlink previous oid if any ( avoid orphan )
-                String selectOld = "SELECT processed_data FROM %s WHERE id = ?::uuid"
-                        .formatted(getTable().getSqlIdentifier());
-                Long oldOid = jdbcTemplate.queryForObject(selectOld, Long.class, fileId.toString());
-                if (oldOid != null && oldOid > 0) {
-                    try { lom.unlink(oldOid); } catch (java.sql.SQLException ex) {
-                        org.slf4j.LoggerFactory.getLogger(BinaryFileRepository.class)
-                                .warn("storeProcessedDataDirectCopy : unlink old LO oid={} failed ( orphan possible ) : {}",
-                                        oldOid, ex.getMessage());
-                    }
-                }
-
-                // 2 . create new LO + delegate write to the callback . Counting
-                //     wrapper tracks the size so we can persist processed_size .
+                unlinkPreviousLargeObject(lom, fileId);
                 long newOid = lom.createLO(org.postgresql.largeobject.LargeObjectManager.READWRITE);
-                org.postgresql.largeobject.LargeObject lo = lom.open(newOid, org.postgresql.largeobject.LargeObjectManager.WRITE);
-                long bytesWritten;
-                try (java.io.OutputStream loStream = lo.getOutputStream();
-                     CountingOutputStream countingOut = new CountingOutputStream(loStream)) {
-                    writer.write(conn, countingOut);
-                    bytesWritten = countingOut.bytesWritten();
-                } finally {
-                    try { lo.close(); } catch (java.sql.SQLException ignored) { /* best-effort */ }
-                }
+                long bytesWritten = streamFileIntoLargeObject(lom, newOid, tempFile);
 
-                // 3 . UPDATE binaryfile.processed_data = oid + processed_size + processed_at
                 String update = "UPDATE %s SET processed_data = ?, processed_size = ?, processed_at = now() WHERE id = ?::uuid"
                         .formatted(getTable().getSqlIdentifier());
                 jdbcTemplate.update(update, newOid, bytesWritten, fileId.toString());
             } catch (java.sql.SQLException | java.io.IOException ex) {
-                throw new RuntimeException("storeProcessedDataDirectCopy failed : " + ex.getMessage(), ex);
+                throw new RuntimeException("persistTempFileToLargeObject failed : " + ex.getMessage(), ex);
             }
         });
+    }
+
+    /**
+     * Best-effort unlink : libere l'oid actuellement reference par
+     * {@code binaryfile.processed_data} . Tout echec est logge sans
+     * faire echouer le flow ( un orphan eventuel sera recupere par
+     * {@code vacuumlo} ) .
+     */
+    private void unlinkPreviousLargeObject(org.postgresql.largeobject.LargeObjectManager lom, UUID fileId) {
+        String selectOld = "SELECT processed_data FROM %s WHERE id = ?::uuid"
+                .formatted(getTable().getSqlIdentifier());
+        Long oldOid = jdbcTemplate.queryForObject(selectOld, Long.class, fileId.toString());
+        if (oldOid != null && oldOid > 0) {
+            try {
+                lom.unlink(oldOid);
+            } catch (java.sql.SQLException ex) {
+                org.slf4j.LoggerFactory.getLogger(BinaryFileRepository.class)
+                        .warn("storeProcessedDataDirectCopy : unlink old LO oid={} failed ( orphan possible ) : {}",
+                                oldOid, ex.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Stream un fichier disque vers un Large Object Postgres ouvert en
+     * write . Retourne le nombre de bytes ecrits ( via {@link CountingOutputStream} )
+     * pour persister {@code binaryfile.processed_size} .
+     */
+    private long streamFileIntoLargeObject(org.postgresql.largeobject.LargeObjectManager lom,
+                                           long oid, java.io.File tempFile)
+            throws java.sql.SQLException, java.io.IOException {
+        org.postgresql.largeobject.LargeObject lo = lom.open(oid, org.postgresql.largeobject.LargeObjectManager.WRITE);
+        try (java.io.OutputStream loStream = lo.getOutputStream();
+             java.io.InputStream in = new java.io.BufferedInputStream(new java.io.FileInputStream(tempFile));
+             CountingOutputStream counting = new CountingOutputStream(loStream)) {
+            in.transferTo(counting);
+            return counting.bytesWritten();
+        } finally {
+            try { lo.close(); } catch (java.sql.SQLException ignored) { /* best-effort */ }
+        }
     }
 
     /**
