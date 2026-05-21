@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.IsEqual;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Timeout;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
@@ -101,6 +102,7 @@ public class TestReferencesErrors extends AbstractIntegrationTest {
 
     @TestFactory
     @DisplayName("Tests des erreurs csv")
+    @Timeout(300)
     Stream<DynamicNode> testRecursivity() throws IOException {
         final Fixtures.UserConnection recursivityConnection = initAndLoadRecursivity();
         final String proprieteTaxonCSV = loadProprieteTaxonCSV();
@@ -190,6 +192,7 @@ public class TestReferencesErrors extends AbstractIntegrationTest {
 
     @TestFactory
     @DisplayName("Tests des erreurs unexpected Columns")
+    @Timeout(300)
     Stream<DynamicNode> testRepeatedColumnsWithAllowUnexpectedColumns() throws Exception {
         final Fixtures.UserConnection repeatedColumnsConnection = initRepeatedColumn();
         loadRepeatedColumn(repeatedColumnsConnection);
@@ -324,6 +327,7 @@ public class TestReferencesErrors extends AbstractIntegrationTest {
 
     @TestFactory
     @DisplayName("Tests des erreurs sus les repeated Columns")
+    @Timeout(300)
     Stream<DynamicNode> repeatedColumnsTest() throws Exception {
         final Fixtures.UserConnection repeatedcolumnsConnection = initAndLoadRepeatedColumn();
         final String monRepositoryCSV = getRepositoryCSV(Fixtures.getSWCRepositoryResourceName());
@@ -388,6 +392,7 @@ public class TestReferencesErrors extends AbstractIntegrationTest {
 
     @TestFactory
     @DisplayName("Tests de l'erreur missingrecursiveParentReferenceWithComponent")
+    @Timeout(300)
     Stream<DynamicNode> testMissingParentInRecursiveReference() throws Exception {
         final Fixtures.UserConnection recursivityConnection = initAndLoadRecursivity();
         // Charger site et proprietes_taxon seulement (pas taxon, c'est ce qu'on va tester)
@@ -430,6 +435,7 @@ public class TestReferencesErrors extends AbstractIntegrationTest {
 
     @TestFactory
     @DisplayName("Tests des erreurs de configuration Groovy")
+    @Timeout(300)
     Stream<DynamicNode> testGroovyConfigurationErrors() throws Exception {
         final Fixtures.CreateUser groovyTestUser = new Fixtures.CreateUser("recursivity_groovy", PASSWORD, "recursivity_groovy@inrae.fr");
         final Fixtures.UserConnection groovyConnection = fixtures.createUserForUserDefinition(groovyTestUser, true, false);

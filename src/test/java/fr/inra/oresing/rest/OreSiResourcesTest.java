@@ -26,6 +26,7 @@ import org.hamcrest.core.Is;
 import org.hamcrest.core.IsEqual;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Timeout;
 import org.opentest4j.AssertionFailedError;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -171,6 +172,7 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
     @Tag("OTHERS_TEST")
     @Tag("app.monsoere")
     @Tag("MONSOERE")
+    @Timeout(600)
     public Stream<DynamicNode> addApplicationMonsoreDynamic() throws Exception {
         MonSoereFixture monSoereFixture = new MonSoereFixture(fixtures, mockMvc, userRepository, jsonRowMapper);
 
@@ -294,6 +296,7 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
     @Tag("app.monsoere")
     @Tag("MONSOERE")
     @Tag("GENERATE_CYPRESS_FIXTURES")
+    @Timeout(600)
     public Stream<DynamicNode> addApplicationMonsoreWithRepositoryDynamic() throws Exception {
         AtomicReference<String> oirFilesUUID = new AtomicReference<>();
         AtomicReference<String> fileUUID2 = new AtomicReference<>();

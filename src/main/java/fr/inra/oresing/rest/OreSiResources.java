@@ -230,6 +230,15 @@ public class OreSiResources {
     private final OpenadomMetrics metrics;
     private final WorkflowLogWriter workflowLogWriter;
     private final fr.inra.oresing.workflow.extraction.ExtractionLifecycle extractionLifecycle;
+    /**
+     * Timeout appliqué au {@code Future.get()} des tâches soumises à
+     * {@code heavyExecutorService}. Même propriété que le timeout HTTP
+     * streaming afin de rester cohérent avec les flux NDJSON longs.
+     * En test on peut le réduire à quelques minutes via
+     * {@code openadom.http.streaming.timeout}.
+     */
+    @Value("${openadom.http.streaming.timeout:6h}")
+    private java.time.Duration heavyTaskTimeout;
     Executor fastExecutor;
     Executor normalExecutor;
     Executor heavyExecutor;
@@ -939,7 +948,7 @@ public class OreSiResources {
                 } catch (IOException e) {
                     throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
                 }
-            }).get();
+            }).get(heavyTaskTimeout.toMillis(), TimeUnit.MILLISECONDS);
             // Post-commit : afterCommit du @Transactional interne au .get() a
             // fire , le UPSERT staging -> table finale ( cascade 3.0.0 deferred )
             // est termine . On recalcule dataSynthesis sur la table finale a
@@ -953,6 +962,11 @@ public class OreSiResources {
             return ResponseEntity
                     .created(URI.create(finalized.uri()))
                     .body(Map.of("id", finalized.dataId().toString(), "referenceSynthesis", finalized.dataSynthesis()));
+        } catch (TimeoutException e) {
+            log.error("Import timed out after {} for application={} dataName={} ; returning 503",
+                    heavyTaskTimeout, nameOrId, dataName, e);
+            throw new OreSiTechnicalException("Import timeout : la tâche d'import n'a pas répondu dans le délai configuré ("
+                    + heavyTaskTimeout + "). Réessayez ou contactez l'administrateur.", e);
         } catch (ExecutionException e) {
             Throwable cause = unwrapException(e.getCause());
             throw switch (cause) {

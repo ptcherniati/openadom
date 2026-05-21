@@ -171,16 +171,6 @@ public class DataService {
     private fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository workflowLogRepository;
 
     /**
-     * Writer workflow_log pour pre-creer la row IMPORT en cas de depot
-     * frais ( Phase 2 cascade adoption ) . Permet d'emettre des
-     * sous-phases pendant prepareContext visibles immediatement dans
-     * le dashboard sans attendre que cascade demarre ( 1-3 min sur
-     * gros fichiers ) .
-     */
-    @Autowired(required = false)
-    private fr.inra.oresing.workflow.cascade.history.WorkflowLogWriter workflowLogWriter;
-
-    /**
      * Prescan service injected as Spring bean ( cascade 3.3.0+ , Axe B ) .
      * Avant : instancie via {@code new} a chaque appel addData - tests
      * impossibles a mocker , dependency hidden , reuse impossible . Bean
@@ -524,8 +514,8 @@ public class DataService {
                                                 Application application,
                                                 String refType,
                                                 String userId) {
-        if (workflowLogWriter == null) {
-            log.debug("WorkflowLogWriter absent ( contexte test ?) , pre-creation row workflow_log skip pour cid {}", cid);
+        if (workflowLogRepository == null) {
+            log.debug("WorkflowLogRepository absent ( contexte test ?) , pre-creation row workflow_log skip pour cid {}", cid);
             return false;
         }
         // user_id est NOT NULL dans workflow_log ( cf V2 schema ) . Si on
@@ -562,7 +552,13 @@ public class DataService {
             }
             String appName = application != null ? application.getName() : null;
             String resourceName = "deferred-csv:" + cid;
-            workflowLogWriter.recordStart(
+            // Appel direct au repository (sans retries + sleeps de WorkflowLogWriter.recordStart) :
+            // on est ici DANS une transaction REQUIRES_NEW qui tient la connexion B ;
+            // les Thread.sleep() de WorkflowLogWriter.recordStart() constitueraient un
+            // anti-pattern (connexion détenue pendant 1.7 s max, risque d'épuisement du
+            // pool). Si l'INSERT échoue, on laisse l'exception remonter vers le catch ci-bas
+            // qui rollback et retourne false (comportement legacy préservé).
+            workflowLogRepository.recordStart(
                     fr.inra.oresing.workflow.cascade.history.WorkflowLogEntry.startMarker(
                             cid,
                             fr.inra.oresing.workflow.cascade.history.WorkflowLogEntry.TYPE_IMPORT,
