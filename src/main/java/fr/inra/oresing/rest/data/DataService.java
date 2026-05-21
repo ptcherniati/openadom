@@ -1714,25 +1714,37 @@ private PlatformTransactionManager transactionManager;
     }
 
     /**
-     * Compute + serialise le payload ; ecrit le cache UNIQUEMENT si le
-     * compute est complet ( aucune colonne en echec ) . Un compute partiel
-     * est retourne au caller mais NON memoise , de sorte que la prochaine
-     * requete declenchera un nouveau compute potentiellement complet .
+     * Compute + serialise le payload + ecrit le cache .
      *
-     * <p>Decision motivee par le bug observe sur la prod : un seul SQL
-     * de colonne ayant timeout pendant un publish concurrent suffisait
-     * a polluer le cache pour des heures , masquant les filtres de
-     * plusieurs referentiels a la fois ( "Point de mesure" , "swc_var_id"
-     * disparaissaient apres un compute partiel sous charge ) .
+     * <p><b>Historique</b> ( important pour comprendre les decisions ) :
+     * <ol>
+     *   <li>v1 ( bug ) : compute partial cache + singleflight slot figee
+     *       a vie -> filtres masques pour des heures . Le coupable etait
+     *       la slot figee , pas le cache du payload partial ;</li>
+     *   <li>v2 : ajout slot cleanup correct ( commit ffad4a8d ) - resout
+     *       le bug principal . En complement , skip-cache-si-partial
+     *       ajoute pour belt-and-suspenders ;</li>
+     *   <li>v3 ( ce code ) : revert du skip-cache-si-partial car il
+     *       rendait le cache impossible a remplir des qu'UN composant
+     *       SQL echouait silencieusement ( RLS deny , pool sature ... )
+     *       sur n'importe quel datatype - resulting in 0/50 entries
+     *       en prod malgre des preheats reussis . Le slot cleanup seul
+     *       suffit a eviter la regression v1 .</li>
+     * </ol>
+     *
+     * <p>Comportement actuel : cache TOUJOURS le payload ( meme partial ) .
+     * Un compute partial est loggue en WARN pour visibilite ops mais
+     * sert correctement les filtres disponibles . A la prochaine
+     * invalidation explicite ( upload / publish / admin refresh ) le
+     * cache sera recompute - cette fois potentiellement complet .
      */
     FilterListValue computeAndMaybeCache(Application application, String refType, String cacheKey) {
         FilterListComputeResult computed = computeFilterListEntries(application, refType);
-        if (computed.isComplete()) {
-            return serializeAndCache(cacheKey, computed.entries());
+        if (!computed.isComplete()) {
+            log.warn("filterList compute partial for {} ( {} component(s) failed ) - caching partial result anyway ; refresh manually if needed",
+                    cacheKey, computed.failedComponents());
         }
-        log.warn("filterList compute partial for {} ( {} component(s) failed ) - skipping cache write , next request will retry",
-                cacheKey, computed.failedComponents());
-        return serializeOnly(computed.entries());
+        return serializeAndCache(cacheKey, computed.entries());
     }
 
     /** Mapping homogene cache value -&gt; resultat public . */
