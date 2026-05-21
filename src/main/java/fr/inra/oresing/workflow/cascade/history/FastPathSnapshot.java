@@ -57,7 +57,7 @@ public record FastPathSnapshot(
      *             still carry this phase string . New runs start with
      *             {@link #PHASE_DELETE_EXISTING} .
      */
-    @Deprecated
+    @Deprecated(since = "2.x", forRemoval = true)
     public static final String PHASE_DELETE_REFREF   = "DELETE_REFREF";
     public static final String PHASE_DELETE_EXISTING = "DELETE_EXISTING";
     public static final String PHASE_COPY_IN         = "COPY_IN";

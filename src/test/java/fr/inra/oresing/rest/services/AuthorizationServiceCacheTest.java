@@ -3,7 +3,6 @@ package fr.inra.oresing.rest.services;
 import fr.inra.oresing.cache.MemoryCache;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.data.menu.MenuType;
-import fr.inra.oresing.domain.data.menu.ReferenceScope;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.DataRepository;

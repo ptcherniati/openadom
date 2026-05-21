@@ -250,7 +250,7 @@ public record AsynchroneFileImporterContext(
         // En cas de collisions ( meme HK + pattern , peu probable mais
         // possible historiquement ) on garde la PREMIERE occurrence ,
         // identique au .findFirst() de l'ancien stream.
-        Map<HkPatternKey, UUID> hkIndexTmp = new HashMap<>(storedReferences.size() * 2);
+        Map<HkPatternKey, UUID> hkIndexTmp = HashMap.newHashMap(storedReferences.size() * 2);
         for (Map.Entry<DataValue.LineIdentityColumnName, UUID> entry : storedReferences.entrySet()) {
             DataValue.LineIdentityColumnName k = entry.getKey();
             hkIndexTmp.putIfAbsent(

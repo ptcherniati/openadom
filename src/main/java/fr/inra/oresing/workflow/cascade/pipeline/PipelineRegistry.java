@@ -48,6 +48,7 @@ public class PipelineRegistry implements WorkflowListener {
 
     private static final int RECENT_EVENT_WINDOW = 30;
     private static final long THROUGHPUT_WINDOW_MS = 5_000L;
+    private static final String STATUS_RUNNING = "RUNNING";
 
     private final ConcurrentMap<UUID, PipelineState> byCorrelationId = new ConcurrentHashMap<>();
 
@@ -106,7 +107,7 @@ public class PipelineRegistry implements WorkflowListener {
         PipelineState s = stateFor(e.correlationId());
         if (s == null) return;
         WorkerStat w = s.sourceWorker(e.workerName());
-        w.status = "RUNNING";
+        w.status = STATUS_RUNNING;
         w.lastActivity = e.time();
     }
 
@@ -129,7 +130,7 @@ public class PipelineRegistry implements WorkflowListener {
         PipelineState s = stateFor(e.correlationId());
         if (s == null) return;
         WorkerStat w = s.transformWorker(e.workerName());
-        w.status = "RUNNING";
+        w.status = STATUS_RUNNING;
         w.currentChunk = e.chunkIndex();
         w.currentRecordsTotal = e.recordsExpected();
         w.currentRecordsProcessed = 0;
@@ -167,7 +168,7 @@ public class PipelineRegistry implements WorkflowListener {
         PipelineState s = stateFor(e.correlationId());
         if (s == null) return;
         WorkerStat w = s.sinkWorker(e.workerName());
-        w.status = "RUNNING";
+        w.status = STATUS_RUNNING;
         w.currentChunk = e.chunkIndex();
         w.lastActivity = e.time();
         s.pushEvent(new PipelineSnapshot.PipelineEvent(
@@ -220,7 +221,7 @@ public class PipelineRegistry implements WorkflowListener {
 
     private static void resetStaleRunning(Map<String, WorkerStat> workers, long nowMs) {
         for (WorkerStat w : workers.values()) {
-            if (!"RUNNING".equals(w.status)) continue;
+            if (!STATUS_RUNNING.equals(w.status)) continue;
             if (w.lastActivity == null) continue;
             if (nowMs - w.lastActivity.toEpochMilli() > STALE_RUNNING_RESET_MS) {
                 w.status = "IDLE";

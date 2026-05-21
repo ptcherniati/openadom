@@ -1,6 +1,5 @@
 package fr.inra.oresing.rest.data;
 
-import fr.inra.oresing.domain.data.DataRows;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
@@ -31,7 +30,6 @@ import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationFor
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForDownloadDatasetQuery;
 import fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent;
 import fr.inra.oresing.persistence.*;
-import fr.inra.oresing.domain.data.deposit.bundle.BundleFileContent;
 import fr.inra.oresing.persistence.data.read.bundle.FileContent;
 import fr.inra.oresing.rest.HierarchicalReferenceAsTree;
 import fr.inra.oresing.rest.data.extraction.DataCsvBuilder;
@@ -89,6 +87,8 @@ public class DataService {
     public static final String CONFIGURATION_FILE = "configuration.yaml";
     private static final String CSV_FILENAME_PATTERN = "%s.csv";
     private static final String REFERENCES_CSV_FILENAME_PATTERN = "references/%s.csv";
+    private static final String ERR_KEY_IO_EXCEPTION = "IOException";
+    private static final String ERR_KEY_MESSAGE = "message";
 
 
     /**
@@ -319,15 +319,6 @@ public class DataService {
     private void addData(final Application application,
                          final String refType,
                          final InputStream file,
-                         final FileOrUUID fileOrUUID) throws IOException {
-        addData(application, refType, file, fileOrUUID,
-                fr.inra.oresing.workflow.cascade.config.CascadeRuntimeOverride.EMPTY,
-                false);
-    }
-
-    private void addData(final Application application,
-                         final String refType,
-                         final InputStream file,
                          final FileOrUUID fileOrUUID,
                          final fr.inra.oresing.workflow.cascade.config.CascadeRuntimeOverride override,
                          final boolean lightweight) throws IOException {
@@ -407,7 +398,7 @@ public class DataService {
             } catch (RuntimeException | IOException ex) {
                 // Fallback graceful : retombe sur le chemin legacy ( hint=null ) .
                 // CRUCIAL : on conserve le csvBufferFile pour fournir un
-                // InputStream FRAIS au cascade ; l'original {@code file} a deja
+                // InputStream FRAIS au cascade ; l'original file a deja
                 // ete consume par Files.copy(...) ci-dessus , l'utiliser
                 // provoquerait NoSuchElementException dans CSVParser downstream .
                 // Fix ISSUE_GITLAB_PRESCAN_AXE_B_IGNORE_DATAHEADERLINE_2026-05-18
@@ -424,72 +415,71 @@ public class DataService {
                 }
             }
         }
-
         try {
-        AsynchroneFileImporterContext referenceImporterContext = getAsynchroneImporterContext(
-                application,
-                refType,
-                fileOrUUID,
-                naturalKeysHint
-        );
-        CancellationContext.checkpoint("addData importer context built");
+            AsynchroneFileImporterContext referenceImporterContext = getAsynchroneImporterContext(
+                    application,
+                    refType,
+                    fileOrUUID,
+                    naturalKeysHint
+            );
+            CancellationContext.checkpoint("addData importer context built");
 
-        final DataImporter referenceImporter = new DataImporter(
-                referenceImporterContext,
-                cascadeImportPipeline.getImportProperties(),
-                lightweight);
-        // Honour cascade.import.skip-csv-reencoding ( default false ) .
-        boolean skipReencoding = cascadeImportPipeline.getImportProperties().isSkipCsvReencoding();
-        final String userId = serviceContainer.authenticationService().getCurrentUser().getId().toString();
-        // Phase 2 cascade adoption :
-        // - republish ( parentCid actif via PublishLifecyclePhase2Handler ) :
-        //   phaseEmitter ecrit sur la row PUBLISH parent ( comportement
-        //   existant Phase 1 preserve ) , cascade genere son propre cid IMPORT
-        // - depot frais ( pas de parentCid ) : pre-genere cid IMPORT +
-        //   pre-cree row workflow_log dans tx isolee REQUIRES_NEW ; le
-        //   phaseEmitter ecrit sur ce cid ; cascade reuse ce cid ( idempotent
-        //   via WorkflowLogWriter.recordStart skip silencieux sur duplicate )
-        //
-        // L'idempotence + l'isolation REQUIRES_NEW protegent la tx outer
-        // ( CreateDataUseCase.@Transactional ) d'un eventuel echec de
-        // pre-creation . En cas d'echec , phaseEmitter retombe sur null
-        // et le depot continue sans visibilite sous-phase pendant
-        // prepareContext ( comportement pre-Phase 2 preserve ) .
-        final java.util.UUID parentCid = CancellationContext.currentParentCid();
-        final java.util.UUID phaseEmitterTargetCid;
-        final String preGeneratedCidForCascade;
-        if (parentCid != null) {
-            phaseEmitterTargetCid     = parentCid;
-            preGeneratedCidForCascade = null;
-        } else {
-            java.util.UUID freshCid   = java.util.UUID.randomUUID();
-            boolean preCreated        = preCreateImportWorkflowLog(freshCid, application, refType, userId);
-            phaseEmitterTargetCid     = preCreated ? freshCid : null;
-            preGeneratedCidForCascade = preCreated ? freshCid.toString() : null;
-        }
-        final java.util.function.Consumer<String> phaseEmitter =
-                (phaseEmitterTargetCid != null && workflowLogRepository != null)
-                        ? subPhase -> {
-                            try { workflowLogRepository.updatePhase(phaseEmitterTargetCid, subPhase); }
-                            catch (RuntimeException ex) {
-                                log.debug("updatePhase {} on cid {} failed ( best effort ) : {}",
-                                        subPhase, phaseEmitterTargetCid, ex.getMessage());
+            final DataImporter referenceImporter = new DataImporter(
+                    referenceImporterContext,
+                    cascadeImportPipeline.getImportProperties(),
+                    lightweight);
+            // Honour cascade.import.skip-csv-reencoding ( default false ) .
+            boolean skipReencoding = cascadeImportPipeline.getImportProperties().isSkipCsvReencoding();
+            final String userId = serviceContainer.authenticationService().getCurrentUser().getId().toString();
+            // Phase 2 cascade adoption :
+            // - republish ( parentCid actif via PublishLifecyclePhase2Handler ) :
+            //   phaseEmitter ecrit sur la row PUBLISH parent ( comportement
+            //   existant Phase 1 preserve ) , cascade genere son propre cid IMPORT
+            // - depot frais ( pas de parentCid ) : pre-genere cid IMPORT +
+            //   pre-cree row workflow_log dans tx isolee REQUIRES_NEW ; le
+            //   phaseEmitter ecrit sur ce cid ; cascade reuse ce cid ( idempotent
+            //   via WorkflowLogWriter.recordStart skip silencieux sur duplicate )
+            //
+            // L'idempotence + l'isolation REQUIRES_NEW protegent la tx outer
+            // ( CreateDataUseCase.@Transactional ) d'un eventuel echec de
+            // pre-creation . En cas d'echec , phaseEmitter retombe sur null
+            // et le depot continue sans visibilite sous-phase pendant
+            // prepareContext ( comportement pre-Phase 2 preserve ) .
+            final java.util.UUID parentCid = CancellationContext.currentParentCid();
+            final java.util.UUID phaseEmitterTargetCid;
+            final String preGeneratedCidForCascade;
+            if (parentCid != null) {
+                phaseEmitterTargetCid     = parentCid;
+                preGeneratedCidForCascade = null;
+            } else {
+                java.util.UUID freshCid   = java.util.UUID.randomUUID();
+                boolean preCreated        = preCreateImportWorkflowLog(freshCid, application, refType, userId);
+                phaseEmitterTargetCid     = preCreated ? freshCid : null;
+                preGeneratedCidForCascade = preCreated ? freshCid.toString() : null;
+            }
+            final java.util.function.Consumer<String> phaseEmitter =
+                    (phaseEmitterTargetCid != null && workflowLogRepository != null)
+                            ? subPhase -> {
+                                try { workflowLogRepository.updatePhase(phaseEmitterTargetCid, subPhase); }
+                                catch (RuntimeException ex) {
+                                    log.debug("updatePhase {} on cid {} failed ( best effort ) : {}",
+                                            subPhase, phaseEmitterTargetCid, ex.getMessage());
+                                }
                             }
-                        }
-                        : null;
-        Path path = referenceImporter.prepareContextForDataTreatment(FileBomResolver.of(effectiveInputStream), skipReencoding, phaseEmitter);
-        CancellationContext.checkpoint("addData prepareContext done");
-        cascadeImportPipeline.execute(
-                referenceImporter,
-                referenceValueRepository,
-                path,
-                userId,
-                application.getName(),
-                refType,
-                fileOrUUID == null ? null : fileOrUUID.fileid(),
-                override,
-                preGeneratedCidForCascade
-        );
+                            : null;
+            Path path = referenceImporter.prepareContextForDataTreatment(FileBomResolver.of(effectiveInputStream), skipReencoding, phaseEmitter);
+            CancellationContext.checkpoint("addData prepareContext done");
+            cascadeImportPipeline.execute(
+                    referenceImporter,
+                    referenceValueRepository,
+                    path,
+                    userId,
+                    application.getName(),
+                    refType,
+                    fileOrUUID == null ? null : fileOrUUID.fileid(),
+                    override,
+                    preGeneratedCidForCascade
+            );
         } finally {
             // Cleanup du temp file de prescan ( Axe B ) . Le file est
             // garde ouvert par effectiveInputStream qui a ete consume
@@ -968,18 +958,18 @@ public class DataService {
         )
                 .flatMap(downloadDatasetQueryByRowId -> Mono.fromCallable(() -> {
                     try {
-                        return self.addDatacsv(zipOutputStream, dataRepository, downloadDatasetQueryByRowId, "references/%s.csv");
+                        return self.addDatacsv(zipOutputStream, dataRepository, downloadDatasetQueryByRowId, REFERENCES_CSV_FILENAME_PATTERN);
                     } catch (Exception e) {
-                        throw new SiOreIllegalArgumentException("IOException", Map.of("message", Optional.ofNullable(e).map(Exception::getLocalizedMessage).orElse(OreSiTechnicalException.NO_MESSAGE)));
+                        throw new SiOreIllegalArgumentException(ERR_KEY_IO_EXCEPTION, Map.of(ERR_KEY_MESSAGE, Optional.ofNullable(e).map(Exception::getLocalizedMessage).orElse(OreSiTechnicalException.NO_MESSAGE)));
                     }
                 }))
                 .blockLast();
                /*  .subscribe(downloadDatasetQueries -> {
            for (DownloadDatasetQueryByRowId downloadDatasetQueryByRowId : downloadDatasetQueries) {
                 try {
-                    addDatacsv(zipOutputStream, dataRepository, downloadDatasetQueryByRowId, "references/%s.csv");
+                    addDatacsv(zipOutputStream, dataRepository, downloadDatasetQueryByRowId, REFERENCES_CSV_FILENAME_PATTERN);
                 } catch (Exception e) {
-                    throw new SiOreIllegalArgumentException("IOException", Map.of("message", Optional.ofNullable(e).map(Exception::getLocalizedMessage).orElse(OreSiTechnicalException.NO_MESSAGE)));
+                    throw new SiOreIllegalArgumentException(ERR_KEY_IO_EXCEPTION, Map.of(ERR_KEY_MESSAGE, Optional.ofNullable(e).map(Exception::getLocalizedMessage).orElse(OreSiTechnicalException.NO_MESSAGE)));
                 }
             }*/
         //TODO add additionalFiles
@@ -1002,13 +992,13 @@ public class DataService {
                 })
                 .doOnError(e -> {
                     // Gestion des erreurs
-                    throw new SiOreIllegalArgumentException("IOException", Map.of("message", e.getLocalizedMessage()));
+                    throw new SiOreIllegalArgumentException(ERR_KEY_IO_EXCEPTION, Map.of(ERR_KEY_MESSAGE, e.getLocalizedMessage()));
                 })
                 .doOnComplete(() -> {
                     try {
                         zipOutputStream.close();
                     } catch (IOException e) {
-                        throw new SiOreIllegalArgumentException("IOException", Map.of("message", e.getLocalizedMessage()));
+                        throw new SiOreIllegalArgumentException(ERR_KEY_IO_EXCEPTION, Map.of(ERR_KEY_MESSAGE, e.getLocalizedMessage()));
                     }
                 })
                 .subscribe();*/
@@ -1066,8 +1056,8 @@ public class DataService {
                         return self.addDatacsvEntry(
                                 zipOutputStream, dataRepository, subQuery, REFERENCES_CSV_FILENAME_PATTERN);
                     } catch (Exception e) {
-                        throw new SiOreIllegalArgumentException("IOException",
-                                Map.of("message", Optional.ofNullable(e)
+                        throw new SiOreIllegalArgumentException(ERR_KEY_IO_EXCEPTION,
+                                Map.of(ERR_KEY_MESSAGE, Optional.ofNullable(e)
                                         .map(Exception::getLocalizedMessage)
                                         .orElse(OreSiTechnicalException.NO_MESSAGE)));
                     }

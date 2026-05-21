@@ -1,11 +1,11 @@
 package fr.inra.oresing.domain.data.deposit.validation.transformer.data;
-import com.google.common.collect.ImmutableList;
 import fr.inra.oresing.domain.data.DataDatum;
 import fr.inra.oresing.domain.data.LinkedLines;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import java.util.List;
 import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -40,7 +40,7 @@ class TransformerDataRecordsTest {
         DataDatum before = new DataDatum();
         DataDatum after = new DataDatum();
         Map<String, Map<String, Map<String, LinkedLines>>> refs = Map.of();
-        ImmutableList<CsvRowValidationCheckResult> errors = ImmutableList.of();
+        List<CsvRowValidationCheckResult> errors = List.of();
         ReferenceDatumAfterChecking rec = new ReferenceDatumAfterChecking(
                 10L, "patCol", before, after, refs, errors
         );
@@ -56,7 +56,7 @@ class TransformerDataRecordsTest {
     void referenceDatumAfterChecking_toString() {
         DataDatum d = new DataDatum();
         ReferenceDatumAfterChecking rec = new ReferenceDatumAfterChecking(
-                1L, "col", d, d, Map.of(), ImmutableList.of()
+                1L, "col", d, d, Map.of(), List.of()
         );
         assertThat(rec.toString()).isNotBlank();
     }

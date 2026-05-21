@@ -20,6 +20,8 @@ import org.apache.commons.collections4.MapUtils;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -46,7 +48,7 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
     // ReferenceType.<init> -> buildNaturalKeyIndex / HashMap.put.
     // volatile car reassigne lors de setReferenceValues, lu depuis workers
     // Cascade en parallele.
-    private volatile Map<Ltree, DataValue.LineIdentityColumnName> naturalKeyIndex = new HashMap<>();
+    private final AtomicReference<Map<Ltree, DataValue.LineIdentityColumnName>> naturalKeyIndexRef = new AtomicReference<>(new HashMap<>());
 
     // ─── R-P2-2 : cache lazy partagé entre l'original et toutes ses copies ────
     // ConcurrentHashMap → thread-safe pour les workers Cascade parallèles.
@@ -57,7 +59,7 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
     private final Set<Ltree> seenOnce;
     private final Map<Ltree, DataValue.LineIdentityColumnName> precomputedResults;
     /** Plafond du cache. Configurable via cascade.import.reference-cache-max-entries. */
-    private volatile int maxCacheEntries = 5_000;
+    private final AtomicInteger maxCacheEntriesRef = new AtomicInteger(5_000);
 
     /** Constructeur principal (instance originale, crée ses propres caches). */
     public ReferenceType(final CheckerTarget target, final String refType,
@@ -76,7 +78,7 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
         // TRANSFORM iter2 #1 : partager l'index avec les copies ; pas de rebuild .
         clone = () -> new ReferenceType(target, refType, referenceValues, transformer,
                 this.lineIdentityColumnName, this.seenOnce, this.precomputedResults,
-                this.naturalKeyIndex);
+                this.naturalKeyIndexRef.get());
     }
 
     /**
@@ -102,15 +104,15 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
         this.seenOnce = sharedSeenOnce;
         this.precomputedResults = sharedPrecomputedResults;
         // TRANSFORM iter2 #1 : pas de rebuild ; on partage l'index immuable .
-        this.naturalKeyIndex = sharedNaturalKeyIndex;
+        this.naturalKeyIndexRef.set(sharedNaturalKeyIndex);
         clone = () -> new ReferenceType(target, refType, referenceValues, transformer,
                 this.lineIdentityColumnName, this.seenOnce, this.precomputedResults,
-                this.naturalKeyIndex);
+                this.naturalKeyIndexRef.get());
     }
 
     /** Configure le plafond du cache. Appelé depuis DataImporter après importProperties. */
     public void setMaxCacheEntries(int max) {
-        this.maxCacheEntries = max;
+        this.maxCacheEntriesRef.set(max);
     }
 
     @JsonIgnore
@@ -138,11 +140,11 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
      * dans {@link #check}. Rebuild complet à chaque appel de setReferenceValues.
      */
     private void buildNaturalKeyIndex(ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues) {
-        Map<Ltree, DataValue.LineIdentityColumnName> index = new HashMap<>(referenceValues.size() * 2);
+        Map<Ltree, DataValue.LineIdentityColumnName> index = HashMap.newHashMap(referenceValues.size() * 2);
         for (DataValue.LineIdentityColumnName key : referenceValues.keySet()) {
             index.put(key.naturalKey(), key);
         }
-        this.naturalKeyIndex = index;
+        this.naturalKeyIndexRef.set(index);
     }
 
     private void buildKnownSpecialCharacters(ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues) {
@@ -190,7 +192,7 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
         }
 
         // ── R-P2-1 : lookup O(1) via l'index naturalKey ─────────────────────────
-        DataValue.LineIdentityColumnName foundKey = naturalKeyIndex.get(value);
+        DataValue.LineIdentityColumnName foundKey = naturalKeyIndexRef.get().get(value);
         if (foundKey != null) {
             value = foundKey.naturalKey();
             uuid = referenceValues.get(foundKey);
@@ -199,7 +201,7 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
             // ── R-P2-2 : mettre en cache après la 2e occurrence ─────────────────
             if (seenOnce.contains(value)) {
                 // Valeur vue ≥ 2 fois → promouvoir dans precomputedResults
-                if (precomputedResults.size() < maxCacheEntries) {
+                if (precomputedResults.size() < maxCacheEntriesRef.get()) {
                     precomputedResults.put(value, foundKey);
                 }
             } else {
@@ -248,10 +250,10 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
                 this.lineIdentityColumnName,
                 this.seenOnce,          // partagé
                 this.precomputedResults, // partagé
-                this.naturalKeyIndex     // partagé : pas de rebuild O(N)
+                this.naturalKeyIndexRef.get() // partagé : pas de rebuild O(N)
         );
         referenceType.value = value;
-        referenceType.maxCacheEntries = this.maxCacheEntries;
+        referenceType.maxCacheEntriesRef.set(this.maxCacheEntriesRef.get());
         return referenceType;
 
     }

@@ -10,6 +10,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -46,7 +47,7 @@ public class CacheSizeEstimator {
     private final ObjectMapper mapper = new ObjectMapper();
     private final ServiceContainer serviceContainer;
     private final ReentrantLock computeLock = new ReentrantLock();
-    private volatile SizeReport lastReport;
+    private final AtomicReference<SizeReport> lastReportRef = new AtomicReference<>();
 
     public CacheSizeEstimator(ServiceContainer serviceContainer) {
         this.serviceContainer = serviceContainer;
@@ -57,7 +58,7 @@ public class CacheSizeEstimator {
      * cache memoire interne est expire .
      */
     public SizeReport getReport(boolean force) {
-        SizeReport last = lastReport;
+        SizeReport last = lastReportRef.get();
         if (!force && last != null && !isExpired(last)) {
             return last;
         }
@@ -65,12 +66,12 @@ public class CacheSizeEstimator {
         try {
             // Double-check apres acquisition du lock ( un autre thread a
             // pu calculer pendant l'attente ) .
-            last = lastReport;
+            last = lastReportRef.get();
             if (!force && last != null && !isExpired(last)) {
                 return last;
             }
             SizeReport computed = compute();
-            lastReport = computed;
+            lastReportRef.set(computed);
             return computed;
         } finally {
             computeLock.unlock();
@@ -84,7 +85,7 @@ public class CacheSizeEstimator {
 
     /** Invalide le rapport memoise ; le prochain {@link #getReport} recomputera . */
     public void invalidate() {
-        lastReport = null;
+        lastReportRef.set(null);
     }
 
     private boolean isExpired(SizeReport report) {

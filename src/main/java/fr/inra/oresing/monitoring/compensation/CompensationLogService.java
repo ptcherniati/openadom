@@ -55,14 +55,18 @@ public class CompensationLogService {
         return id;
     }
 
-    /** Default TTL ( 240 min ) . */
+    /** Default TTL ( 240 min ) — propre tx REQUIRES_NEW sans auto-invocation . */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public UUID record(String operationType,
                        String targetSchema, String targetTable, String targetId,
                        UUID correlationId, UUID userId, String userLogin,
                        Map<String, Object> payload) {
-        return record(operationType, targetSchema, targetTable, targetId,
+        UUID id = repository.recordPending(operationType,
+                targetSchema, targetTable, targetId,
                 correlationId, userId, userLogin, payload,
                 CompensationLogEntry.DEFAULT_TTL_MINUTES);
+        log.debug("CompensationLog recorded : {} for {}.{}/{}", id, targetSchema, targetTable, targetId);
+        return id;
     }
 
     /**

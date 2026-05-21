@@ -3,17 +3,16 @@ package fr.inra.oresing.workflow.cascade.history;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -96,7 +95,7 @@ class HeartbeatServiceTest {
         UUID corrId = UUID.randomUUID();
         HeartbeatService.Heartbeat hb = service.start(corrId);
         hb.close();
-        hb.close();   // doit etre no-op , pas d'exception
+        assertDoesNotThrow(hb::close);
     }
 
     @Test

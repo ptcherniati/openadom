@@ -37,6 +37,10 @@ public class DataVersioningScopeCacheRepository {
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
+    private static final String PARAM_APPLICATION = "application";
+    private static final String PARAM_REFERENCE_TYPE = "referenceType";
+    private static final String PARAM_USER_ID = "userId";
+
     private final Application application;
     private final SqlSchemaForApplication schema;
     private final NamedParameterJdbcTemplate jdbc;
@@ -61,10 +65,10 @@ public class DataVersioningScopeCacheRepository {
                   AND user_id        = :userId::uuid
                 """.formatted(schema.getSqlIdentifier());
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("application", application.getId())
-                .addValue("referenceType", referenceType)
+                .addValue(PARAM_APPLICATION, application.getId())
+                .addValue(PARAM_REFERENCE_TYPE, referenceType)
                 .addValue("columnName", columnName)
-                .addValue("userId", userId);
+                .addValue(PARAM_USER_ID, userId);
         try {
             String json = jdbc.queryForObject(query, params, String.class);
             return Optional.ofNullable(json).map(this::deserialize);
@@ -88,10 +92,10 @@ public class DataVersioningScopeCacheRepository {
                     computed_at    = EXCLUDED.computed_at
                 """.formatted(schema.getSqlIdentifier());
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("application", application.getId())
-                .addValue("referenceType", referenceType)
+                .addValue(PARAM_APPLICATION, application.getId())
+                .addValue(PARAM_REFERENCE_TYPE, referenceType)
                 .addValue("columnName", columnName)
-                .addValue("userId", userId)
+                .addValue(PARAM_USER_ID, userId)
                 .addValue("visibleValues", serialize(values));
         jdbc.update(query, params);
     }
@@ -110,8 +114,8 @@ public class DataVersioningScopeCacheRepository {
                   AND reference_type = :referenceType
                 """.formatted(schema.getSqlIdentifier());
         return jdbc.update(query, new MapSqlParameterSource()
-                .addValue("application", application.getId())
-                .addValue("referenceType", referenceType));
+                .addValue(PARAM_APPLICATION, application.getId())
+                .addValue(PARAM_REFERENCE_TYPE, referenceType));
     }
 
     /**
@@ -123,7 +127,7 @@ public class DataVersioningScopeCacheRepository {
                 DELETE FROM %s.data_versioning_scope_cache
                 WHERE user_id = :userId::uuid
                 """.formatted(schema.getSqlIdentifier());
-        return jdbc.update(query, new MapSqlParameterSource().addValue("userId", userId));
+        return jdbc.update(query, new MapSqlParameterSource().addValue(PARAM_USER_ID, userId));
     }
 
     /**
@@ -135,7 +139,7 @@ public class DataVersioningScopeCacheRepository {
                 WHERE application = :application::uuid
                 """.formatted(schema.getSqlIdentifier());
         return jdbc.update(query, new MapSqlParameterSource()
-                .addValue("application", application.getId()));
+                .addValue(PARAM_APPLICATION, application.getId()));
     }
 
     /**
@@ -149,7 +153,7 @@ public class DataVersioningScopeCacheRepository {
                 WHERE application = :application::uuid
                 """.formatted(schema.getSqlIdentifier());
         Long c = jdbc.queryForObject(query, new MapSqlParameterSource()
-                .addValue("application", application.getId()), Long.class);
+                .addValue(PARAM_APPLICATION, application.getId()), Long.class);
         return c == null ? 0L : c;
     }
 

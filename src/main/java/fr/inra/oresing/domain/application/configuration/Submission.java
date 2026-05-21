@@ -23,6 +23,7 @@ public record Submission(
 ) {
 
     public static final String DD_MM_YYYY_FOR_FILE = "dd-MM-yyyy";
+    private static final String KEY_FILE_NAME_FORMAT = "fileNameFormat";
 
     public BinaryFileDataset parseFileName(Map<String, ComponentDescription> componentDescriptions, String fileName, BinaryFileDataset binaryFileDataset) {
         final String timeScopePattern = getTimeScopePattern(componentDescriptions);
@@ -49,7 +50,7 @@ public record Submission(
                                     Map.of(
                                             "startDate", value,
                                             "dateformat", DD_MM_YYYY_FOR_FILE,
-                                            "fileNameFormat", fileNameParsing().createExampleSubmissionFileName()
+                                            KEY_FILE_NAME_FORMAT, fileNameParsing().createExampleSubmissionFileName()
                                     )
                             );
                         }
@@ -64,7 +65,7 @@ public record Submission(
                                     Map.of(
                                             "endDate", value,
                                             "dateformat", DD_MM_YYYY_FOR_FILE,
-                                            "fileNameFormat", fileNameParsing().createExampleSubmissionFileName()
+                                            KEY_FILE_NAME_FORMAT, fileNameParsing().createExampleSubmissionFileName()
                                     )
                             );
                         }
@@ -88,7 +89,7 @@ public record Submission(
         } catch (Exception e) {
             throw new SiOreAuthorizationRequestException(
                     AuthorizationRequestException.INVALID_FILE_NAME,
-                    Map.of("fileNameFormat", fileNameParsing().createExampleSubmissionFileName())
+                    Map.of(KEY_FILE_NAME_FORMAT, fileNameParsing().createExampleSubmissionFileName())
             );
 
         }

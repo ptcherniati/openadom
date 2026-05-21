@@ -43,7 +43,7 @@ public record CascadeRuntimeOverride(
     public static final CascadeRuntimeOverride EMPTY =
             new CascadeRuntimeOverride(null, null, null, null, null, null);
 
-    public static CascadeRuntimeOverride empty() {
+    public static CascadeRuntimeOverride noOverride() {
         return EMPTY;
     }
 

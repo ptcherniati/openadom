@@ -6,7 +6,7 @@ PLAN DE CORRECTION EXHAUSTIF -- 566 issues en nouvelle periode de code
 ### SEVERITE : BLOCKER
 ######################################################################
 
-  -- java:S2699  (15 occurrences) --
+  - [x] java:S2699  (15 occurrences) --
     L   71  TEST/fr/inra/oresing/workflow/cascade/preparation/PreparationPhaseListenerInterceptorTest.java
            -> Add at least one assertion to this test case.
     L   77  TEST/fr/inra/oresing/workflow/cascade/ImportRateLimiterTest.java
@@ -38,19 +38,19 @@ PLAN DE CORRECTION EXHAUSTIF -- 566 issues en nouvelle periode de code
     L  144  TEST/fr/inra/oresing/workflow/cascade/progress/LoggingImportProgressReporterTest.java
            -> Add at least one assertion to this test case.
 
-  -- java:S2229  (1 occurrences) --
+  - [x] java:S2229  (1 occurrences) --
     L   63  fr/inra/oresing/monitoring/compensation/CompensationLogService.java
            -> "record's" @Transactional requirement is incompatible with the one for this method.
 
-  -- java:S2095  (1 occurrences) --
+  - [x] java:S2095  (1 occurrences) --
     L  498  fr/inra/oresing/persistence/BinaryFileRepository.java
            -> Use try-with-resources or close this "LargeObject" in a "finally" clause.
 
-  -- java:S2695  (1 occurrences) --
+  - [x] java:S2695  (1 occurrences) --
     L  123  fr/inra/oresing/persistence/refref/RefrefRebuildSql.java
            -> This "PreparedStatement" has no parameters.
 
-  -- java:S1845  (1 occurrences) --
+  - [x] java:S1845  (1 occurrences) --
     L   46  fr/inra/oresing/workflow/cascade/config/CascadeRuntimeOverride.java
            -> Rename method "empty" to prevent any misunderstanding/clash with field "EMPTY".
 
@@ -212,7 +212,7 @@ PLAN DE CORRECTION EXHAUSTIF -- 566 issues en nouvelle periode de code
     L   18  fr/inra/oresing/domain/authorization/DomainUserDetails.java
            -> Remove usage of generic wildcard type.
 
-  -- java:S1948  (3 occurrences) --
+  - [x] java:S1948  (3 occurrences) --
     L   26  fr/inra/oresing/domain/BinaryFile.java
            -> Make "processedData" transient or serializable.
     L   21  fr/inra/oresing/domain/rightsrequest/RightsRequest.java
@@ -220,21 +220,21 @@ PLAN DE CORRECTION EXHAUSTIF -- 566 issues en nouvelle periode de code
     L   44  fr/inra/oresing/domain/rightsrequest/RightsRequest.java
            -> Make "linkedAuthorizationIds" private or transient.
 
-  -- java:S1186  (2 occurrences) --
+  - [x] java:S1186  (2 occurrences) --
     L   71  TEST/fr/inra/oresing/workflow/cascade/config/CascadePoolReloaderTest.java
            -> Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete t
     L   83  TEST/fr/inra/oresing/workflow/cascade/config/CascadePoolReloaderTest.java
            -> Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete t
 
-  -- java:S2479  (1 occurrences) --
+  - [x] java:S2479  (1 occurrences) --
     L  385  fr/inra/oresing/domain/data/deposit/prescan/NaturalKeyPreScanService.java
            -> Remove the non-escaped \uFEFF character from this literal.
 
-  -- java:S2235  (1 occurrences) --
+  - [x] java:S2235  (1 occurrences) --
     L  278  fr/inra/oresing/rest/usecases/admin/BuildCacheService.java
            -> Refactor this piece of code to not catch IllegalMonitorStateException
 
-  -- java:S5845  (1 occurrences) --
+  - [x] java:S5845  (1 occurrences) --
     L  229  TEST/fr/inra/oresing/rest/model/data/DownloadDatasetQueryAdvancedSearchTest.java
            -> Change the assertion arguments to not compare dissimilar types.
 

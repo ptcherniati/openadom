@@ -1392,27 +1392,6 @@ public class CascadeImportPipeline {
     }
 
     /**
-     * Deplace le fichier source dans un repertoire dedie au user et au
-     * correlationId, puis renvoie le chemin final.
-     */
-    /**
-     * Helper de construction + submission asynchrone d'une
-     * {@link WorkflowLogEntry} pour un import. Best-effort : en cas
-     * d'erreur de parsing des IDs , on log un warning et on continue.
-     */
-    private void logImportEvent(
-            String correlationId, String userId, String userLogin,
-            String applicationName, String dataType, String resourceName,
-            Instant startedAt, Duration duration, String status,
-            long recordsProcessed, long recordsFailed,
-            int chunksProcessed, long fileSizeBytes,
-            List<String> errors, String fatalError) {
-        logImportEvent(correlationId, userId, userLogin, applicationName, dataType,
-                resourceName, startedAt, duration, status, recordsProcessed, recordsFailed,
-                chunksProcessed, fileSizeBytes, errors, fatalError, null);
-    }
-
-    /**
      * Resout le nombre de rows reellement traitees par l'import . Cascade
      * cumule la taille des chunks emis par le sink ( {@code Chunk.recordCount()} )
      * pour produire {@code WorkflowResult.recordsProcessed()} . Pour les

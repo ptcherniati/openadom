@@ -111,10 +111,8 @@ public class ByteaSubstringInputStream extends InputStream {
         if (eof) return -1;
 
         // Recharge si buffer courant epuise
-        if (currentBuffer == null || currentPos >= currentBuffer.length) {
-            if (!loadNextChunk()) {
-                return -1;
-            }
+        if ((currentBuffer == null || currentPos >= currentBuffer.length) && !loadNextChunk()) {
+            return -1;
         }
         int available = currentBuffer.length - currentPos;
         int toCopy    = Math.min(available, len);

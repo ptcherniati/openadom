@@ -54,13 +54,6 @@ public record BundleReport(List<ImportProgressEvent> results, Locale locale, Str
     }
 
 
-    public BundleReport(List<ImportProgressEvent> results, Locale locale, String origin, Application application, Mapper mapper) {
-        this.results = results;
-        this.application = application;
-        this.locale = locale;
-        this.origin = origin;
-        this.mapper = mapper;
-    }
 
     public BundleReport(Locale locale, String origin, Application application, Mapper mapper) {
         this(new LinkedList<>(), locale, origin, application, mapper);

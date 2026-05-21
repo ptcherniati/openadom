@@ -88,12 +88,14 @@ public class PublishLifecycleService {
             OreSiWorkflowType.UNPUBLISH.name(),
             OreSiWorkflowType.DELETE_FILE.name());
 
+    private static final String KEY_FILE_ID = "fileId";
+    private static final String KEY_WAS_PUBLISHED = "wasPublished";
+
     private final ServiceContainer              serviceContainer;
     private final OreSiRepository               repository;
     private final WorkflowLogWriter             logWriter;
     private final WorkflowLogRepository         logRepository;
     private final ApplicationEventPublisher     events;
-    private final PublishLifecycleCoordinator   coordinator;
     private final ConfigHashService             configHashService;
 
     /**
@@ -137,14 +139,12 @@ public class PublishLifecycleService {
             WorkflowLogWriter           logWriter,
             WorkflowLogRepository       logRepository,
             ApplicationEventPublisher   events,
-            PublishLifecycleCoordinator coordinator,
             ConfigHashService           configHashService) {
         this.serviceContainer  = serviceContainer;
         this.repository        = repository;
         this.logWriter         = logWriter;
         this.logRepository     = logRepository;
         this.events            = events;
-        this.coordinator       = coordinator;
         this.configHashService = configHashService;
     }
 
@@ -336,7 +336,7 @@ public class PublishLifecycleService {
                     startTime, endTime, duration, WorkflowLogEntry.STATUS_FAILED,
                     0L, 0L, 0, 0L, List.of(),
                     "Phase 1 rejected : " + safeMessage(ex),
-                    Map.of("fileId", fileId.toString(), "wasPublished", wasPublished, "phase", "PHASE_1"),
+                    Map.of(KEY_FILE_ID, fileId.toString(), KEY_WAS_PUBLISHED, wasPublished, "phase", "PHASE_1"),
                     null, null));
         } catch (RuntimeException endEx) {
             log.error("Phase 1 audit recordEnd failed for {} : {}", correlationId, endEx.getMessage());
@@ -437,12 +437,12 @@ public class PublishLifecycleService {
                 : null;
         Map<String, Object> metadata = currentConfigHash != null
                 ? Map.of(
-                        "fileId",            fileId.toString(),
-                        "wasPublished",      wasPublished,
+                        KEY_FILE_ID,            fileId.toString(),
+                        KEY_WAS_PUBLISHED,      wasPublished,
                         "currentConfigHash", currentConfigHash)
                 : Map.of(
-                        "fileId",       fileId.toString(),
-                        "wasPublished", wasPublished);
+                        KEY_FILE_ID,       fileId.toString(),
+                        KEY_WAS_PUBLISHED, wasPublished);
         return new WorkflowLogEntry(
                 correlationId, type.name(), userId, userLogin,
                 applicationName, dataName, fileName,

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.web.csrf.CsrfToken;
@@ -39,10 +40,8 @@ class SpaCsrfTokenRequestHandlerTest {
         CsrfToken token = mock(CsrfToken.class, org.mockito.Answers.RETURNS_DEFAULTS);
         Supplier<CsrfToken> tokenSupplier = () -> token;
 
-        handler.handle(request, response, tokenSupplier);
-
-        // The key behavior: no NPE and the supplier was consumed
-        // (no assertion needed — if we reach here without exception, the handler worked)
+        assertDoesNotThrow(() -> handler.handle(request, response, tokenSupplier));
+        // verify no NPE thrown — the handler consumed the supplier
     }
 
     @Test

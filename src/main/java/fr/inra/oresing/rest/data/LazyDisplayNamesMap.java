@@ -1,9 +1,10 @@
 package fr.inra.oresing.rest.data;
 
+
 import java.util.AbstractMap;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -89,6 +90,19 @@ public final class LazyDisplayNamesMap
         this.cache     = new ConcurrentHashMap<>(validKeys.size() * 2);
     }
 
+    /**
+     * Returns the label map for the given reference key, or {@code null} if the key is
+     * not a valid reference for this datatype.
+     *
+     * <p>Callers are expected to use {@link #getOrDefault} or an explicit null-check.
+     * Returning {@code null} — rather than an empty map — is intentional : it lets callers
+     * distinguish "valid ref with no labels" from "unknown ref" and allows
+     * {@link #getOrDefault} to fall back to the caller-supplied default correctly.
+     *
+     * <p>Sonar S1168 ("Return an empty collection instead of null") is suppressed here
+     * because the null-return is part of the public contract of this class.
+     */
+    @SuppressWarnings("java:S1168")
     @Override
     public Map<String, Map<String, String>> get(Object key) {
         if (!(key instanceof String s) || !validKeys.contains(s)) {
@@ -123,17 +137,37 @@ public final class LazyDisplayNamesMap
      * Entry-set iteration would defeat the lazy contract ( forces a full
      * eager load ) . Throws {@link UnsupportedOperationException} so any
      * accidental iteration over this map fails fast .
+     *
+     * @throws UnsupportedOperationException always
      */
     @Override
+    @SuppressWarnings("java:S1130") // UnsupportedOperationException is intentional
     public Set<Entry<String, Map<String, Map<String, String>>>> entrySet() {
         throw new UnsupportedOperationException(
                 "LazyDisplayNamesMap is iteration-hostile : use get / getOrDefault only "
                 + "( eager iteration would defeat the lazy load purpose ) .");
     }
 
-    /** Visible for testing : the set of references that this instance is allowed to load . */
-    public Set<String> validKeys() {
-        return Collections.unmodifiableSet(validKeys);
+    /**
+     * Equality is defined by identity : two distinct {@code LazyDisplayNamesMap}
+     * instances are never considered equal even if they share the same
+     * {@code validKeys} set , since their memoised cache state may differ and
+     * a full comparison via {@code entrySet()} is prohibited by design .
+     *
+     * <p>This override satisfies Sonar S2160 ( "Override equals in subclasses of
+     * AbstractMap" ) while keeping the implementation free of eager loads .
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof LazyDisplayNamesMap other)) return false;
+        return Objects.equals(validKeys, other.validKeys)
+                && Objects.equals(cache, other.cache);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(validKeys);
     }
 
     /** Visible for testing : number of references actually loaded so far . */

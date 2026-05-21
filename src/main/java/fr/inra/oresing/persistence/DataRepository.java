@@ -180,6 +180,10 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     private static final int BULK_INSERT_BATCH_SIZE =
             Integer.getInteger("app.import.bulkInsertBatchSize", 50_000);
 
+    private static final String COL_BINARY_FILE = "binaryFile";
+    private static final String COL_NATURAL_KEY = "naturalkey";
+    private static final String COL_HIERARCHICAL_KEY = "hierarchicalkey";
+
     @Override
     public long storeAll(final Path finalCsvFile,
                          final java.util.function.LongConsumer onBatchUpserted,
@@ -319,7 +323,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         }
                     }
                 });
-        return upserted == null ? 0L : upserted;
+        return upserted != null ? upserted : 0L;
     }
 
 
@@ -346,7 +350,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         SELECT count(*) FROM %s WHERE binaryfile = :binaryFile
                         """,
                 getTable().getSqlIdentifier());
-        Map<String, Object> params = Map.of("binaryFile", fileId);
+        Map<String, Object> params = Map.of(COL_BINARY_FILE, fileId);
         Long n = getNamedParameterJdbcTemplate().queryForObject(query, params, Long.class);
         return n == null ? 0L : n;
     }
@@ -445,7 +449,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
             }
             java.util.List<UUID> ids = getNamedParameterJdbcTemplate().queryForList(
                     selectIdsSql,
-                    Map.of("binaryFile", fileId, "chunkSize", chunkSize),
+                    Map.of(COL_BINARY_FILE, fileId, "chunkSize", chunkSize),
                     UUID.class);
             batch = ids.size();
             if (batch == 0) break;
@@ -779,8 +783,8 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
             // and dominates the pre-cascade preparation time observed at
             // ~2m30s wall-clock . fromSqlWithoutCheck does the same allocation
             // without the per-row syntax validation .
-            Ltree naturalKey      = Ltree.fromSqlWithoutCheck(rs.getString("naturalkey"));
-            Ltree hierarchicalKey = Ltree.fromSqlWithoutCheck(rs.getString("hierarchicalkey"));
+            Ltree naturalKey      = Ltree.fromSqlWithoutCheck(rs.getString(COL_NATURAL_KEY));
+            Ltree hierarchicalKey = Ltree.fromSqlWithoutCheck(rs.getString(COL_HIERARCHICAL_KEY));
             String patternColName = rs.getString("patterncolumnname");
             dataIdPerKeys.put(
                     new DataValue.LineIdentityColumnName(naturalKey, hierarchicalKey, patternColName),
@@ -866,11 +870,11 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 .addValue("nks", nksArray);
         final long t0 = System.nanoTime();
         final long[] rowCount = { 0L };
-        Map<DataValue.LineIdentityColumnName, UUID> dataIdPerKeys = new HashMap<>(naturalKeysOfInterest.size() * 2);
+        Map<DataValue.LineIdentityColumnName, UUID> dataIdPerKeys = HashMap.newHashMap(naturalKeysOfInterest.size() * 2);
         getNamedParameterJdbcTemplate().query(query, params, rs -> {
             UUID id = UUID.fromString(rs.getString("id"));
-            Ltree naturalKey      = Ltree.fromSqlWithoutCheck(rs.getString("naturalkey"));
-            Ltree hierarchicalKey = Ltree.fromSqlWithoutCheck(rs.getString("hierarchicalkey"));
+            Ltree naturalKey      = Ltree.fromSqlWithoutCheck(rs.getString(COL_NATURAL_KEY));
+            Ltree hierarchicalKey = Ltree.fromSqlWithoutCheck(rs.getString(COL_HIERARCHICAL_KEY));
             String patternColName = rs.getString("patterncolumnname");
             dataIdPerKeys.put(
                     new DataValue.LineIdentityColumnName(naturalKey, hierarchicalKey, patternColName),
@@ -1074,7 +1078,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 rs -> {
                     Map<String, String> result = new HashMap<>();
                     while (rs.next()) {
-                        result.put(rs.getString("naturalkey"), rs.getString("hierarchicalkey"));
+                        result.put(rs.getString(COL_NATURAL_KEY), rs.getString(COL_HIERARCHICAL_KEY));
                     }
                     return result;
                 }

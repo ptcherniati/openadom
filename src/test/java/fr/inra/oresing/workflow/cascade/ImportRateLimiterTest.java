@@ -11,6 +11,7 @@ import org.mockito.Mockito;
 
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
@@ -75,17 +76,17 @@ class ImportRateLimiterTest {
         @Test
         @DisplayName("acquisition réussit si slot disponible")
         void acquireSucceedsWhenSlotAvailable() {
-            // Ne doit pas lancer
-            rateLimiter.acquireOrThrow("user-1");
+            assertDoesNotThrow(() -> rateLimiter.acquireOrThrow("user-1"));
             rateLimiter.release("user-1");
         }
 
         @Test
         @DisplayName("deux acquisitions réussissent pour le même utilisateur (max=2)")
         void twoAcquisitionsForSameUser() {
-            rateLimiter.acquireOrThrow("user-2");
-            rateLimiter.acquireOrThrow("user-2");
-            // Pas d'exception
+            assertDoesNotThrow(() -> {
+                rateLimiter.acquireOrThrow("user-2");
+                rateLimiter.acquireOrThrow("user-2");
+            });
             rateLimiter.release("user-2");
             rateLimiter.release("user-2");
         }
@@ -93,12 +94,12 @@ class ImportRateLimiterTest {
         @Test
         @DisplayName("acquisitions parallèles pour utilisateurs différents sont indépendantes")
         void separateUsersHaveIndependentSlots() {
-            // max=2 pour chaque utilisateur
-            rateLimiter.acquireOrThrow("userA");
-            rateLimiter.acquireOrThrow("userA");
-            // userB ne doit pas être affecté par les slots de userA
-            rateLimiter.acquireOrThrow("userB");
-            rateLimiter.acquireOrThrow("userB");
+            assertDoesNotThrow(() -> {
+                rateLimiter.acquireOrThrow("userA");
+                rateLimiter.acquireOrThrow("userA");
+                rateLimiter.acquireOrThrow("userB");
+                rateLimiter.acquireOrThrow("userB");
+            });
             rateLimiter.release("userA");
             rateLimiter.release("userA");
             rateLimiter.release("userB");
@@ -171,8 +172,7 @@ class ImportRateLimiterTest {
             rateLimiter.acquireOrThrow("user-r");
             rateLimiter.acquireOrThrow("user-r");
             rateLimiter.release("user-r");
-            // Après release, un slot est disponible
-            rateLimiter.acquireOrThrow("user-r"); // ne doit pas throw
+            assertDoesNotThrow(() -> rateLimiter.acquireOrThrow("user-r"));
             rateLimiter.release("user-r");
             rateLimiter.release("user-r");
         }
@@ -180,8 +180,7 @@ class ImportRateLimiterTest {
         @Test
         @DisplayName("release() d'un userId inconnu est sans effet")
         void releaseUnknownUserIsNoOp() {
-            // Ne doit pas lancer NPE
-            rateLimiter.release("unknown-user");
+            assertDoesNotThrow(() -> rateLimiter.release("unknown-user"));
         }
     }
 

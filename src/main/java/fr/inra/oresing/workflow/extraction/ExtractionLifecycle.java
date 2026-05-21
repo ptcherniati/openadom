@@ -60,19 +60,16 @@ import java.util.UUID;
 @Component
 public class ExtractionLifecycle {
 
-    private final WorkflowLogRepository    repository;
     private final WorkflowLogWriter        logWriter;
     private final WorkflowActiveRegistry   activeRegistry;
     private final HeartbeatService         heartbeatService;
     private final OpenadomMetrics          metrics;
 
     public ExtractionLifecycle(
-            WorkflowLogRepository repository,
             WorkflowLogWriter logWriter,
             WorkflowActiveRegistry activeRegistry,
             HeartbeatService heartbeatService,
             OpenadomMetrics metrics) {
-        this.repository       = repository;
         this.logWriter        = logWriter;
         this.activeRegistry   = activeRegistry;
         this.heartbeatService = heartbeatService;
@@ -148,7 +145,7 @@ public class ExtractionLifecycle {
 
         return new Handle(corrId, workflowType, metricsType,
                 userId, userLogin, applicationName, dataType, resourceName,
-                bytesTotal, startedAt, hb);
+                startedAt, hb);
     }
 
     /**
@@ -181,7 +178,6 @@ public class ExtractionLifecycle {
         private final String  applicationName;
         private final String  dataType;
         private final String  resourceName;
-        private final long    bytesTotal;
         private final Instant startedAt;
         private final HeartbeatService.Heartbeat heartbeat;
 
@@ -190,7 +186,7 @@ public class ExtractionLifecycle {
         Handle(UUID correlationId, String workflowType, String metricsType,
                UUID userId, String userLogin,
                String applicationName, String dataType, String resourceName,
-               long bytesTotal, Instant startedAt,
+               Instant startedAt,
                HeartbeatService.Heartbeat heartbeat) {
             this.correlationId   = correlationId;
             this.workflowType    = workflowType;
@@ -200,7 +196,6 @@ public class ExtractionLifecycle {
             this.applicationName = applicationName;
             this.dataType        = dataType;
             this.resourceName    = resourceName;
-            this.bytesTotal      = bytesTotal;
             this.startedAt       = startedAt;
             this.heartbeat       = heartbeat;
         }
