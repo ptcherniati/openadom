@@ -4,6 +4,8 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedHashMap;
@@ -110,6 +112,20 @@ public class CachePreloader {
                 : null;
 
         if (parallel) {
+            // SecurityContextHolder est un ThreadLocal : il NE se propage PAS
+            // automatiquement aux threads du pool ci-dessous . Sans capture
+            // explicite , les appels role-aware ( ex
+            // applicationService.getApplication(nameOrId) dans le chemin
+            // tryCheckedFormat / preloadReferencedFiles ) se font sur un
+            // thread anonyme , tombent en rôle PostgreSQL anonyme , et le
+            // SELECT filtré par RLS sur la table {@code application} échoue
+            // avec NoSuchApplicationException ( "application inconnue 'X'" )
+            // alors que l'application existe . Le pattern de capture + re-set
+            // + clear en finally est déjà en place dans OreSiResources pour
+            // StreamingResponseBody ( cf commentaire ~ligne 1032 ) - on
+            // l'applique ici via {@link #withSecurityContext} pour propager
+            // l'authentification HTTP appelante à chaque task du pool .
+            final SecurityContext capturedSecurityCtx = SecurityContextHolder.getContext();
             int effectiveParallelism = Math.max(1, Math.min(parallelism, dataNames.size() + 1));
             ExecutorService pool = Executors.newFixedThreadPool(effectiveParallelism, r -> {
                 Thread t = new Thread(r, "cache-preload-" + application.getName());
@@ -119,11 +135,19 @@ public class CachePreloader {
             try {
                 List<CompletableFuture<Void>> tasks = new java.util.ArrayList<>(dataNames.size() * 2 + 1);
                 for (String dataName : dataNames) {
-                    tasks.add(CompletableFuture.runAsync(() -> tryFilterList(application, dataName, filterListCount, errors), pool));
-                    tasks.add(CompletableFuture.runAsync(() -> tryCheckedFormat(application, dataName, checkedFormatCount, errors), pool));
+                    tasks.add(CompletableFuture.runAsync(
+                            withSecurityContext(capturedSecurityCtx,
+                                    () -> tryFilterList(application, dataName, filterListCount, errors)),
+                            pool));
+                    tasks.add(CompletableFuture.runAsync(
+                            withSecurityContext(capturedSecurityCtx,
+                                    () -> tryCheckedFormat(application, dataName, checkedFormatCount, errors)),
+                            pool));
                 }
                 if (refFilesTask != null) {
-                    tasks.add(CompletableFuture.runAsync(refFilesTask, pool));
+                    tasks.add(CompletableFuture.runAsync(
+                            withSecurityContext(capturedSecurityCtx, refFilesTask),
+                            pool));
                 }
                 CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new)).join();
             } finally {
@@ -162,6 +186,37 @@ public class CachePreloader {
                 report.filterListPreloaded(), report.checkedFormatPreloaded(),
                 report.referencedFilesPreloaded(), report.errors(), parallel);
         return report;
+    }
+
+    /**
+     * Décorateur qui propage le {@link SecurityContext} capturé sur le
+     * thread appelant vers un thread du pool d'exécution . Pose le
+     * contexte avant d'invoquer la task , le clear en {@code finally}
+     * pour éviter une fuite de contexte sur le thread du pool ( les
+     * threads sont réutilisés entre tasks ) .
+     *
+     * <p>Justification : {@link SecurityContextHolder} expose un
+     * ThreadLocal qui ne se propage pas automatiquement vers un pool
+     * borné ( cf JLS sur ThreadLocal + comportement de Spring Security
+     * sans {@code DelegatingSecurityContextExecutor} ) . Sans cette
+     * propagation , les chemins role-aware ( résolution d'application
+     * par nom filtrée par RLS , autorisations , audit ) tombent en rôle
+     * anonyme et échouent .
+     *
+     * <p>Note : on N'UTILISE PAS {@code DelegatingSecurityContextExecutor}
+     * de Spring car le pool est construit à la demande pour 1 preload
+     * et détruit immédiatement après - l'overhead de configuration du
+     * delegator est supérieur au snippet inline ici .
+     */
+    private static Runnable withSecurityContext(SecurityContext ctx, Runnable task) {
+        return () -> {
+            SecurityContextHolder.setContext(ctx);
+            try {
+                task.run();
+            } finally {
+                SecurityContextHolder.clearContext();
+            }
+        };
     }
 
     private void tryFilterList(Application app, String dataName, AtomicInteger count, AtomicInteger errors) {
