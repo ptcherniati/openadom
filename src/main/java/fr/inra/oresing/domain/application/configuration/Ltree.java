@@ -104,6 +104,7 @@ public class Ltree implements Comparable<Ltree> {
         return extracttolabelFromStringWithSpecialCharacters(key);
     }
 
+    @SuppressWarnings("java:S2629")
     public static void checkLabelSyntax(final String label) {
         Preconditions.checkState(label.length() <= 256, ExceptionMessage.TOO_LONG_LABEL.toMessage());
         Preconditions.checkState(!label.isEmpty(), ExceptionMessage.NULL_LABEL.toMessage());

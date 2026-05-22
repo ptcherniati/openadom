@@ -83,7 +83,7 @@ public class AdditionalFileSearchHelper {
                         .map(this::addArgumentAndReturnSubstitution)
                         .collect(Collectors.joining(",", " (\nassociate @> ARRAY[", "]\n) "))
                 ));
-        Optional.ofNullable(additionalFilesInfos.getAdditionalFilesInfos())
+        Optional.ofNullable(additionalFilesInfos.getAdditionalFilesInfosMap())
                 .filter(additionalFileInfos -> !CollectionUtils.isEmpty(additionalFileInfos))
                 .ifPresent(list -> where.add(list.entrySet().stream()
                         .map(this::whereForAdditionalFileName)

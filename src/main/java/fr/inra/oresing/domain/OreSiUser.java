@@ -19,6 +19,7 @@ public class OreSiUser extends OreSiEntity {
     private OreSiUserStates accountstate;
     private Map<String, Timestamp> chartes = new HashMap<>();
 
+    @SuppressWarnings("java:S115")
     public enum OreSiUserStates {
         idle, active, pending, closed
     }

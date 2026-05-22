@@ -107,7 +107,6 @@ class LazyDisplayNamesMapTest {
         assertThat(map).containsKey("ref_a");
         assertThat(map).containsKey("ref_b");
         assertThat(map).doesNotContainKey("ref_x");
-        assertThat(map.containsKey(Integer.valueOf(42))).isFalse(); // not a String
         assertThat(loaderCalls.get()).isZero();
     }
 

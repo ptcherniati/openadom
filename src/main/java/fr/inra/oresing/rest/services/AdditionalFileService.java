@@ -231,11 +231,11 @@ public class AdditionalFileService {
     public AdditionalFileParamsParsingResult getAdditionalFileSearchHelper(final String nameOrId, final AdditionalFilesInfos additionalFilesInfos) {
         final Application application = AdditionalFileService.CHARTE.equals(additionalFilesInfos.getFiletype()) ? serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId) : serviceContainer.applicationService().getApplication(nameOrId);
         final AdditionalFileParamsParsingResult.Builder builder = AdditionalFileParamsParsingResult.builder();
-        for (final Map.Entry<String, AdditionalFilesInfos.AdditionalFileInfos> entry : additionalFilesInfos.getAdditionalFilesInfos().entrySet()) {
+        for (final Map.Entry<String, AdditionalFilesInfos.AdditionalFileInfos> entry : additionalFilesInfos.getAdditionalFilesInfosMap().entrySet()) {
             final String additionalFileName = entry.getKey();
             AdditionalFileDescription additionalFileDescription = application.getConfiguration().additionalFiles().get(additionalFileName);
             if (additionalFileDescription == null) {
-                builder.unknownAdditionalFilename(additionalFileName, additionalFilesInfos.getAdditionalFilesInfos().keySet());
+                builder.unknownAdditionalFilename(additionalFileName, additionalFilesInfos.getAdditionalFilesInfosMap().keySet());
             } else {
                 AdditionalFilesInfos.AdditionalFileInfos value = entry.getValue();
                 if (value != null && !CollectionUtils.isEmpty(value.getFieldFilters())) {

@@ -15,7 +15,7 @@ public class PolicyDescription {
     String schemaname;
     String tablename;
 
-    public static PolicyDescription convert(final ResultSet rs, final int rowNum) {
+    public static PolicyDescription convert(final ResultSet rs) {
         try {
             PolicyDescription policyDescription = new PolicyDescription();
             policyDescription.policyname = rs.getString("policyname");
@@ -26,5 +26,4 @@ public class PolicyDescription {
             return null;
         }
     }
-    // List<String> roles;
 }

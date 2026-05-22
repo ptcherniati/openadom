@@ -77,4 +77,7 @@ public class ConfigurationSchemaNode {
     public static final String OA_DATA_HEADER_LINE = "OA_dataHeaderLine";
     public static final String OA_DATA_FIRST_LINE = "OA_dataFirstLine";
 
+    private ConfigurationSchemaNode() {
+        super();
+    }
 }

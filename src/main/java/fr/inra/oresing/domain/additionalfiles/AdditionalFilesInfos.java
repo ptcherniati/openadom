@@ -20,7 +20,7 @@ public class AdditionalFilesInfos {
     //@ApiModelProperty(notes = "A list of authorizationss of additionalfiles to find", required = false)
     Set<Authorization> authorizations = new LinkedHashSet<>();
     //@ApiModelProperty(notes = "A map of List of AdditionalFileInfos by additionalFileName ", required = false)
-    Map<String, AdditionalFileInfos> additionalFilesInfos = new LinkedHashMap<>();
+    Map<String, AdditionalFileInfos> additionalFilesInfosMap = new LinkedHashMap<>();
     //@ApiModelProperty(notes = "The locale for result default= fr", required = false, example = "FR")
     String locale = Locale.FRANCE.toString();
     //@ApiModelProperty(notes = "The first file to return ", required = false, example = "10")
@@ -29,9 +29,9 @@ public class AdditionalFilesInfos {
     Long limit; // default "ALL"
 
 
-    /** Alias de {@link #getAdditionalFilesInfos()} pour la compatibilite des tests. */
+    /** Alias de {@link #getAdditionalFilesInfosMap ()} pour la compatibilite des tests. */
     public Map<String, AdditionalFileInfos> getInfosByFileName() {
-        return additionalFilesInfos;
+        return additionalFilesInfosMap;
     }
     @Getter
     @Setter

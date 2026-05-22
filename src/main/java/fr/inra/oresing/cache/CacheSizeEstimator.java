@@ -33,7 +33,7 @@ import java.util.concurrent.locks.ReentrantLock;
 @Slf4j
 @Component
 public class CacheSizeEstimator {
-
+    @SuppressWarnings({"java:S1186", "java:S100"})
     public record SizeReport(Map<String, Long> bytesByCache, Instant computedAt, long durationMs) {}
 
     @Value("${openadom.cache.sizes.ttl-minutes:360}")

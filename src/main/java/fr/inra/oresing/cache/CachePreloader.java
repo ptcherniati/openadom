@@ -50,7 +50,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 @Component
 public class CachePreloader {
-
+    @SuppressWarnings({"java:S1186", "java:S100"})
     public record PreloadReport(
             int filterListPreloaded,
             int checkedFormatPreloaded,

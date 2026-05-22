@@ -83,7 +83,7 @@ public class SqlService {
         final String sql = """
                 SELECT  policyname, schemaname, tablename FROM pg_policies WHERE array[:role::name] @> roles ;
                 """;
-        return namedParameterJdbcTemplate.query(sql, Map.of("role", role.getAsSqlRole()), PolicyDescription::convert);
+        return namedParameterJdbcTemplate.query(sql, Map.of("role", role.getAsSqlRole()), (rs, _) -> PolicyDescription.convert(rs));
     }
 
     public void createPolicy(final SqlPolicy sqlPolicy) {

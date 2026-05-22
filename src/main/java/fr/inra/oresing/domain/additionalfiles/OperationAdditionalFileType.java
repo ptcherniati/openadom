@@ -12,6 +12,8 @@ import java.util.Map;
  * Déplacé de {@code persistence} vers {@code domain.additionalfiles} (Phase 1 — indépendance domaine).
  */
 @Getter
+
+@SuppressWarnings("java:S115")
 public enum OperationAdditionalFileType {
     admin("admin", true, Map.of("fr", "Délégation", "en", "Delegation")),
     delete("delete", true, Map.of("fr", "Suppression", "en", "Deletion")),
