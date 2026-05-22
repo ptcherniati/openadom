@@ -47,9 +47,7 @@ class NormalizedServiceTest extends AbstractIntegrationTest {
                         dynamicTest("initialisation de l'utilisateur withRightsUser", () -> {
                             fixtures.withRightsUserConnection = fixtures.createUserForUserDefinition(withRightsUser, true, false);
                         }))),
-                dynamicTest("test public", () -> {
-                    monSoereFixture.testPublic();
-                }),
+                dynamicTest("test public", monSoereFixture::testPublic),
                 dynamicContainer("chargement de MONSOERE",
                         monSoereFixture.loadMonsore(appId)),
                 dynamicContainer("chargement de MONSOERE",

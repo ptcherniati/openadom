@@ -213,7 +213,7 @@ public class IntegrityService {
             java.time.Instant fallback = startTs != null ? startTs.toInstant() : java.time.Instant.now();
             java.time.Instant referenceInstant = lastHeartbeat != null ? lastHeartbeat.toInstant() : fallback;
             boolean stuck = STATUS_IN_PROGRESS.equals(status)
-                    && referenceInstant.isBefore(java.time.Instant.now().minusSeconds(5 * 60));
+                    && referenceInstant.isBefore(java.time.Instant.now().minusSeconds(5L * 60));
 
             if (finalCount < 0) {
                 // metadata.binaryFileId absent -> impossible de calculer

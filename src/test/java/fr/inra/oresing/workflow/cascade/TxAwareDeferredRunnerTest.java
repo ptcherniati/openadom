@@ -76,7 +76,7 @@ class TxAwareDeferredRunnerTest {
         TxAwareDeferredRunner runner = new TxAwareDeferredRunner(
                 deferred, CORR_ID, onSuccess, null, null);
 
-        assertDoesNotThrow(() -> runner.afterCommit());
+        assertDoesNotThrow(runner::afterCommit);
         verify(onSuccess).run();
     }
 
@@ -88,7 +88,7 @@ class TxAwareDeferredRunnerTest {
         TxAwareDeferredRunner runner = new TxAwareDeferredRunner(
                 deferred, CORR_ID, null, null, null);
 
-        assertDoesNotThrow(() -> runner.afterCommit());
+        assertDoesNotThrow(runner::afterCommit);
         verify(deferred).execute();
     }
 
@@ -101,7 +101,7 @@ class TxAwareDeferredRunnerTest {
         TxAwareDeferredRunner runner = new TxAwareDeferredRunner(
                 deferred, CORR_ID, onSuccess, null, null);
 
-        assertDoesNotThrow(() -> runner.afterCommit());
+        assertDoesNotThrow(runner::afterCommit);
     }
 
     // ─── afterCompletion — rollback ──────────────────────────────────────────

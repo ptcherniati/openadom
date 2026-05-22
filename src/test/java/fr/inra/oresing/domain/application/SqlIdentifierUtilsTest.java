@@ -174,8 +174,8 @@ class SqlIdentifierUtilsTest {
         @Test
         @DisplayName("Identifiant de 64 caractères → FieldNameTooLongForSqlFieldException")
         void tooLongThrows() {
-            String too_long = "a".repeat(64);
-            assertThatThrownBy(() -> SqlIdentifierUtils.IdentifierTest.forStringIdentifier(too_long))
+            String tooLong = "a".repeat(64);
+            assertThatThrownBy(() -> SqlIdentifierUtils.IdentifierTest.forStringIdentifier(tooLong))
                     .isInstanceOf(FieldNameTooLongForSqlFieldException.class);
         }
 
@@ -239,7 +239,7 @@ class SqlIdentifierUtilsTest {
         }
 
         @Test
-        @DisplayName("Chaînage forNaturalKey �� forId sur identifiant court reste ≤ 63 chars")
+        @DisplayName("Chainage forNaturalKey puis forId sur identifiant court reste <= 63 chars")
         void chainedSuffixesUnderLimit() {
             // "ab" + "_naturalkey" + "_id" = 14 chars < 63
             String result = SqlIdentifierUtils.IdentifierTest

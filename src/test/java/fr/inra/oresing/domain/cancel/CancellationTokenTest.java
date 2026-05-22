@@ -18,7 +18,7 @@ class CancellationTokenTest {
 
     @Test
     void none_throwIfCancelled_doesNotThrow() {
-        assertThatCode(() -> CancellationToken.NONE.throwIfCancelled())
+        assertThatCode(CancellationToken.NONE::throwIfCancelled)
                 .doesNotThrowAnyException();
     }
 

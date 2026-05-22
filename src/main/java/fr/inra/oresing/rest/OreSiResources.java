@@ -238,6 +238,17 @@ public class OreSiResources {
      */
     @org.springframework.beans.factory.annotation.Autowired
     private fr.inra.oresing.rest.data.FilterListRateLimiter filterListRateLimiter;
+
+    /**
+     * Timeout applique au {@code Future.get()} des taches soumises a
+     * {@code heavyExecutorService}. Garantit qu'un import bloque ne
+     * tient pas indefiniment le thread HTTP / connexion DB . En test
+     * on reduit via {@code openadom.http.streaming.timeout} pour
+     * faire echouer rapidement les tests qui hangeraient autrement
+     * ( cf TestReferencesErrors , app_test_monsoere ) .
+     */
+    @Value("${openadom.http.streaming.timeout:6h}")
+    private Duration heavyTaskTimeout;
     Executor fastExecutor;
     Executor normalExecutor;
     Executor heavyExecutor;
@@ -914,7 +925,7 @@ public class OreSiResources {
                 } catch (IOException e) {
                     throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
                 }
-            }).get();
+            }).get(heavyTaskTimeout.toMillis(), TimeUnit.MILLISECONDS);
             // Post-commit : afterCommit du @Transactional interne au .get() a
             // fire , le UPSERT staging -> table finale ( cascade 3.0.0 deferred )
             // est termine . On recalcule dataSynthesis sur la table finale a
@@ -939,6 +950,44 @@ public class OreSiResources {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new OreSiTechnicalException("Thread interrompu", e);
+        } catch (TimeoutException e) {
+            log.error("Import bloque - timeout apres {} pour application={} dataName={}",
+                    heavyTaskTimeout, nameOrId, dataName);
+            // Diagnostic : dumper les stacks des threads heavy-*/cache-preload-*
+            // pour localiser exactement OU le thread est bloque ( DB lock ,
+            // attente Future , I/O , ... ) . Sans cela on a juste "timeout"
+            // sans cause , et le bug se reproduit dans un environnement
+            // different a chaque fois ( cf TestReferencesErrors , monsoere ) .
+            dumpRelevantThreads();
+            throw new OreSiTechnicalException(
+                    "Import bloque (timeout " + heavyTaskTimeout + ") - voir thread dump dans les logs", e);
+        }
+    }
+
+    /**
+     * Affiche les stacks des threads des pools applicatifs ( heavy , normal ,
+     * fast , cache-preload ) et ceux marques "scheduling" . Utilise lorsqu'un
+     * Future.get() timeout pour identifier la cause racine du blocage sans
+     * avoir a se brancher avec jstack en production .
+     */
+    private void dumpRelevantThreads() {
+        try {
+            java.lang.management.ThreadMXBean bean = java.lang.management.ManagementFactory.getThreadMXBean();
+            java.lang.management.ThreadInfo[] infos = bean.dumpAllThreads(true, true);
+            StringBuilder sb = new StringBuilder("=== Thread dump on import timeout ===\n");
+            for (java.lang.management.ThreadInfo ti : infos) {
+                String name = ti.getThreadName();
+                if (name.startsWith("heavy-") || name.startsWith("normal-")
+                        || name.startsWith("fast-") || name.startsWith("backup-")
+                        || name.startsWith("cache-preload-") || name.startsWith("scheduling-")
+                        || name.contains("cascade") || name.contains("workflow")) {
+                    sb.append(ti).append('\n');
+                }
+            }
+            sb.append("=== End thread dump ===");
+            log.error(sb.toString());
+        } catch (RuntimeException dumpEx) {
+            log.warn("Echec du thread dump diagnostic", dumpEx);
         }
     }
 

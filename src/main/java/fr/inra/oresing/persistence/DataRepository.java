@@ -285,7 +285,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                 totalUpserted += affected;
                                 batchCount++;
                                 try {
-                                    onBatchUpserted.accept((long) affected);
+                                    onBatchUpserted.accept(affected);
                                 } catch (RuntimeException ignored) {
                                     /* best effort : un consommateur fautif ne doit pas
                                        casser le UPSERT en cours */

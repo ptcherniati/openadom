@@ -174,7 +174,7 @@ class DownloadDatasetQueryTest {
         Assertions.assertTrue(buildedDownloadDatasetQuery.componentOrderBy().stream().map(fr.inra.oresing.domain.data.read.query.ComponentOrderBy::order).anyMatch(DataRepository.Order.ASC::equals));
         Assertions.assertTrue(buildedDownloadDatasetQuery.componentOrderBy().stream().map(fr.inra.oresing.domain.data.read.query.ComponentOrderBy::order).anyMatch(DataRepository.Order.DESC::equals));
         Assertions.assertEquals(DownloadDatasetQueryByRowId.class, buildedDownloadDatasetQuery.getClass());
-        Assertions.assertTrue(((DownloadDatasetQueryByRowId) buildedDownloadDatasetQuery).rowIds().stream().map(dataRowIds -> dataRowIds.id()).map(UUID::toString).allMatch(ROW_IDS::contains));
+        Assertions.assertTrue(((DownloadDatasetQueryByRowId) buildedDownloadDatasetQuery).rowIds().stream().map(DataRowIds::id).map(UUID::toString).allMatch(ROW_IDS::contains));
         Assertions.assertFalse(buildedDownloadDatasetQuery.horizontalDisplay());
     }
 

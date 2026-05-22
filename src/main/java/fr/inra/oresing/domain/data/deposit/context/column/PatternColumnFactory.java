@@ -126,7 +126,6 @@ public class PatternColumnFactory {
                     .map(PatternDescription.ExceptionPattern::columnName)
                     .collect(Collectors.collectingAndThen(Collectors.toList(), ImmutableList::copyOf));
         }
-
         return rapportWithNoErrors;
 
     }

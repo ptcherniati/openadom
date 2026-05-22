@@ -34,15 +34,9 @@ public record BuildColumns(PatternColumnFactory patternColumnFactory, ImmutableS
                     final String headerForReferenceColumn = Optional.of(basicComponent)
                             .map(ComponentDescription::importHeader)
                             .orElse(entry.getKey());
-                    final ComponentPresenceConstraint mandatory = Optional.of(basicComponent)
+                     final ComponentPresenceConstraint mandatory = Optional.of(basicComponent)
                             .map(ComponentDescription::mandatory)
                             .orElse(ComponentPresenceConstraint.MANDATORY);
-                    final Set<? extends Tag> tags = Optional.of(basicComponent)
-                            .map(ComponentDescription::tags)
-                            .orElse(Set.of(Tag.NoTag.instance()));
-                    final CheckerDescription checker = Optional.of(basicComponent)
-                            .map(ComponentDescription::checker)
-                            .orElse(null);
                     final Multiplicity multiplicity = Optional.ofNullable(basicComponent.checker()).map(CheckerDescription::multiplicity).orElse(Multiplicity.ONE);
                     return Optional.ofNullable(defaultValue)
                             .map(defaultValueConfiguration -> Column.staticColumnDescriptionToColumn(
@@ -107,7 +101,6 @@ public record BuildColumns(PatternColumnFactory patternColumnFactory, ImmutableS
                     final Set<? extends Tag> tags = Optional.ofNullable(dynamicComponent)
                             .map(ComponentDescription::tags)
                             .orElse(Set.of(Tag.NoTag.instance()));
-                    final Multiplicity multiplicity = Optional.ofNullable(Objects.requireNonNull(dynamicComponent).checker()).map(CheckerDescription::multiplicity).orElse(Multiplicity.ONE);
                     final ReferenceDynamicColumnDescription referenceDynamicColumnDescription =
                             new ReferenceDynamicColumnDescription(
                                     mandatory,

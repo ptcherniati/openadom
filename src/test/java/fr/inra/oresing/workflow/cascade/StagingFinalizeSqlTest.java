@@ -294,7 +294,6 @@ class StagingFinalizeSqlTest {
      * font pas attendre toute la suite ( 7s+ cumule par defaut ) .
      */
     private static void runWithFastBackoff(Runnable test) {
-        java.util.function.LongSupplier saved = null;
         try {
             // Inject 1ms backoff via setter ( pas via JVM prop puisque la conf
             // est maintenant pilotee par ImportProperties supplier ) .
