@@ -1,5 +1,6 @@
 package fr.inra.oresing.persistence.requestbuilder.data;
 
+import fr.inra.oresing.persistence.EmptyCellPredicate;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -76,14 +77,20 @@ class DataRequestBuilderTest {
                 DataRequestBuilder.sanitizeJsonPathStringValue(input));
     }
 
-    // ─── Convention "(vide)" : filtre = null -> JSONPath @ == null ───────────
+    // ─── Convention "(vide)" : filtre = null -> JSONPath cellule vide ─────────
+    // Mise à jour ticket #519 ( commit fb0fb5d9 ) : le predicat couvre
+    // maintenant à la fois JSON null ET chaîne JSON vide "" via la
+    // constante centralisée EmptyCellPredicate.JSONPATH_EMPTY_PREDICATE .
+    // Les cellules CSV vides sont stockées comme "" dans le JSONB ; sans
+    // cette mise à jour la sélection "(vide)" ramenait 0 résultat .
 
     @Test
-    void buildEqualityPredicate_returnsAtNullForNullValue() {
-        // Décision §5.7 : null sur le wire signifie "valeur absente / vide".
-        // Le JSONPath produit doit être `@ == null` , sans guillemets , pour
-        // matcher le littéral JSON null en base.
-        Assertions.assertEquals("@ == null",
+    void buildEqualityPredicate_returnsEmptyPredicateForNullValue() {
+        // Décision §5.7 : null sur le wire signifie "valeur absente / vide" .
+        // Le JSONPath produit délègue à la sentinelle centralisée pour
+        // matcher à la fois `@ == null` ( cellule JSON null ) ET
+        // `@ == ""` ( cellule CSV vide stockée comme chaîne vide ) .
+        Assertions.assertEquals(EmptyCellPredicate.JSONPATH_EMPTY_PREDICATE,
                 DataRequestBuilder.buildEqualityPredicate(null));
     }
 
@@ -107,17 +114,19 @@ class DataRequestBuilderTest {
     }
 
     @Test
-    void buildReferencePredicate_returnsAtNullForNullValue() {
+    void buildReferencePredicate_returnsEmptyPredicateForNullValue() {
         // Pour null , pas de `starts with` ( une branche d'arbre vide n'a
-        // pas de sens ) , on retombe sur l'égalité null pure.
-        Assertions.assertEquals("@ == null",
+        // pas de sens ) , on retombe sur la sentinelle centralisée pour
+        // couvrir à la fois JSON null ET chaîne JSON vide .
+        Assertions.assertEquals(EmptyCellPredicate.JSONPATH_EMPTY_PREDICATE,
                 DataRequestBuilder.buildReferencePredicate(null));
     }
 
     @Test
     void buildRegexpPredicate_handlesNullValue() {
-        // Pour null , like_regex n'a pas de sens ; on retombe sur l'égalité.
-        Assertions.assertEquals("@ == null",
+        // Pour null , like_regex n'a pas de sens ; on retombe sur la
+        // sentinelle centralisée pour cohérence avec les autres builders .
+        Assertions.assertEquals(EmptyCellPredicate.JSONPATH_EMPTY_PREDICATE,
                 DataRequestBuilder.buildRegexpPredicate(null));
     }
 

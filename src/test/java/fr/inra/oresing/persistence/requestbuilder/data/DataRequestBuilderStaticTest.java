@@ -7,6 +7,7 @@ import fr.inra.oresing.domain.application.configuration.checker.CheckerDescripti
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.data.read.query.*;
+import fr.inra.oresing.persistence.EmptyCellPredicate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Nested;
@@ -109,9 +110,12 @@ class DataRequestBuilderStaticTest {
     class EqualityPredicateTest {
 
         @Test
-        @DisplayName("null → @ == null")
+        @DisplayName("null → sentinelle EmptyCellPredicate ( JSON null OU \"\" )")
         void nullFilter() {
-            assertThat(DataRequestBuilder.buildEqualityPredicate(null)).isEqualTo("@ == null");
+            // Mise à jour ticket #519 ( fb0fb5d9 ) : couvre maintenant
+            // JSON null ET chaîne JSON vide via la sentinelle centralisée .
+            assertThat(DataRequestBuilder.buildEqualityPredicate(null))
+                    .isEqualTo(EmptyCellPredicate.JSONPATH_EMPTY_PREDICATE);
         }
 
         @Test
@@ -137,9 +141,10 @@ class DataRequestBuilderStaticTest {
     class ReferencePredicateTest {
 
         @Test
-        @DisplayName("null → @ == null")
+        @DisplayName("null → sentinelle EmptyCellPredicate ( JSON null OU \"\" )")
         void nullFilter() {
-            assertThat(DataRequestBuilder.buildReferencePredicate(null)).isEqualTo("@ == null");
+            assertThat(DataRequestBuilder.buildReferencePredicate(null))
+                    .isEqualTo(EmptyCellPredicate.JSONPATH_EMPTY_PREDICATE);
         }
 
         @Test
@@ -161,9 +166,10 @@ class DataRequestBuilderStaticTest {
     class RegexpPredicateTest {
 
         @Test
-        @DisplayName("null → @ == null")
+        @DisplayName("null → sentinelle EmptyCellPredicate ( JSON null OU \"\" )")
         void nullFilter() {
-            assertThat(DataRequestBuilder.buildRegexpPredicate(null)).isEqualTo("@ == null");
+            assertThat(DataRequestBuilder.buildRegexpPredicate(null))
+                    .isEqualTo(EmptyCellPredicate.JSONPATH_EMPTY_PREDICATE);
         }
 
         @Test
