@@ -228,8 +228,8 @@ public class EmailService implements Email {
     );
 
     private static final String MAIL_VERIFICATION_TEMPLATE = """
-            %2$s%n%nVotre clé de connexion est : %n%1$s
-            %3$sYour connection key is: %n%1$s
+            %2$s%n%nVotre clé de validation est : %n%1$s
+            %3$sYour validation key is: %n%1$s
             """;
     private static final String MAIL_MESSAGE_TEMPLATE =
             "Bonjour %1$s%n%n" +
