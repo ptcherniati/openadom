@@ -227,10 +227,40 @@ public class EmailService implements Email {
             )
     );
 
-    private static final String MAIL_VERIFICATION_TEMPLATE = """
-            %2$s%n%nVotre clé de validation est : %n%1$s
-            %3$sYour validation key is: %n%1$s
-            """;
+    // Mise en forme du corps du mail bilingue ( FR + EN ) :
+    //   {title_fr}Votre clé de validation est :
+    //   {key}
+    //                              <- ligne vide
+    //   {title_en}Your validation key is:
+    //   {key}
+    //                              <- ligne vide ( pour ne pas coller au bloc
+    //                                  "L'équipe d'OpenAdom" ajouté par
+    //                                  MAIL_MESSAGE_TEMPLATE )
+    //
+    // Pour le cas VALIDATION_KEY ( forgot-password ) où title_fr et
+    // title_en sont vides , le rendu obtenu est exactement :
+    //   Bonjour {login}
+    //                              <- ligne vide ( de MAIL_MESSAGE_TEMPLATE )
+    //   Votre clé de validation est :
+    //   {key}
+    //                              <- ligne vide
+    //   Your validation key is:
+    //   {key}
+    //                              <- ligne vide
+    //   L'équipe d'OpenAdom
+    //
+    // Évite le bug d'espacement excessif observé image #111 ( double saut
+    // de ligne entre "Bonjour" et "Votre clé" car le précédent template
+    // commençait par %2$s%n%n qui combiné avec le %n%n de MESSAGE_TEMPLATE
+    // produisait 4 sauts de ligne = 3 lignes vides ) .
+    //
+    // Pour les cas NEW_ACCOUNT / NEW_EMAIL où title_fr / title_en
+    // contiennent du texte d'introduction se terminant déjà par leur
+    // propre %n%n , le rendu reste cohérent : le titre s'affiche avant
+    // la clé , séparé par une ligne vide .
+    private static final String MAIL_VERIFICATION_TEMPLATE =
+            "%2$sVotre clé de validation est :%n%1$s%n%n"
+            + "%3$sYour validation key is:%n%1$s%n";
     private static final String MAIL_MESSAGE_TEMPLATE =
             "Bonjour %1$s%n%n" +
             "%2$s%n" +
