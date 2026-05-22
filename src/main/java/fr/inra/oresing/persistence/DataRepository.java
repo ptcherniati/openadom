@@ -1383,17 +1383,29 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 query,
                 Map.of("dataName", dataName, "componentKey", componentKey),
                 (rs, rowNum) -> rs.getString(1));
-        final boolean truncated = values.size() > ColumnDistinctValues.DISTINCT_VALUES_LIMIT;
+        // Une cellule "vide" peut être stockée comme SQL NULL ( clé absente ,
+        // valeur JSON null ) OU comme chaîne JSON vide "" ( import CSV cellule
+        // vide ) . Sémantique unifiée via {@link EmptyCellPredicate} ; les
+        // valeurs vides sont normalisées en {@code null} dans la liste
+        // renvoyée , ce qui aligne le format wire sur l'attente du frontend
+        // ( ListFilter convertit {@code null} en sentinelle "( vide )" ) .
+        final List<String> normalized = new java.util.ArrayList<>(values.size());
+        boolean anyEmpty = false;
+        for (final String v : values) {
+            if (EmptyCellPredicate.isEmpty(v)) {
+                anyEmpty = true;
+                if (!normalized.contains(null)) {
+                    normalized.add(null);
+                }
+            } else {
+                normalized.add(v);
+            }
+        }
+        final boolean truncated = normalized.size() > ColumnDistinctValues.DISTINCT_VALUES_LIMIT;
         final List<String> capped = truncated
-                ? List.copyOf(values.subList(0, ColumnDistinctValues.DISTINCT_VALUES_LIMIT))
-                : List.copyOf(values);
-        // hasEmpty est dérivable de capped : si null y figure , la colonne
-        // contient au moins une valeur vide. Comme on a fait ORDER BY ASC
-        // NULLS LAST , un null éventuel est en fin de liste ; pour MANY ,
-        // null peut apparaitre n'importe où ( jsonb_array_elements_text
-        // ne distingue pas les positions ) - on scanne intégralement.
-        final boolean hasEmpty = capped.stream().anyMatch(v -> v == null);
-        return new ColumnDistinctValues(componentKey, capped, truncated, hasEmpty);
+                ? new java.util.ArrayList<>(normalized.subList(0, ColumnDistinctValues.DISTINCT_VALUES_LIMIT))
+                : normalized;
+        return new ColumnDistinctValues(componentKey, capped, truncated, anyEmpty);
     }
 
     /**
@@ -1426,26 +1438,17 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
             final String dataName,
             final String componentKey,
             final Multiplicity multiplicity) {
-        // ONE  : null si la valeur scalaire est null ( ou si la clé
-        //         absente de l'objet -> #>> renvoie aussi NULL )
-        // MANY : on considère "vide" si le tableau est null/absent ( pas
-        //         d'élément à filtrer ) , ou si l'un des éléments est null.
-        //         jsonb_array_length renvoie NULL pour un non-array ;
-        //         coalesce sur 0.
-        final String emptyPredicate = switch (multiplicity) {
-            case ONE -> "rv.refvalues #>> ARRAY[:componentKey] IS NULL";
-            case MANY -> """
-                    COALESCE(jsonb_array_length(rv.refvalues -> :componentKey), 0) = 0
-                    OR EXISTS (
-                        SELECT 1 FROM jsonb_array_elements(rv.refvalues -> :componentKey) elt
-                        WHERE elt = 'null'::jsonb
-                    )""";
-        };
+        // Predicat SQL "cellule vide" centralisé : couvre à la fois SQL NULL
+        // ( clé absente ou valeur JSON null ) et chaîne JSON vide ( "" ) qui
+        // est la représentation effective d'une cellule CSV vide après import .
+        // Single source of truth -> cohérence avec getColumnDistinctValues
+        // ( prédicat Java symétrique EmptyCellPredicate.isEmpty(...) ) .
+        final String emptyPredicate = EmptyCellPredicate.sqlPredicate(multiplicity);
         final String hasEmptyQuery = """
                 SELECT EXISTS (
                     SELECT 1 FROM %1$s.referencevalue rv
                     WHERE rv.referencetype = :dataName
-                      AND ( %2$s )
+                      AND %2$s
                     LIMIT 1
                 ) AS has_empty
                 """.formatted(getSchema().getSqlIdentifier(), emptyPredicate);
@@ -1454,31 +1457,36 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 Map.of("dataName", dataName, "componentKey", componentKey),
                 Boolean.class);
 
-        // Sondage des 2 premières valeurs distinctes non-null pour détecter
-        // un éventuel "single value" ( auto-select côté UI ).
+        // Sondage des 2 premières valeurs distinctes non-vides pour détecter
+        // un éventuel "single value" ( auto-select côté UI ) . On exclut
+        // les vides via NOT EmptyCellPredicate.sqlPredicate(...) pour
+        // garantir que "" ne soit pas considéré comme une valeur distincte
+        // ( sinon une colonne avec [ "ref2_A", "", "" ] aurait preview = 2
+        // alors qu'il n'y a qu'une seule valeur réelle "ref2_A" ) .
         final String unfold = switch (multiplicity) {
-            case ONE -> "rv.refvalues #>> ARRAY[:componentKey]";
-            case MANY -> "jsonb_array_elements_text(COALESCE(rv.refvalues -> :componentKey, '[]'::jsonb))";
+            case ONE -> EmptyCellPredicate.JSON_PATH_ONE;
+            case MANY -> EmptyCellPredicate.JSON_UNFOLD_MANY;
         };
         final String fromClause = multiplicity == Multiplicity.ONE
                 ? "%1$s.referencevalue rv".formatted(getSchema().getSqlIdentifier())
                 : "%1$s.referencevalue rv, LATERAL %2$s AS v".formatted(getSchema().getSqlIdentifier(), unfold);
         final String selectExpr = multiplicity == Multiplicity.ONE ? unfold + " AS v" : "v";
+        final String valueExpr = multiplicity == Multiplicity.ONE ? unfold : "v";
         final String previewQuery = """
                 SELECT DISTINCT %1$s
                 FROM %2$s
                 WHERE rv.referencetype = :dataName
-                  AND ( %3$s ) IS NOT NULL
+                  AND %3$s IS NOT NULL
+                  AND %3$s <> ''
                 LIMIT 2
-                """.formatted(selectExpr, fromClause,
-                multiplicity == Multiplicity.ONE ? unfold : "v");
+                """.formatted(selectExpr, fromClause, valueExpr);
         final List<String> preview = getNamedParameterJdbcTemplate().query(
                 previewQuery,
                 Map.of("dataName", dataName, "componentKey", componentKey),
                 (rs, rowNum) -> rs.getString(1));
-        // Une seule valeur distincte non-null -> on la transmet au front
-        // pour l'auto-select. Sinon on renvoie une liste vide ( pas de
-        // sens de prébourrer le champ texte avec plusieurs valeurs ).
+        // Une seule valeur distincte non-vide -> on la transmet au front
+        // pour l'auto-select . Sinon on renvoie une liste vide ( pas de
+        // sens de prébourrer le champ texte avec plusieurs valeurs ) .
         final List<String> values = preview.size() == 1 ? List.copyOf(preview) : List.of();
 
         return new ColumnDistinctValues(
