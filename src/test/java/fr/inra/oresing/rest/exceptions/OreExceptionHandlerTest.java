@@ -25,16 +25,25 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.postgresql.util.PSQLException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.BadSqlGrammarException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.support.WebExchangeBindException;
+import io.jsonwebtoken.ExpiredJwtException;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.DisconnectedException;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @Tag("domain.model")
@@ -215,5 +224,105 @@ class OreExceptionHandlerTest {
         ResponseEntity<String> response = exceptionHandler.handle(exception);
 
         assertDoesNotThrow(() -> objectMapper.writeValueAsString(response.getBody()));
+    }
+
+    @Test
+    void handleAccessDenied_returnsUnauthorized() {
+        var resp = exceptionHandler.handleAccessDenied(new AccessDeniedException("nope"));
+        assertNotNull(resp);
+        assertEquals(HttpStatus.UNAUTHORIZED.value(), resp.getStatusCode().value());
+    }
+
+    @Test
+    void handleDisconnectedException_returnsUnauthorized() {
+        DisconnectedException de = new DisconnectedException("disconnected");
+        ResponseEntity<?> resp = exceptionHandler.handle(de);
+        assertEquals(HttpStatus.UNAUTHORIZED, resp.getStatusCode());
+    }
+
+    @Test
+    void handleExpiredJwt_returnsUnauthorized() {
+        ExpiredJwtException ex = new ExpiredJwtException(null, null, "expired");
+        ResponseEntity<ExpiredJwtException> resp = exceptionHandler.handle(ex);
+        assertEquals(HttpStatus.UNAUTHORIZED, resp.getStatusCode());
+        assertNotNull(resp.getBody());
+    }
+
+    @Test
+    void handleBadCredentials_withExpiredJwtCause_returnsTokenExpired() {
+        ExpiredJwtException cause = new ExpiredJwtException(null, null, "expired");
+        BadCredentialsException ex = new BadCredentialsException("bad", cause);
+        ResponseEntity<Map<String, String>> resp = exceptionHandler.handle(ex);
+        assertEquals(HttpStatus.UNAUTHORIZED, resp.getStatusCode());
+        assertEquals("TOKEN_EXPIRED", resp.getBody().get("code"));
+    }
+
+    @Test
+    void handleBadCredentials_withoutExpiredJwtCause_returnsTokenInvalid() {
+        BadCredentialsException ex = new BadCredentialsException("bad");
+        ResponseEntity<Map<String, String>> resp = exceptionHandler.handle(ex);
+        assertEquals("TOKEN_INVALID", resp.getBody().get("code"));
+    }
+
+    @Test
+    void handleAuthenticationCredentialsNotFound_returnsTokenInvalid() {
+        var ex = new AuthenticationCredentialsNotFoundException("none");
+        ResponseEntity<Map<String, String>> resp = exceptionHandler.handle(ex);
+        assertEquals(HttpStatus.UNAUTHORIZED, resp.getStatusCode());
+        assertEquals("TOKEN_INVALID", resp.getBody().get("code"));
+    }
+
+    @Test
+    void handleAuthenticationFailure_inactiveAccount_setsHeadersAndPaymentRequired() {
+        OreSiUser u = new OreSiUser();
+        u.setId(UUID.randomUUID());
+        u.setLogin("john");
+        u.setEmail("john@x.fr");
+        u.setAccountstate(OreSiUser.OreSiUserStates.idle);
+        AuthenticationFailure ex = new AuthenticationFailure("INACTIVE_ACCOUNT", u);
+        ResponseEntity<String> resp = exceptionHandler.handle(ex);
+        assertEquals(HttpStatus.PAYMENT_REQUIRED, resp.getStatusCode());
+        assertNotNull(resp.getHeaders().getFirst("Id"));
+        assertEquals("john", resp.getHeaders().getFirst("Login"));
+        assertEquals("john@x.fr", resp.getHeaders().getFirst("Email"));
+    }
+
+    @Test
+    void handleAuthenticationFailure_existingLogin_returnsPreconditionFailed() {
+        OreSiUser u = newMinimalUser();
+        AuthenticationFailure ex = new AuthenticationFailure("EXISTING_LOGIN", u);
+        assertEquals(HttpStatus.PRECONDITION_FAILED, exceptionHandler.handle(ex).getStatusCode());
+    }
+
+    @Test
+    void handleAuthenticationFailure_badRequest_mapsToUnauthorized() {
+        OreSiUser u = newMinimalUser();
+        AuthenticationFailure ex = new AuthenticationFailure("BAD_REQUEST", u);
+        assertEquals(HttpStatus.UNAUTHORIZED, exceptionHandler.handle(ex).getStatusCode());
+    }
+
+    private static OreSiUser newMinimalUser() {
+        OreSiUser u = new OreSiUser();
+        u.setId(UUID.randomUUID());
+        u.setLogin("u");
+        u.setEmail("u@x.fr");
+        return u;
+    }
+
+    @Test
+    void handleBadSqlGrammar_withoutPermissionDenied_rethrows() {
+        // root cause is NOT a PSQLException with "permission denied" => method rethrows
+        BadSqlGrammarException ex =
+                new BadSqlGrammarException("task", "select 1", new java.sql.SQLException("syntax error"));
+        assertThrows(BadSqlGrammarException.class, () -> exceptionHandler.handle(ex));
+    }
+
+    @Test
+    void handleBadSqlGrammar_permissionDenied_returnsNotAcceptable() throws Exception {
+        PSQLException pgEx = new PSQLException(new org.postgresql.util.ServerErrorMessage(
+                "S:ERROR\u0000C:42501\u0000Mpermission denied\u0000F:auth.c\u0000L:1\u0000Rcheck\u0000"));
+        BadSqlGrammarException ex = new BadSqlGrammarException("task", "select 1", pgEx);
+        ResponseEntity<String> resp = exceptionHandler.handle(ex);
+        assertEquals(HttpStatus.NOT_ACCEPTABLE, resp.getStatusCode());
     }
 }

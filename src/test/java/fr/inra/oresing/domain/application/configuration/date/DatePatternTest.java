@@ -154,6 +154,97 @@ class DatePatternTest {
         Assertions.assertEquals(DATETIME, dateFormatted);
     }
 
+    @Test
+    void testCreateWithNullKeywordThrowsMissingPattern() {
+        SiOreConfigurationFormatException ex = Assertions.assertThrows(
+                SiOreConfigurationFormatException.class,
+                () -> DatePattern.of("null")
+        );
+        Assertions.assertEquals(ConfigurationException.MISSING_PATTERN_FOR_CHECKER_DATE, ex.getException());
+    }
+
+    @Test
+    void dateFromStandardFormat_nullInputs_returnNull() {
+        DatePattern<LocalDate> p = DatePattern.of("dd/MM/yyyy");
+        Assertions.assertNull(p.dateFromStandardFormat(null));
+        Assertions.assertNull(p.dateFromStandardFormat("null"));
+    }
+
+    @Test
+    void dateFromStandardFormat_validIsoDateTime_isReformatted() {
+        DatePattern<LocalDate> p = DatePattern.of("dd/MM/yyyy");
+        String iso = "2024-03-15 12:34:56";
+        String out = p.dateFromStandardFormat(iso);
+        Assertions.assertEquals("15/03/2024", out);
+    }
+
+    @Test
+    void dateFromStandardFormat_unparseableReturnsInputUnchanged() {
+        DatePattern<LocalDate> p = DatePattern.of("dd/MM/yyyy");
+        Assertions.assertEquals("not-a-date", p.dateFromStandardFormat("not-a-date"));
+    }
+
+    @Test
+    void dateToStandardFormat_nullInputs_returnNull() {
+        DatePattern<LocalDate> p = DatePattern.of("dd/MM/yyyy");
+        Assertions.assertNull(p.dateToStandardFormat(null));
+        Assertions.assertNull(p.dateToStandardFormat("null"));
+    }
+
+    @Test
+    void dateToStandardFormat_dateType_returnsStandardFormat() {
+        DatePattern<LocalDate> p = DatePattern.of("dd/MM/yyyy");
+        String out = p.dateToStandardFormat("15/03/2024");
+        Assertions.assertNotNull(out);
+        Assertions.assertTrue(out.startsWith("2024-03-15"), "should be ISO-like: " + out);
+    }
+
+    @Test
+    void dateToStandardFormat_timeType_returnsStandardFormat() {
+        DatePattern<LocalTime> p = DatePattern.of("HH:mm:ss");
+        String out = p.dateToStandardFormat("12:34:56");
+        Assertions.assertNotNull(out);
+        Assertions.assertTrue(out.contains("12:34:56"), "should contain time: " + out);
+    }
+
+    @Test
+    void dateToStandardFormat_datetimeType_returnsStandardFormat() {
+        DatePattern<LocalDateTime> p = DatePattern.of("dd/MM/yyyy HH:mm:ss");
+        String out = p.dateToStandardFormat("15/03/2024 12:34:56");
+        Assertions.assertNotNull(out);
+        Assertions.assertTrue(out.startsWith("2024-03-15"), "should be ISO-like: " + out);
+    }
+
+    @Test
+    void dateToStandardFormat_unparseableButStandard_returnsAsIs() {
+        DatePattern<LocalDate> p = DatePattern.of("dd/MM/yyyy");
+        // déjà au format standard → retourné tel quel
+        String standard = "2024-03-15 12:34:56";
+        Assertions.assertEquals(standard, p.dateToStandardFormat(standard));
+    }
+
+    @Test
+    void dateToStandardFormat_unparseable_throws() {
+        DatePattern<LocalDate> p = DatePattern.of("dd/MM/yyyy");
+        Assertions.assertThrows(
+                fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException.class,
+                () -> p.dateToStandardFormat("garbage"));
+    }
+
+    @Test
+    void getFieldType_byTypeClass() {
+        Assertions.assertEquals(TypeOfDate.DATE, DatePattern.of("dd/MM/yyyy").getFieldType());
+        Assertions.assertEquals(TypeOfDate.TIME, DatePattern.of("HH:mm:ss").getFieldType());
+        Assertions.assertEquals(TypeOfDate.DATETIME, DatePattern.of("dd/MM/yyyy HH:mm:ss").getFieldType());
+    }
+
+    @Test
+    void format_emptyOrNullDate_returnsNullForLocalDate() {
+        DatePattern<LocalDate> p = DatePattern.of("dd/MM/yyyy");
+        Assertions.assertNull(p.format(""));
+        Assertions.assertNull(p.format((String) null));
+    }
+
     record PatternArgument(
             String pattern,
             String dateTotest,

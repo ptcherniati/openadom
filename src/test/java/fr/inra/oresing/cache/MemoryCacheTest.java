@@ -1,5 +1,7 @@
 package fr.inra.oresing.cache;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -7,6 +9,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests unitaires de {@link MemoryCache} - LRU eviction , TTL ,
@@ -140,6 +145,89 @@ class MemoryCacheTest {
         assertEquals(1, snap.size());
         assertTrue(snap.containsKey("a"));
         assertThrows(UnsupportedOperationException.class, () -> snap.put("b", new MemoryCache.Entry<>(2, 0L)));
+    }
+
+    @Test
+    void lastWriteAt_isNullBeforeFirstPut() {
+        MemoryCache<String, Integer> cache = new MemoryCache<>("t", 10, 0);
+        assertNull(cache.lastWriteAt());
+    }
+
+    @Test
+    void lastWriteAt_isSetAfterPut() {
+        MemoryCache<String, Integer> cache = new MemoryCache<>("t", 10, 0);
+        long before = System.currentTimeMillis();
+        cache.put("a", 1);
+        long after = System.currentTimeMillis();
+        java.time.Instant lw = cache.lastWriteAt();
+        assertNotNull(lw);
+        long t = lw.toEpochMilli();
+        assertTrue(t >= before && t <= after, "timestamp dans la fenêtre");
+    }
+
+    @Test
+    void lastWriteAt_resetByInvalidateAll() {
+        MemoryCache<String, Integer> cache = new MemoryCache<>("t", 10, 0);
+        cache.put("a", 1);
+        assertNotNull(cache.lastWriteAt());
+        cache.invalidateAll();
+        assertNull(cache.lastWriteAt());
+    }
+
+    @Test
+    void invalidateAll_emptyCache_noopButResetsTimestamp() {
+        MemoryCache<String, Integer> cache = new MemoryCache<>("t", 10, 0);
+        cache.invalidateAll();
+        assertEquals(0, cache.size());
+        assertNull(cache.lastWriteAt());
+    }
+
+    @Test
+    void ttl_positive_returnsValueWhenFresh() {
+        MemoryCache<String, Integer> cache = new MemoryCache<>("t", 10, 60);
+        cache.put("a", 1);
+        assertEquals(1, cache.get("a"));
+    }
+
+    @Test
+    void estimateSizeBytes_emptyCache_returnsZero() {
+        MemoryCache<String, String> cache = new MemoryCache<>("t", 10, 0);
+        assertEquals(0L, cache.estimateSizeBytes(new ObjectMapper()));
+    }
+
+    @Test
+    void estimateSizeBytes_sumsBytesAcrossEntries() throws Exception {
+        MemoryCache<String, String> cache = new MemoryCache<>("t", 10, 0);
+        cache.put("a", "hello");
+        cache.put("b", "world");
+        ObjectMapper mapper = new ObjectMapper();
+        long expected = mapper.writeValueAsBytes("hello").length + mapper.writeValueAsBytes("world").length;
+        assertEquals(expected, cache.estimateSizeBytes(mapper));
+    }
+
+    @Test
+    void estimateSizeBytes_withExtractor_projectsValues() throws Exception {
+        MemoryCache<String, String> cache = new MemoryCache<>("t", 10, 0);
+        cache.put("a", "hello");
+        ObjectMapper mapper = new ObjectMapper();
+        long expected = mapper.writeValueAsBytes("HELLO").length;
+        assertEquals(expected, cache.estimateSizeBytes(mapper, String::toUpperCase));
+    }
+
+    @Test
+    void estimateSizeBytes_extractorReturningNull_isSkipped() {
+        MemoryCache<String, String> cache = new MemoryCache<>("t", 10, 0);
+        cache.put("a", "hello");
+        assertEquals(0L, cache.estimateSizeBytes(new ObjectMapper(), v -> null));
+    }
+
+    @Test
+    void estimateSizeBytes_serializationFailure_isSwallowed() throws Exception {
+        MemoryCache<String, String> cache = new MemoryCache<>("t", 10, 0);
+        cache.put("a", "hello");
+        ObjectMapper mapper = mock(ObjectMapper.class);
+        when(mapper.writeValueAsBytes(any())).thenThrow(new JsonProcessingException("boom") {});
+        assertEquals(0L, cache.estimateSizeBytes(mapper));
     }
 
     private static void sleepMs(long ms) {
