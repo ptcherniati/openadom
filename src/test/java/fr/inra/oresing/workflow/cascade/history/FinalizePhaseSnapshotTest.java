@@ -47,7 +47,7 @@ class FinalizePhaseSnapshotTest {
         assertThat(snap.finalizeFinishedAt()).isNull();
         assertThat(snap.rollbackStartedAt()).isNull();
         assertThat(snap.rollbackFinishedAt()).isNull();
-        assertThat(snap.rowsBeforeRollback()).isEqualTo(0L);
+        assertThat(snap.rowsBeforeRollback()).isZero();
         assertThat(snap.errorMessage()).isNull();
     }
 

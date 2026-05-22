@@ -87,7 +87,7 @@ class HierarchicalReferenceAsTreeAndZipUtilsTest {
         ZipUtils.zipDirectory(sourceDir, zipFile);
 
         assertThat(zipFile).exists();
-        assertThat(Files.size(zipFile)).isGreaterThan(0);
+        assertThat(Files.size(zipFile)).isPositive();
 
         // Vérifie que les 3 fichiers sont dans le ZIP
         int count = 0;

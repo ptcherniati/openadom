@@ -7,10 +7,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -51,7 +51,7 @@ class WorkflowLogRepositoryDeleteUnitTest {
     @Test
     void deleteByCorrelationId_existingId_returns1AndPassesUuidStringToJdbc() {
         UUID id = UUID.fromString("96a7ee3f-a9d9-43ff-93aa-3ecd31ca906f");
-        when(jdbcTemplate.update(eq(DELETE_BY_ID_SQL), eq(id.toString()))).thenReturn(1);
+        when(jdbcTemplate.update(DELETE_BY_ID_SQL, id.toString())).thenReturn(1);
 
         int deleted = repository.deleteByCorrelationId(id);
 
@@ -59,18 +59,18 @@ class WorkflowLogRepositoryDeleteUnitTest {
         // SQL must cast the param to ::uuid AND the param must be the UUID
         // string ( not the UUID object - PG driver would reject the binding
         // because the cast applies to a text parameter ) .
-        verify(jdbcTemplate, times(1)).update(eq(DELETE_BY_ID_SQL), eq(id.toString()));
+        verify(jdbcTemplate, times(1)).update(DELETE_BY_ID_SQL, id.toString());
     }
 
     @Test
     void deleteByCorrelationId_unknownId_returns0() {
         UUID id = UUID.randomUUID();
-        when(jdbcTemplate.update(eq(DELETE_BY_ID_SQL), eq(id.toString()))).thenReturn(0);
+        when(jdbcTemplate.update(DELETE_BY_ID_SQL, id.toString())).thenReturn(0);
 
         int deleted = repository.deleteByCorrelationId(id);
 
         assertEquals(0, deleted);
-        verify(jdbcTemplate).update(eq(DELETE_BY_ID_SQL), eq(id.toString()));
+        verify(jdbcTemplate).update(DELETE_BY_ID_SQL, id.toString());
     }
 
     @Test
@@ -86,27 +86,27 @@ class WorkflowLogRepositoryDeleteUnitTest {
 
     @Test
     void deleteAll_returnsRowCountFromJdbc() {
-        when(jdbcTemplate.update(eq(DELETE_ALL_SQL))).thenReturn(742);
+        when(jdbcTemplate.update(DELETE_ALL_SQL)).thenReturn(742);
 
         int deleted = repository.deleteAll();
 
         assertEquals(742, deleted);
-        verify(jdbcTemplate, times(1)).update(eq(DELETE_ALL_SQL));
+        verify(jdbcTemplate, times(1)).update(DELETE_ALL_SQL);
     }
 
     @Test
     void deleteAll_emptyTable_returns0() {
-        when(jdbcTemplate.update(eq(DELETE_ALL_SQL))).thenReturn(0);
+        when(jdbcTemplate.update(DELETE_ALL_SQL)).thenReturn(0);
 
         int deleted = repository.deleteAll();
 
         assertEquals(0, deleted);
-        verify(jdbcTemplate).update(eq(DELETE_ALL_SQL));
+        verify(jdbcTemplate).update(DELETE_ALL_SQL);
     }
 
     @Test
     void deleteAll_neverCallsDeleteByIdSql() {
-        when(jdbcTemplate.update(eq(DELETE_ALL_SQL))).thenReturn(0);
+        when(jdbcTemplate.update(DELETE_ALL_SQL)).thenReturn(0);
 
         repository.deleteAll();
 

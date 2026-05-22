@@ -10,6 +10,7 @@ import fr.inra.oresing.domain.data.read.query.*;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -21,7 +22,6 @@ import static fr.inra.oresing.domain.application.configuration.checker.CheckerDe
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
-import org.junit.jupiter.api.Tag;
 
 @DisplayName("ComponentFilters et ComponentType")
 @Tag("domain.model")

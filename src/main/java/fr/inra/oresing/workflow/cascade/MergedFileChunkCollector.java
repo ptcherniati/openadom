@@ -4,7 +4,6 @@ import fr.inrae.ore.cascade.model.chunk.Chunk;
 import fr.inrae.ore.cascade.model.chunk.ChunkMetadata;
 import fr.inrae.ore.cascade.model.collector.CollectorContext;
 import fr.inrae.ore.cascade.model.core.ChunkCollector;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,11 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**

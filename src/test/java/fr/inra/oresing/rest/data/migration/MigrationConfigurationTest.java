@@ -4,8 +4,8 @@ import fr.inra.oresing.domain.application.configuration.internationalization.Int
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
 import org.javers.core.Javers;
 import org.javers.core.diff.Diff;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
 import java.util.Map;

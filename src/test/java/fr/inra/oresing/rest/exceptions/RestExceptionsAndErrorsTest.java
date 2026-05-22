@@ -1,10 +1,10 @@
 package fr.inra.oresing.rest.exceptions;
 
+import fr.inra.oresing.domain.exceptions.ExceptionMessage;
+import fr.inra.oresing.domain.exceptions.FieldNameTooLongForSqlFieldException;
 import fr.inra.oresing.domain.exceptions.authorization.AuthorizationRequestException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
-import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.exceptions.filesenderclient.FileSenderServiceException;
-import fr.inra.oresing.domain.exceptions.FieldNameTooLongForSqlFieldException;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.configuration.ValidationError;
 import org.junit.jupiter.api.DisplayName;

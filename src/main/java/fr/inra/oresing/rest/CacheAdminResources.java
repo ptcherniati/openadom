@@ -14,11 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -55,9 +51,6 @@ import java.util.Map;
 public class CacheAdminResources {
 
     private static final String KEY_TTL_MINUTES = "ttlMinutes";
-    private static final String KEY_ENABLED = "enabled";
-    private static final String KEY_MAX_ENTRIES = "maxEntries";
-    private static final String KEY_ENTRIES = "entries";
 
     private final ServiceContainer serviceContainer;
     private final fr.inra.oresing.cache.CacheSizeEstimator cacheSizeEstimator;

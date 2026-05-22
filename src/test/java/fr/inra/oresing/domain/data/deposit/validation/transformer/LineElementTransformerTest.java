@@ -58,7 +58,7 @@ class LineElementTransformerTest {
             FieldType<?> result = t.transform(datum, StringType.getStringTypeFromStringValue("initial"));
 
             assertThat(result).isInstanceOf(StringType.class);
-            assertThat(result.toString()).isEqualTo("resultat");
+            assertThat(result).hasToString("resultat");
         }
 
         @Test
@@ -73,7 +73,7 @@ class LineElementTransformerTest {
 
             Datum datum = new Datum();
             FieldType<?> result = t.transform(datum, StringType.getStringTypeFromStringValue(""));
-            assertThat(result.toString()).isEqualTo("contextValue");
+            assertThat(result).hasToString("contextValue");
         }
 
         @Test

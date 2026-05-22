@@ -1,8 +1,8 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.domain.BinaryFile;
-import fr.inra.oresing.domain.ReferencedBinaryFiles;
 import fr.inra.oresing.domain.BinaryFileInfos;
+import fr.inra.oresing.domain.ReferencedBinaryFiles;
 import fr.inra.oresing.rest.model.data.BinaryFilePublicationState;
 import fr.inra.oresing.rest.model.data.BinaryFileResult;
 import fr.inra.oresing.rest.model.data.UserDescriptionResult;
@@ -20,22 +20,13 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.FileCopyUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 

@@ -1,8 +1,8 @@
 package fr.inra.oresing.rest.model;
 
 import fr.inra.oresing.domain.BinaryFileDataset;
-import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.BinaryFileInfos;
+import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.model.data.BinaryFileDatasetResult;
 import fr.inra.oresing.rest.model.data.BinaryFileInfosResult;
@@ -11,6 +11,7 @@ import fr.inra.oresing.rest.model.data.UserDescriptionResult;
 import fr.inra.oresing.rest.model.reference.GetReferenceResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -19,7 +20,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import org.junit.jupiter.api.Tag;
 
 /**
  * Tests unitaires des DTOs du package rest.model.

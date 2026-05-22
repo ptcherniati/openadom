@@ -1,12 +1,12 @@
 package fr.inra.oresing.rest.services;
 
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.rest.config.MigrationProperties;
 import fr.inra.oresing.domain.application.configuration.migration.execution.MigrationExecutor;
 import fr.inra.oresing.domain.application.configuration.migration.plan.MigrationMode;
 import fr.inra.oresing.domain.application.configuration.migration.plan.MigrationStatus;
 import fr.inra.oresing.domain.application.configuration.migration.report.MigrationResult;
 import fr.inra.oresing.persistence.JsonRowMapper;
+import fr.inra.oresing.rest.config.MigrationProperties;
 import fr.inra.oresing.rest.data.migration.MigrationConfiguration;
 import org.javers.core.Javers;
 import org.javers.core.diff.Diff;
@@ -27,9 +27,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests unitaires pour la logique de bypass dans {@link MigrationService#executeMigration}.

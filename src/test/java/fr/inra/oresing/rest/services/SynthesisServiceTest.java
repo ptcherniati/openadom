@@ -1,16 +1,13 @@
 package fr.inra.oresing.rest.services;
 
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.application.configuration.BasicComponent;
 import fr.inra.oresing.domain.application.configuration.ComponentDescription;
 import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
-
 import fr.inra.oresing.domain.chart.OreSiSynthesis;
 import fr.inra.oresing.persistence.DataSynthesisRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +21,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.*;
 
 /**

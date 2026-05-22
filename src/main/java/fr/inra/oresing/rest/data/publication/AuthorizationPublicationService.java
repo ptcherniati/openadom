@@ -2,6 +2,7 @@ package fr.inra.oresing.rest.data.publication;
 
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
+import fr.inra.oresing.domain.BinaryFileInfos;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.Submission;
@@ -11,7 +12,6 @@ import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
 import fr.inra.oresing.domain.services.synthesis.SynthesisService;
-import fr.inra.oresing.domain.BinaryFileInfos;
 import lombok.Getter;
 
 import java.util.Optional;

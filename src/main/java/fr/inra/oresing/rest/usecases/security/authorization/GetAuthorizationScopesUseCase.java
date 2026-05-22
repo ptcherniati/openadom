@@ -1,8 +1,8 @@
 package fr.inra.oresing.rest.usecases.security.authorization;
 
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.authorization.GetGrantableResult;
+import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.rest.services.AuthorizationService;
 import org.springframework.stereotype.Component;
 

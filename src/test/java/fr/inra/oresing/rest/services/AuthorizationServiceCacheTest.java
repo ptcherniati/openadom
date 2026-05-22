@@ -1,15 +1,11 @@
 package fr.inra.oresing.rest.services;
 
 import fr.inra.oresing.cache.MemoryCache;
-import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.OreSiUser;
-import fr.inra.oresing.persistence.AuthenticationService;
-import fr.inra.oresing.persistence.DataRepository;
-import fr.inra.oresing.persistence.OreSiRepository;
-import fr.inra.oresing.persistence.SqlService;
-import fr.inra.oresing.persistence.UserRepository;
+import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.GetGrantableResult;
+import fr.inra.oresing.domain.data.menu.MenuType;
+import fr.inra.oresing.persistence.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,10 +17,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests unitaires de la logique de cache dans {@link AuthorizationService}.

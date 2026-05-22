@@ -56,7 +56,7 @@ class MergedFileChunkCollectorTest {
     @DisplayName("initialize ( ) cree un fichier merged.csv vide")
     void initialize_creates_empty_merged_file() {
         assertThat(Files.exists(mergedPath)).isTrue();
-        assertThat(mergedPath).hasSize(0);
+        assertThat(mergedPath).hasSize(0L);
     }
 
     @Test
@@ -117,7 +117,7 @@ class MergedFileChunkCollectorTest {
 
         Chunk<Path> merged = collector.finish().get().orElseThrow();
 
-        assertThat(merged.chunkIndex()).isEqualTo(0);
+        assertThat(merged.chunkIndex()).isZero();
         assertThat(merged.records()).containsExactly(mergedPath);
     }
 
@@ -194,7 +194,7 @@ class MergedFileChunkCollectorTest {
         MergedFileChunkCollector c = new MergedFileChunkCollector(target);
         c.initialize(new CollectorContext("cid", -1, null, null, null, tempDir));
 
-        assertThat(target).hasSize(0);
+        assertThat(target).hasSize(0L);
     }
 
     private Path writeChunkFile(String name, String content) throws Exception {

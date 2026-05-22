@@ -1,21 +1,15 @@
 package fr.inra.oresing.rest.model.rightsrequest;
 
 import fr.inra.oresing.domain.application.configuration.RightRequestDescription;
-import fr.inra.oresing.domain.rightsrequest.RightsRequest;
 import fr.inra.oresing.domain.authorization.GetGrantableResult;
+import fr.inra.oresing.domain.rightsrequest.RightsRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -244,7 +238,7 @@ class RightsRequestDTOsTest {
             TreatRightsRequestRequest b = new TreatRightsRequestRequest(
                     "APPROVED", List.of(id), "c", "s", "b", false);
             assertThat(a).isEqualTo(b);
-            assertThat(a.hashCode()).isEqualTo(b.hashCode());
+            assertThat(a).hasSameHashCodeAs(b);
         }
     }
 

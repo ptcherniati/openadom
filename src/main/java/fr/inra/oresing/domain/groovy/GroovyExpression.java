@@ -6,9 +6,9 @@ import fr.inra.oresing.domain.groovy.exception.GroovyException;
 import fr.inra.oresing.domain.groovy.predefined.script.ScriptConstantProvider;
 
 import javax.script.*;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 public non-sealed class GroovyExpression implements Expression<Object> {

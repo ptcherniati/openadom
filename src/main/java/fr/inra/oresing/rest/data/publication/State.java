@@ -3,8 +3,8 @@ package fr.inra.oresing.rest.data.publication;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
-import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.authorization.AuthorizationParsed;
+import fr.inra.oresing.domain.file.FileOrUUID;
 
 import java.util.function.Predicate;
 

@@ -14,7 +14,6 @@ import fr.inra.oresing.workflow.OreSiWorkflowType;
 import fr.inra.oresing.workflow.cascade.history.WorkflowLogEntry;
 import fr.inra.oresing.workflow.cascade.history.WorkflowLogRepository;
 import fr.inra.oresing.workflow.cascade.history.WorkflowLogWriter;
-import fr.inrae.ore.cascade.core.monitoring.WorkflowEventBus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -24,7 +23,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 /**

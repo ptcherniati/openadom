@@ -1,8 +1,8 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.rest.services.ApplicationService;
 import fr.inra.oresing.rest.data.DataService;
+import fr.inra.oresing.rest.services.ApplicationService;
 import fr.inra.oresing.rest.services.AuthorizationService;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,14 +11,9 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests unitaires sur {@link CacheAdminResources}.

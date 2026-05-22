@@ -1,6 +1,9 @@
 package fr.inra.oresing.domain.data.deposit.csvreader;
 
-import com.google.common.collect.*;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.domain.application.configuration.Ltree;

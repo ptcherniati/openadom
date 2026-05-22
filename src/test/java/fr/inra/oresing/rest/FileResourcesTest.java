@@ -1,16 +1,12 @@
 package fr.inra.oresing.rest;
 
-import fr.inra.oresing.domain.BinaryFile;
-import fr.inra.oresing.domain.BinaryFileDataset;
-import fr.inra.oresing.domain.BinaryFileInfos;
-import fr.inra.oresing.domain.OreSiUser;
-import fr.inra.oresing.domain.ReferencedBinaryFiles;
+import fr.inra.oresing.domain.*;
 import fr.inra.oresing.rest.model.data.BinaryFileResult;
-import fr.inra.oresing.rest.usecases.storage.versioning.PublishLifecycleService;
 import fr.inra.oresing.rest.usecases.security.authorization.GetAllUsersUseCase;
 import fr.inra.oresing.rest.usecases.storage.binaryfile.GetFileUseCase;
 import fr.inra.oresing.rest.usecases.storage.binaryfile.GetFileWithDataUseCase;
 import fr.inra.oresing.rest.usecases.storage.binaryfile.GetReferencedBinaryFilesUseCase;
+import fr.inra.oresing.rest.usecases.storage.versioning.PublishLifecycleService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;

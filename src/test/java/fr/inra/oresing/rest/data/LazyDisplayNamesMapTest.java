@@ -104,10 +104,10 @@ class LazyDisplayNamesMapTest {
         };
         LazyDisplayNamesMap map = new LazyDisplayNamesMap(Set.of("ref_a", "ref_b"), loader);
 
-        assertThat(map.containsKey("ref_a")).isTrue();
-        assertThat(map.containsKey("ref_b")).isTrue();
-        assertThat(map.containsKey("ref_x")).isFalse();
-        assertThat(map.containsKey(42)).isFalse(); // not a String
+        assertThat(map).containsKey("ref_a");
+        assertThat(map).containsKey("ref_b");
+        assertThat(map).doesNotContainKey("ref_x");
+        assertThat(map.containsKey(Integer.valueOf(42))).isFalse(); // not a String
         assertThat(loaderCalls.get()).isZero();
     }
 
@@ -116,8 +116,8 @@ class LazyDisplayNamesMapTest {
     void isEmptyChecksValidKeys() {
         LazyDisplayNamesMap empty = new LazyDisplayNamesMap(Set.of(), ref -> new HashMap<>());
         LazyDisplayNamesMap nonEmpty = new LazyDisplayNamesMap(Set.of("ref_a"), ref -> new HashMap<>());
-        assertThat(empty.isEmpty()).isTrue();
-        assertThat(nonEmpty.isEmpty()).isFalse();
+        assertThat(empty).isEmpty();
+        assertThat(nonEmpty).isNotEmpty();
     }
 
     @Test

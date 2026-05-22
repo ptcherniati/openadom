@@ -2,19 +2,16 @@ package fr.inra.oresing.rest.model.data;
 
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
-import fr.inra.oresing.domain.ReferencedBinaryFiles;
 import fr.inra.oresing.domain.BinaryFileInfos;
-import org.junit.jupiter.api.Test;
+import fr.inra.oresing.domain.ReferencedBinaryFiles;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests {@link BinaryFileResult} : verifie que {@code hasLinks} est

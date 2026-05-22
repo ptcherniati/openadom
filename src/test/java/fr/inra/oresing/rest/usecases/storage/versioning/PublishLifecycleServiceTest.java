@@ -32,13 +32,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests unitaires de la phase 1 de
@@ -74,7 +69,6 @@ class PublishLifecycleServiceTest {
     @Mock private AuthenticationService     authenticationService;
     @Mock private Application               application;
 
-    private final PublishLifecycleCoordinator coordinator = new PublishLifecycleCoordinator();
     private final ConfigHashService configHashService = new ConfigHashService();
     private PublishLifecycleService service;
 

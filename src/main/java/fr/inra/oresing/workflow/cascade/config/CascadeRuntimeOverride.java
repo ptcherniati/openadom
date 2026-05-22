@@ -1,5 +1,6 @@
 package fr.inra.oresing.workflow.cascade.config;
 
+import fr.inra.oresing.workflow.cascade.CascadeImportPipeline;
 import fr.inrae.ore.cascade.model.workflow.PipelineMode;
 
 /**

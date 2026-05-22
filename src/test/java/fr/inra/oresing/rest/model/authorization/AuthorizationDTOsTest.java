@@ -4,6 +4,7 @@ import fr.inra.oresing.domain.exceptions.authorization.AuthorizationRequestExcep
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Timestamp;
@@ -15,7 +16,6 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import org.junit.jupiter.api.Tag;
 
 /**
  * Tests unitaires des DTOs d'autorisation.

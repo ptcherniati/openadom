@@ -1,12 +1,6 @@
 package fr.inra.oresing.rest.dashboard;
 
-import fr.inra.oresing.workflow.cascade.history.ChunkSnapshot;
-import fr.inra.oresing.workflow.cascade.history.ImportConfigSnapshot;
-import fr.inra.oresing.workflow.cascade.history.ParallelismSnapshot;
-import fr.inra.oresing.workflow.cascade.history.SinkChunkRecord;
-import fr.inra.oresing.workflow.cascade.history.StrategySnapshot;
-import fr.inra.oresing.workflow.cascade.history.WorkerSnapshot;
-import fr.inra.oresing.workflow.cascade.history.WorkflowSnapshot;
+import fr.inra.oresing.workflow.cascade.history.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

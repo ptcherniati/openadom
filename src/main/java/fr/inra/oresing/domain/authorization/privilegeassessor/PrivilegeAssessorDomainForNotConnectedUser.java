@@ -4,11 +4,11 @@ package fr.inra.oresing.domain.authorization.privilegeassessor;
 import com.google.common.base.Strings;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.authorization.AuthenticationServiceImpl;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
-import fr.inra.oresing.domain.repository.user.file.UserRepository;
-import fr.inra.oresing.domain.exceptions.AuthenticationFailure;
-import fr.inra.oresing.domain.user.CreateUserRequest;
 import fr.inra.oresing.domain.authorization.LoginAdminResult;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
+import fr.inra.oresing.domain.exceptions.AuthenticationFailure;
+import fr.inra.oresing.domain.repository.user.file.UserRepository;
+import fr.inra.oresing.domain.user.CreateUserRequest;
 
 import java.util.Locale;
 import java.util.Map;

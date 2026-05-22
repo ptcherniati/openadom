@@ -2,9 +2,9 @@ package fr.inra.oresing.rest.model.authorization;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import fr.inra.oresing.domain.authorization.request.AuthorizationInput;
 import fr.inra.oresing.domain.exceptions.authorization.AuthorizationRequestException;
 import fr.inra.oresing.domain.exceptions.authorization.SiOreAuthorizationRequestException;
-import fr.inra.oresing.domain.authorization.request.AuthorizationInput;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 
 import java.util.*;

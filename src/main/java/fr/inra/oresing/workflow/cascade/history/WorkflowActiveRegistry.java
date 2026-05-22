@@ -1,5 +1,6 @@
 package fr.inra.oresing.workflow.cascade.history;
 
+import fr.inra.oresing.workflow.cascade.StoreAllPathSink;
 import fr.inrae.ore.cascade.core.monitoring.WorkflowEventBus;
 import fr.inrae.ore.cascade.model.listener.WorkflowEvents;
 import fr.inrae.ore.cascade.model.listener.WorkflowListener;
@@ -10,13 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;

@@ -2,11 +2,7 @@ package fr.inra.oresing.rest.dashboard;
 
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
-import fr.inra.oresing.monitoring.session.JwtBlacklistRegistry;
-import fr.inra.oresing.monitoring.session.SessionInfo;
-import fr.inra.oresing.monitoring.session.UserSessionLogRepository;
-import fr.inra.oresing.monitoring.session.UserSessionLogWriter;
-import fr.inra.oresing.monitoring.session.UserSessionRegistry;
+import fr.inra.oresing.monitoring.session.*;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.workflow.cascade.ImportRateLimiter;
 import fr.inra.oresing.workflow.cascade.config.ImportProperties;
@@ -31,11 +27,7 @@ import org.springframework.security.access.AccessDeniedException;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;

@@ -49,7 +49,7 @@ class ColumnContextTest {
         void secondaryConstructorFirstElement() {
             List<String> headers = List.of("alpha", "beta");
             ContextHeader h = new ContextHeader("alpha", headers);
-            assertThat(h.columnIndex()).isEqualTo(0);
+            assertThat(h.columnIndex()).isZero();
         }
 
         @Test
@@ -75,7 +75,7 @@ class ColumnContextTest {
             ContextHeader x = new ContextHeader("a", h);
             ContextHeader y = new ContextHeader("a", h);
             assertThat(x).isEqualTo(y);
-            assertThat(x.hashCode()).isEqualTo(y.hashCode());
+            assertThat(x).hasSameHashCodeAs(y);
         }
 
         @Test
@@ -115,7 +115,7 @@ class ColumnContextTest {
             AdjacentDescription b = new AdjacentDescription("k", "col",
                     ComponentPresenceConstraint.OPTIONAL, Multiplicity.MANY);
             assertThat(a).isEqualTo(b);
-            assertThat(a.hashCode()).isEqualTo(b.hashCode());
+            assertThat(a).hasSameHashCodeAs(b);
         }
 
         @Test

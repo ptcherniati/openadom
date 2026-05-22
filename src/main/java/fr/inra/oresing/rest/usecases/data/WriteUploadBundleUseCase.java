@@ -1,7 +1,7 @@
 package fr.inra.oresing.rest.usecases.data;
 
-import fr.inra.oresing.rest.data.DataService;
 import fr.inra.oresing.domain.filesenderclient.BuildBundleReport;
+import fr.inra.oresing.rest.data.DataService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

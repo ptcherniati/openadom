@@ -2,6 +2,7 @@ package fr.inra.oresing.rest.reactive;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -13,7 +14,6 @@ import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import org.junit.jupiter.api.Tag;
 
 /**
  * Tests unitaires purs du package {@code rest.reactive} — aucun contexte Spring.

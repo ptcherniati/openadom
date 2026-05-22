@@ -5,9 +5,9 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
+import fr.inra.oresing.domain.authorization.AuthorizationParsed;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.file.FileOrUUID;
-import fr.inra.oresing.domain.authorization.AuthorizationParsed;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.time.LocalDate;

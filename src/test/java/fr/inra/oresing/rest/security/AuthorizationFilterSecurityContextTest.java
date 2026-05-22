@@ -1,21 +1,16 @@
 package fr.inra.oresing.rest.security;
 
+import fr.inra.oresing.domain.authorization.CurrentUserRolesResult;
+import fr.inra.oresing.domain.authorization.LoginAdminResult;
 import fr.inra.oresing.monitoring.session.JwtBlacklistRegistry;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.exceptions.OreExceptionHandler;
-import fr.inra.oresing.domain.authorization.CurrentUserRolesResult;
-import fr.inra.oresing.domain.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
