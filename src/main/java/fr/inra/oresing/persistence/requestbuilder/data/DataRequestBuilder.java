@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.data.read.query.*;
+import fr.inra.oresing.persistence.EmptyCellPredicate;
 import fr.inra.oresing.persistence.SqlSchema;
 import fr.inra.oresing.persistence.SqlSchemaForApplication;
 import org.apache.commons.collections4.CollectionUtils;
@@ -81,7 +82,7 @@ public class DataRequestBuilder {
      */
     static String buildEqualityPredicate(final String filter) {
         return filter == null
-                ? "@ == null"
+                ? EmptyCellPredicate.JSONPATH_EMPTY_PREDICATE
                 : "@ == \"%s\"".formatted(sanitizeJsonPathStringValue(filter));
     }
 
@@ -89,13 +90,14 @@ public class DataRequestBuilder {
      * Variante de {@link #buildEqualityPredicate} pour les filtres référence ,
      * qui acceptent en plus les correspondances hiérarchiques ( clé qui
      * commence par {@code "<filter>."} - matche tous les descendants ). Une
-     * valeur {@code null} reste traitée comme {@code @ == null} ; on ne
-     * compose pas le {@code starts with} pour {@code null} parce qu'une
-     * branche d'arbre n'a pas de sens vide.
+     * valeur {@code null} reste traitée via {@link EmptyCellPredicate#JSONPATH_EMPTY_PREDICATE}
+     * ( cellule vide = JSON null OU chaîne JSON "" ) ; on ne compose pas
+     * le {@code starts with} pour {@code null} parce qu'une branche
+     * d'arbre n'a pas de sens vide.
      */
     static String buildReferencePredicate(final String filter) {
         return filter == null
-                ? "@ == null"
+                ? EmptyCellPredicate.JSONPATH_EMPTY_PREDICATE
                 : "@ == \"%1$s\"  || @ starts with \"%2$s\"".formatted(filter, filter + ".");
     }
 
@@ -103,12 +105,13 @@ public class DataRequestBuilder {
      * Variante de {@link #buildEqualityPredicate} pour les filtres regexp
      * ( recherche LIKE , insensible à la casse ). La valeur a déjà été
      * échappée des méta-regex côté frontend ; on l'utilise telle quelle
-     * dans {@code like_regex}. Pour {@code null} , {@code like_regex} n'a
-     * pas de sens , on retombe sur l'égalité null.
+     * dans {@code like_regex}. Pour {@code null} ( sentinelle "( vide )" ) ,
+     * {@code like_regex} n'a pas de sens , on retombe sur l'égalité vide
+     * unifiée via {@link EmptyCellPredicate#JSONPATH_EMPTY_PREDICATE} .
      */
     static String buildRegexpPredicate(final String filter) {
         if (filter == null) {
-            return "@ == null";
+            return EmptyCellPredicate.JSONPATH_EMPTY_PREDICATE;
         }
         final String safe = sanitizeJsonPathStringValue(filter);
         return "@ == \"%1$s\" || @ like_regex \"%1$s\" flag \"i\" ".formatted(safe);

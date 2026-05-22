@@ -93,6 +93,20 @@ public final class EmptyCellPredicate {
                 WHERE elt = 'null'::jsonb OR elt = '""'::jsonb
             ))""";
 
+    /**
+     * Expression jsonpath utilisée dans les filtres {@code WHERE
+     * refvalues @@ 'exists($.col ? (...))'} pour matcher une cellule
+     * vide ( JSON {@code null} OU chaîne JSON vide {@code ""} ) . Wrappée
+     * entre parenthèses pour pouvoir être combinée avec d'autres
+     * conditions via {@code || } .
+     *
+     * <p>Pourquoi : le stockage des cellules CSV vides utilise la chaîne
+     * vide {@code ""} en JSON ; sans le {@code @ == ""} la sélection
+     * "( vide )" cliquée par l'utilisateur ne matchait aucune ligne
+     * ( bug images #116 / #118 ) .
+     */
+    public static final String JSONPATH_EMPTY_PREDICATE = "@ == null || @ == \"\"";
+
     private EmptyCellPredicate() {
         // util class
     }

@@ -88,6 +88,22 @@ class EmptyCellPredicateTest {
     }
 
     @Nested
+    class JsonPathEmptyPredicate {
+
+        @Test
+        void detecteJsonNullEtChaineJsonVide() {
+            final String pred = EmptyCellPredicate.JSONPATH_EMPTY_PREDICATE;
+            assertAll("predicat jsonpath",
+                    () -> assertTrue(pred.contains("@ == null"),
+                            "doit detecter JSON null"),
+                    () -> assertTrue(pred.contains("@ == \"\""),
+                            "doit detecter chaine JSON vide"),
+                    () -> assertTrue(pred.contains("||"),
+                            "doit composer les 2 cas en OR"));
+        }
+    }
+
+    @Nested
     class JsonPathConstants {
 
         @Test
