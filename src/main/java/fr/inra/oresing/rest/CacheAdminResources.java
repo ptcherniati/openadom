@@ -171,11 +171,13 @@ public class CacheAdminResources {
 
     @Operation(
             summary = "Purge tous les caches mémoire du backend ( global )",
-            description = "Vide les 3 caches mémoire backend pour toutes les applications "
-                    + "et tous les utilisateurs. Réservé à openAdomAdmin ( opération de "
-                    + "maintenance ; les premiers hits suivants paieront le coût du "
-                    + "rechargement complet ). Utile en debug ou après modification "
-                    + "transverse de configuration.",
+            description = "Vide les 4 caches mémoire JVM ( filterList , authorizationScopes , "
+                    + "checkedFormatComponents , referencedFiles ) pour toutes les applications "
+                    + "et tous les utilisateurs , ainsi que le cache materialise BDD "
+                    + "{@code data_versioning_scope_cache} ( purge par application iterativement ) . "
+                    + "Réservé à openAdomAdmin ( opération de maintenance ; les premiers hits "
+                    + "suivants paieront le coût du rechargement complet ). Utile en debug ou "
+                    + "après modification transverse de configuration .",
             tags = {"Admin / Caches"},
             responses = {
                     @ApiResponse(
@@ -198,12 +200,31 @@ public class CacheAdminResources {
         dataService.invalidateAllFilterListCaches();
         authorizationService.invalidateAllAuthorizationScopes();
         dataService.invalidateAllCheckedFormatComponents();
+        // Audit CACHE_ADMIN ( 23/5/26 ) : referencedFiles ( BinaryFileService )
+        // etait promis dans la description Swagger mais jamais invalide
+        // globalement -> cache stale possible apres reset admin , casse la
+        // promesse "tous les caches vides" . Fix : appel symetrique avec les
+        // autres invalidateAll* .
+        if (serviceContainer.binaryFileService() instanceof fr.inra.oresing.rest.binaryFile.BinaryFileService bfs) {
+            bfs.invalidateAllReferencedFilesCaches();
+        }
+        // dataVersioningScopeCache est materialise BDD ( table per-app ) ,
+        // pas un MemoryCache JVM . Itere sur toutes les apps pour purger
+        // leur table individuelle . Operation rare ( admin uniquement ) ,
+        // cout acceptable pour garantir une purge totale coherente avec
+        // ce que la description annonce a l'admin .
+        int versioningAppsPurged = serviceContainer.dataVersioningScopeCacheService().invalidateAllApps();
 
-        log.warn("Admin invalidate-all-caches : tous les caches mémoire backend ont été vidés");
+        log.warn("Admin invalidate-all-caches : tous les caches memoire JVM vides + " +
+                "dataVersioningScopeCache purge sur {} app(s)", versioningAppsPurged);
         return ResponseEntity.ok(Map.of(
                 "status", "all caches cleared",
                 "invalidatedCaches", java.util.List.of(
-                        "filterList", "authorizationScopes", "checkedFormatComponents")
+                        "filterList",
+                        "authorizationScopes",
+                        "checkedFormatComponents",
+                        "referencedFiles",
+                        "dataVersioningScopeCache ( " + versioningAppsPurged + " app(s) )")
         ));
     }
 
@@ -258,6 +279,18 @@ public class CacheAdminResources {
                 dataService.getCheckedFormatComponentsCacheTtlMinutes(),
                 dataService.getCheckedFormatComponentsCacheSize(),
                 dataService.getCheckedFormatComponentsCacheLastWriteAt()));
+        // Audit CACHE_ADMIN ( 23/5/26 ) : referencedFiles ( BinaryFileService )
+        // etait absent de l'observabilite admin -> oa-live ne pouvait pas
+        // l'afficher . Expose desormais flag + capacite + TTL + size + lastWrite ,
+        // meme forme que les autres MemoryCache .
+        if (serviceContainer.binaryFileService() instanceof fr.inra.oresing.rest.binaryFile.BinaryFileService bfs) {
+            body.put("referencedFiles", cacheEntryStats(
+                    bfs.isReferencedFilesCacheEnabled(),
+                    bfs.getReferencedFilesCacheMaxEntries(),
+                    bfs.getReferencedFilesCacheTtlMinutes(),
+                    bfs.getReferencedFilesCacheSize(),
+                    bfs.getReferencedFilesCacheLastWriteAt()));
+        }
         body.put("frontEtagDefaults", Map.of(
                 "maxEntries", dataService.getFrontEtagCacheMaxEntries(),
                 "maxBytesMb", dataService.getFrontEtagCacheMaxBytesMb()

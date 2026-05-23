@@ -123,9 +123,37 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
         referencedFilesCache.invalidateMatching(k -> k.startsWith(prefix));
     }
 
+    /**
+     * Purge totale du cache referencedFiles ( toutes apps , tous fichiers ) .
+     * Appele par l'endpoint admin {@code /admin/caches/invalidate-all} .
+     */
+    public void invalidateAllReferencedFilesCaches() {
+        if (referencedFilesCache != null) referencedFilesCache.invalidateAll();
+    }
+
     /** Observabilité : taille courante du cache referencedFiles . */
     public int getReferencedFilesCacheSize() {
         return referencedFilesCache == null ? 0 : referencedFilesCache.size();
+    }
+
+    /** Observabilite : flag d'activation expose au endpoint stats . */
+    public boolean isReferencedFilesCacheEnabled() {
+        return referencedFilesCacheEnabled;
+    }
+
+    /** Observabilite : capacite max ( LRU ) du cache referencedFiles . */
+    public int getReferencedFilesCacheMaxEntries() {
+        return referencedFilesCache == null ? referencedFilesCacheMaxEntries : referencedFilesCache.maxEntries();
+    }
+
+    /** Observabilite : TTL minutes du cache ( 0 = pas d'eviction auto ) . */
+    public long getReferencedFilesCacheTtlMinutes() {
+        return referencedFilesCache == null ? referencedFilesCacheTtlMinutes : referencedFilesCache.ttlMinutes();
+    }
+
+    /** Observabilite : timestamp de derniere ecriture ( null si jamais ecrit ) . */
+    public java.time.Instant getReferencedFilesCacheLastWriteAt() {
+        return referencedFilesCache == null ? null : referencedFilesCache.lastWriteAt();
     }
 
     /**

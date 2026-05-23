@@ -373,6 +373,19 @@ public class PublishLifecyclePhase2Handler {
                 endTime  = Instant.now();
                 duration = Duration.between(ev.startTime(), endTime);
                 invalidateReferencedFilesCacheSilently(application.getName());
+                // Cache filterList : publish / unpublish / delete-file changent
+                // l'ensemble des rows visibles de data_<dataType> ( ajout /
+                // retrait via flag binaryfile.published ou DELETE physique ) ,
+                // donc les valeurs distinctes par colonne du payload /filters
+                // sont obsoletes . Refresh asynchrone ( Mono boundedElastic )
+                // pour rester coherent avec les hooks deja en place sur
+                // addData ( OreSiResources L965 ) , deleteData ( L1394 ) et
+                // changement de config ( L757 ) . Sans ce hook , le bloc
+                // filtre frontend afficherait des valeurs stales jusqu'a la
+                // prochaine action mutante ( TTL filterListCache = 0 = pas
+                // d'eviction auto ) . Granularite per-dataType : cle cache
+                // app::dataType , aucune purge globale .
+                refreshFilterListCacheSilently(application, ev.dataName());
                 finalStatus = WorkflowLogEntry.STATUS_COMPLETED;
                 logRepository.updatePhase(ev.correlationId(),
                         fr.inra.oresing.workflow.WorkflowPhase.DONE);
@@ -813,6 +826,33 @@ public class PublishLifecyclePhase2Handler {
             }
         } catch (RuntimeException ex) {
             log.warn("invalidateReferencedFilesCache failed : {}", ex.getMessage());
+        }
+    }
+
+    /**
+     * Refresh asynchrone du cache filterList ( payload {@code /filters} )
+     * pour le dataType cible , en best-effort .
+     *
+     * <p>Symetrique avec les hooks deja en place sur addData ( OreSiResources
+     * L965 ) , deleteData ( L1394 ) et changement de config ( L757 ) .
+     * Reutilise {@link fr.inra.oresing.rest.data.DataService#refreshFilterListCache}
+     * qui : (i) recompute SQL dans Mono boundedElastic ( pas de blocage du
+     * thread Phase 2 ) , (ii) garde l'ancien cache pendant le rebuild ( zero
+     * downtime ) , (iii) invalide aussi authorizationScopes + checkedFormat
+     * en cascade ( coherence checkers / RLS apres mutation ) .
+     *
+     * <p>Granularite : cle cache {@code application.name + "::" + dataType} ,
+     * aucune purge globale .
+     */
+    // Package-private pour tests unitaires ( verification appel best-effort
+    // + swallow RuntimeException + guards null/blank ) .
+    void refreshFilterListCacheSilently(Application application, String dataName) {
+        if (dataName == null || dataName.isBlank()) return;
+        try {
+            serviceContainer.dataService().refreshFilterListCache(application, dataName);
+        } catch (RuntimeException ex) {
+            log.warn("refreshFilterListCache failed for {}::{} : {}",
+                    application.getName(), dataName, ex.getMessage());
         }
     }
 

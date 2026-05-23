@@ -1,7 +1,11 @@
 package fr.inra.oresing.rest.usecases.storage.versioning;
 
+import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.rest.data.DataService;
+import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.workflow.cascade.history.WorkflowLogEntry;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,6 +33,12 @@ class PublishLifecyclePhase2HandlerTest {
 
     @Mock
     private PublishLifecycleCoordinator coordinator;
+
+    @Mock
+    private ServiceContainer serviceContainer;
+
+    @Mock
+    private DataService dataService;
 
     @InjectMocks
     private PublishLifecyclePhase2Handler handler;
@@ -94,5 +104,66 @@ class PublishLifecyclePhase2HandlerTest {
         // safe default = persist . Mieux qu'un silent skip .
         assertThat(handler.shouldPersistRecordEnd(cid, "WEIRD_STATUS")).isTrue();
         verifyNoInteractions(coordinator);
+    }
+
+    /**
+     * Tests du hook d'invalidation cache filterList post-Phase 2 .
+     *
+     * <p>Le hook {@code refreshFilterListCacheSilently} couvre les 3
+     * actions PUBLISH / UNPUBLISH / DELETE_FILE qui convergent toutes
+     * vers le meme bloc {@code finalStatus = COMPLETED} dans
+     * {@code handlePhase2} . Sans ce hook , le cache filterList resterait
+     * stale jusqu'a la prochaine action mutante ( TTL = 0 = pas
+     * d'eviction auto ) .
+     *
+     * <p>Granularite verifiee : cle cache {@code app::dataType} ,
+     * aucune purge globale .
+     */
+    @Nested
+    class RefreshFilterListCacheSilently {
+
+        private Application application(String name) {
+            Application app = new Application();
+            app.setName(name);
+            return app;
+        }
+
+        @Test
+        void delegates_to_dataService_refreshFilterListCache_with_app_and_dataType() {
+            when(serviceContainer.dataService()).thenReturn(dataService);
+            Application app = application("acbb");
+            handler.refreshFilterListCacheSilently(app, "tdr1a");
+            verify(dataService).refreshFilterListCache(app, "tdr1a");
+            verifyNoMoreInteractions(dataService);
+        }
+
+        @Test
+        void skips_call_when_dataName_is_null() {
+            // Garde defensif : sans dataType , refreshFilterListCache
+            // construirait une cle "app::null" inutile -> short-circuit
+            handler.refreshFilterListCacheSilently(application("acbb"), null);
+            verifyNoInteractions(serviceContainer);
+            verifyNoInteractions(dataService);
+        }
+
+        @Test
+        void skips_call_when_dataName_is_blank() {
+            handler.refreshFilterListCacheSilently(application("acbb"), "   ");
+            verifyNoInteractions(serviceContainer);
+            verifyNoInteractions(dataService);
+        }
+
+        @Test
+        void swallows_runtime_exception_from_dataService() {
+            // Best-effort : si le refresh echoue ( DataService bean
+            // detruit , SQL down , etc. ) , le hook ne doit PAS faire
+            // echouer le workflow Phase 2 . L'ancien cache reste lisible .
+            when(serviceContainer.dataService()).thenReturn(dataService);
+            doThrow(new RuntimeException("DB down"))
+                    .when(dataService).refreshFilterListCache(any(), anyString());
+            // Ne doit pas propager l'exception
+            handler.refreshFilterListCacheSilently(application("acbb"), "tdr1a");
+            verify(dataService).refreshFilterListCache(any(), eq("tdr1a"));
+        }
     }
 }

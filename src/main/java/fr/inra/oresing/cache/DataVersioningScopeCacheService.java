@@ -149,6 +149,28 @@ public class DataVersioningScopeCacheService {
         }
     }
 
+    /**
+     * Purge totale : itere sur toutes les applications connues et invalide
+     * leur table {@code <app>.data_versioning_scope_cache} . Appele par
+     * l'endpoint admin {@code /admin/caches/invalidate-all} . Best-effort
+     * par app ( un echec sur l'app A ne stoppe pas l'app B ) .
+     *
+     * @return nombre d'apps traitees ( succes ou echec swallowed )
+     */
+    public int invalidateAllApps() {
+        int processed = 0;
+        try {
+            List<Application> apps = repository.application().findAll();
+            for (Application app : apps) {
+                invalidateAllForApp(app);
+                processed++;
+            }
+        } catch (RuntimeException e) {
+            log.warn("invalidateAllApps : iteration aborted after {} apps : {}", processed, e.getMessage());
+        }
+        return processed;
+    }
+
     public boolean isEnabled() { return enabled; }
     public int getMaxEntriesPerApp() { return maxEntriesPerApp; }
 }

@@ -40,6 +40,7 @@ class CacheAdminResourcesUnitTest {
     private AuthorizationService authorizationService;
     private ApplicationService applicationService;
     private fr.inra.oresing.cache.DataVersioningScopeCacheService dataVersioningScopeCacheService;
+    private fr.inra.oresing.rest.binaryFile.BinaryFileService binaryFileService;
     private fr.inra.oresing.cache.CacheSizeEstimator cacheSizeEstimator;
     private fr.inra.oresing.cache.CachePreloader cachePreloader;
     private CacheAdminResources resources;
@@ -51,6 +52,12 @@ class CacheAdminResourcesUnitTest {
         authorizationService = mock(AuthorizationService.class);
         applicationService = mock(ApplicationService.class);
         dataVersioningScopeCacheService = mock(fr.inra.oresing.cache.DataVersioningScopeCacheService.class);
+        // Mock du type concret ( pas de l'interface ) parce que CacheAdmin
+        // teste {@code instanceof rest.binaryFile.BinaryFileService} pour
+        // accéder aux méthodes d'observabilité étendues ( taille / TTL /
+        // lastWriteAt / invalidateAll ) qui ne sont pas dans l'interface
+        // {@code domain.services.file.BinaryFileService} .
+        binaryFileService = mock(fr.inra.oresing.rest.binaryFile.BinaryFileService.class);
         cacheSizeEstimator = mock(fr.inra.oresing.cache.CacheSizeEstimator.class);
         cachePreloader = mock(fr.inra.oresing.cache.CachePreloader.class);
 
@@ -58,6 +65,7 @@ class CacheAdminResourcesUnitTest {
         when(serviceContainer.authorizationService()).thenReturn(authorizationService);
         when(serviceContainer.applicationService()).thenReturn(applicationService);
         when(serviceContainer.dataVersioningScopeCacheService()).thenReturn(dataVersioningScopeCacheService);
+        when(serviceContainer.binaryFileService()).thenReturn(binaryFileService);
 
         resources = new CacheAdminResources(serviceContainer, cacheSizeEstimator, cachePreloader);
     }
@@ -85,17 +93,36 @@ class CacheAdminResourcesUnitTest {
     }
 
     @Test
-    void invalidateAllCaches_purgeLes3CachesGlobalement() {
+    void invalidateAllCaches_purgeLes5CachesGlobalement() {
+        // Sprint cache invalidation ( 23/5/26 ) : la purge globale doit
+        // toucher TOUS les caches promis par la description Swagger , pas
+        // seulement les 3 historiques . Ajout de referencedFiles ( JVM )
+        // et dataVersioningScopeCache ( materialise BDD , itere par app ) .
+        when(dataVersioningScopeCacheService.invalidateAllApps()).thenReturn(3);
+
         ResponseEntity<Map<String, Object>> response = resources.invalidateAllCaches();
 
         verify(dataService).invalidateAllFilterListCaches();
         verify(authorizationService).invalidateAllAuthorizationScopes();
         verify(dataService).invalidateAllCheckedFormatComponents();
+        verify(binaryFileService).invalidateAllReferencedFilesCaches();
+        verify(dataVersioningScopeCacheService).invalidateAllApps();
 
         assertEquals(200, response.getStatusCode().value());
         Map<String, Object> body = response.getBody();
         assertNotNull(body);
         assertEquals("all caches cleared", body.get("status"));
+        @SuppressWarnings("unchecked")
+        java.util.List<String> invalidated = (java.util.List<String>) body.get("invalidatedCaches");
+        // Verifie que la response liste les 5 caches purges ( pas 3 )
+        assertEquals(5, invalidated.size());
+        assertTrue(invalidated.contains("filterList"));
+        assertTrue(invalidated.contains("authorizationScopes"));
+        assertTrue(invalidated.contains("checkedFormatComponents"));
+        assertTrue(invalidated.contains("referencedFiles"));
+        // dataVersioningScopeCache porte le suffixe avec le nombre d'apps
+        assertTrue(invalidated.stream().anyMatch(s -> s.startsWith("dataVersioningScopeCache")));
+        assertTrue(invalidated.stream().anyMatch(s -> s.contains("3 app(s)")));
     }
 
     @Test
@@ -116,6 +143,13 @@ class CacheAdminResourcesUnitTest {
 
         when(dataService.getFrontEtagCacheMaxEntries()).thenReturn(50);
         when(dataService.getFrontEtagCacheMaxBytesMb()).thenReturn(20);
+
+        // Sprint cache invalidation ( 23/5/26 ) : referencedFiles
+        // ( BinaryFileService ) est desormais expose dans le stats endpoint .
+        when(binaryFileService.isReferencedFilesCacheEnabled()).thenReturn(true);
+        when(binaryFileService.getReferencedFilesCacheMaxEntries()).thenReturn(200);
+        when(binaryFileService.getReferencedFilesCacheTtlMinutes()).thenReturn(30L);
+        when(binaryFileService.getReferencedFilesCacheSize()).thenReturn(5);
 
         ResponseEntity<Map<String, Object>> response = resources.cacheStats();
 
@@ -144,6 +178,15 @@ class CacheAdminResourcesUnitTest {
         Map<String, Object> frontDefaults = (Map<String, Object>) body.get("frontEtagDefaults");
         assertEquals(50, frontDefaults.get("maxEntries"));
         assertEquals(20, frontDefaults.get("maxBytesMb"));
+
+        // referencedFiles : meme shape que les autres MemoryCache
+        @SuppressWarnings("unchecked")
+        Map<String, Object> referencedFiles = (Map<String, Object>) body.get("referencedFiles");
+        assertNotNull(referencedFiles, "referencedFiles doit etre present dans le stats body");
+        assertEquals(true, referencedFiles.get("enabled"));
+        assertEquals(200, referencedFiles.get("maxEntries"));
+        assertEquals(30L, referencedFiles.get("ttlMinutes"));
+        assertEquals(5, referencedFiles.get("entries"));
     }
 
     @Test
