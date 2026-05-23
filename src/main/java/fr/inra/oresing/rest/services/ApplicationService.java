@@ -32,6 +32,7 @@ import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult;
 import fr.inra.oresing.rest.reactive.ReactiveEventHelper;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
+import fr.inra.oresing.rest.reactive.ReactiveTypeError;
 import fr.inra.oresing.rest.reactive.ReactiveTypeProgress;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
 import lombok.Setter;
@@ -42,6 +43,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -416,43 +418,96 @@ public class ApplicationService {
                                 .toList();
                     }
                 })
+                // Audit OA (22/5/26) - Robustesse / non-blocage du chargement
+                // "Mes applications" ( bug observe : progressbar bloquee a
+                // 80% , images #121 ) :
+                //
+                //  1. subscribeOn(boundedElastic) : les operations dans le
+                //     flatMap ( filterFieldsAndHidden , ApplicationLightResult.of
+                //     impliquant resolution droits + i18n potentiellement
+                //     synchrone JDBC ) doivent tourner sur un pool dedie au
+                //     blocking I/O , pas sur le pool reactor par defaut qui
+                //     n'a que quelques threads ( taille = nb CPU ) et peut
+                //     saturer si plusieurs requetes /applications concurrentes .
+                //
+                //  2. onErrorResume sur le flatMap interieur : si l'une des
+                //     N applications throw ( config YAML corrompue , i18n
+                //     malformee , RLS issue ) , on EMET un ReactiveTypeError
+                //     pour le client + on SKIP cette appli + on continue le
+                //     stream avec les suivantes au lieu de tout casser . Avant
+                //     ce fix , 1 appli fautive cassait le chargement de
+                //     TOUTES les apps suivantes ( stream coupe a 80% ) .
+                //
+                //  3. concatWith ReactiveTypeProgress(1.0) en fin de stream :
+                //     garantie que le client recoit toujours l'evenement final
+                //     "100% atteint" meme si une erreur partielle a eu lieu .
+                //     Le frontend peut donc fermer la modale de chargement de
+                //     facon deterministe au lieu de rester bloque sur 80% .
                 .flatMapMany(allApplications -> {
-                    CurrentUserRoles currentUserRoles = serviceContainer.authenticationService().getCurrentUserRoles();
-                    int total = allApplications.size();
-
+                    final CurrentUserRoles currentUserRoles = serviceContainer.authenticationService().getCurrentUserRoles();
+                    final int total = allApplications.size();
+                    if (total == 0) {
+                        return Flux.just(new ReactiveTypeProgress(1.0));
+                    }
                     return Flux.fromIterable(allApplications)
                             .index()
-                            .flatMap(tuple -> {
-                                long index = tuple.getT1();
-                                Application app = tuple.getT2();
-
-                                // Traiter l'application
-                                Application filtered = app.filterFieldsAndHidden(filters);
-                                // Audit OA_FULL_REVIEW (8/5/26) : on n'appelle PAS
-                                // getReferenceSynthesis() ici. Le SELECT
-                                // "ReferenceType, COUNT(*) FROM referencevalue
-                                // GROUP BY ReferenceType" prend ~12 s sur
-                                // si_acbb ( 10M rows ) et était exécuté pour
-                                // CHAQUE application au chargement de la page
-                                // "Mes applications" alors que le résultat
-                                // n'y est même pas affiché ( la liste montre
-                                // uniquement nom + date + version ). La synthèse
-                                // reste calculée au niveau de la page détail
-                                // ( buildOpenAdom -> getReferenceSynthesis quand
-                                //   le filtre REFERENCETYPE est demandé ).
-                                List<ApplicationResult.DataSynthesis> synthesis = List.of();
-                                ApplicationLightResult result = ApplicationLightResult.of(filtered, currentUserRoles, synthesis);
-
-                                // Calculer la progression
-                                double progress = (index + 1.0) / total;
-
-                                // Émettre résultat + progression
-                                return Flux.just(
-                                        new ReactiveTypeResult<>(result),
-                                        new ReactiveTypeProgress(progress)
-                                );
-                            });
+                            .flatMap(tuple -> buildApplicationEvents(tuple, filters, currentUserRoles, total))
+                            .subscribeOn(Schedulers.boundedElastic())
+                            .concatWith(Flux.just(new ReactiveTypeProgress(1.0)));
                 });
+    }
+
+    /**
+     * Construit les evenements reactifs ( resultat + progression ) pour
+     * une application . En cas d'echec sur cette application , emet un
+     * {@link ReactiveTypeError} non-fatal et continue le stream pour les
+     * applications suivantes ( extracted pour la testabilite et la
+     * lisibilite ) .
+     *
+     * @param tuple              ( index , application ) provenant de
+     *                           {@link Flux#index()}
+     * @param filters            filtres de champs / hidden a appliquer
+     * @param currentUserRoles   roles courants pour calculer
+     *                           {@link ApplicationLightResult}
+     * @param total              nombre total d'applications a traiter
+     *                           ( denominateur de la progression )
+     * @return un sous-flux de 2 evenements ( RESULT + PROGRESS ) ou un
+     *         seul ERROR + PROGRESS si l'application a echoue
+     */
+    private Flux<ReactiveResult> buildApplicationEvents(
+            final reactor.util.function.Tuple2<Long, Application> tuple,
+            final List<ApplicationInformation> filters,
+            final CurrentUserRoles currentUserRoles,
+            final int total) {
+        final long index = tuple.getT1();
+        final Application app = tuple.getT2();
+        final double progress = (index + 1.0) / total;
+        try {
+            // Audit OA_FULL_REVIEW (8/5/26) : on n'appelle PAS
+            // getReferenceSynthesis() ici. Le SELECT
+            // "ReferenceType, COUNT(*) FROM referencevalue
+            // GROUP BY ReferenceType" prend ~12 s sur si_acbb ( 10M rows )
+            // et etait execute pour CHAQUE application au chargement de la
+            // page "Mes applications" alors que le resultat n'y est meme
+            // pas affiche ( la liste montre uniquement nom + date + version ) .
+            // La synthese reste calculee au niveau de la page detail
+            // ( buildOpenAdom -> getReferenceSynthesis quand le filtre
+            //   REFERENCETYPE est demande ) .
+            final Application filtered = app.filterFieldsAndHidden(filters);
+            final List<ApplicationResult.DataSynthesis> synthesis = List.of();
+            final ApplicationLightResult result = ApplicationLightResult.of(filtered, currentUserRoles, synthesis);
+            return Flux.just(
+                    new ReactiveTypeResult<>(result),
+                    new ReactiveTypeProgress(progress)
+            );
+        } catch (final RuntimeException ex) {
+            log.warn("Skip application '{}' au chargement /applications ( index {} / {} ) : {}",
+                    app.getName(), index + 1, total, ex.getMessage(), ex);
+            return Flux.just(
+                    new ReactiveTypeError<>(ex.getMessage()),
+                    new ReactiveTypeProgress(progress)
+            );
+        }
     }
 
 
