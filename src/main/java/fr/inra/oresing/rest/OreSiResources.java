@@ -382,25 +382,36 @@ public class OreSiResources {
 
 
     /**
-     * Résout le code langue ( "fr" / "en" ) depuis le header
-     * {@code Accept-Language} de la requête . Fallback sur la locale par
-     * défaut si le header est absent ou mal formé .
+     * Code langue par défaut quand le header {@code Accept-Language} est absent
+     * ou mal formé . Choix "fr" aligné sur le défaut historique de l'application
+     * ( cf {@link #getDefaultLocale} ) .
+     */
+    static final String DEFAULT_LANGUAGE = "fr";
+
+    /**
+     * Résout le code langue ( "fr" / "en" / ... ) depuis le header
+     * {@code Accept-Language} de la requête . Fallback sur
+     * {@link #DEFAULT_LANGUAGE} si le header est absent ou mal formé .
      *
      * <p>Utilisé par {@code getDataFilters} pour propager la locale au
      * calcul des {@code variables} ( filtre {@code isHiddenOrHasLangRestriction} ) .
+     *
+     * <p>Pure function ( static , aucun side effect , aucun accès au
+     * SecurityContext ou HttpServletRequest ) -&gt; testable en unit test
+     * sans MockMvc .
      */
     static String resolveLanguage(final String acceptLanguageHeader) {
         if (acceptLanguageHeader == null || acceptLanguageHeader.isBlank()) {
-            return getDefaultLocale().getLanguage();
+            return DEFAULT_LANGUAGE;
         }
         try {
             // Accept-Language peut contenir des q-values ( ex "fr-FR,fr;q=0.9,en;q=0.8" ) .
             // On extrait juste le 1er token et on garde seulement les 2 premiers chars .
             final String firstToken = acceptLanguageHeader.split(",")[0].trim();
             final String lang = firstToken.split("-")[0].trim().toLowerCase();
-            return lang.isBlank() ? getDefaultLocale().getLanguage() : lang;
+            return lang.isBlank() ? DEFAULT_LANGUAGE : lang;
         } catch (Exception e) {
-            return getDefaultLocale().getLanguage();
+            return DEFAULT_LANGUAGE;
         }
     }
 
