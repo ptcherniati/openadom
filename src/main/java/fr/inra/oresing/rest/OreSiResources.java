@@ -381,6 +381,29 @@ public class OreSiResources {
     }
 
 
+    /**
+     * Résout le code langue ( "fr" / "en" ) depuis le header
+     * {@code Accept-Language} de la requête . Fallback sur la locale par
+     * défaut si le header est absent ou mal formé .
+     *
+     * <p>Utilisé par {@code getDataFilters} pour propager la locale au
+     * calcul des {@code variables} ( filtre {@code isHiddenOrHasLangRestriction} ) .
+     */
+    static String resolveLanguage(final String acceptLanguageHeader) {
+        if (acceptLanguageHeader == null || acceptLanguageHeader.isBlank()) {
+            return getDefaultLocale().getLanguage();
+        }
+        try {
+            // Accept-Language peut contenir des q-values ( ex "fr-FR,fr;q=0.9,en;q=0.8" ) .
+            // On extrait juste le 1er token et on garde seulement les 2 premiers chars .
+            final String firstToken = acceptLanguageHeader.split(",")[0].trim();
+            final String lang = firstToken.split("-")[0].trim().toLowerCase();
+            return lang.isBlank() ? getDefaultLocale().getLanguage() : lang;
+        } catch (Exception e) {
+            return getDefaultLocale().getLanguage();
+        }
+    }
+
     public static Locale getDefaultLocale() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         String acceptLanguage = request.getHeader(HEADER_ACCEPT_LANGUAGE);
@@ -1268,9 +1291,18 @@ public class OreSiResources {
      * @return la liste des FilterList contenant les valeurs distinctes des dropdowns de filtres
      */
     @Operation(
-            description = "Return the list of available filters (reference dropdowns) for dataType 'dataType' of application 'nameOrId'. "
-                    + "Separated from the /json endpoint for asynchronous loading: data is displayed immediately while filters load in the background. "
-                    + "Results are cached server-side for 10 minutes. Use refresh=true to force a cache reload.",
+            description = "Return the filter payload for dataType 'dataType' of application 'nameOrId' . "
+                    + "Response shape : `{entries: FilterListEntry[], variables: string[]}` . "
+                    + "  - `entries` : FilterList values per filterable column ( ReferenceChecker dropdowns , "
+                    + "                FILTER_LIST distinct values , FILTER_TEXT hasEmpty flag ) . "
+                    + "  - `variables` : column keys filtrables ( permet au frontend de rendre le bloc filtre "
+                    + "                  immédiatement sans attendre /data/json ) . "
+                    + "Separated from /json for asynchronous loading : data displays immediately while filters "
+                    + "load in background . Results cached server-side ( openadom.cache.filter-list.enabled ; "
+                    + "default 10 minutes ) . Use refresh=true to force fresh reload . "
+                    + "ETag honors If-None-Match for 304 responses ( ~30ms vs ~1-3s on ACBB ) . "
+                    + "Variables list is lang-aware ( filter isHiddenOrHasLangRestriction ) , so ETag differs "
+                    + "across Accept-Language values for the same datatype .",
             parameters = {
                     @Parameter(name = "nameOrId", description = "The name or uuid of an application", required = true),
                     @Parameter(name = "dataType", description = "The name of the dataType (e.g. 't_soil_analysis_sana')", required = true),
@@ -1283,7 +1315,8 @@ public class OreSiResources {
             @PathVariable("nameOrId") final String nameOrId,
             @PathVariable("dataType") final String dataName,
             @RequestParam(defaultValue = "false") boolean refresh,
-            @RequestHeader(value = HttpHeaders.IF_NONE_MATCH, required = false) final String ifNoneMatch) {
+            @RequestHeader(value = HttpHeaders.IF_NONE_MATCH, required = false) final String ifNoneMatch,
+            @RequestHeader(value = HttpHeaders.ACCEPT_LANGUAGE, required = false) final String acceptLanguage) {
         // Rate limit avant tout travail : empêche un user spammeur de
         // saturer le pool Hikari ou le CPU backend en multipliant les
         // appels /filters avec refType différents ( singleflight ne
@@ -1303,10 +1336,15 @@ public class OreSiResources {
         if (refresh) {
             serviceContainer.dataService().invalidateFilterListCache(application, dataName);
         }
-        // Récupère JSON + ETag : sur cache hit , les deux sont stockés côte
-        // à côte ( pas de recomputation hash à chaque hit ).
+        // Récupère JSON + ETag : sur cache hit , les entries Java + JSON
+        // pré-sérialisé sont stockés ; les variables ( colonnes filtrables
+        // exposées au frontend ) sont calculées à chaque appel via
+        // FilterListVariablesExtractor ( ops O(N) sur ~50 leaves , <1ms ) .
+        // La langue de la requête ( Accept-Language ) gouverne le filtre
+        // isHiddenOrHasLangRestriction sur les variables exposées .
+        final String language = resolveLanguage(acceptLanguage);
         fr.inra.oresing.rest.data.DataService.FilterListResult result =
-                serviceContainer.dataService().getFilterListResult(application, dataName);
+                serviceContainer.dataService().getFilterListResult(application, dataName, language);
         // PERF audit (8/5/26) - HTTP 304 si le browser détient déjà cette
         // version. Évite le retransfert de ~1.7 MB sur les datasets riches
         // ( ACBB ) : Tomcat répond ~30 ms sans body au lieu de 1-3 s avec gzip.

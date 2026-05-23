@@ -1599,12 +1599,26 @@ private PlatformTransactionManager transactionManager;
     //   - Pour un jeu de 105K lignes : le résultat fait ~1.7 MB de JSON
     //   - 50 entrées max = ~85 MB worst case ( en pratique beaucoup moins )
     /**
-     * Valeur stockée dans le cache filterList : JSON sérialisé + ETag.
-     * Le timestamp ( pour LRU eviction ) est désormais porté par le
-     * wrapper {@link fr.inra.oresing.cache.MemoryCache.Entry} , ce
-     * record ne porte que la donnée métier.
+     * Valeur stockée dans le cache filterList : entries Java + JSON
+     * pré-sérialisé + nombre de composants en échec ( observabilité ) .
+     * Le timestamp ( LRU eviction ) est porté par le wrapper
+     * {@link fr.inra.oresing.cache.MemoryCache.Entry} .
+     *
+     * <p><b>Pourquoi stocker les deux representations</b> :
+     * <ul>
+     *   <li>{@code entries} ( Java List ) : permet le calcul des
+     *       {@code variables} côté réponse via
+     *       {@link FilterListVariablesExtractor} sans désérialiser le JSON
+     *       ( ops TreeSet O(N) sur ~50 leaves moyens , &lt;1ms ) .</li>
+     *   <li>{@code entriesJson} ( pré-sérialisé ) : permet la composition
+     *       JSON de réponse {@code {entries:[...],variables:[...]}} sans
+     *       re-sérialiser les entries à chaque appel ( économise 5-10ms
+     *       sur datasets ACBB ~200KB ) .</li>
+     * </ul>
      */
-    private record FilterListValue(String json, String etag) {}
+    private record FilterListValue(List<FilterListEntry> entries,
+                                   String entriesJson,
+                                   int failedComponents) {}
 
     /**
      * Résultat public exposé par {@link #getFilterListResult} : JSON sérialisé
@@ -1670,7 +1684,22 @@ private PlatformTransactionManager transactionManager;
      * @return le JSON + ETag prêts à être retournés directement par le
      *         endpoint
      */
+    /**
+     * Overload backward-compat : utilise la locale par défaut "fr" .
+     * Préférer la version 3-args pour bénéficier du filtre
+     * {@code langRestriction} sur les variables exposées au frontend .
+     *
+     * @deprecated utiliser {@link #getFilterListResult(Application, String, String)}
+     *             pour propager la locale de la requête HTTP .
+     */
+    @Deprecated
     public FilterListResult getFilterListResult(final Application application, final String refType) {
+        return getFilterListResult(application, refType, "fr");
+    }
+
+    public FilterListResult getFilterListResult(final Application application,
+                                                final String refType,
+                                                final String language) {
         final String cacheKey = application.getName() + "::" + refType;
 
         // Cache desactive via openadom.cache.filter-list.enabled : on bypass
@@ -1678,16 +1707,17 @@ private PlatformTransactionManager transactionManager;
         // Utile pour debug stale-data ou benchmarking comparatif des temps SQL .
         if (!filterListCacheEnabled) {
             log.debug("filterList cache disabled , computing directly for {}", cacheKey);
-            return toFilterListResult(serializeOnly(
-                    computeFilterListEntries(application, refType).entries()));
+            return composeResponse(
+                    buildFilterListValue(computeFilterListEntries(application, refType)),
+                    application, refType, language);
         }
 
-        // Cache hit : retourner le JSON deja serialise + ETag stocke ( ~0ms ) .
+        // Cache hit : compose JSON {entries , variables} en O(N) sur cache entries ( ~ms ) .
         FilterListValue cached = filterListCache.get(cacheKey);
         if (cached != null) {
             log.debug("filterList cache hit for {}", cacheKey);
             if (cacheMetrics != null) cacheMetrics.recordFilterListHit();
-            return toFilterListResult(cached);
+            return composeResponse(cached, application, refType, language);
         }
 
         // Cache miss : singleflight pour empecher le cache stampede .
@@ -1695,7 +1725,7 @@ private PlatformTransactionManager transactionManager;
         if (cacheMetrics != null) cacheMetrics.recordFilterListMiss();
         FilterListValue value = filterListInFlight.load(cacheKey,
                 () -> computeAndMaybeCache(application, refType, cacheKey));
-        return toFilterListResult(value);
+        return composeResponse(value, application, refType, language);
     }
 
     /**
@@ -1729,12 +1759,40 @@ private PlatformTransactionManager transactionManager;
             log.warn("filterList compute partial for {} ( {} component(s) failed ) - caching partial result anyway ; refresh manually if needed",
                     cacheKey, computed.failedComponents());
         }
-        return serializeAndCache(cacheKey, computed.entries());
+        return serializeAndCache(cacheKey, computed);
     }
 
-    /** Mapping homogene cache value -&gt; resultat public . */
-    private static FilterListResult toFilterListResult(FilterListValue value) {
-        return new FilterListResult(value.json(), value.etag());
+    /**
+     * Compose le {@link FilterListResult} final ( JSON + ETag ) à partir de
+     * la valeur cache + de la langue de la requête .
+     *
+     * <p><b>Shape JSON</b> : {@code {entries: [...], variables: [...]}} .
+     * Les {@code variables} sont calculées via
+     * {@link FilterListVariablesExtractor#extract} et reflètent l'ensemble
+     * des componentKeys filtrables ( = colonnes à afficher dans le bloc
+     * filtre frontend ) , dérivées des {@code entries} + config app +
+     * filtre {@code isHiddenOrHasLangRestriction(language)} .
+     *
+     * <p>L'ETag hash le JSON final ( variables inclues ) donc des requêtes
+     * sur le même datatype avec locales différentes obtiennent des ETag
+     * distincts ( cohérent avec le contrat If-None-Match ) .
+     */
+    private FilterListResult composeResponse(final FilterListValue value,
+                                             final Application application,
+                                             final String refType,
+                                             final String language) {
+        final java.util.Set<String> variables = FilterListVariablesExtractor.extract(
+                value.entries(), application, refType, language);
+        try {
+            final String variablesJson = cacheObjectMapper.writeValueAsString(variables);
+            final String fullJson = "{\"entries\":" + value.entriesJson()
+                    + ",\"variables\":" + variablesJson + "}";
+            return new FilterListResult(fullJson, computeEtag(fullJson));
+        } catch (Exception e) {
+            log.error("Failed to compose filterList response JSON ( fallback empty )", e);
+            final String empty = "{\"entries\":[],\"variables\":[]}";
+            return new FilterListResult(empty, computeEtag(empty));
+        }
     }
 
     /**
@@ -1851,32 +1909,31 @@ private PlatformTransactionManager transactionManager;
     }
 
     /**
-     * Sérialise la liste d'entrées en JSON , calcule l'ETag stable et stocke
-     * le tout dans le cache. Retourne l'entrée pour que les callers ( hit
-     * miss ou refresh asynchrone ) puissent renvoyer JSON + ETag sans aller
-     * relire le cache.
+     * Construit la {@link FilterListValue} ( entries Java + JSON pré-sérialisé )
+     * et l'écrit dans le cache . Retourne la valeur pour que les callers
+     * puissent composer le JSON de réponse sans relire le cache .
      */
-    private FilterListValue serializeAndCache(String cacheKey, List<FilterListEntry> list) {
-        FilterListValue value = serializeOnly(list);
+    private FilterListValue serializeAndCache(String cacheKey, FilterListComputeResult computed) {
+        FilterListValue value = buildFilterListValue(computed);
         // LRU eviction + put geres par MemoryCache.put en interne .
         filterListCache.put(cacheKey, value);
         return value;
     }
 
     /**
-     * Serialise la liste en JSON + ETag SANS ecrire au cache .
-     * Utilise pour les chemins ou la memoisation est indesirable :
-     *  - cache desactive ( {@code openadom.cache.filter-list.enabled=false} )
+     * Construit la {@link FilterListValue} SANS écrire au cache .
+     * Utilisé pour les chemins où la mémoisation est indésirable :
+     *  - cache désactivé ( {@code openadom.cache.filter-list.enabled=false} )
      *  - compute partiel ( cf {@link #computeAndMaybeCache} )
-     * Fallback paylod vide en cas d'echec de serialisation - jamais cache .
+     * Fallback {@code entries=[]} en cas d'échec de sérialisation .
      */
-    private FilterListValue serializeOnly(List<FilterListEntry> list) {
+    private FilterListValue buildFilterListValue(FilterListComputeResult computed) {
         try {
-            String json = cacheObjectMapper.writeValueAsString(list);
-            return new FilterListValue(json, computeEtag(json));
+            String entriesJson = cacheObjectMapper.writeValueAsString(computed.entries());
+            return new FilterListValue(computed.entries(), entriesJson, computed.failedComponents());
         } catch (Exception e) {
-            log.error("Failed to serialize filterList", e);
-            return new FilterListValue("[]", computeEtag("[]"));
+            log.error("Failed to serialize filterList entries", e);
+            return new FilterListValue(List.of(), "[]", computed.failedComponents());
         }
     }
 
@@ -1898,7 +1955,7 @@ private PlatformTransactionManager transactionManager;
                 .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
                 .doOnNext(computed -> {
                     if (computed.isComplete()) {
-                        serializeAndCache(cacheKey, computed.entries());
+                        serializeAndCache(cacheKey, computed);
                         log.info("filterList cache refreshed for {}", cacheKey);
                     } else {
                         // Refresh partiel : on conserve l'ancien cache plutot
