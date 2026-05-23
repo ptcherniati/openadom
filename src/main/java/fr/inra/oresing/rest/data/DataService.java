@@ -1679,7 +1679,7 @@ private PlatformTransactionManager transactionManager;
         if (!filterListCacheEnabled) {
             log.debug("filterList cache disabled , computing directly for {}", cacheKey);
             return toFilterListResult(serializeOnly(
-                    computeFilterListEntries(application, refType).entries()));
+                    computeFilterListEntries(application, refType)));
         }
 
         // Cache hit : retourner le JSON deja serialise + ETag stocke ( ~0ms ) .
@@ -1729,7 +1729,7 @@ private PlatformTransactionManager transactionManager;
             log.warn("filterList compute partial for {} ( {} component(s) failed ) - caching partial result anyway ; refresh manually if needed",
                     cacheKey, computed.failedComponents());
         }
-        return serializeAndCache(cacheKey, computed.entries());
+        return serializeAndCache(cacheKey, computed);
     }
 
     /** Mapping homogene cache value -&gt; resultat public . */
@@ -1743,10 +1743,16 @@ private PlatformTransactionManager transactionManager;
      * saturation , RLS deny ) pour permettre au caller de decider du
      * caching ( cf {@link #computeAndMaybeCache} ) .
      *
+     * <p>{@code variables} = liste des composants effectivement utilises
+     * dans le dataset ( extraite des cles JSON de la 1ere ligne ) . Sert
+     * au bloc filtre frontend pour s'afficher des l'arrivee de
+     * {@code /filters} sans attendre {@code /data} . Iso-comportement avec
+     * l'algo {@code .limit(1).keySet()} de {@code OreSiResources.getAllDataJson} .
+     *
      * <p>Package-private pour permettre les tests unitaires sans exposer
      * inutilement le detail interne au reste du code .
      */
-    record FilterListComputeResult(List<FilterListEntry> entries, int failedComponents) {
+    record FilterListComputeResult(List<FilterListEntry> entries, Set<String> variables, int failedComponents) {
         boolean isComplete() {
             return failedComponents == 0;
         }
@@ -1798,6 +1804,23 @@ private PlatformTransactionManager transactionManager;
         final int[] failed = { 0 };   // mutable counter pour fermeture lambda
         final var dataRepo = repository.getRepository(application).data();
 
+        // Variables = cles JSON de la 1ere ligne du dataset , filtrees des
+        // prefixes systeme `_*` . Reproduction de l'algo de
+        // OreSiResources.getAllDataJson ( ligne 1163-1182 ) pour iso-comportement .
+        // Permet au frontend de filtrer les colonnes du bloc filtre sans
+        // dependre de /data . Best-effort : si SQL echoue ( table absente ,
+        // RLS , etc. ) on continue avec set vide plutot que faire echouer
+        // tout le compute - le bloc filtre se contentera de masquer toutes
+        // les colonnes , consistant avec un dataset vide .
+        Set<String> variables;
+        try {
+            variables = dataRepo.getDataVariables(refType);
+        } catch (Exception e) {
+            log.warn("Failed to compute variables for {}::{} - filterBlock may show no columns",
+                    application.getName(), refType, e);
+            variables = ImmutableSet.of();
+        }
+
         // 1. Filtres reference ( historique - inchange )
         final List<FilterList> filterLists = dataRepo.getFilterList(refType)
                 .collectList()
@@ -1847,7 +1870,7 @@ private PlatformTransactionManager transactionManager;
                             }
                         }));
 
-        return new FilterListComputeResult(entries, failed[0]);
+        return new FilterListComputeResult(entries, variables, failed[0]);
     }
 
     /**
@@ -1856,27 +1879,38 @@ private PlatformTransactionManager transactionManager;
      * miss ou refresh asynchrone ) puissent renvoyer JSON + ETag sans aller
      * relire le cache.
      */
-    private FilterListValue serializeAndCache(String cacheKey, List<FilterListEntry> list) {
-        FilterListValue value = serializeOnly(list);
+    private FilterListValue serializeAndCache(String cacheKey, FilterListComputeResult computed) {
+        FilterListValue value = serializeOnly(computed);
         // LRU eviction + put geres par MemoryCache.put en interne .
         filterListCache.put(cacheKey, value);
         return value;
     }
 
     /**
-     * Serialise la liste en JSON + ETag SANS ecrire au cache .
+     * Payload wire {@code /filters} : entries + variables .
+     * <p>{@code entries} : valeurs distinctes par colonne filtrable .
+     * <p>{@code variables} : composants effectivement utilises dans le
+     * dataset ( cles JSON 1ere ligne ) ; le frontend l'utilise pour filtrer
+     * les colonnes du bloc filtre sans dependre de {@code /data} .
+     */
+    private record FilterListPayload(List<FilterListEntry> entries, Set<String> variables) {}
+
+    /**
+     * Serialise entries + variables en JSON + ETag SANS ecrire au cache .
      * Utilise pour les chemins ou la memoisation est indesirable :
      *  - cache desactive ( {@code openadom.cache.filter-list.enabled=false} )
      *  - compute partiel ( cf {@link #computeAndMaybeCache} )
-     * Fallback paylod vide en cas d'echec de serialisation - jamais cache .
+     * Fallback payload vide en cas d'echec de serialisation - jamais cache .
      */
-    private FilterListValue serializeOnly(List<FilterListEntry> list) {
+    private FilterListValue serializeOnly(FilterListComputeResult computed) {
         try {
-            String json = cacheObjectMapper.writeValueAsString(list);
+            FilterListPayload payload = new FilterListPayload(computed.entries(), computed.variables());
+            String json = cacheObjectMapper.writeValueAsString(payload);
             return new FilterListValue(json, computeEtag(json));
         } catch (Exception e) {
             log.error("Failed to serialize filterList", e);
-            return new FilterListValue("[]", computeEtag("[]"));
+            final String empty = "{\"entries\":[],\"variables\":[]}";
+            return new FilterListValue(empty, computeEtag(empty));
         }
     }
 
@@ -1898,7 +1932,7 @@ private PlatformTransactionManager transactionManager;
                 .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
                 .doOnNext(computed -> {
                     if (computed.isComplete()) {
-                        serializeAndCache(cacheKey, computed.entries());
+                        serializeAndCache(cacheKey, computed);
                         log.info("filterList cache refreshed for {}", cacheKey);
                     } else {
                         // Refresh partiel : on conserve l'ancien cache plutot

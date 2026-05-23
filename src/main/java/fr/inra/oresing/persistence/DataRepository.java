@@ -3,6 +3,7 @@ package fr.inra.oresing.persistence;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
@@ -1494,6 +1495,44 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
         return new ColumnDistinctValues(
                 componentKey, values, false, Boolean.TRUE.equals(hasEmpty));
+    }
+
+    /**
+     * Liste des composants ( clés JSON ) presents dans le datatype , extraite
+     * de la 1ere ligne du dataset . Reproduit fidelement l'algo de
+     * {@code OreSiResources.getAllDataJson} qui derive {@code variables}
+     * via {@code data.stream().limit(1).map(DataRow::values).map(Map::keySet)} .
+     *
+     * <p>Sert a alimenter le payload {@code /filters} avec la liste des
+     * composants effectivement utilises , afin que le bloc filtre frontend
+     * puisse se rendre des l'arrivee de {@code /filters} sans attendre
+     * {@code /data} ( cf decouplage timing du bloc filtre ) .
+     *
+     * <p>Filtre les variables systeme prefixees {@code _} pour rester
+     * coherent avec {@code OreSiResources.getAllDataJson} ( predicat
+     * {@code !startsWith("_")} cote Java ) .
+     *
+     * <p>Cout : <1ms ( LIMIT 1 sur table indexee par referencetype ) . Appele
+     * 1x par cache miss {@code /filters} ; cache 10min + invalidation sur
+     * mutations couvre tous les autres acces .
+     */
+    public Set<String> getDataVariables(final String dataName) {
+        final String query = """
+                SELECT key
+                FROM (
+                    SELECT refvalues
+                    FROM %1$s.referencevalue
+                    WHERE referencetype = :dataName
+                    LIMIT 1
+                ) firstRow,
+                LATERAL jsonb_object_keys(firstRow.refvalues) key
+                WHERE NOT starts_with(key, '_')
+                """.formatted(getSchema().getSqlIdentifier());
+        final List<String> keys = getNamedParameterJdbcTemplate().query(
+                query,
+                Map.of("dataName", dataName),
+                (rs, rowNum) -> rs.getString(1));
+        return ImmutableSet.copyOf(keys);
     }
 
     @Override

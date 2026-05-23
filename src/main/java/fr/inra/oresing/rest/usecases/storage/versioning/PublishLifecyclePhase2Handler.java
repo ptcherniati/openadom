@@ -456,11 +456,22 @@ public class PublishLifecyclePhase2Handler {
     // ------------------------------------------------------------
 
     private long executeAction(Application application, PublishLifecycleEvent ev) throws Exception {
-        return switch (ev.action()) {
+        final long result = switch (ev.action()) {
             case PUBLISH     -> doPublish(application, ev);
             case UNPUBLISH   -> doUnpublish(application, ev);
             case DELETE_FILE -> doDeleteFile(application, ev);
         };
+        // Filtres : publish / unpublish / delete-file changent les valeurs
+        // visibles du dataset ( ajout / retrait de lignes via referencevalue
+        // RLS ou DELETE physique ) , donc les valeurs distinctes par colonne
+        // ( payload /filters ) peuvent etre obsoletes . Refresh asynchrone
+        // pour rester coherent avec les hooks deja en place sur addData
+        // ( OreSiResources ligne 931 ) et deleteData ( ligne 1345 ) . Sans
+        // ce hook , le bloc filtre frontend afficherait des valeurs stales
+        // jusqu'a expiration TTL 10min . Best-effort : Mono async ne bloque
+        // pas le retour de Phase 2 .
+        serviceContainer.dataService().refreshFilterListCache(application, ev.dataName());
+        return result;
     }
 
     /**
