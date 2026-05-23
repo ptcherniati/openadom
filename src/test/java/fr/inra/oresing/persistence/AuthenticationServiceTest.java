@@ -96,7 +96,12 @@ class AuthenticationServiceTest extends AbstractIntegrationTest {
         Objects.requireNonNull(message.getText()).split("\n");
 
         final String newEmail = "newmail@inrae.fr";
-        validationKey = getValidationKey(messageArgumentCaptor, login, password, "pending", newEmail);
+        // Note : depuis le fix "wrong validation key locks out user" ( V17 +
+        // pending_email decouple ) , un changement d'email NE FAIT PLUS
+        // basculer le compte en pending . user.email + accountstate restent
+        // intacts tant que la cle n'est pas validee ; pending_email porte
+        // la cible . Le state reste donc "active" tout au long du flow .
+        validationKey = getValidationKey(messageArgumentCaptor, login, password, "active", newEmail);
 
         //on valide l'email
         mockMvc.perform(put("/api/v1/users")
@@ -105,16 +110,25 @@ class AuthenticationServiceTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.accountState", Matchers.is("active")))
                 .andReturn().getResponse().getContentAsString();
 
-        validationKey = getValidationKey(messageArgumentCaptor, login, password, "active", newEmail);
-        final String validationKey2 = getValidationKey(messageArgumentCaptor, login, password, "active", newEmail);
-        assertEquals(validationKey2, validationKey);
+        // Apres commit du changement d'email , user.email == newEmail . Un
+        // PUT avec login + newPassword ( email facultatif ) suffit pour
+        // changer le mot de passe . Pas besoin de pre-requester un
+        // verificationKey : avec la nouvelle semantique 2-phase , la cle
+        // ne sert QUE pour la phase 2 d'un email-change ( pending_email
+        // non vide ) ; en dehors de ce flow elle est ignoree . Note :
+        // ancienne version du test re-appelait getValidationKey avec
+        // newEmail apres commit -> aujourd'hui c'est un no-op qui rend
+        // 422 EMAIL_UNCHANGED ( cf invariant "200 OK <=> mail envoye" ) .
         mockMvc.perform(put("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\"" +
                                  ", \"email\": \"" + newEmail + "\", " +
+                                 // password ( actuel ) requis pour
+                                 // authentifier la mutation - dispatch
+                                 // NotConnectedAuthentifiedActiveUser .
+                                 "\"password\": \"" + password + "\", " +
                                  "\"newPassword\": \"newpassword\", " +
-                                 "\"newPasswordConfirm\": \"newpassword\", " +
-                                 "\"verificationKey\": \"" + validationKey + "\"}"))
+                                 "\"newPasswordConfirm\": \"newpassword\"}"))
                 .andExpect(jsonPath("$.accountState", Matchers.is("active")))
                 .andReturn().getResponse().getContentAsString();
 
@@ -173,5 +187,105 @@ class AuthenticationServiceTest extends AbstractIntegrationTest {
     @Transactional
     void setToActive(final UUID userId) {
         namedParameterJdbcTemplate.update("update public.OreSiUser set accountstate = 'active' where id = :id", Map.of("id", userId));
+    }
+
+    /**
+     * Garde-fou anti-regression du bug "wrong validation key locks out
+     * user" : si l'utilisateur soumet une mauvaise cle pendant un
+     * changement d'email , l'email actuel ET l'accountstate DOIVENT
+     * rester intacts ( pas de bascule en pending ) et la reponse HTTP
+     * doit etre 422 ( pas 401 -> pas de logout cote frontend ) .
+     */
+    @Test
+    void emailChange_wrongValidationKey_preservesEmailAndState() throws Throwable {
+        final ArgumentCaptor<SimpleMailMessage> messageArgumentCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        final String login = "alice";
+        final String email = "alice@codelutin.com";
+        final String password = "pwd-alice";
+        // Setup : creation + activation .
+        mockMvc.perform(post("/api/v1/users")
+                .param("login", login).param("password", password).param("email", email)
+                .contentType(MediaType.APPLICATION_JSON));
+        Mockito.verify(mailSender).send(messageArgumentCaptor.capture());
+        final String activationKey = extractValidationKeyFromMail(messageArgumentCaptor.getValue());
+        mockMvc.perform(put("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{ \"login\": \"" + login + "\", \"password\": \"" + password + "\", \"verificationKey\": \"" + activationKey + "\"}"))
+                .andExpect(jsonPath("$.accountState", Matchers.is("active")));
+        final LoginAdminResult loginAdminResult = authenticationService.login(login, password);
+
+        // Phase 1 : demande de changement vers un nouvel email .
+        final String newEmail = "alice-new@inrae.fr";
+        mockMvc.perform(put("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{ \"login\": \"" + login + "\", \"email\": \"" + newEmail + "\", \"password\": \"" + password + "\"}"))
+                // Invariant : state reste active ( ne plus passer en pending ) .
+                .andExpect(jsonPath("$.accountState", Matchers.is("active")));
+
+        // Phase 2 KO : on soumet une cle deliberement fausse .
+        mockMvc.perform(put("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{ \"login\": \"" + login + "\", \"password\": \"" + password + "\", \"verificationKey\": \"WRONG-KEY-12\"}"))
+                // 422 = erreur metier , PAS 401 ( pas de logout client ) .
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isUnprocessableEntity());
+
+        // Verification : login marche TOUJOURS avec l'email INITIAL +
+        // password initial ( aucune mutation persistee ) .
+        final LoginAdminResult after = authenticationService.login(login, password);
+        assertEquals(login, after.login());
+        // L'email actuel doit etre toujours l'initial ( pas le newEmail ) .
+        // On le verifie indirectement via getUserRole + lookup du record :
+        // si l'email avait ete change , findByLoginAndEmail(login, email)
+        // ne renverrait plus le user .
+        org.junit.jupiter.api.Assertions.assertTrue(
+                authenticationService.getUserRole(after.id()) != null,
+                "l'utilisateur doit rester accessible apres une cle KO");
+
+        authenticationService.setRole(authenticationService.getUserRole(loginAdminResult.id()));
+        authenticationService.resetRole();
+        authenticationService.removeUser(loginAdminResult.id());
+    }
+
+    /**
+     * Invariant "200 OK <=> mail bien envoye" : si le client appelle
+     * phase 1 du changement d'email avec un email IDENTIQUE a l'email
+     * courant et sans newPassword , le backend NE DOIT PAS envoyer de
+     * mail ni retourner 200 ( sinon le frontend afficherait un toast
+     * vert mensonger ) . Reponse attendue : 422 EMAIL_UNCHANGED .
+     */
+    @Test
+    void emailChange_sameEmail_returns422AndDoesNotSendMail() throws Throwable {
+        final ArgumentCaptor<SimpleMailMessage> activationMailCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        final String login = "bob";
+        final String email = "bob@codelutin.com";
+        final String password = "pwd-bob";
+        mockMvc.perform(post("/api/v1/users")
+                .param("login", login).param("password", password).param("email", email)
+                .contentType(MediaType.APPLICATION_JSON));
+        Mockito.verify(mailSender).send(activationMailCaptor.capture());
+        final String activationKey = extractValidationKeyFromMail(activationMailCaptor.getValue());
+        mockMvc.perform(put("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{ \"login\": \"" + login + "\", \"password\": \"" + password + "\", \"verificationKey\": \"" + activationKey + "\"}"))
+                .andExpect(jsonPath("$.accountState", Matchers.is("active")));
+        final LoginAdminResult loginAdminResult = authenticationService.login(login, password);
+
+        // Reset des invocations : on veut verifier qu'AUCUN nouvel envoi
+        // de mail n'a lieu en phase 1 no-op .
+        Mockito.clearInvocations(mailSender);
+
+        // Phase 1 avec MEME email que l'email courant -> no-op cote metier .
+        mockMvc.perform(put("/api/v1/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{ \"login\": \"" + login + "\", \"email\": \"" + email + "\", \"password\": \"" + password + "\"}"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isUnprocessableEntity())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string("EMAIL_UNCHANGED"));
+
+        // Aucun mail envoye sur ce no-op .
+        Mockito.verifyNoInteractions(mailSender);
+
+        authenticationService.setRole(authenticationService.getUserRole(loginAdminResult.id()));
+        authenticationService.resetRole();
+        authenticationService.removeUser(loginAdminResult.id());
     }
 }

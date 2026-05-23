@@ -25,9 +25,35 @@ public class AuthenticationFailure extends OreSiException {
     public static final String INVALID_ACCOUNT = "INVALID_ACCOUNT";
 
     public static final String BAD_LOGIN_PASSWORD = "BAD_LOGIN_PASSWORD";
+    /**
+     * Mot de passe actuel KO dans un flow d'update de compte ( ex
+     * changement d'email / mot de passe utilisateur deja authentifie ) .
+     * Distinct de {@link #BAD_LOGIN_PASSWORD} qui est specifique au
+     * login : meme erreur metier mais code HTTP different ( 422 vs 401 )
+     * pour eviter que le frontend {@code Fetcher.ts} declenche son
+     * auto-logout global sur 401 quand l'utilisateur entre juste un
+     * mauvais mot de passe dans un formulaire d'edition .
+     */
+    public static final String BAD_CURRENT_PASSWORD = "BAD_CURRENT_PASSWORD";
     public static final String BAD_VALIDATION_KEY = "BAD_VALIDATION_KEY";
     public static final String BAD_LOGIN_OR_EMAIL_PASSWORD = "BAD_LOGIN_OR_EMAIL_PASSWORD";
     public static final String BAD_PASSWORDS = "BAD_PASSWORDS";
+    /**
+     * Soumission d'une cle de validation alors qu'aucun changement d'email
+     * n'est en attente ( pending_email NULL ) . Cas degenere : double-submit
+     * apres succes , ou appel direct hors flow . Le client doit relancer la
+     * phase 1 ( nouvel email ) avant de re-valider .
+     */
+    public static final String NO_PENDING_EMAIL_CHANGE = "NO_PENDING_EMAIL_CHANGE";
+    /**
+     * Phase 1 d'un changement d'email appelee sans changement effectif :
+     * email cible identique a l'email courant , aucun mot de passe a changer ,
+     * aucune cle de validation . L'appel est un no-op et NE DOIT PAS provoquer
+     * d'envoi de mail ni de toast de succes cote frontend . On remonte donc
+     * une erreur metier explicite ( 422 ) pour que le client affiche un
+     * message clair plutot que de croire qu'un mail a ete envoye .
+     */
+    public static final String EMAIL_UNCHANGED = "EMAIL_UNCHANGED";
     public static final String CONSTANT_LOGIN = "login";
     public static final String CONSTANT_EMAIL = "email";
     public static final String CONSTANT_ID = "id";
@@ -38,13 +64,16 @@ public class AuthenticationFailure extends OreSiException {
 
     public AuthenticationFailure(String message, CreateUserRequest userRequest) {
         super(message);
-        params = Optional.ofNullable(userRequest)
-                .map(lr -> Map.of(
-                                CONSTANT_LOGIN, lr.getLogin(),
-                                CONSTANT_EMAIL, lr.getEmail()
-                        )
-                )
-                .orElseGet(Map::of);
+        // {@code Map.of(...)} refuse les valeurs null -> NPE si le payload ne
+        // contient pas a la fois login ET email ( ex flow forgot-password ou
+        // login est null ) . On utilise un HashMap mutable et on n'insere que
+        // les champs effectivement renseignes pour eviter ce piege .
+        final java.util.HashMap<String, Serializable> built = new java.util.HashMap<>();
+        Optional.ofNullable(userRequest).ifPresent(lr -> {
+            if (lr.getLogin() != null) built.put(CONSTANT_LOGIN, lr.getLogin());
+            if (lr.getEmail() != null) built.put(CONSTANT_EMAIL, lr.getEmail());
+        });
+        params = built;
     }
 
 

@@ -52,6 +52,16 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
     @Value("${bcryptCost:12}")
     private int bcryptCost;
 
+    /**
+     * Duree de validite d'une cle de validation generee par mail
+     * ( activation compte , mot de passe oublie , changement d'email ) .
+     * Au-dela , la cle est rejetee meme bien formee ; l'utilisateur doit
+     * relancer le flow . Configurable via env OPENADOM_AUTH_VALIDATION_KEY_TTL_MINUTES
+     * ( cf application.properties pour la doc complete ) .
+     */
+    @Value("${openadom.auth.validation-key-ttl-minutes:10}")
+    private int validationKeyTtlMinutes;
+
     public AuthenticationService(
             UserRepository userRepository,
             SqlService db,
@@ -80,10 +90,28 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
      * suffisamment courte pour etre saisie a la main.</p>
      */
     private static String generateVerificationKey(final OreSiUser oreSiUser) {
+        return generateVerificationKey(oreSiUser, oreSiUser.getEmail());
+    }
+
+    /**
+     * Variante qui derive la cle a partir d'un email cible explicite plutot
+     * que de {@code user.email} . Indispensable pour le flow email-change
+     * 2-phases : a la phase 1 , user.email pointe encore sur l'ancien email
+     * ( decouple ; cf {@code pending_email} ) ; la cle envoyee par mail doit
+     * cependant rester valide apres le swap en phase 2 ( ou user.email
+     * devient pendingEmail ) . En la binant a pendingEmail des le depart
+     * on garantit que la meme cle est verifiable AVANT et APRES le swap .
+     *
+     * <p>Effet secondaire securite : la cle est implicitement liee a la
+     * cible ; un attaquant qui interceptererait la cle ne pourrait pas
+     * detourner le changement vers un autre email ( la cle serait invalide
+     * pour toute autre cible ) .
+     */
+    private static String generateVerificationKey(final OreSiUser oreSiUser, final String targetEmail) {
         Objects.requireNonNull(oreSiUser, "oreSiUser");
         final String input = String.join("|",
                 String.valueOf(oreSiUser.getId()),
-                Objects.toString(oreSiUser.getEmail(), ""),
+                Objects.toString(targetEmail, ""),
                 Objects.toString(oreSiUser.getPassword(), ""),
                 Objects.toString(oreSiUser.getCreationDate(), ""));
         try {
@@ -170,7 +198,12 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
         };
     }
 
-    public LoginAdminResult checkLoginPassword(final String login, final String password) throws AuthenticationFailure {
+    /**
+     * Variante explicitement contextuelle de {@link #checkLoginPassword(String, String)} .
+     * Le code d'erreur emis depend de {@code context} - cf {@link fr.inra.oresing.domain.authorization.LoginPasswordCheckContext} .
+     */
+    @Override
+    public LoginAdminResult checkLoginPassword(final String login, final String password, final fr.inra.oresing.domain.authorization.LoginPasswordCheckContext context) throws AuthenticationFailure {
         final Predicate<OreSiUser> checkPassword = user -> BCrypt.verifyer()
                 .verify(password.toCharArray(), user.getPassword().toCharArray())
                 .verified;
@@ -183,7 +216,21 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
         return userRepository.findByLogin(login)
                 .filter(checkPassword)
                 .map(user -> toLoginResult(user, currentUserRoles))
-                .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_PASSWORD, (LoginAdminResult) null));
+                .orElseThrow(() -> new AuthenticationFailure(
+                        context == fr.inra.oresing.domain.authorization.LoginPasswordCheckContext.UPDATE
+                                ? AuthenticationFailure.BAD_CURRENT_PASSWORD
+                                : AuthenticationFailure.BAD_LOGIN_PASSWORD,
+                        (LoginAdminResult) null));
+    }
+
+    /**
+     * Backward-compat : appel sans contexte explicite -> assume
+     * {@link LoginPasswordCheckContext#LOGIN} ( comportement historique
+     * du flow {@code POST /login} ) . Tous les nouveaux call sites
+     * doivent passer le contexte explicitement via l'overload .
+     */
+    public LoginAdminResult checkLoginPassword(final String login, final String password) throws AuthenticationFailure {
+        return checkLoginPassword(login, password, fr.inra.oresing.domain.authorization.LoginPasswordCheckContext.LOGIN);
     }
 
     public void sendEmailValidation(final String loginOrEmail) throws AuthenticationFailure {
@@ -217,7 +264,7 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
             sendValidationKey(oreSiUser1);
             throw new AuthenticationFailure(AuthenticationFailure.BAD_VALIDATION_KEY, oreSiUser1);
         }
-        if (duration.compareTo(Duration.ofMinutes(10)) < 0) {
+        if (duration.compareTo(Duration.ofMinutes(validationKeyTtlMinutes)) < 0) {
             setRoleAdmin();
             oreSiUser1.setAccountstate(OreSiUser.OreSiUserStates.active);
             oreSiUser1 = userRepository.setState(oreSiUser1.getId(), OreSiUser.OreSiUserStates.active);
@@ -632,12 +679,38 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
         return update;
     }
 
+    /**
+     * Route le PUT /users d'un utilisateur deja authentifie ( ActiveUser ) vers
+     * la sous-action adequate selon le payload :
+     * <ul>
+     *     <li>{@code verificationKey} present -> phase 2 d'un changement d'email
+     *         en cours : {@link #commitEmailChange} valide la cle et swap
+     *         atomique pendingEmail -> email ;
+     *     <li>{@code newPassword} present : applique le changement de mdp ;
+     *     <li>{@code email} different de user.email : phase 1 d'un changement
+     *         d'email - enregistre uniquement {@code pendingEmail} et envoie
+     *         la cle ; {@code email} et {@code accountstate} INCHANGES pour
+     *         que l'utilisateur reste pleinement actif pendant la validation
+     *         ( cf. bug "wrong validation key locks out user" ) .
+     * </ul>
+     */
     private OreSiUser updateAccount(final OreSiUser user, final CreateUserRequest createUserRequest) throws AuthenticationFailure, JsonProcessingException {
-        final String email = Optional.ofNullable(createUserRequest.getEmail())
+        // Phase 2 declenchee uniquement si verificationKey ET un changement
+        // est effectivement en attente . Si l'appelant passe une cle alors
+        // que pending_email est null ( cas typique : PUT combine email +
+        // newPassword + verificationKey decorative post-validation ) , on
+        // ignore la cle et on traite les autres champs - ne pas le faire
+        // brise les flow legacy ou la cle est toleree sans pending_email .
+        final boolean hasVerificationKey = !Strings.isNullOrEmpty(createUserRequest.getVerificationKey());
+        final boolean hasPendingEmail = !Strings.isNullOrEmpty(user.getPendingEmail());
+        if (hasVerificationKey && hasPendingEmail) {
+            return commitEmailChange(user, createUserRequest.getVerificationKey());
+        }
+        final String requestedEmail = Optional.ofNullable(createUserRequest.getEmail())
                 .filter(mail -> !Strings.isNullOrEmpty(mail))
                 .orElse(user.getEmail())
                 .toLowerCase();
-        final boolean emailChanged = !user.getEmail().toLowerCase().equals(email);
+        final boolean emailChanged = !user.getEmail().toLowerCase().equals(requestedEmail);
         if (createUserRequest.getNewPassword() != null) {
             final String verifiedPassword = Optional.of(createUserRequest.getNewPassword())
                     .filter(password -> !Strings.isNullOrEmpty(password))
@@ -647,17 +720,102 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
             user.setPassword(bcrypted);
         }
         if (emailChanged) {
-            user.setAccountstate(OreSiUser.OreSiUserStates.pending);
-            user.setEmail(createUserRequest.getEmail().toLowerCase());
+            // Pre-check unicite : si un AUTRE utilisateur a deja cet email ,
+            // refus immediat sans envoi de mail ni mutation DB . Sans ce
+            // garde-fou , le commit ( phase 2 ) declencherait une violation
+            // de contrainte unique {@code oresiuser_email_key} -> 500
+            // cryptique au lieu d'un message d'erreur metier clair .
+            final Optional<OreSiUser> collidingUser = userRepository.findByEmail(requestedEmail);
+            if (collidingUser.isPresent() && !collidingUser.get().getId().equals(user.getId())) {
+                throw new AuthenticationFailure(AuthenticationFailure.EXISTING_EMAIL, collidingUser.get());
+            }
+            // Phase 1 atomique "send first , persist after" :
+            //   1. compute key bound to pendingEmail ( in-memory )
+            //   2. send mail SMTP -> throws MailServiceUnavailableException si KO
+            //   3. mail OK -> persist pending_email + updateDate ( ancrage TTL )
+            // En cas d'erreur SMTP a l'etape 2 , aucune mutation DB n'a ete
+            // appliquee -> retry direct utilisateur sans etat corrompu .
+            user.setPendingEmail(requestedEmail);
+            final String verificationKey = generateVerificationKey(user, requestedEmail);
+            serviceContainer.emailService().sendEmailValidation(
+                    user.getLogin(),
+                    requestedEmail,
+                    verificationKey,
+                    EmailService.MESSAGES.NEW_EMAIL);
+            // Mail OK , on peut persister . updateNewDate refresh updateDate
+            // ( TTL anchor ) + persiste pending_email dans la meme ecriture .
+            setRoleAdmin();
+            userRepository.updateNewDate(user, new java.sql.Timestamp(System.currentTimeMillis()));
+            final OreSiUser updateUser = userRepository.update(user);
+            setRoleForClient();
+            return updateUser;
         }
+        // Garde-fou : on arrive ici sans changement d'email ET sans changement
+        // de mot de passe ( newPassword null traite plus haut sinon ) ET sans
+        // cle de validation ( commitEmailChange traite au tout debut ) . L'
+        // appelant a effectue une requete vide - typiquement frontend phase 1
+        // avec newEmail == email courant . On NE DOIT PAS retourner 200 sinon
+        // le frontend afficherait un toast vert "mail envoye" alors qu'aucun
+        // mail n'a ete envoye . Invariant : 200 OK <=> mail envoye .
+        if (createUserRequest.getNewPassword() == null) {
+            throw new AuthenticationFailure(AuthenticationFailure.EMAIL_UNCHANGED, user);
+        }
+        // Changement de mot de passe pur ( email identique , verifie plus haut
+        // que newPassword n'est pas null ) : on persiste juste le hash deja
+        // calcule dans user .
         setRoleAdmin();
         final OreSiUser updateUser = userRepository.update(user);
-        if (emailChanged) {
-            sendEmailValidation(updateUser, EmailService.MESSAGES.NEW_EMAIL);
-        }
         setRoleForClient();
         return updateUser;
     }
+
+    /**
+     * Phase 2 d'un changement d'email : valide la cle puis swap atomique
+     * {@code pendingEmail} -> {@code email} . En cas de cle invalide ,
+     * {@link #validateValidationKey} jette BAD_VALIDATION_KEY et aucune
+     * modification n'est appliquee ( pending_email + email inchanges ) .
+     *
+     * @throws AuthenticationFailure BAD_VALIDATION_KEY si la cle est
+     *         invalide ou expiree ; NO_PENDING_EMAIL_CHANGE si l'appelant
+     *         soumet une cle alors qu'aucun changement n'est en attente
+     *         ( cas degenere : double-soumission apres succes , ou
+     *         appel direct hors flow ) .
+     */
+    private OreSiUser commitEmailChange(final OreSiUser user, final String verificationKey) throws AuthenticationFailure, JsonProcessingException {
+        if (Strings.isNullOrEmpty(user.getPendingEmail())) {
+            throw new AuthenticationFailure(AuthenticationFailure.NO_PENDING_EMAIL_CHANGE, user);
+        }
+        // Verification bindee au pendingEmail ( pas user.email ) : meme cle
+        // utilisee a la phase 1 ( cf sendEmailChangeValidation ) , garantit
+        // la coherence avant et apres le swap email <- pendingEmail .
+        final String expected = generateVerificationKey(user, user.getPendingEmail());
+        if (!expected.equals(verificationKey)) {
+            throw new AuthenticationFailure(AuthenticationFailure.BAD_VALIDATION_KEY, user);
+        }
+        // TTL identique aux autres flows ( 10 min depuis updateDate ) .
+        final Duration duration = Duration.between(user.getUpdateDate(), LocalDateTime.now());
+        if (duration.compareTo(Duration.ofMinutes(validationKeyTtlMinutes)) >= 0) {
+            throw new AuthenticationFailure(AuthenticationFailure.BAD_VALIDATION_KEY, user);
+        }
+        // Re-check unicite juste avant le swap : entre phase 1 et phase 2
+        // ( fenetre TTL pouvant atteindre {@code validationKeyTtlMinutes} ) ,
+        // un autre utilisateur peut avoir pris l'email cible . Sans ce
+        // recheck , la contrainte unique {@code oresiuser_email_key}
+        // declencherait une violation SQL -> 500 cryptique . On detecte
+        // la collision tot pour rendre une erreur metier explicite et
+        // laisser pending_email intact pour analyse cote utilisateur .
+        final Optional<OreSiUser> collidingUser = userRepository.findByEmail(user.getPendingEmail());
+        if (collidingUser.isPresent() && !collidingUser.get().getId().equals(user.getId())) {
+            throw new AuthenticationFailure(AuthenticationFailure.EXISTING_EMAIL, collidingUser.get());
+        }
+        setRoleAdmin();
+        user.setEmail(user.getPendingEmail());
+        user.setPendingEmail(null);
+        final OreSiUser updateUser = userRepository.update(user);
+        setRoleForClient();
+        return updateUser;
+    }
+
 
     private OreSiUser activeAccount(final OreSiUser oreSiUser, final String verificationKey) throws AuthenticationFailure {
         validateValidationKey(oreSiUser, verificationKey);

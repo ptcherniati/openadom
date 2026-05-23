@@ -48,7 +48,14 @@ public record PrivilegeAssessorDomainForNotConnectedUser<P extends PrivilegeSyst
         final String verificationKey = createUserRequest.getVerificationKey();
         final String charte = createUserRequest.getCharte();
         if (!Strings.isNullOrEmpty(login) && !Strings.isNullOrEmpty(password)) {
-            final LoginAdminResult loginAdminResult = authenticationService().checkLoginPassword(login, password);
+            // Contexte UPDATE : si le mdp est KO , checkLoginPassword throw
+            // BAD_CURRENT_PASSWORD ( 422 metier ) - PAS BAD_LOGIN_PASSWORD
+            // ( 401 ) qui declencherait l'auto-logout global frontend . Le
+            // code d'erreur est dicte par {@link LoginPasswordCheckContext}
+            // - typage explicite , plus de string-matching sur les messages
+            // d'exception .
+            final LoginAdminResult loginAdminResult = authenticationService()
+                    .checkLoginPassword(login, password, fr.inra.oresing.domain.authorization.LoginPasswordCheckContext.UPDATE);
             final OreSiUser user = userRepository.findById(loginAdminResult.id());
             if (Strings.isNullOrEmpty(verificationKey)) {
                 return new NotConnectedAuthentifiedActiveUser(user, createUserRequest);

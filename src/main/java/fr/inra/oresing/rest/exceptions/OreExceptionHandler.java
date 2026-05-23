@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.exception.Disconne
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResultRest;
 import fr.inra.oresing.domain.exceptions.AuthenticationFailure;
+import fr.inra.oresing.domain.exceptions.MailServiceUnavailableException;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.exceptions.application.NoSuchApplicationException;
@@ -42,6 +43,19 @@ import java.util.Optional;
 public class OreExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final String KEY_MESSAGE = "message";
+
+    /**
+     * Defaillance du service de messagerie ( SMTP injoignable , auth refusee ,
+     * timeout ) . 503 Service Unavailable + body code stable consommable
+     * cote frontend pour un toast i18n . Le frontend NE redirige PAS vers
+     * /login ( pas une perte d'authentification ) - cf Fetcher.ts qui
+     * ne deconnecte que sur 401 .
+     */
+    @ExceptionHandler(MailServiceUnavailableException.class)
+    public ResponseEntity<String> handleMailServiceUnavailable(final MailServiceUnavailableException ex) {
+        log.warn("Mail service unavailable : {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(MailServiceUnavailableException.CODE);
+    }
 
     // Ajoutez cette méthode pour les erreurs Spring Security
     @ExceptionHandler(AccessDeniedException.class)
@@ -154,9 +168,37 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
                         .body(eee.getMessage());
             }
             case "EXISTING_LOGIN" -> ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body(eee.getMessage());
+            // EXISTING_EMAIL = email cible deja pris par un autre utilisateur
+            // ( creation OU changement d'email ) . 422 metier , pas 412
+            // ( reserve a EXISTING_LOGIN historique ) , pour que le frontend
+            // affiche un toast rouge i18n sans tomber dans le flow logout .
+            case "EXISTING_EMAIL" -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(eee.getMessage());
             case "BAD_LOGIN_PASSWORD" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
+            // BAD_CURRENT_PASSWORD = mdp actuel KO dans un flow d'update
+            // ( utilisateur deja loggue ) . 422 metier pour eviter l'
+            // auto-logout du frontend qui se declenche sur 401 .
+            case "BAD_CURRENT_PASSWORD" -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(eee.getMessage());
+            // BAD_LOGIN_OR_EMAIL_PASSWORD = email saisi inconnu en DB
+            // ( typiquement flow forgot-password step 1 sur un email
+            // inexistant ) . 401 plutot que default 403 pour que le
+            // frontend swallow optimiste ( security-through-obscurity )
+            // se declenche sans leak de l'existence du compte .
+            case "BAD_LOGIN_OR_EMAIL_PASSWORD" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
             case "BAD_PASSWORDS" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
-            case "BAD_VALIDATION_KEY" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
+            // BAD_VALIDATION_KEY = erreur de validation metier ( cle saisie ne
+            // match pas ) , PAS une perte d'authentification . 401 declenchait
+            // un logout automatique cote Fetcher.ts ( cf bug "wrong key locks
+            // out user" ) . 422 = Unprocessable Entity -> le frontend peut
+            // afficher un toast + permettre retry sans deconnecter .
+            case "BAD_VALIDATION_KEY" -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(eee.getMessage());
+            // NO_PENDING_EMAIL_CHANGE = double-submit ou flow casse , meme
+            // logique : 422 pour ne pas confondre avec auth invalide .
+            case "NO_PENDING_EMAIL_CHANGE" -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(eee.getMessage());
+            // EMAIL_UNCHANGED = phase 1 appelee sans changement effectif . Le
+            // backend N'A PAS envoye de mail ; le frontend doit afficher un
+            // toast rouge ( pas vert ) - garantit l'invariant "200 OK = mail
+            // bien envoye" .
+            case "EMAIL_UNCHANGED" -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(eee.getMessage());
             case "BAD_REQUEST" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
             default -> ResponseEntity.status(HttpStatus.FORBIDDEN).body(eee.getMessage());
         };

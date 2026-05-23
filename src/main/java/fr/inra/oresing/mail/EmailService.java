@@ -2,14 +2,16 @@ package fr.inra.oresing.mail;
 
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.exceptions.MailServiceUnavailableException;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisation;
 import fr.inra.oresing.rest.data.publication.DataVersioningResult;
 import fr.inra.oresing.rest.filesenderclient.FileSenderRepository;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -17,11 +19,12 @@ import org.springframework.web.servlet.LocaleResolver;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static fr.inra.oresing.mail.EmailService.UPLOAD_STATE.UNPUBLISHED;
 
 @Service
-@RequiredArgsConstructor
+@Slf4j
 public class EmailService implements Email {
     public static final String OPENADOM_INRAE_FR = "openadom@inrae.fr";
     private static final String NEW_ACCOUNT_SUBJECT = "Création de compte / Account creation";
@@ -265,27 +268,178 @@ public class EmailService implements Email {
             "Bonjour %1$s%n%n" +
             "%2$s%n" +
             "L'équipe d'OpenAdom";
+    /**
+     * Pattern d'invalidation des headers SMTP : tout CR ou LF dans un
+     * champ ( Subject , From , recipient ) ouvre une injection RFC 5322
+     * permettant a un attaquant d'ajouter des entetes arbitraires ( BCC ,
+     * Reply-To ) si la valeur provient d'une saisie utilisateur ( login ,
+     * nom de fichier , nom de datatype ) . On strip ces caracteres
+     * avant insertion dans le message .
+     */
+    private static final Pattern HEADER_INJECTION_CHARS = Pattern.compile("[\\r\\n]");
+
     private final JavaMailSender mailSender;
     private final ServiceContainer serviceContainer;
-    @Value("${spring.mail.from}")
-    String mailFrom;
-    private LocaleResolver localeResolver;
+    private final LocaleResolver localeResolver;
+    /**
+     * Adresse d'expediteur applicative , configurable via
+     * {@code spring.mail.from} . Defaut prod = {@value #OPENADOM_INRAE_FR}
+     * pour rester compatible si la propriete n'est pas explicitement
+     * fixee dans l'environnement ( evite NPE silencieuse a runtime ) .
+     */
+    private final String mailFrom;
 
     @Autowired
-    public EmailService(JavaMailSender mailSender, LocaleResolver localeResolver, ServiceContainer serviceContainer) {
+    public EmailService(
+            final JavaMailSender mailSender,
+            final LocaleResolver localeResolver,
+            final ServiceContainer serviceContainer,
+            @Value("${spring.mail.from:" + OPENADOM_INRAE_FR + "}") final String mailFrom) {
         this.mailSender = mailSender;
         this.localeResolver = localeResolver;
         this.serviceContainer = serviceContainer;
+        this.mailFrom = mailFrom;
+    }
+
+    /**
+     * Centralise tous les appels {@link JavaMailSender#send} pour :
+     * <ol>
+     *   <li>uniformiser la traduction d'une defaillance SMTP en
+     *       {@link MailServiceUnavailableException} ( runtime , traduite en
+     *       HTTP 503 par OreExceptionHandler ) ;</li>
+     *   <li>tenter UN seul retry automatique <strong>immediat</strong> en
+     *       cas d'echec initial - couvre les hoquets transients .</li>
+     * </ol>
+     *
+     * <p><b>Borne stricte temps</b> : chaque tentative est limitee par les
+     * timeouts SMTP {@code mail.smtp.connectiontimeout|timeout|writetimeout}
+     * ( configurables via {@code OPENADOM_MAIL_SEND_TIMEOUT_MS} , default
+     * 3000 ms ) . Total worst-case : 2 x timeout = ~6s avant que le caller
+     * recoive l'exception . Pas de sleep entre tentatives : un timeout SMTP
+     * signifie deja attente cote socket , inutile d'attendre en plus .
+     *
+     * <p><b>Garantie "once and only once"</b> : best-effort . Le retry n'est
+     * declenche que si la tentative initiale a leve une {@link MailException} ,
+     * qui dans la quasi-totalite des cas signifie que le SMTP n'a PAS accepte
+     * le message ( auth refused , connection refused , relay 4xx/5xx ,
+     * socket timeout avant ack ) . Le seul cas pathologique ou un
+     * double-envoi est possible est un timeout apres que le SMTP a accepte
+     * le message mais avant le ACK reseau - extremement rare avec un relay
+     * configure correctement . Risque juge acceptable .
+     *
+     * <p>Le service appelant doit considerer qu'aucune mutation downstream
+     * dependante de l'envoi du mail ne doit etre persistee tant que cette
+     * methode n'a pas reussi ( strategie atomique : "send first , persist
+     * after" - cf flow updateAccount / requestEmailChange ) .
+     */
+    /**
+     * Pre-validation des champs du message AVANT l'appel a la pile JavaMail .
+     * Sans cette garde , une donnee invalide ( recipient null / vide ,
+     * subject null , from null ) leve une {@link IllegalStateException}
+     * dans {@code JavaMailSenderImpl} qui n'est PAS un {@link MailException} -
+     * elle echappe au catch ci-dessous et remonte en 500 au lieu de 503 .
+     * On verifie ici fail-fast pour eviter ce bug de classification d'erreur .
+     */
+    private void validateMessage(final SimpleMailMessage message) {
+        if (message.getTo() == null || message.getTo().length == 0) {
+            throw new MailServiceUnavailableException("Mail recipient ( To ) is missing - refusing to send", null);
+        }
+        for (final String to : message.getTo()) {
+            if (to == null || to.isBlank()) {
+                throw new MailServiceUnavailableException("Mail recipient ( To ) contains a null or blank entry", null);
+            }
+        }
+        if (message.getFrom() == null || message.getFrom().isBlank()) {
+            throw new MailServiceUnavailableException("Mail sender ( From ) is missing - check spring.mail.from", null);
+        }
+        if (message.getSubject() == null) {
+            throw new MailServiceUnavailableException("Mail subject is missing", null);
+        }
+    }
+
+    /**
+     * Sanitize une valeur destinee a etre injectee dans un header SMTP
+     * ( Subject , From , To ) . Supprime les CR/LF qui pourraient permettre
+     * a un appelant malveillant ( ou une donnee utilisateur non controlee )
+     * d'ajouter des entetes arbitraires - cf RFC 5322 § 2.2 .
+     *
+     * @return la valeur d'origine si elle ne contient pas de CR/LF , sinon
+     *         une copie nettoyee . {@code null} en entree -> {@code null} en
+     *         sortie ( les appelants restent responsables des null guards ) .
+     */
+    private static String sanitizeHeader(final String value) {
+        if (value == null) return null;
+        if (!HEADER_INJECTION_CHARS.matcher(value).find()) return value;
+        return HEADER_INJECTION_CHARS.matcher(value).replaceAll(" ");
+    }
+
+    /**
+     * Centralise tous les appels {@link JavaMailSender#send} pour :
+     * <ol>
+     *   <li>uniformiser la traduction d'une defaillance SMTP en
+     *       {@link MailServiceUnavailableException} ( runtime , traduite en
+     *       HTTP 503 par OreExceptionHandler ) ;</li>
+     *   <li>tenter UN seul retry automatique <strong>immediat</strong> en
+     *       cas d'echec initial - couvre les hoquets transients ;</li>
+     *   <li>valider fail-fast les champs minimaux ( cf {@link #validateMessage} )
+     *       pour eviter qu'une erreur de programmation soit classifiee 500 .</li>
+     * </ol>
+     *
+     * <p><b>Trace</b> : un INFO est emis sur succes ( recipient + subject ) ,
+     * pour permettre de tracer exactement ce qui est parti vers le SMTP .
+     * Indispensable au diagnostic "j'ai pas recu de mail" - sans ce log on
+     * ne sait pas si on a meme tente l'envoi .
+     *
+     * <p><b>Borne temps</b> : chaque tentative est limitee par les timeouts
+     * SMTP {@code mail.smtp.connectiontimeout|timeout|writetimeout}
+     * ( configurables via {@code OPENADOM_MAIL_SEND_TIMEOUT_MS} , default
+     * 3000 ms ) . Total worst-case : 2 x timeout = ~6s avant que le caller
+     * recoive l'exception . Pas de sleep entre tentatives .
+     *
+     * <p><b>Garantie "once and only once"</b> : best-effort . Le retry n'est
+     * declenche que si la tentative initiale a leve une {@link MailException} ,
+     * qui dans la quasi-totalite des cas signifie que le SMTP n'a PAS accepte
+     * le message . Cas pathologique extreme : timeout apres ack SMTP mais
+     * avant ack reseau -> double-envoi rare , risque juge acceptable .
+     *
+     * <p>Le service appelant doit considerer qu'aucune mutation downstream
+     * dependante de l'envoi du mail ne doit etre persistee tant que cette
+     * methode n'a pas reussi ( strategie atomique : "send first , persist
+     * after" - cf flow updateAccount / requestEmailChange ) .
+     */
+    private void sendOrThrow(final SimpleMailMessage message) {
+        validateMessage(message);
+        final String recipients = java.util.Arrays.toString(message.getTo());
+        final String subject = message.getSubject();
+        try {
+            mailSender.send(message);
+            log.info("Mail send OK -> to={} subject=\"{}\" from={}", recipients, subject, message.getFrom());
+            return;
+        } catch (final MailException firstAttempt) {
+            log.warn("Mail send attempt 1/2 failed -> to={} subject=\"{}\" cause={}",
+                    recipients, subject, firstAttempt.getMessage());
+            try {
+                mailSender.send(message);
+                log.info("Mail send attempt 2/2 OK after initial failure -> to={} subject=\"{}\"",
+                        recipients, subject);
+            } catch (final MailException secondAttempt) {
+                log.error("Mail send FAILED twice -> to={} subject=\"{}\" - giving up",
+                        recipients, subject, secondAttempt);
+                throw new MailServiceUnavailableException(
+                        "SMTP send failed twice ( initial + 1 immediate retry ) for recipient(s) " + recipients,
+                        secondAttempt);
+            }
+        }
     }
 
     @Override
     public void sendEmail(final String login, final String to, final String subject, final String message) {
         final SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo(to);
-        mailMessage.setFrom(mailFrom);
-        mailMessage.setSubject(subject);
+        mailMessage.setTo(sanitizeHeader(to));
+        mailMessage.setFrom(sanitizeHeader(mailFrom));
+        mailMessage.setSubject(sanitizeHeader(subject));
         mailMessage.setText(String.format(MAIL_MESSAGE_TEMPLATE, login, message));
-        mailSender.send(mailMessage);
+        sendOrThrow(mailMessage);
     }
 
 
@@ -304,16 +458,16 @@ public class EmailService implements Email {
             FileSenderInternationalisation fileSenderInternationalisation,
             String internationnalizedDataName) {
         final SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo(to);
-        mailMessage.setFrom(OPENADOM_INRAE_FR);
-        mailMessage.setSubject(subject);
+        mailMessage.setTo(sanitizeHeader(to));
+        mailMessage.setFrom(sanitizeHeader(mailFrom));
+        mailMessage.setSubject(sanitizeHeader(subject));
         mailMessage.setText(
                 String.format(
                         fileSenderInternationalisation.mailMessagefor(message, FileSenderRepository.DEFAULT_TRANSFER_DAYS_VALID),
                         internationnalizedDataName
                 )
         );
-        mailSender.send(mailMessage);
+        sendOrThrow(mailMessage);
     }
 
     @Override
@@ -347,12 +501,12 @@ public class EmailService implements Email {
         }
 
         final SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo(currentUser.getEmail());
-        mailMessage.setFrom(OPENADOM_INRAE_FR);
-        mailMessage.setSubject(subject);
+        mailMessage.setTo(sanitizeHeader(currentUser.getEmail()));
+        mailMessage.setFrom(sanitizeHeader(mailFrom));
+        mailMessage.setSubject(sanitizeHeader(subject));
         mailMessage.setText(text);
 
-        mailSender.send(mailMessage);
+        sendOrThrow(mailMessage);
     }
 
     @Override
@@ -371,12 +525,12 @@ public class EmailService implements Email {
                 .formatted(dataName, application, body, safeFileName);
 
         final SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo(currentUser.getEmail());
-        mailMessage.setFrom(OPENADOM_INRAE_FR);
-        mailMessage.setSubject(subject);
+        mailMessage.setTo(sanitizeHeader(currentUser.getEmail()));
+        mailMessage.setFrom(sanitizeHeader(mailFrom));
+        mailMessage.setSubject(sanitizeHeader(subject));
         mailMessage.setText(text);
 
-        mailSender.send(mailMessage);
+        sendOrThrow(mailMessage);
     }
 
     public enum UPLOAD_STATE {

@@ -28,10 +28,10 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
     protected String getUpsertQuery() {
         return """
                 INSERT INTO %1$s (
-                    id, login, password, email, accountstate,  authorizations, chartes
+                    id, login, password, email, accountstate,  authorizations, chartes, pendingemail
                 )
                 SELECT
-                    id, lower(login), password, lower(email), accountstate, authorizations, chartes
+                    id, lower(login), password, lower(email), accountstate, authorizations, chartes, lower(pendingemail)
                 FROM json_populate_recordset(NULL::%1$s, :json::json)
                 ON CONFLICT (id)
                 DO UPDATE SET
@@ -41,7 +41,8 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
                 email=lower(EXCLUDED.email),
                 accountstate=EXCLUDED.accountstate,
                 authorizations=EXCLUDED.authorizations,
-                chartes=EXCLUDED.chartes RETURNING id"""
+                chartes=EXCLUDED.chartes,
+                pendingemail=lower(EXCLUDED.pendingemail) RETURNING id"""
                 .formatted(getTable().getSqlIdentifier());
     }
 
@@ -251,7 +252,8 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
                 "updatedate = :updateDate,\n" +
                 "email = :email,\n" +
                 "chartes = :chartes::jsonb,\n" +
-                "password = :password\n" +
+                "password = :password,\n" +
+                "pendingemail = :pendingEmail\n" +
                 "where id = :uuid::uuid\n";
         final ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         final String charte;
@@ -267,7 +269,9 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
                         .addValue("email", oreSiUser.getEmail())
                         .addValue("chartes", charte)
                         .addValue("updateDate", newDate)
-                        .addValue("password", oreSiUser.getPassword()));
+                        .addValue("password", oreSiUser.getPassword())
+                        .addValue("pendingEmail", oreSiUser.getPendingEmail() == null
+                                ? null : oreSiUser.getPendingEmail().toLowerCase()));
         findById(oreSiUser.getId());
     }
 
@@ -278,7 +282,8 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
                 email = :email,
                 chartes = :chartes::jsonb,
                 password = :password,
-                "authorizations" = :authorizations::text[]
+                "authorizations" = :authorizations::text[],
+                pendingemail = :pendingEmail
                 where id = :uuid::uuid
                 """.formatted(getTable().getSqlIdentifier());
         final ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
@@ -291,7 +296,9 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
                         .addValue("chartes", charte)
                         .addValue("authorizations", oreSiUser.getAuthorizations().stream()
                                 .collect(Collectors.joining(", ", "{", "}")))
-                        .addValue("password", oreSiUser.getPassword()));
+                        .addValue("password", oreSiUser.getPassword())
+                        .addValue("pendingEmail", oreSiUser.getPendingEmail() == null
+                                ? null : oreSiUser.getPendingEmail().toLowerCase()));
         return findById(oreSiUser.getId());
     }
 
