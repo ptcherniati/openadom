@@ -153,10 +153,6 @@ public class CacheAdminResources {
         dataService.invalidateFilterListCacheForApplication(application.getName());
         authorizationService.invalidateAuthorizationScopesForApplication(application.getName());
         dataService.invalidateCheckedFormatComponentsForApplication(application.getName());
-        // Cache materialise V8 ( table dediee per-app ) : DELETE rows pour
-        // cette application . Les triggers SQL et hooks Java continuent de
-        // fonctionner ; cet appel est l'equivalent admin manuel .
-        serviceContainer.dataVersioningScopeCacheService().invalidateAllForApp(application);
 
         log.info("Admin invalidate-caches for app {} requested", application.getName());
         return ResponseEntity.ok(Map.of(
@@ -164,8 +160,7 @@ public class CacheAdminResources {
                 "invalidatedCaches", java.util.List.of(
                         "filterList ( app uniquement )",
                         "authorizationScopes ( app uniquement )",
-                        "checkedFormatComponents ( app uniquement )",
-                        "dataVersioningScope ( app uniquement )")
+                        "checkedFormatComponents ( app uniquement )")
         ));
     }
 
@@ -173,11 +168,9 @@ public class CacheAdminResources {
             summary = "Purge tous les caches mémoire du backend ( global )",
             description = "Vide les 4 caches mémoire JVM ( filterList , authorizationScopes , "
                     + "checkedFormatComponents , referencedFiles ) pour toutes les applications "
-                    + "et tous les utilisateurs , ainsi que le cache materialise BDD "
-                    + "{@code data_versioning_scope_cache} ( purge par application iterativement ) . "
-                    + "Réservé à openAdomAdmin ( opération de maintenance ; les premiers hits "
-                    + "suivants paieront le coût du rechargement complet ). Utile en debug ou "
-                    + "après modification transverse de configuration .",
+                    + "et tous les utilisateurs . Réservé à openAdomAdmin ( opération de "
+                    + "maintenance ; les premiers hits suivants paieront le coût du rechargement "
+                    + "complet ). Utile en debug ou après modification transverse de configuration .",
             tags = {"Admin / Caches"},
             responses = {
                     @ApiResponse(
@@ -205,26 +198,16 @@ public class CacheAdminResources {
         // globalement -> cache stale possible apres reset admin , casse la
         // promesse "tous les caches vides" . Fix : appel symetrique avec les
         // autres invalidateAll* .
-        if (serviceContainer.binaryFileService() instanceof fr.inra.oresing.rest.binaryFile.BinaryFileService bfs) {
-            bfs.invalidateAllReferencedFilesCaches();
-        }
-        // dataVersioningScopeCache est materialise BDD ( table per-app ) ,
-        // pas un MemoryCache JVM . Itere sur toutes les apps pour purger
-        // leur table individuelle . Operation rare ( admin uniquement ) ,
-        // cout acceptable pour garantir une purge totale coherente avec
-        // ce que la description annonce a l'admin .
-        int versioningAppsPurged = serviceContainer.dataVersioningScopeCacheService().invalidateAllApps();
+        withBinaryFileService(bfs -> bfs.invalidateAllReferencedFilesCaches());
 
-        log.warn("Admin invalidate-all-caches : tous les caches memoire JVM vides + " +
-                "dataVersioningScopeCache purge sur {} app(s)", versioningAppsPurged);
+        log.warn("Admin invalidate-all-caches : tous les caches memoire JVM vides");
         return ResponseEntity.ok(Map.of(
                 "status", "all caches cleared",
                 "invalidatedCaches", java.util.List.of(
                         "filterList",
                         "authorizationScopes",
                         "checkedFormatComponents",
-                        "referencedFiles",
-                        "dataVersioningScopeCache ( " + versioningAppsPurged + " app(s) )")
+                        "referencedFiles")
         ));
     }
 
@@ -283,19 +266,37 @@ public class CacheAdminResources {
         // etait absent de l'observabilite admin -> oa-live ne pouvait pas
         // l'afficher . Expose desormais flag + capacite + TTL + size + lastWrite ,
         // meme forme que les autres MemoryCache .
-        if (serviceContainer.binaryFileService() instanceof fr.inra.oresing.rest.binaryFile.BinaryFileService bfs) {
-            body.put("referencedFiles", cacheEntryStats(
-                    bfs.isReferencedFilesCacheEnabled(),
-                    bfs.getReferencedFilesCacheMaxEntries(),
-                    bfs.getReferencedFilesCacheTtlMinutes(),
-                    bfs.getReferencedFilesCacheSize(),
-                    bfs.getReferencedFilesCacheLastWriteAt()));
-        }
+        withBinaryFileService(bfs -> body.put("referencedFiles", cacheEntryStats(
+                bfs.isReferencedFilesCacheEnabled(),
+                bfs.getReferencedFilesCacheMaxEntries(),
+                bfs.getReferencedFilesCacheTtlMinutes(),
+                bfs.getReferencedFilesCacheSize(),
+                bfs.getReferencedFilesCacheLastWriteAt())));
         body.put("frontEtagDefaults", Map.of(
                 "maxEntries", dataService.getFrontEtagCacheMaxEntries(),
                 "maxBytesMb", dataService.getFrontEtagCacheMaxBytesMb()
         ));
         return ResponseEntity.ok(body);
+    }
+
+    /**
+     * Helper pour acceder a l'implementation concrete
+     * {@link fr.inra.oresing.rest.binaryFile.BinaryFileService} ( seule a
+     * exposer les accesseurs etendus d'observabilite cache - taille , TTL ,
+     * invalidateAll ) au lieu de l'interface domain
+     * {@link fr.inra.oresing.domain.services.file.BinaryFileService} qui
+     * est minimaliste . Centralise le pattern {@code instanceof} repete
+     * dans {@code invalidateAllCaches} et {@code cacheStats} ( DRY ) .
+     *
+     * <p>Best-effort : si le bean injecte n'est pas l'implementation
+     * attendue ( cas test / mock ) , le consumer n'est juste pas appele
+     * et l'absence de stats / d'invalidation referencedFiles est
+     * silencieuse .
+     */
+    private void withBinaryFileService(java.util.function.Consumer<fr.inra.oresing.rest.binaryFile.BinaryFileService> action) {
+        if (serviceContainer.binaryFileService() instanceof fr.inra.oresing.rest.binaryFile.BinaryFileService bfs) {
+            action.accept(bfs);
+        }
     }
 
     /**

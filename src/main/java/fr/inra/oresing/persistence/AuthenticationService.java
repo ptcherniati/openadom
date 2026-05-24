@@ -254,6 +254,22 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
         return oreSiUser;
     }
 
+    /**
+     * Valide la cle fournie par l'utilisateur ( forgot-password Phase 2 ou
+     * activation de compte ) . Aucun effet de bord en cas d'echec : si la
+     * cle est invalide ou expiree , on jette simplement BAD_VALIDATION_KEY
+     * sans renvoyer un nouveau mail . L'utilisateur dispose d'un mecanisme
+     * dedie de renvoi ( bouton "Renvoyer une nouvelle cle par email" en
+     * UI ) , et un renvoi automatique a chaque tentative serait :
+     * <ul>
+     *   <li>contre-intuitif - le bouton "Valider" ne doit pas envoyer
+     *       un mail ;</li>
+     *   <li>une surface d'abus - un attaquant pourrait spammer l'inbox
+     *       d'une victime en repetant des tentatives de cle ;</li>
+     *   <li>generateur de bruit pour l'utilisateur honnete qui se trompe
+     *       de cle .</li>
+     * </ul>
+     */
     public void validateValidationKey(OreSiUser oreSiUser, final String validationKey) throws AuthenticationFailure {
         OreSiUser oreSiUser1 = oreSiUser;
         String verificationKey = generateVerificationKey(oreSiUser1);
@@ -261,18 +277,15 @@ public class AuthenticationService implements AuthenticationServiceImpl, Authent
         final LocalDateTime updateDate = oreSiUser1.getUpdateDate();
         final Duration duration = Duration.between(updateDate, now);
         if (!verificationKey.equals(validationKey)) {
-            sendValidationKey(oreSiUser1);
             throw new AuthenticationFailure(AuthenticationFailure.BAD_VALIDATION_KEY, oreSiUser1);
         }
-        if (duration.compareTo(Duration.ofMinutes(validationKeyTtlMinutes)) < 0) {
-            setRoleAdmin();
-            oreSiUser1.setAccountstate(OreSiUser.OreSiUserStates.active);
-            oreSiUser1 = userRepository.setState(oreSiUser1.getId(), OreSiUser.OreSiUserStates.active);
-            setRoleForClient();
-        } else {
-            sendValidationKey(oreSiUser1);
+        if (duration.compareTo(Duration.ofMinutes(validationKeyTtlMinutes)) >= 0) {
             throw new AuthenticationFailure(AuthenticationFailure.BAD_VALIDATION_KEY, oreSiUser1);
         }
+        setRoleAdmin();
+        oreSiUser1.setAccountstate(OreSiUser.OreSiUserStates.active);
+        oreSiUser1 = userRepository.setState(oreSiUser1.getId(), OreSiUser.OreSiUserStates.active);
+        setRoleForClient();
         userRepository.findById(oreSiUser1.getId());
     }
 

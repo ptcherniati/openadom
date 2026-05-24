@@ -184,7 +184,14 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
             // frontend swallow optimiste ( security-through-obscurity )
             // se declenche sans leak de l'existence du compte .
             case "BAD_LOGIN_OR_EMAIL_PASSWORD" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
-            case "BAD_PASSWORDS" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
+            // BAD_PASSWORDS = newPassword / newPasswordConfirm vides ou non
+            // identiques ( erreur de saisie utilisateur , PAS une perte
+            // d'authentification ) . 401 declenchait un auto-logout cote
+            // Fetcher.ts -> l'utilisateur connecte se faisait deconnecter
+            // en cliquant Enregistrer sans avoir rempli newPassword . 422 =
+            // Unprocessable Entity -> le frontend peut afficher un toast +
+            // garder la session . Aligne avec BAD_VALIDATION_KEY ci-dessous .
+            case "BAD_PASSWORDS" -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(eee.getMessage());
             // BAD_VALIDATION_KEY = erreur de validation metier ( cle saisie ne
             // match pas ) , PAS une perte d'authentification . 401 declenchait
             // un logout automatique cote Fetcher.ts ( cf bug "wrong key locks

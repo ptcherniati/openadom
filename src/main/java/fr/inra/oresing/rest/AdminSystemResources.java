@@ -26,25 +26,19 @@ import java.util.*;
  *   <li>{@code <schema>.referencevalue_count_stats} ( V5 ) : compteurs
  *       par referencetype , maintenus par triggers AFTER INSERT/DELETE
  *       statement-level + endpoint admin de recompute exact .</li>
- *   <li>{@code <schema>.data_versioning_scope_cache} ( V8 ) : cache
- *       materialise des dropdowns de scope DataVersioning , invalide
- *       par triggers SQL + hooks Java .</li>
  *   <li>{@code <schema>.oresisynthesis} : synthese pre-calculee des
  *       ranges + variables par datatype , alimente le tableau de bord
  *       et l'extraction CSV .</li>
  * </ul>
  *
- * <p>Quatre endpoints exposes , tous sous garde {@code SYSTEM_OPENADOM_ADMIN} :
+ * <p>Trois endpoints exposes , tous sous garde {@code SYSTEM_OPENADOM_ADMIN} :
  *
  * <ul>
  *   <li>{@code GET /admin/applications/{name}/stats-tables/summary} :
- *       compteurs agreges des 3 tables ( rows , last_update , size ) .</li>
+ *       compteurs agreges des 2 tables ( rows , last_update , size ) .</li>
  *   <li>{@code GET /admin/applications/{name}/stats-tables/count-stats} :
  *       liste paginee de {@code referencevalue_count_stats} . Filtre
  *       optionnel {@code refType} .</li>
- *   <li>{@code GET /admin/applications/{name}/stats-tables/data-versioning-scope} :
- *       liste paginee de {@code data_versioning_scope_cache} . Filtres
- *       optionnels {@code refType} , {@code userId} , {@code columnName} .</li>
  *   <li>{@code GET /admin/applications/{name}/stats-tables/synthesis} :
  *       liste paginee de {@code oresisynthesis} . Filtre optionnel
  *       {@code datatype} .</li>
@@ -70,7 +64,6 @@ public class AdminSystemResources {
     private static final String SQL_SELECT_COUNT = "SELECT count(*) FROM ";
     private static final String KEY_LAST_UPDATE = "lastUpdate";
     private static final String KEY_ERROR = "error";
-    private static final String SQL_SUFFIX_DATA_VERSIONING_CACHE = ".data_versioning_scope_cache";
     private static final String SQL_SUFFIX_ORESI_SYNTHESIS = ".oresisynthesis";
     private static final String SQL_AND = " AND ";
     private static final String SQL_WHERE = " WHERE ";
@@ -130,7 +123,6 @@ public class AdminSystemResources {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put(PARAM_APP_NAME, application.getName());
         body.put("countStats", countStatsSummary(schema));
-        body.put("dataVersioningScope", dataVersioningScopeSummary(schema));
         body.put("synthesis", synthesisSummary(schema));
         return ResponseEntity.ok(body);
     }
@@ -148,29 +140,6 @@ public class AdminSystemResources {
             m.put(KEY_LAST_UPDATE, lastUpdate == null ? null : lastUpdate.toInstant().toString());
         } catch (RuntimeException e) {
             log.warn("countStats summary failed for {} : {}", schema, e.getMessage());
-            m.put("rows", 0L);
-            m.put(KEY_ERROR, e.getMessage());
-        }
-        return m;
-    }
-
-    private Map<String, Object> dataVersioningScopeSummary(String schema) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        try {
-            Long rows = jdbc.queryForObject(
-                    SQL_SELECT_COUNT + schema + SQL_SUFFIX_DATA_VERSIONING_CACHE,
-                    Long.class);
-            Timestamp lastUpdate = jdbc.queryForObject(
-                    "SELECT max(computed_at) FROM " + schema + SQL_SUFFIX_DATA_VERSIONING_CACHE,
-                    Timestamp.class);
-            Long sizeBytes = jdbc.queryForObject(
-                    "SELECT pg_total_relation_size('" + schema + ".data_versioning_scope_cache')",
-                    Long.class);
-            m.put("rows", rows == null ? 0L : rows);
-            m.put(KEY_LAST_UPDATE, lastUpdate == null ? null : lastUpdate.toInstant().toString());
-            m.put("sizeBytes", sizeBytes == null ? 0L : sizeBytes);
-        } catch (RuntimeException e) {
-            log.warn("dataVersioningScope summary failed for {} : {}", schema, e.getMessage());
             m.put("rows", 0L);
             m.put(KEY_ERROR, e.getMessage());
         }
@@ -261,80 +230,6 @@ public class AdminSystemResources {
                     row.put("lineCount", rs.getLong("line_count"));
                     Timestamp ts = rs.getTimestamp("updated_at");
                     row.put("updatedAt", ts == null ? null : ts.toInstant().toString());
-                    return row;
-                });
-        return paged(application.getName(), total, l, o, items);
-    }
-
-    // ---------------------------------------------------------------- //
-    //  data-versioning-scope listing                                   //
-    // ---------------------------------------------------------------- //
-
-    @Operation(summary = "Liste paginee de data_versioning_scope_cache .")
-    @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
-    @GetMapping(value = "/{nameOrId}/stats-tables/data-versioning-scope",
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> listDataVersioningScope(
-            @PathVariable("nameOrId") String nameOrId,
-            @RequestParam(name = "limit", required = false) Integer limit,
-            @RequestParam(name = "offset", required = false) Integer offset,
-            @RequestParam(name = "refType", required = false) String refType,
-            @RequestParam(name = "userId", required = false) String userId,
-            @RequestParam(name = "columnName", required = false) String columnName) {
-
-        Application application = serviceContainer.applicationService()
-                .getApplicationOrApplicationAccordingToRights(nameOrId);
-        String schema = quoteIdent(application.getName());
-        int l = boundedLimit(limit);
-        int o = nonNegativeOffset(offset);
-
-        StringBuilder where = new StringBuilder(" WHERE application = ?::uuid ");
-        List<Object> params = new ArrayList<>();
-        params.add(application.getId().toString());
-
-        if (refType != null && !refType.isBlank()) {
-            where.append(" AND reference_type = ? ");
-            params.add(refType);
-        }
-        if (columnName != null && !columnName.isBlank()) {
-            where.append(" AND column_name = ? ");
-            params.add(columnName);
-        }
-        if (userId != null && !userId.isBlank()) {
-            // Validation UUID stricte pour eviter une SQLException opaque
-            // sur un cast invalide cote PG .
-            try {
-                UUID.fromString(userId);
-            } catch (IllegalArgumentException ex) {
-                return ResponseEntity.badRequest().body(Map.of(
-                        KEY_ERROR, "userId must be a valid UUID : " + userId));
-            }
-            where.append(" AND user_id = ?::uuid ");
-            params.add(userId);
-        }
-
-        Long total = jdbc.queryForObject(
-                SQL_SELECT_COUNT + schema + SQL_SUFFIX_DATA_VERSIONING_CACHE + where,
-                params.toArray(), Long.class);
-
-        params.add(l);
-        params.add(o);
-        List<Map<String, Object>> items = jdbc.query(
-                "SELECT application::text, reference_type, column_name, user_id::text, "
-                + "       visible_values::text AS visible_values_json, computed_at "
-                + "FROM " + schema + SQL_SUFFIX_DATA_VERSIONING_CACHE
-                + where
-                + " ORDER BY reference_type, column_name, user_id LIMIT ? OFFSET ?",
-                params.toArray(),
-                (rs, n) -> {
-                    Map<String, Object> row = new LinkedHashMap<>();
-                    row.put("application", rs.getString("application"));
-                    row.put("referenceType", rs.getString("reference_type"));
-                    row.put("columnName", rs.getString("column_name"));
-                    row.put("userId", rs.getString("user_id"));
-                    row.put("visibleValues", rs.getString("visible_values_json"));
-                    Timestamp ts = rs.getTimestamp("computed_at");
-                    row.put("computedAt", ts == null ? null : ts.toInstant().toString());
                     return row;
                 });
         return paged(application.getName(), total, l, o, items);

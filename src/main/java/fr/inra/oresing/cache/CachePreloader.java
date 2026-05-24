@@ -38,10 +38,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  *       thread appelant .</li>
  * </ul>
  *
- * <p>Out of scope : {@code authorizationScopesCache} et
- * {@code data_versioning_scope_cache} sont scopes par utilisateur ; on
- * ne peut pas les prechauffer sans connaitre l'identite de chaque
- * appelant futur .
+ * <p>Out of scope : {@code authorizationScopesCache} est scope par
+ * utilisateur ; on ne peut pas le prechauffer sans connaitre l'identite
+ * de chaque appelant futur .
  *
  * <p>Erreurs : chaque task est isolee ; un echec sur 1 dataName ne
  * stoppe pas les autres . Le compteur d'erreurs est remonte dans la

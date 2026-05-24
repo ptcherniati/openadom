@@ -39,7 +39,6 @@ class CacheAdminResourcesUnitTest {
     private DataService dataService;
     private AuthorizationService authorizationService;
     private ApplicationService applicationService;
-    private fr.inra.oresing.cache.DataVersioningScopeCacheService dataVersioningScopeCacheService;
     private fr.inra.oresing.rest.binaryFile.BinaryFileService binaryFileService;
     private fr.inra.oresing.cache.CacheSizeEstimator cacheSizeEstimator;
     private fr.inra.oresing.cache.CachePreloader cachePreloader;
@@ -51,7 +50,6 @@ class CacheAdminResourcesUnitTest {
         dataService = mock(DataService.class);
         authorizationService = mock(AuthorizationService.class);
         applicationService = mock(ApplicationService.class);
-        dataVersioningScopeCacheService = mock(fr.inra.oresing.cache.DataVersioningScopeCacheService.class);
         // Mock du type concret ( pas de l'interface ) parce que CacheAdmin
         // teste {@code instanceof rest.binaryFile.BinaryFileService} pour
         // accéder aux méthodes d'observabilité étendues ( taille / TTL /
@@ -64,7 +62,6 @@ class CacheAdminResourcesUnitTest {
         when(serviceContainer.dataService()).thenReturn(dataService);
         when(serviceContainer.authorizationService()).thenReturn(authorizationService);
         when(serviceContainer.applicationService()).thenReturn(applicationService);
-        when(serviceContainer.dataVersioningScopeCacheService()).thenReturn(dataVersioningScopeCacheService);
         when(serviceContainer.binaryFileService()).thenReturn(binaryFileService);
 
         resources = new CacheAdminResources(serviceContainer, cacheSizeEstimator, cachePreloader);
@@ -93,20 +90,17 @@ class CacheAdminResourcesUnitTest {
     }
 
     @Test
-    void invalidateAllCaches_purgeLes5CachesGlobalement() {
+    void invalidateAllCaches_purgeLes4CachesGlobalement() {
         // Sprint cache invalidation ( 23/5/26 ) : la purge globale doit
-        // toucher TOUS les caches promis par la description Swagger , pas
-        // seulement les 3 historiques . Ajout de referencedFiles ( JVM )
-        // et dataVersioningScopeCache ( materialise BDD , itere par app ) .
-        when(dataVersioningScopeCacheService.invalidateAllApps()).thenReturn(3);
-
+        // toucher TOUS les caches JVM promis par la description Swagger .
+        // Inclut filterList , authorizationScopes , checkedFormatComponents
+        // et referencedFiles ( ce dernier auparavant absent ) .
         ResponseEntity<Map<String, Object>> response = resources.invalidateAllCaches();
 
         verify(dataService).invalidateAllFilterListCaches();
         verify(authorizationService).invalidateAllAuthorizationScopes();
         verify(dataService).invalidateAllCheckedFormatComponents();
         verify(binaryFileService).invalidateAllReferencedFilesCaches();
-        verify(dataVersioningScopeCacheService).invalidateAllApps();
 
         assertEquals(200, response.getStatusCode().value());
         Map<String, Object> body = response.getBody();
@@ -114,15 +108,11 @@ class CacheAdminResourcesUnitTest {
         assertEquals("all caches cleared", body.get("status"));
         @SuppressWarnings("unchecked")
         java.util.List<String> invalidated = (java.util.List<String>) body.get("invalidatedCaches");
-        // Verifie que la response liste les 5 caches purges ( pas 3 )
-        assertEquals(5, invalidated.size());
+        assertEquals(4, invalidated.size());
         assertTrue(invalidated.contains("filterList"));
         assertTrue(invalidated.contains("authorizationScopes"));
         assertTrue(invalidated.contains("checkedFormatComponents"));
         assertTrue(invalidated.contains("referencedFiles"));
-        // dataVersioningScopeCache porte le suffixe avec le nombre d'apps
-        assertTrue(invalidated.stream().anyMatch(s -> s.startsWith("dataVersioningScopeCache")));
-        assertTrue(invalidated.stream().anyMatch(s -> s.contains("3 app(s)")));
     }
 
     @Test

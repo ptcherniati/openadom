@@ -37,7 +37,7 @@ public class EmailService implements Email {
                                                    "Pour valider votre e-mail, renseignez la clé de validation lors de la connexion.";
     private static final String EMAIL_CHANGED_EN = "You have just changed your email. \n" +
                                                    "To validate your e-mail, enter the validation key when connecting.";
-    private static final String VALIDATION_KEY_SUBJECT = "Clef de validation / Validation key";
+    private static final String VALIDATION_KEY_SUBJECT = "Clé de validation / Validation key";
     private static final Map<UPLOAD_STATE, Map<Locale, String>> SUCCESS_UPLOAD_SUBJECTS = Map.ofEntries(
             Map.entry(UNPUBLISHED, Map.of(
                     Locale.FRENCH, "Votre fichier a bien été dépublié",

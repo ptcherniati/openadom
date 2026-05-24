@@ -70,11 +70,6 @@ public class OreSiRepository {
             return beanFactory.getBean(DataSynthesisRepository.class, application);
         }
 
-        public DataVersioningScopeCacheRepository dataVersioningScopeCache() {
-            return beanFactory.getBean(DataVersioningScopeCacheRepository.class,
-                    application, namedParameterJdbcTemplate);
-        }
-
         public RightsRequestRepository rightsRequestRepository() {
             return beanFactory.getBean(RightsRequestRepository.class, application);
         }

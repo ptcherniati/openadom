@@ -208,7 +208,6 @@ public class OreSiResources {
     private final GetFormatCheckedUseCase getFormatCheckedUseCase;
     private final GetReferenceDisplaysByIdUseCase getReferenceDisplaysByIdUseCase;
     private final GetDataCsvStreamUseCase getDataCsvStreamUseCase;
-    private final GetDataColumnUseCase getDataColumnUseCase;
     private final FindDataUseCase findDataUseCase;
     private final GetCheckedFormatComponentsUseCase getCheckedFormatComponentsUseCase;
     private final DeleteDataUseCase deleteDataUseCase;
@@ -290,7 +289,6 @@ public class OreSiResources {
             GetFormatCheckedUseCase getFormatCheckedUseCase,
             GetReferenceDisplaysByIdUseCase getReferenceDisplaysByIdUseCase,
             GetDataCsvStreamUseCase getDataCsvStreamUseCase,
-            GetDataColumnUseCase getDataColumnUseCase,
             GetFileWithDataUseCase getFileWithDataUseCase,
             GetFilesOnRepositoryUseCase getFilesOnRepositoryUseCase,
             FindDataUseCase findDataUseCase,
@@ -345,7 +343,6 @@ public class OreSiResources {
         this.getFormatCheckedUseCase = getFormatCheckedUseCase;
         this.getReferenceDisplaysByIdUseCase = getReferenceDisplaysByIdUseCase;
         this.getDataCsvStreamUseCase = getDataCsvStreamUseCase;
-        this.getDataColumnUseCase = getDataColumnUseCase;
         this.getFileWithDataUseCase = getFileWithDataUseCase;
         this.getFilesOnRepositoryUseCase = getFilesOnRepositoryUseCase;
         this.findDataUseCase = findDataUseCase;
@@ -795,61 +792,6 @@ public class OreSiResources {
         return okResponse(application.getOrderedReferences());
     }
 
-    /**
-     * Liste toutes les valeurs possibles pour un type de referenciel
-     *
-     * @param nameOrId l'id ou le nom de l'application
-     * @param refType  le type du referenciel
-     * @return un tableau de chaine
-     */
-    private ResponseEntity<GetReferenceResult> listDataForColumn(
-            final String nameOrId,
-            final String refType,
-            final MultiValueMap<String, String> params) {
-        final List<DataValue> list = findReferenceUseCase.execute(nameOrId, refType, params);
-
-        final Map<String, Map<String, LineChecker>> checkedFormatColumns = getFormatCheckedUseCase.execute(nameOrId, refType);
-        Set<String> listOfReferenceIds = list.stream()
-                .map(DataValue::getReferenceType)
-                .collect(Collectors.toSet());
-        final Map<Ltree, List<DataValue>> requiredReferencesValues = getReferenceDisplaysByIdUseCase.execute(
-            getApplicationOrAccordingToRightsUseCase.execute(nameOrId),
-            listOfReferenceIds);
-        Map<String, LineChecker> referenceLineCheckers = checkedFormatColumns.get(ReferenceType.class.getSimpleName());
-        Map<String, String> referenceTypeForReferencingColumns =
-                Optional.ofNullable(checkedFormatColumns.get(ReferenceType.class.getSimpleName()))
-                        .map(checkedFormatColumn -> checkedFormatColumn.entrySet()
-                                .stream()
-                                .collect(Collectors.toMap(
-                                                Map.Entry::getKey,
-                                                e -> Optional.of(e)
-                                                        .map(Map.Entry::getValue)
-                                                        .map(LineChecker::underlyingType)
-                                                        .filter(ReferenceType.class::isInstance)
-                                                        .map(c -> (ReferenceType) c)
-                                                        .map(ReferenceType::getRefType)
-                                                        .orElse("erreur")
-                                        )
-                                )
-                        )
-                        .orElseGet(LinkedHashMap::new);
-        final ImmutableSet<GetReferenceResult.ReferenceValue> referenceValues = list.stream()
-                .map(referenceValue ->
-                        new GetReferenceResult.ReferenceValue(
-                                referenceValue.getId().toString(),
-                                referenceValue.getPatternColumnName(),
-                                referenceValue.getHierarchicalKey().getSql(),
-                                referenceValue.getNaturalKey().getSql(),
-                                referenceValue.getRefValues().toJsonForFrontend(),
-                                referenceValue.getRefsLinkedTo(),
-                                referenceValue.getReferencingreferences()
-                        )
-                )
-                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetReferenceResult.ReferenceValue::commparingValue)));
-        return okResponse(new GetReferenceResult(referenceValues,
-                referenceTypeForReferencingColumns));
-    }
-
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/data/{refType}/csv", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> listDataCsv(
@@ -889,14 +831,6 @@ public class OreSiResources {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(streamResponseBody);
-    }
-
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
-    @GetMapping(value = "/applications/{nameOrId}/data/{refType}/{column}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<List<String>>> listDataForColumn(@PathVariable("nameOrId") final String nameOrId, @PathVariable("refType") final String refType, @PathVariable("column") final String column) {
-        final Application application = getApplicationUseCase.execute(nameOrId);
-        final List<List<String>> result = getDataColumnUseCase.execute(application, refType, column);
-        return okResponse(result);
     }
 
     protected ResponseEntity<Map<String, Object>> createData(

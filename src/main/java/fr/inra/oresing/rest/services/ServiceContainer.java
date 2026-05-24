@@ -58,8 +58,4 @@ public class ServiceContainer {
     public Email emailService() {
         return (Email) context.getBean("emailService");
     }
-
-    public fr.inra.oresing.cache.DataVersioningScopeCacheService dataVersioningScopeCacheService() {
-        return context.getBean(fr.inra.oresing.cache.DataVersioningScopeCacheService.class);
-    }
 }
