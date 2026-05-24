@@ -62,6 +62,44 @@ public class AuthorizationRepository extends JsonTableInApplicationSchemaReposit
         return getNamedParameterJdbcTemplate().query(query, sqlParams, getJsonRowMapper());
     }
 
+    /**
+     * Verifie l'existence d'une autorisation portant ce nom ( case-insensitive )
+     * pour l'application courante , en excluant optionnellement une autorisation
+     * deja existante ( utile pour les flows d'update : on autorise un nom
+     * "existant" tant que c'est celui de l'autorisation qu'on est en train
+     * de modifier ) .
+     *
+     * <p>Pre-check applicatif executable avant le store ( pas de contrainte
+     * unique SQL en BDD a ce jour ) : permet de remonter une erreur metier
+     * claire ( AUTHORIZATION_NAME_EXISTS ) plutot qu'une violation SQL
+     * cryptique en 500 .
+     *
+     * @param name nom a verifier ( trim + lower applique cote SQL )
+     * @param excludeId id a ignorer lors de la recherche ; {@code null}
+     *                  pour une creation
+     */
+    public boolean existsByName(final String name, final UUID excludeId) {
+        if (name == null || name.isBlank()) {
+            return false;
+        }
+        final String query = String.format("""
+                        SELECT EXISTS (
+                          SELECT 1 FROM %s t
+                          WHERE t.application = :applicationId
+                            AND lower(trim(t.name)) = lower(trim(:name))
+                            AND (:excludeId::uuid IS NULL OR t.id <> :excludeId::uuid)
+                        )
+                        """,
+                getTable().getSqlIdentifier()
+        );
+        final MapSqlParameterSource sqlParams = new MapSqlParameterSource("applicationId", getApplication().getId())
+                .addValue("name", name)
+                .addValue("excludeId", excludeId == null ? null : excludeId.toString());
+        return Boolean.TRUE.equals(
+                getNamedParameterJdbcTemplate().queryForObject(query, sqlParams, Boolean.class)
+        );
+    }
+
     public List<OreSiAuthorization> findPublicAuthorizations() {
         final String query = String.format("""
                         SELECT '%1$s' AS "@class", to_jsonb(t) AS json

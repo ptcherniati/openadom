@@ -8,6 +8,13 @@ import java.util.stream.Collectors;
 @Getter
 public enum AuthorizationRequestException {
     NO_AUTHORIZATION_NAME,
+    /**
+     * Tentative de creation d'une autorisation alors qu'une autorisation
+     * portant le meme nom existe deja pour cette application . Erreur
+     * metier remontee en 422 vers le frontend qui affiche un toast et
+     * marque le champ {@code name} en rouge ( setFieldError ) .
+     */
+    AUTHORIZATION_NAME_EXISTS,
     BAD_REFERENCES,
 
     BAD_FILE_NAME_START_DATE,

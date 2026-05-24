@@ -31,6 +31,8 @@ import fr.inra.oresing.domain.data.menu.ReferenceScope;
 import fr.inra.oresing.domain.exceptions.ExceptionMessage;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
+import fr.inra.oresing.domain.exceptions.authorization.AuthorizationRequestException;
+import fr.inra.oresing.domain.exceptions.authorization.SiOreAuthorizationRequestException;
 import fr.inra.oresing.domain.exceptions.role.role.BadApplicationRoleException;
 import fr.inra.oresing.domain.exceptions.role.role.BadRoleException;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
@@ -295,6 +297,21 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         final OreSiAuthorization entity = previous == null ?
                 new OreSiAuthorization()
                 : previous;
+        // Pre-check unicite du nom au sein de l'application . Sans ce garde-fou ,
+        // une tentative de creation avec un nom deja pris se solde par un 500
+        // ( exception PG ou silencieux ) , et l'utilisateur reste devant un
+        // formulaire qui n'a rien sauve sans aucun feedback . On remonte
+        // explicitement {@code AUTHORIZATION_NAME_EXISTS} ( 422 ) que le
+        // frontend transforme en toast + setFieldError sur le champ name .
+        // Lors d'un update on exclut l'autorisation en cours pour autoriser
+        // un "save" sans changement de nom .
+        if (authorizationRepository.existsByName(authorizationRequest.name(),
+                previous == null ? null : previous.getId())) {
+            throw new SiOreAuthorizationRequestException(
+                    AuthorizationRequestException.AUTHORIZATION_NAME_EXISTS,
+                    Map.of("name", authorizationRequest.name())
+            );
+        }
         final Map<String, AuthorizationForScope> authorizationsByDataType = authorizationRequest.buildAuthorizationsByDataname();
 
         Preconditions.checkArgument(

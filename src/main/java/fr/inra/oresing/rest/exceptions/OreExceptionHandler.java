@@ -109,6 +109,24 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     /**
+     * Erreurs metier des requetes d'autorisation ( ex
+     * {@code AUTHORIZATION_NAME_EXISTS} lors de la creation d'une autorisation
+     * avec un nom deja pris pour l'application ) . 422 Unprocessable Entity :
+     * la requete est syntaxiquement valide mais ne peut etre traitee pour
+     * raison metier . Le body contient le code enum + les params pour que le
+     * frontend resolve l'i18n exceptionMessage.<CODE> et marque le bon champ
+     * du formulaire en rouge via setFieldError .
+     */
+    @ExceptionHandler(fr.inra.oresing.domain.exceptions.authorization.SiOreAuthorizationRequestException.class)
+    public ResponseEntity<Map<String, Object>> handle(final fr.inra.oresing.domain.exceptions.authorization.SiOreAuthorizationRequestException eee) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of(
+                "code", eee.getException().name(),
+                KEY_MESSAGE, eee.getException().name(),
+                "params", eee.getParams() == null ? Map.of() : eee.getParams()
+        ));
+    }
+
+    /**
      * Reject 409 Conflict lorsqu'une operation lifecycle ( PUBLISH / UNPUBLISH /
      * DELETE_FILE ) est deja en cours sur le meme fileId . Le corps de la
      * reponse contient le code {@code WORKFLOW_ALREADY_IN_PROGRESS} + les

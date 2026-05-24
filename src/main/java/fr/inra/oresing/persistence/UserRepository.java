@@ -28,10 +28,10 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
     protected String getUpsertQuery() {
         return """
                 INSERT INTO %1$s (
-                    id, login, password, email, accountstate,  authorizations, chartes, pendingemail
+                    id, login, password, email, accountstate,  authorizations, chartes
                 )
                 SELECT
-                    id, lower(login), password, lower(email), accountstate, authorizations, chartes, lower(pendingemail)
+                    id, lower(login), password, lower(email), accountstate, authorizations, chartes
                 FROM json_populate_recordset(NULL::%1$s, :json::json)
                 ON CONFLICT (id)
                 DO UPDATE SET
@@ -41,8 +41,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
                 email=lower(EXCLUDED.email),
                 accountstate=EXCLUDED.accountstate,
                 authorizations=EXCLUDED.authorizations,
-                chartes=EXCLUDED.chartes,
-                pendingemail=lower(EXCLUDED.pendingemail) RETURNING id"""
+                chartes=EXCLUDED.chartes RETURNING id"""
                 .formatted(getTable().getSqlIdentifier());
     }
 

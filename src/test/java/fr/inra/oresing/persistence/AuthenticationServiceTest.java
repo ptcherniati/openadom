@@ -84,29 +84,35 @@ class AuthenticationServiceTest extends AbstractIntegrationTest {
         assertEquals(login, loginAdminResult.login());
         final OreSiUserRole userRole = authenticationService.getUserRole(UUID.fromString(id));
 
+        // Depuis le refacto "suppression pendingEmail" ( commit 4cb62e30 ) le
+        // nouvel email cible n'est plus stocke en base entre les 2 phases :
+        // le frontend doit transporter {@code email=newEmail} dans le
+        // payload de chaque phase ( Phase 1 : declenche l'envoi de la cle ;
+        // Phase 2 : la cle + le meme newEmail permettent au backend de
+        // recomputer la cle attendue et de comparer ) . Le state reste
+        // "active" tout au long du flow ( aucun pending intermediaire ) .
+        final String newEmail = "newmail@inrae.fr";
+
+        // Phase 1 : declenche l'envoi de la cle au nouvel email .
         mockMvc.perform(put("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{ \"login\": \"" + login + "\", \"email\": \"" + email + "\"}"))
+                        .content("{ \"login\": \"" + login + "\", \"password\": \"" + password + "\", \"email\": \"" + newEmail + "\"}"))
                 .andExpect(jsonPath("$.accountState", Matchers.is("active")))
                 .andReturn().getResponse().getContentAsString();
         Mockito.verify(mailSender, Mockito.times(2)).send(messageArgumentCaptor.capture());
         message = messageArgumentCaptor.getValue();
-        assertArrayEquals(new String[]{email}, message.getTo());
+        assertArrayEquals(new String[]{newEmail}, message.getTo());
         assertEquals(mailFrom, message.getFrom());
         Objects.requireNonNull(message.getText()).split("\n");
 
-        final String newEmail = "newmail@inrae.fr";
-        // Note : depuis le fix "wrong validation key locks out user" ( V17 +
-        // pending_email decouple ) , un changement d'email NE FAIT PLUS
-        // basculer le compte en pending . user.email + accountstate restent
-        // intacts tant que la cle n'est pas validee ; pending_email porte
-        // la cible . Le state reste donc "active" tout au long du flow .
         validationKey = getValidationKey(messageArgumentCaptor, login, password, "active", newEmail);
 
-        //on valide l'email
+        // Phase 2 : valide la cle + applique le swap email = newEmail . Le
+        // payload doit reporter {@code email=newEmail} pour que le backend
+        // recompute la meme cle ( cf {@code commitEmailChange} ) .
         mockMvc.perform(put("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{ \"login\": \"" + login + "\", \"password\": \"" + password + "\", \"verificationKey\": \"" + validationKey + "\"}"))
+                        .content("{ \"login\": \"" + login + "\", \"password\": \"" + password + "\", \"email\": \"" + newEmail + "\", \"verificationKey\": \"" + validationKey + "\"}"))
                 .andExpect(jsonPath("$.accountState", Matchers.is("active")))
                 .andReturn().getResponse().getContentAsString();
 
