@@ -151,22 +151,44 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
 
+    /**
+     * Reponse "compte non encore activable a la connexion" : etats {@code idle}
+     * ( INACTIVE_ACCOUNT ) et {@code pending} ( PENDING_ACCOUNT ) . Dans les
+     * deux cas le backend a deja renvoye une nouvelle cle de validation a
+     * l'utilisateur ( cf {@link AuthenticationService#login} ) et le frontend
+     * doit basculer sur l'ecran de saisie de cle plutot que de loguer .
+     *
+     * <p>Le code HTTP {@code 402 PAYMENT_REQUIRED} et les headers
+     * {@code Id} / {@code Login} / {@code Email} / {@code Result__State} sont
+     * lus par {@code Signin.vue#handleInactiveAccountResponse} : le frontend
+     * sait alors quel utilisateur est concerne sans avoir a re-questionner
+     * le backend .
+     */
+    private ResponseEntity<String> accountStateResponse(final AuthenticationFailure eee) {
+        final HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.set("Id", Optional.ofNullable(eee.getParams())
+                .map(m -> m.get("id"))
+                .map(Object::toString)
+                .orElse(""));
+        responseHeaders.set("Login", Optional.ofNullable(eee.getParams()).map(m -> (String) m.get(("login"))).orElse(""));
+        responseHeaders.set("Email", Optional.ofNullable(eee.getParams()).map(m -> (String) m.get(("email"))).orElse(""));
+        responseHeaders.set("Result__State", Optional.ofNullable(eee.getParams()).map(m -> (String) m.get(("state"))).orElse(""));
+        return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED)
+                .headers(responseHeaders)
+                .body(eee.getMessage());
+    }
+
     @ExceptionHandler(AuthenticationFailure.class)
     public ResponseEntity<String> handle(final AuthenticationFailure eee) {
         return switch (eee.getMessage()) {
-            case "INACTIVE_ACCOUNT" -> {
-                final HttpHeaders responseHeaders = new HttpHeaders();
-                responseHeaders.set("Id", Optional.ofNullable(eee.getParams())
-                        .map(m -> m.get("id"))
-                        .map(Object::toString)
-                        .orElse(""));
-                responseHeaders.set("Login", Optional.ofNullable(eee.getParams()).map(m -> (String) m.get(("login"))).orElse(""));
-                responseHeaders.set("Email", Optional.ofNullable(eee.getParams()).map(m -> (String) m.get(("email"))).orElse(""));
-                responseHeaders.set("Result__State", Optional.ofNullable(eee.getParams()).map(m -> (String) m.get(("state"))).orElse(""));
-                yield ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED)
-                        .headers(responseHeaders)
-                        .body(eee.getMessage());
-            }
+            // INACTIVE_ACCOUNT ( idle ) et PENDING_ACCOUNT ( pending ) :
+            // memes semantiques cote frontend ( basculer sur l'ecran cle
+            // d'activation , une nouvelle cle a deja ete envoyee par mail ) ,
+            // donc meme reponse HTTP . Le state precis ( idle / pending ) est
+            // porte par le header {@code Result__State} si jamais le frontend
+            // doit ajuster l'UX pour distinguer "premiere activation" vs
+            // "activation interrompue" .
+            case "INACTIVE_ACCOUNT", "PENDING_ACCOUNT" -> accountStateResponse(eee);
             case "EXISTING_LOGIN" -> ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body(eee.getMessage());
             // EXISTING_EMAIL = email cible deja pris par un autre utilisateur
             // ( creation OU changement d'email ) . 422 metier , pas 412
@@ -203,6 +225,13 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
             // toast rouge ( pas vert ) - garantit l'invariant "200 OK = mail
             // bien envoye" .
             case "EMAIL_UNCHANGED" -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(eee.getMessage());
+            // CLOSED_ACCOUNT = compte ferme , l'utilisateur ne peut plus se
+            // connecter ni se reactiver lui-meme . 410 GONE = ressource
+            // definitivement indisponible , distinct du 402 ( pending ,
+            // reactivable via cle ) et du 403 generique ( hors etats compte ) .
+            // Le frontend ( Signin.vue ) intercepte 410 pour afficher une
+            // banniere danger + toast invitant a contacter l'admin .
+            case "CLOSED_ACCOUNT" -> ResponseEntity.status(HttpStatus.GONE).body(eee.getMessage());
             case "BAD_REQUEST" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
             default -> ResponseEntity.status(HttpStatus.FORBIDDEN).body(eee.getMessage());
         };
