@@ -39,13 +39,6 @@ public class AuthenticationFailure extends OreSiException {
     public static final String BAD_LOGIN_OR_EMAIL_PASSWORD = "BAD_LOGIN_OR_EMAIL_PASSWORD";
     public static final String BAD_PASSWORDS = "BAD_PASSWORDS";
     /**
-     * Soumission d'une cle de validation alors qu'aucun changement d'email
-     * n'est en attente ( pending_email NULL ) . Cas degenere : double-submit
-     * apres succes , ou appel direct hors flow . Le client doit relancer la
-     * phase 1 ( nouvel email ) avant de re-valider .
-     */
-    public static final String NO_PENDING_EMAIL_CHANGE = "NO_PENDING_EMAIL_CHANGE";
-    /**
      * Phase 1 d'un changement d'email appelee sans changement effectif :
      * email cible identique a l'email courant , aucun mot de passe a changer ,
      * aucune cle de validation . L'appel est un no-op et NE DOIT PAS provoquer

@@ -252,8 +252,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
                 "updatedate = :updateDate,\n" +
                 "email = :email,\n" +
                 "chartes = :chartes::jsonb,\n" +
-                "password = :password,\n" +
-                "pendingemail = :pendingEmail\n" +
+                "password = :password\n" +
                 "where id = :uuid::uuid\n";
         final ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         final String charte;
@@ -269,9 +268,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
                         .addValue("email", oreSiUser.getEmail())
                         .addValue("chartes", charte)
                         .addValue("updateDate", newDate)
-                        .addValue("password", oreSiUser.getPassword())
-                        .addValue("pendingEmail", oreSiUser.getPendingEmail() == null
-                                ? null : oreSiUser.getPendingEmail().toLowerCase()));
+                        .addValue("password", oreSiUser.getPassword()));
         findById(oreSiUser.getId());
     }
 
@@ -282,8 +279,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
                 email = :email,
                 chartes = :chartes::jsonb,
                 password = :password,
-                "authorizations" = :authorizations::text[],
-                pendingemail = :pendingEmail
+                "authorizations" = :authorizations::text[]
                 where id = :uuid::uuid
                 """.formatted(getTable().getSqlIdentifier());
         final ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
@@ -296,9 +292,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
                         .addValue("chartes", charte)
                         .addValue("authorizations", oreSiUser.getAuthorizations().stream()
                                 .collect(Collectors.joining(", ", "{", "}")))
-                        .addValue("password", oreSiUser.getPassword())
-                        .addValue("pendingEmail", oreSiUser.getPendingEmail() == null
-                                ? null : oreSiUser.getPendingEmail().toLowerCase()));
+                        .addValue("password", oreSiUser.getPassword()));
         return findById(oreSiUser.getId());
     }
 

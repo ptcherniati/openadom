@@ -198,9 +198,6 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
             // out user" ) . 422 = Unprocessable Entity -> le frontend peut
             // afficher un toast + permettre retry sans deconnecter .
             case "BAD_VALIDATION_KEY" -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(eee.getMessage());
-            // NO_PENDING_EMAIL_CHANGE = double-submit ou flow casse , meme
-            // logique : 422 pour ne pas confondre avec auth invalide .
-            case "NO_PENDING_EMAIL_CHANGE" -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(eee.getMessage());
             // EMAIL_UNCHANGED = phase 1 appelee sans changement effectif . Le
             // backend N'A PAS envoye de mail ; le frontend doit afficher un
             // toast rouge ( pas vert ) - garantit l'invariant "200 OK = mail
