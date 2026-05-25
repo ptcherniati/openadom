@@ -34,6 +34,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.support.WebExchangeBindException;
 import io.jsonwebtoken.ExpiredJwtException;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.CantSelfRevokeApplicationRoleException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.DisconnectedException;
 
 import java.util.List;
@@ -170,6 +171,21 @@ class OreExceptionHandlerTest {
         OreSiTechnicalException techException = new OreSiTechnicalException("Technical error");
         ResponseEntity<OreSiTechnicalException> techResponse = exceptionHandler.handle(techException);
         assertDoesNotThrow(() -> objectMapper.writeValueAsString(techResponse.getBody()));
+    }
+
+    /**
+     * Vérifie que l'auto-révocation ( règle métier ) renvoie 400 et non 401
+     * - le fallback générique du package {@code privilegeassessor.exception}
+     * mapperait sur 401 et déclencherait une déconnexion automatique côté
+     * Fetcher .
+     */
+    @Test
+    void testCantSelfRevokeReturnsBadRequestNotUnauthorized() {
+        CantSelfRevokeApplicationRoleException ex = new CantSelfRevokeApplicationRoleException();
+        ResponseEntity<OreSiTechnicalException> response = exceptionHandler.handle(ex);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(CantSelfRevokeApplicationRoleException.CANT_SELF_REVOKE_APPLICATION_ROLE,
+                response.getBody().getMessage());
     }
 
     @Test

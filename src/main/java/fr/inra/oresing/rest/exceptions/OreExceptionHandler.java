@@ -1,6 +1,7 @@
 package fr.inra.oresing.rest.exceptions;
 
 import com.google.common.base.Throwables;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.CantSelfRevokeApplicationRoleException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.DisconnectedException;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResultRest;
@@ -282,6 +283,21 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(BadApplicationConfigurationException.class)
     public ResponseEntity<ConfigurationException> handle(final BadApplicationConfigurationException badApplicationConfigurationException) {
         return ResponseEntity.badRequest().body(badApplicationConfigurationException.getConfigurationException());
+    }
+
+    /**
+     * Cas particulier : l'auto-révocation par un applicationManager / userManager
+     * n'est PAS un échec d'authentification ( l'utilisateur a un JWT valide
+     * et est bien authentifié ) , c'est une règle métier qui interdit
+     * l'opération . Mapper en 401 déclencherait le mécanisme de déconnexion
+     * automatique côté frontend ( Fetcher ) , ce qui dérouterait l'utilisateur .
+     * On renvoie donc {@code 400 BAD_REQUEST} avec le code applicatif
+     * {@code CANT_SELF_REVOKE_APPLICATION_ROLE} dans le body pour permettre
+     * un message d'erreur ciblé sans logout .
+     */
+    @ExceptionHandler(CantSelfRevokeApplicationRoleException.class)
+    public ResponseEntity<OreSiTechnicalException> handle(final CantSelfRevokeApplicationRoleException ex) {
+        return ResponseEntity.badRequest().body(ex);
     }
 
     @ExceptionHandler(OreSiTechnicalException.class)
