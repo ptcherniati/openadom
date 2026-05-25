@@ -95,7 +95,14 @@ public class AuthorizationResources {
         return getAdminAuthorizationsUseCase.execute();
     }
 
-    @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
+    // Permission alignee sur le POST/PUT d'autorisation ( cf endpoint
+    // addOrUpdateAuthorization plus bas , meme {@code @PreAuthorize} ) :
+    // qui peut creer ou modifier une autorisation doit pouvoir la
+    // recharger pour l'editer . L'ancienne contrainte SYSTEM_OPENADOM_ADMIN
+    // empechait un applicationManager d'editer ses propres autorisations
+    // ( clic sur le crayon -> 401 -> auto-logout cote frontend ) bien
+    // qu'il puisse les creer , incoherence corrigee ici .
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @GetMapping(value = "/applications/{nameOrId}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetAuthorizationResult> getAuthorizationById(
             @PathVariable("nameOrId") final String applicationNameOrId,
