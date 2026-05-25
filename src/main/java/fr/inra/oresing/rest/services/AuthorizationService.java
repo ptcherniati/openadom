@@ -342,16 +342,23 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         }
         Application application = getApplication(applicationNameOrid);
 
-        OreSiAuthorization oreSiAuthorization = repository.getRepository(application).authorization().findById(revokeAuthorizationRequest.authorizationId());
-        Map<String, AuthorizationForScope> filteredAuthorizations = oreSiAuthorization.getAuthorizations().entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue
-                ));
-
-        if (filteredAuthorizations.isEmpty()) {
-            return null;
-        }
+        // Charge l'autorisation pour s'assurer qu'elle existe en base : si
+        // l'id est inconnu , {@code findById} leve une exception et le
+        // controleur renvoie une 4xx ( comportement attendu ) . L'ancien
+        // garde-fou {@code if ( filteredAuthorizations.isEmpty() ) return null ;}
+        // a ete retire : il court-circuitait silencieusement la suppression
+        // quand l'autorisation n'avait aucun scope coche ( cas typique d'une
+        // autorisation creee a tort sans aucun referentiel ni datatype ) , la
+        // row {@code OreSiAuthorization} restait alors en base alors que le
+        // frontend recevait une 200 et croyait la suppression effectuee .
+        // {@code UpdateRolesOnManagement#revoke} gere proprement le cas
+        // scopes vides : {@code dropPolicies} et le {@code forEach} sur
+        // {@code getOreSiUsers()} sont no-op , {@code authorizationRepository.delete}
+        // supprime bien la row , et {@code db.dropRole} reussit car le role
+        // PostgreSQL est cree systematiquement a la creation de l'autorisation
+        // ( cf {@link #createRoleForAuthorization} ) , independamment du nombre
+        // de scopes .
+        repository.getRepository(application).authorization().findById(revokeAuthorizationRequest.authorizationId());
 
         return new UpdateRolesOnManagement(application, repository, db, serviceContainer.authenticationService()).revoke(revokeAuthorizationRequest);
     }
