@@ -711,7 +711,13 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
                                 Assertions.assertEquals(NotApplicationDataWriterForDepositException.NO_RIGHT_FOR_USER_DATA_WRITER_FOR_DEPOSIT, e.getMessage());
                             }
 
-                            getJsonRightsforRestrictions(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(OperationType.publication.name()), "monsore", "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1", "01/01/1984", "06/01/1984", fixtures.adminConnection.jwt());
+                            // Ticket #521 - réponse Damien 2026-05-25 : la suppression
+                            // ( {@code delete} ) doit être cochée EXPLICITEMENT pour être
+                            // accordée , la magie ancienne ( {@code publication} implique
+                            // {@code delete} ) ayant été retirée . Le test ci-dessous
+                            // exerce la suppression finale ligne 725 , il faut donc
+                            // ajouter {@code delete} en plus de {@code publication} .
+                            getJsonRightsforRestrictions(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(OperationType.publication.name(), OperationType.delete.name()), "monsore", "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1", "01/01/1984", "06/01/1984", fixtures.adminConnection.jwt());
 
                             fileUUID2.set(publishOrDepublish(fixtures.getWithRightsUserConnection().jwt(), "manche", "plateforme", "NULL_KEY__nivelle", 34, true, 2, true));
                             testFilesAndDataOnServer("plateforme", "manche", "NULL_KEY__nivelle", 0, 2, fileUUID2.get(), true);

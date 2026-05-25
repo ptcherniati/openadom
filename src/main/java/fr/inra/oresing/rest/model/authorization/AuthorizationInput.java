@@ -4,6 +4,7 @@ import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
+import fr.inra.oresing.domain.repository.authorization.OperationTypeHierarchy;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -97,26 +98,37 @@ public class AuthorizationInput {
     }
 
     public AuthorizationInput withRestrictionWithDependants(String dataName, Function<String, Boolean> isVersionningStrategy) {
+        // Ticket #521 - réponse Damien 2026-05-25 : hiérarchie stricte
+        // ( delete > depot/publication > extraction ) déléguée à
+        // {@link OperationTypeHierarchy} . Magie versionning retirée :
+        // {@code delete} doit être coché explicitement par l'utilisateur ,
+        // plus d'ajout automatique en mode versionning .
+        //
+        // TODO ( à supprimer après confirmation Damien ) : ancienne
+        // logique d'explosion par operationType , conservée en commentaire
+        // pour pouvoir la ré-introduire si la magie versionning s'avère
+        // requise pour un scénario métier non couvert .
+        //     getOperationTypes().stream()
+        //             .flatMap(operationType -> {
+        //                 final Boolean isVersionning = isVersionningStrategy.apply(dataName);
+        //                 if(operationType==null){
+        //                     return Stream.of();
+        //                 }
+        //                 if(OperationType.extraction.equals(operationType)) {
+        //                     return Stream.of(operationType);
+        //                 }
+        //                 if(Set.of(OperationType.depot, OperationType.publication).contains(operationType)){
+        //                     return isVersionning?
+        //                             Stream.of(OperationType.depot, OperationType.publication, OperationType.delete, OperationType.extraction):
+        //                             Stream.of(OperationType.depot, OperationType.publication, OperationType.extraction);
+        //                 }
+        //                 return Stream.of(OperationType.depot, OperationType.publication, OperationType.delete, OperationType.extraction);
+        //             })
+        //             .collect(Collectors.toSet())
         return new AuthorizationInput(
                 getRequiredAuthorizations(),
                 getTimeScope(),
-                getOperationTypes().stream()
-                        .flatMap(operationType -> {
-                            final Boolean isVersionning = isVersionningStrategy.apply(dataName);
-                            if(operationType==null){
-                                return Stream.of();
-                            }
-                            if(OperationType.extraction.equals(operationType)) {
-                                return Stream.of(operationType);
-                            }
-                            if(Set.of(OperationType.depot, OperationType.publication).contains(operationType)){
-                                return isVersionning?
-                                        Stream.of(OperationType.depot, OperationType.publication, OperationType.delete, OperationType.extraction):
-                                        Stream.of(OperationType.depot, OperationType.publication, OperationType.extraction);
-                            }
-                            return Stream.of(OperationType.depot, OperationType.publication, OperationType.delete, OperationType.extraction);
-                        })
-                        .collect(Collectors.toSet())
+                OperationTypeHierarchy.normalize(getOperationTypes())
         );
     }
 }

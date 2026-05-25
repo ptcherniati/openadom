@@ -4,6 +4,7 @@ import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
+import fr.inra.oresing.domain.repository.authorization.OperationTypeHierarchy;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -35,29 +36,38 @@ public class AuthorizationInput {
                               Set<OperationType> operationTypes) {
         this.requiredAuthorizations = requiredAuthorizations;
         this.timeScope = timeScope;
-        operationTypes = new HashSet<>(operationTypes);
-        if (operationTypes.contains(OperationType.publication)) {
-            operationTypes.add(OperationType.depot);
-            operationTypes.add(OperationType.delete);
-        }
-        if (operationTypes.contains(OperationType.depot) || operationTypes.contains(OperationType.delete)) {
-            operationTypes.add(OperationType.extraction);
-        }
-        this.operationTypes = operationTypes;
+        // Ticket #521 - réponse Damien 2026-05-25 : hiérarchie stricte
+        // ( delete > depot/publication > extraction ) + miroir auto
+        // depot <-> publication encodés dans OperationTypeHierarchy .
+        //
+        // TODO ( à supprimer après confirmation Damien ) : ancienne magie
+        // "publication implique delete" ( = en pratique , cocher publi
+        // ajoutait suppression sans demander ) , retirée car contredit
+        // la nouvelle règle "delete doit être coché explicitement" .
+        // Code d'origine pour référence :
+        //     if (operationTypes.contains(OperationType.publication)) {
+        //         operationTypes.add(OperationType.depot);
+        //         operationTypes.add(OperationType.delete);
+        //     }
+        //     if (operationTypes.contains(OperationType.depot) || operationTypes.contains(OperationType.delete)) {
+        //         operationTypes.add(OperationType.extraction);
+        //     }
+        this.operationTypes = OperationTypeHierarchy.normalize(operationTypes);
     }
 
     public AuthorizationInput() {
     }
 
     public void setOperationTypes(Set<OperationType> operationTypes) {
-
-        if (operationTypes.contains(OperationType.publication)) {
-            operationTypes.add(OperationType.depot);
-        }
-        if (operationTypes.contains(OperationType.depot) || operationTypes.contains(OperationType.delete)) {
-            operationTypes.add(OperationType.extraction);
-        }
-        this.operationTypes = operationTypes;
+        // Ticket #521 : hiérarchie stricte déléguée à OperationTypeHierarchy .
+        // Ancien code ( à supprimer après confirmation Damien ) :
+        //     if (operationTypes.contains(OperationType.publication)) {
+        //         operationTypes.add(OperationType.depot);
+        //     }
+        //     if (operationTypes.contains(OperationType.depot) || operationTypes.contains(OperationType.delete)) {
+        //         operationTypes.add(OperationType.extraction);
+        //     }
+        this.operationTypes = OperationTypeHierarchy.normalize(operationTypes);
     }
 
     public void setTimeScope(Map<String, String> dates) {
@@ -97,26 +107,40 @@ public class AuthorizationInput {
     }
 
     public AuthorizationInput withRestrictionWithDependants(String dataName, Function<String, Boolean> isVersionningStrategy) {
+        // Ticket #521 - réponse Damien 2026-05-25 : on respecte la
+        // hiérarchie stricte ( delete > depot/publication > extraction )
+        // au lieu d'exploser tous les droits . Le paramètre
+        // {@code isVersionningStrategy} reste dans la signature pour
+        // ne pas casser les callers existants ( call-sites multiples ) ,
+        // mais n'est plus consulté ici car la magie versionning
+        // ( ajout auto de {@code delete} quand {@code depot/publication}
+        // coché en mode versionning ) est retirée .
+        //
+        // TODO ( à supprimer après confirmation Damien ) : ancienne logique
+        // d'explosion par operationType , à ré-introduire si la magie
+        // versionning s'avère finalement requise pour certains scénarios
+        // métier non couverts par le ticket #521 .
+        //     getOperationTypes().stream()
+        //             .flatMap(operationType -> {
+        //                 final Boolean isVersionning = isVersionningStrategy.apply(dataName);
+        //                 if(operationType==null){
+        //                     return Stream.of();
+        //                 }
+        //                 if(OperationType.extraction.equals(operationType)) {
+        //                     return Stream.of(operationType);
+        //                 }
+        //                 if(Set.of(OperationType.depot, OperationType.publication).contains(operationType)){
+        //                     return isVersionning?
+        //                             Stream.of(OperationType.depot, OperationType.publication, OperationType.delete, OperationType.extraction):
+        //                             Stream.of(OperationType.depot, OperationType.publication, OperationType.extraction);
+        //                 }
+        //                 return Stream.of(OperationType.depot, OperationType.publication, OperationType.delete, OperationType.extraction);
+        //             })
+        //             .collect(Collectors.toSet())
         return new AuthorizationInput(
                 getRequiredAuthorizations(),
                 getTimeScope(),
-                getOperationTypes().stream()
-                        .flatMap(operationType -> {
-                            final Boolean isVersionning = isVersionningStrategy.apply(dataName);
-                            if(operationType==null){
-                                return Stream.of();
-                            }
-                            if(OperationType.extraction.equals(operationType)) {
-                                return Stream.of(operationType);
-                            }
-                            if(Set.of(OperationType.depot, OperationType.publication).contains(operationType)){
-                                return isVersionning?
-                                        Stream.of(OperationType.depot, OperationType.publication, OperationType.delete, OperationType.extraction):
-                                        Stream.of(OperationType.depot, OperationType.publication, OperationType.extraction);
-                            }
-                            return Stream.of(OperationType.depot, OperationType.publication, OperationType.delete, OperationType.extraction);
-                        })
-                        .collect(Collectors.toSet())
+                OperationTypeHierarchy.normalize(getOperationTypes())
         );
     }
 }

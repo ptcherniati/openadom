@@ -19,6 +19,7 @@ import fr.inra.oresing.domain.authorization.AuthorizationsForUserResult;
 import fr.inra.oresing.domain.authorization.AuthorizationsResult;
 import fr.inra.oresing.domain.authorization.GetGrantableResult;
 import fr.inra.oresing.domain.authorization.privilegeassessor.*;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.CantSelfRevokeApplicationRoleException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationUserManagerRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationAdminUser;
@@ -658,6 +659,11 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
     private OreSiUserResult deleteApplicationManagerRoleUser(final OreSiRoleForUser oreSiRoleForApplicationManager, Application application) {
         CurrentUserRoles currentUserRoles = serviceContainer.authenticationService().getCurrentUserRoles();
         if (currentUserRoles.applicationManagerOf(application)) {
+            // Bug #4 ticket #521 : un applicationManager ne peut pas
+            // s'auto-révoquer ( risque de laisser une application orpheline
+            // de gestionnaire ) , sauf s'il est aussi openAdomAdmin qui
+            // pourra de toute facon revenir sur la modification .
+            assertNotSelfRevoke(oreSiRoleForApplicationManager.userId(), currentUserRoles);
             final OreSiUser user = serviceContainer.authenticationService().deleteUserRightApplicationManager(UUID.fromString(oreSiRoleForApplicationManager.userId()), application);
             return new OreSiUserResult(user, userRepository.getRolesForRole(oreSiRoleForApplicationManager.userId()));
         }
@@ -667,10 +673,34 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
     private OreSiUserResult deleteUserManagerRoleUser(final OreSiRoleForUser oreSiUserRoleUserManager, Application application) {
         CurrentUserRoles currentUserRoles = serviceContainer.authenticationService().getCurrentUserRoles();
         if (currentUserRoles.applicationManagerOf(application)) {
+            // Bug #4 ticket #521 : meme garde-fou que pour applicationManager .
+            assertNotSelfRevoke(oreSiUserRoleUserManager.userId(), currentUserRoles);
             OreSiUser user = serviceContainer.authenticationService().deleteUserRightUserManager(UUID.fromString(oreSiUserRoleUserManager.userId()), application);
             return new OreSiUserResult(user, userRepository.getRolesForRole(oreSiUserRoleUserManager.userId()));
         }
         throw new NotOpenAdomAdminException();
+    }
+
+    /**
+     * Garde-fou : empêche l'utilisateur courant de se révoquer lui-même
+     * un rôle de gestion ( applicationManager ou userManager ) sur une
+     * application . L'auto-révocation reste autorisée si l'utilisateur
+     * courant est {@code openAdomAdmin} ( il a les moyens de revenir
+     * sur la modification ) .
+     *
+     * @param targetUserId id de l'utilisateur cible de la révocation
+     * @param currentUserRoles rôles de l'utilisateur courant
+     * @throws CantSelfRevokeApplicationRoleException si l'utilisateur
+     *         courant tente de se révoquer lui-même sans être openAdomAdmin
+     */
+    private void assertNotSelfRevoke(final String targetUserId, final CurrentUserRoles currentUserRoles) {
+        if (currentUserRoles.isOpenAdomAdmin()) {
+            return;
+        }
+        final UUID currentUserId = OreSiApiRequestContext.getRequestUserId();
+        if (currentUserId != null && currentUserId.toString().equals(targetUserId)) {
+            throw new CantSelfRevokeApplicationRoleException();
+        }
     }
 
     private OreSiUserResult deleteAdminRoleUser(final OreSiRoleForUser oreSiRoleForUserAdmin) {
@@ -925,6 +955,29 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
     public CreateAuthorizationRequest createAuthorizationRequestWithDependantAuthorization(
             Application application,
             CreateAuthorizationRequest createAuthorizationRequest) {
+        // Ticket #521 : l'enrichissement automatique du payload avec les
+        // autorisations dépendantes ( {@code addDependantAuthorizations} )
+        // est nécessaire pour que les requêtes SQL puissent résoudre les
+        // FK croisées vers les référentiels dépendants ( cf
+        // {@code BinaryFileService.getFilesOnRepository} qui itère sur
+        // {@code requiredAuthorizations} - un payload sans extraction sur
+        // un ref dépendant produirait un 5xx serveur en runtime ) .
+        //
+        // <p>Le contrat WYSIWYG vis-à-vis de l'utilisateur reste préservé
+        // côté frontend via {@code buildAuthorization} (
+        // {@code DataTypeAuthorizationInfoView.vue} ) qui n'envoie au backend
+        // QUE ce qui est explicitement coché dans l'UI . Le backend ajoute
+        // ensuite les dépendances RLS-nécessaires à l'écriture en base ,
+        // sans que cela ne se transforme en "extractions fantômes" au
+        // reload : à la lecture suivante , l'UI affiche bien ce qui a été
+        // saisi initialement ( les extractions auto-ajoutées sont des
+        // dépendances impliquées par les choix utilisateur , et restent
+        // visibles tant qu'un droit racine les nécessite ) .
+        //
+        // <p>{@code addRequiredOperationTypes} applique en sus la hiérarchie
+        // intra-ligne ( {@code delete > depot/publication > extraction} +
+        // miroir auto {@code depot ↔ publication} ) , déléguée au helper
+        // {@code OperationTypeHierarchy.normalize} .
         Set<String> dependantsNodes = Optional.ofNullable(createAuthorizationRequest)
                 .map(CreateAuthorizationRequest::authorizationsWithRestriction)
                 .map(Map::keySet)
@@ -940,7 +993,6 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         return Objects.requireNonNull(createAuthorizationRequest)
                 .addRequiredOperationTypes(isVersionningStrategy)
                 .addDependantAuthorizations(dependantsNodes);
-
     }
 
     public AuthorizationRequest createAuthorizationRequestToAuthorizationRequest(

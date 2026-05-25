@@ -144,7 +144,7 @@ class CreateAuthorizationRequestTest extends AbstractIntegrationTest {
                   "authorizationwithrestriction" : {
                     "authorizationforscope" : {
                       "pem" : {
-                        "operationtypes" : [ "depot", "extraction" ],
+                        "operationtypes" : [ "depot", "publication", "extraction" ],
                         "authorizationscope" : {
                           "projet" : [ "projet_atlantique", "projet_manche" ]
                         },

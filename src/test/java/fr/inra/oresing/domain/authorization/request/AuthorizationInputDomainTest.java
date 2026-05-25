@@ -40,17 +40,37 @@ class AuthorizationInputDomainTest {
     @DisplayName("Constructeur : propagation des types d'opération")
     class ConstructorPropagationTest {
 
+        // Ticket #521 - réponse Damien 2026-05-25 : ce test validait la
+        // magie "publication implique delete" qui a été retirée car
+        // contredit la nouvelle règle "delete doit être coché explicitement" .
+        // TODO ( à supprimer après confirmation Damien ) : ré-activer ce
+        // test ( et restaurer la magie versionning dans OperationTypeHierarchy )
+        // si finalement requis pour un scénario métier non couvert .
+        //
+        // @Test
+        // @DisplayName("publication entraîne depot + delete + extraction")
+        // void publicationAddsDepotDeleteExtraction() {
+        //     AuthorizationInput input = new AuthorizationInput(
+        //             new HashMap<>(),
+        //             LocalDateTimeRange.always(),
+        //             EnumSet.of(OperationType.publication)
+        //     );
+        //     assertThat(input.getOperationTypes())
+        //             .contains(OperationType.publication, OperationType.depot,
+        //                       OperationType.delete, OperationType.extraction);
+        // }
+
         @Test
-        @DisplayName("publication entraîne depot + delete + extraction")
-        void publicationAddsDepotDeleteExtraction() {
+        @DisplayName("Ticket #521 : publication entraîne depot + extraction ( pas delete )")
+        void publicationAddsDepotExtractionNoDelete() {
             AuthorizationInput input = new AuthorizationInput(
                     new HashMap<>(),
                     LocalDateTimeRange.always(),
                     EnumSet.of(OperationType.publication)
             );
             assertThat(input.getOperationTypes())
-                    .contains(OperationType.publication, OperationType.depot,
-                              OperationType.delete, OperationType.extraction);
+                    .contains(OperationType.publication, OperationType.depot, OperationType.extraction)
+                    .doesNotContain(OperationType.delete);
         }
 
         @Test
@@ -221,9 +241,30 @@ class AuthorizationInputDomainTest {
             assertThat(result.getOperationTypes()).contains(OperationType.extraction);
         }
 
+        // Ticket #521 - réponse Damien 2026-05-25 : la magie versionning
+        // ( cocher depot/publication ajoutait auto delete en mode
+        // versionning ) a été retirée car contredit la nouvelle règle
+        // "delete doit être coché explicitement par l'utilisateur" .
+        // TODO ( à supprimer après confirmation Damien ) : ré-activer ce
+        // test si finalement requis .
+        //
+        // @Test
+        // @DisplayName("depot avec versionning ajoute publication, delete, extraction")
+        // void depotWithVersionningAddsAll() {
+        //     AuthorizationInput input = new AuthorizationInput(
+        //             new HashMap<>(),
+        //             LocalDateTimeRange.always(),
+        //             EnumSet.of(OperationType.depot)
+        //     );
+        //     AuthorizationInput result = input.withRestrictionWithDependants("myData", ignored -> true);
+        //     assertThat(result.getOperationTypes())
+        //             .contains(OperationType.depot, OperationType.publication,
+        //                       OperationType.delete, OperationType.extraction);
+        // }
+
         @Test
-        @DisplayName("depot avec versionning ajoute publication, delete, extraction")
-        void depotWithVersionningAddsAll() {
+        @DisplayName("Ticket #521 : depot avec versionning n'ajoute PLUS delete ( magie retirée )")
+        void depotWithVersionningNoLongerAddsDelete() {
             AuthorizationInput input = new AuthorizationInput(
                     new HashMap<>(),
                     LocalDateTimeRange.always(),
@@ -231,8 +272,8 @@ class AuthorizationInputDomainTest {
             );
             AuthorizationInput result = input.withRestrictionWithDependants("myData", ignored -> true);
             assertThat(result.getOperationTypes())
-                    .contains(OperationType.depot, OperationType.publication,
-                              OperationType.delete, OperationType.extraction);
+                    .contains(OperationType.depot, OperationType.publication, OperationType.extraction)
+                    .doesNotContain(OperationType.delete);
         }
 
         @Test
