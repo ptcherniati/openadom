@@ -1302,15 +1302,22 @@ public class OreSiResources {
         // "no-store" qui empêche le browser de garder l'ETag.
         org.springframework.http.CacheControl cacheControl =
                 org.springframework.http.CacheControl.noCache().mustRevalidate().cachePrivate();
+        // X-Filter-Cache : header de diagnostic ( HIT / MISS / PARTIAL /
+        // DISABLED ) consomme par le bloc filtre cote frontend pour afficher
+        // un indicateur invisible ( debug visibilite ) . Aucune semantique
+        // metier ; safe a ignorer cote client si non lu .
+        final String cacheStatusHeader = result.cacheStatus().name();
         if (result.etag().equals(ifNoneMatch)) {
             return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
                     .eTag(result.etag())
                     .cacheControl(cacheControl)
+                    .header("X-Filter-Cache", cacheStatusHeader)
                     .build();
         }
         return ResponseEntity.ok()
                 .eTag(result.etag())
                 .cacheControl(cacheControl)
+                .header("X-Filter-Cache", cacheStatusHeader)
                 .body(result.json());
     }
 

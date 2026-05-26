@@ -1602,13 +1602,29 @@ private PlatformTransactionManager transactionManager;
                                    int failedComponents) {}
 
     /**
+     * Origine du payload : utilisé par {@link OreSiResources} pour exposer
+     * un header HTTP {@code X-Filter-Cache} de diagnostic ( visibilite ops
+     * sans toucher au shape JSON ). Aucune logique applicative ne consomme
+     * cette valeur cote backend ; elle sert uniquement a piloter l'UI .
+     * <ul>
+     *   <li>{@code HIT}      : payload servi depuis {@link #filterListCache} .</li>
+     *   <li>{@code MISS}     : cache miss , compute SQL + cache write .</li>
+     *   <li>{@code PARTIAL}  : MISS + au moins un component a echoue silencieusement
+     *                          ( payload cache mais incomplet ) .</li>
+     *   <li>{@code DISABLED} : cache desactive par config ( bypass integral ) .</li>
+     * </ul>
+     */
+    public enum CacheStatus { HIT, MISS, PARTIAL, DISABLED }
+
+    /**
      * Résultat public exposé par {@link #getFilterListResult} : JSON sérialisé
      * + ETag stable ( hash SHA-256 du JSON , tronqué 64 bits ). L'ETag est
      * recalculé une seule fois à l'écriture cache et réutilisé tel quel à
      * chaque hit , de sorte que le coût HTTP/304 côté serveur soit borné à
-     * une comparaison de String.
+     * une comparaison de String. {@code cacheStatus} expose l'origine du
+     * payload pour diagnostic ( cf {@link CacheStatus} ) .
      */
-    public record FilterListResult(String json, String etag) {}
+    public record FilterListResult(String json, String etag, CacheStatus cacheStatus) {}
 
     @org.springframework.beans.factory.annotation.Value("${openadom.cache.filter-list.max-entries:50}")
     private int filterListCacheMaxEntries;
@@ -1690,7 +1706,7 @@ private PlatformTransactionManager transactionManager;
             log.debug("filterList cache disabled , computing directly for {}", cacheKey);
             return composeResponse(
                     buildFilterListValue(computeFilterListEntries(application, refType)),
-                    application, refType, language);
+                    application, refType, language, CacheStatus.DISABLED);
         }
 
         // Cache hit : compose JSON {entries , variables} en O(N) sur cache entries ( ~ms ) .
@@ -1698,7 +1714,7 @@ private PlatformTransactionManager transactionManager;
         if (cached != null) {
             log.debug("filterList cache hit for {}", cacheKey);
             if (cacheMetrics != null) cacheMetrics.recordFilterListHit();
-            return composeResponse(cached, application, refType, language);
+            return composeResponse(cached, application, refType, language, CacheStatus.HIT);
         }
 
         // Cache miss : singleflight pour empecher le cache stampede .
@@ -1706,7 +1722,13 @@ private PlatformTransactionManager transactionManager;
         if (cacheMetrics != null) cacheMetrics.recordFilterListMiss();
         FilterListValue value = filterListInFlight.load(cacheKey,
                 () -> computeAndMaybeCache(application, refType, cacheKey));
-        return composeResponse(value, application, refType, language);
+        // {@code failedComponents() > 0} indique que le compute a swallow au
+        // moins une erreur sur un component SQL ( cf computeAndMaybeCache )
+        // -> on expose PARTIAL pour distinguer du MISS reussi .
+        final CacheStatus status = value.failedComponents() > 0
+                ? CacheStatus.PARTIAL
+                : CacheStatus.MISS;
+        return composeResponse(value, application, refType, language, status);
     }
 
     /**
@@ -1761,18 +1783,19 @@ private PlatformTransactionManager transactionManager;
     private FilterListResult composeResponse(final FilterListValue value,
                                              final Application application,
                                              final String refType,
-                                             final String language) {
+                                             final String language,
+                                             final CacheStatus cacheStatus) {
         final java.util.Set<String> variables = FilterListVariablesExtractor.extract(
                 value.entries(), application, refType, language);
         try {
             final String variablesJson = cacheObjectMapper.writeValueAsString(variables);
             final String fullJson = "{\"entries\":" + value.entriesJson()
                     + ",\"variables\":" + variablesJson + "}";
-            return new FilterListResult(fullJson, computeEtag(fullJson));
+            return new FilterListResult(fullJson, computeEtag(fullJson), cacheStatus);
         } catch (Exception e) {
             log.error("Failed to compose filterList response JSON ( fallback empty )", e);
             final String empty = "{\"entries\":[],\"variables\":[]}";
-            return new FilterListResult(empty, computeEtag(empty));
+            return new FilterListResult(empty, computeEtag(empty), cacheStatus);
         }
     }
 
