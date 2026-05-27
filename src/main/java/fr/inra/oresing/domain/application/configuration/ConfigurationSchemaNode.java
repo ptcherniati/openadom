@@ -76,5 +76,7 @@ public class ConfigurationSchemaNode {
     public static final String OA_SEPARATOR = "OA_separator";
     public static final String OA_DATA_HEADER_LINE = "OA_dataHeaderLine";
     public static final String OA_DATA_FIRST_LINE = "OA_dataFirstLine";
+    public static final String OA_FILTER_MODEL = "OA_filterModel";
+    public static final String OA_FILTER_MODEL_APPLIES_TO_DATA_ONLY = "OA_filterModelAppliesToDataOnly";
 
 }

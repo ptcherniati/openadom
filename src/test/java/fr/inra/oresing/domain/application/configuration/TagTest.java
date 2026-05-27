@@ -1,5 +1,6 @@
 package fr.inra.oresing.domain.application.configuration;
 
+import fr.inra.oresing.domain.exceptions.application.SiOreConfigurationFormatException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -104,5 +105,51 @@ class TagTest {
     @Test
     void testOrderStrictTagPatternConstant() {
         Assertions.assertEquals("__ORDER_STRICT__", Tag.OrderStrictTag.ORDER_STRICT_PATTERN);
+    }
+
+    @Test
+    void testBusinessTagWithoutParameterFromBuildTag() {
+        Tag tag = Tag.buildTag("__STEP__");
+        Assertions.assertInstanceOf(Tag.BusinessTag.class, tag);
+        Tag.BusinessTag businessTag = (Tag.BusinessTag) tag;
+        Assertions.assertEquals(Tag.TagDefinitions.BUSINESS_TAG, businessTag.tagDefinition());
+        Assertions.assertEquals("STEP", businessTag.tagPrefix());
+        Assertions.assertNull(businessTag.tagParameter());
+    }
+
+    @Test
+    void testBusinessTagWithParameterFromBuildTag() {
+        Tag tag = Tag.buildTag("__STEP_100__");
+        Assertions.assertInstanceOf(Tag.BusinessTag.class, tag);
+        Tag.BusinessTag businessTag = (Tag.BusinessTag) tag;
+        Assertions.assertEquals("STEP", businessTag.tagPrefix());
+        Assertions.assertEquals(100, businessTag.tagParameter());
+    }
+
+    @Test
+    void testZoneBusinessTagWithParameterFromBuildTag() {
+        Tag tag = Tag.buildTag("__ZONE_3__");
+        Assertions.assertInstanceOf(Tag.BusinessTag.class, tag);
+        Tag.BusinessTag businessTag = (Tag.BusinessTag) tag;
+        Assertions.assertEquals("ZONE", businessTag.tagPrefix());
+        Assertions.assertEquals(3, businessTag.tagParameter());
+    }
+
+    @Test
+    void testReservedTagsWinBeforeBusinessTag() {
+        Assertions.assertInstanceOf(Tag.OrderTag.class, Tag.buildTag("__ORDER_5__"));
+        Assertions.assertInstanceOf(Tag.FilterTextTag.class, Tag.buildTag("__FILTER_TEXT__"));
+    }
+
+    @Test
+    void testInvalidBusinessTagPatternsAreRejected() {
+        Assertions.assertThrows(SiOreConfigurationFormatException.class, () -> Tag.buildTag("__foo__"));
+        Assertions.assertThrows(SiOreConfigurationFormatException.class, () -> Tag.buildTag("__1STEP__"));
+    }
+
+    @Test
+    void testBusinessTagIsNotDefinedTag() {
+        Tag.BusinessTag tag = TagBuilder.businessTag("STEP", null);
+        Assertions.assertFalse(Tag.DefinedTag.class.isInstance(tag));
     }
 }

@@ -1,5 +1,6 @@
 package fr.inra.oresing.domain.application.configuration;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
 import fr.inra.oresing.domain.application.configuration.checker.*;
 import fr.inra.oresing.domain.data.read.query.*;
@@ -22,6 +23,7 @@ public record StandardDataDescription(
         Integer firstRowLine,
         Boolean allowUnexpectedColumns,
         Set<Tag> tags,
+        @JsonProperty("OA_filterModel") FilterModel filterModel,
         LinkedHashSet<String> naturalKey,
         Map<String, ComponentDescription> componentDescriptions,
         Submission submission,
@@ -31,6 +33,10 @@ public record StandardDataDescription(
         TreeMap<Integer, List<MigrationDescription>> migrations
 ) {
     private static final Logger log = LoggerFactory.getLogger(StandardDataDescription.class);
+
+    public StandardDataDescription {
+        filterModel = Optional.ofNullable(filterModel).orElseGet(FilterModel::defaultValue);
+    }
 
     public StandardDataDescription(final char separator,
                                    final Integer dataHeaderLine,
@@ -43,12 +49,30 @@ public record StandardDataDescription(
                                    Authorization authorization, final
                                    Map<String, ValidationDescription> validationMap,
                                    final TreeMap<Integer, List<MigrationDescription>> migrations) {
+        this(separator, dataHeaderLine, dataFirstLine, allowUnexpectedColumns, tags,
+                FilterModel.defaultValue(), naturalKey, componentDescriptions, submission,
+                authorization, validationMap, migrations);
+    }
+
+    public StandardDataDescription(final char separator,
+                                   final Integer dataHeaderLine,
+                                   final Integer dataFirstLine,
+                                   final Boolean allowUnexpectedColumns,
+                                   final Set<Tag> tags,
+                                   final FilterModel filterModel,
+                                   final LinkedHashSet<String> naturalKey,
+                                   final Map<String, ComponentDescription> componentDescriptions,
+                                   final Submission submission,
+                                   Authorization authorization, final
+                                   Map<String, ValidationDescription> validationMap,
+                                   final TreeMap<Integer, List<MigrationDescription>> migrations) {
         this(
                 separator,
                 dataHeaderLine,
                 dataFirstLine,
                 allowUnexpectedColumns,
                 tags,
+                filterModel,
                 naturalKey,
                 componentDescriptions,
                 submission,
@@ -73,7 +97,7 @@ public record StandardDataDescription(
                                         yield null;
                                 }).orElse(null)).filter(Objects::nonNull)
                         .collect(Collectors.toList()),
-                null
+                migrations
         );
     }
 
@@ -133,6 +157,20 @@ public record StandardDataDescription(
      * datatype on n'expose qu'un booléen union ( "au moins une colonne porte un
      * filtre opt-in" ), suffisant pour les tests d'éligibilité côté front.
      */
+    /**
+     * Indique si le datatype conserve le GIN JSONB historique pour les filtres.
+     */
+    public boolean isLegacyGin() {
+        return filterModel() == FilterModel.LEGACY_GIN;
+    }
+
+    /**
+     * Indique si seuls les index des colonnes explicitement filtrables sont créés.
+     */
+    public boolean isDefinedFilters() {
+        return filterModel() == FilterModel.DEFINED_FILTERS;
+    }
+
     public boolean isFilterable() {
         return Optional.ofNullable(tags())
                 .map(tags -> tags.stream().anyMatch(Tag.FilterTag.class::isInstance))

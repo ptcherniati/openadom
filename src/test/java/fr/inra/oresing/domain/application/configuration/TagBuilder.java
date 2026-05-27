@@ -37,4 +37,8 @@ public class TagBuilder {
     public static Tag.OrderStrictTag orderStrictTag() {
         return Tag.OrderStrictTag.instance();
     }
+
+    public static Tag.BusinessTag businessTag(String prefix, Integer parameter) {
+        return new Tag.BusinessTag(prefix, parameter);
+    }
 }

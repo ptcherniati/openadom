@@ -40,6 +40,7 @@ class StandardDataDescriptionTest {
         Assertions.assertEquals(3, description.firstRowLine());
         Assertions.assertTrue(description.allowUnexpectedColumns());
         Assertions.assertEquals(tags, description.tags());
+        Assertions.assertEquals(FilterModel.NONE, description.filterModel());
         Assertions.assertEquals(naturalKey, description.naturalKey());
         Assertions.assertEquals(components, description.componentDescriptions());
         Assertions.assertEquals(submission, description.submission());
@@ -47,5 +48,14 @@ class StandardDataDescriptionTest {
         Assertions.assertEquals(validations, description.validations());
         Assertions.assertEquals(depends, description.depends());
         Assertions.assertEquals(migrations, description.migrations());
+    }
+
+    @Test
+    void testFilterModelDefaultsToNoneWhenNull() {
+        StandardDataDescription description = new StandardDataDescription(
+                ';', 1, 2, false, Set.of(), null, new LinkedHashSet<>(),
+                Map.of(), null, null, Map.of(), List.of(), new TreeMap<>());
+
+        Assertions.assertEquals(FilterModel.NONE, description.filterModel());
     }
 }

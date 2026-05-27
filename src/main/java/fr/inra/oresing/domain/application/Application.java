@@ -180,6 +180,29 @@ public class Application extends OreSiEntity {
                 .orElse(false);
     }
 
+
+    /**
+     * Résout le modèle de filtres effectif d'un datatype en tenant compte du
+     * drapeau applicatif qui limite le nouveau modèle aux seuls OA_data.
+     */
+    public FilterModel resolveFilterModel(StandardDataDescription dataDescription) {
+        FilterModel declared = Optional.ofNullable(dataDescription)
+                .map(StandardDataDescription::filterModel)
+                .orElseGet(FilterModel::defaultValue);
+        boolean dataOnly = Optional.ofNullable(getConfiguration())
+                .map(Configuration::applicationDescription)
+                .map(ApplicationDescription::filterModelAppliesToDataOnly)
+                .orElse(false);
+        boolean isDataType = Optional.ofNullable(dataDescription)
+                .map(StandardDataDescription::tags)
+                .map(tags -> tags.contains(Tag.DataTag.instance()))
+                .orElse(false);
+        if (dataOnly && !isDataType) {
+            return FilterModel.LEGACY_GIN;
+        }
+        return declared;
+    }
+
     public List<String> getAllDataNames() {
         Map<Boolean, List<String>> nameByType = getConfiguration().orderedNodes()
                 .stream()
