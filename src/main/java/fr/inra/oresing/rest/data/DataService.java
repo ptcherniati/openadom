@@ -1611,10 +1611,17 @@ private PlatformTransactionManager transactionManager;
      *   <li>{@code MISS}     : cache miss , compute SQL + cache write .</li>
      *   <li>{@code PARTIAL}  : MISS + au moins un component a echoue silencieusement
      *                          ( payload cache mais incomplet ) .</li>
+     *   <li>{@code STALE}    : entry presente mais marquee periemee suite a un
+     *                          depot / publication en cours . Le payload est
+     *                          servi pour ne pas bloquer l'utilisateur ; un
+     *                          recompute tourne en arriere-plan . Le frontend
+     *                          peut afficher un toast informatif . Cf
+     *                          {@link #refreshFilterListCache} et le hook
+     *                          stale-while-revalidate dans {@link #getFilterListResult} .</li>
      *   <li>{@code DISABLED} : cache desactive par config ( bypass integral ) .</li>
      * </ul>
      */
-    public enum CacheStatus { HIT, MISS, PARTIAL, DISABLED }
+    public enum CacheStatus { HIT, MISS, PARTIAL, STALE, DISABLED }
 
     /**
      * Résultat public exposé par {@link #getFilterListResult} : JSON sérialisé
@@ -1658,6 +1665,33 @@ private PlatformTransactionManager transactionManager;
      */
     private final fr.inra.oresing.cache.SingleflightCache<String, FilterListValue> filterListInFlight =
             new fr.inra.oresing.cache.SingleflightCache<>();
+
+    /**
+     * Pattern stale-while-revalidate ( RFC 5861 ) : suivi des recomputes en
+     * cours declenches par {@link #refreshFilterListCache} . Chaque entree
+     * porte un {@link java.util.concurrent.CompletableFuture} complete par
+     * le pipeline reactor une fois le payload frais ecrit dans le cache .
+     *
+     * <p>Le read path ( {@link #getFilterListResult} ) consulte cette map
+     * quand il rencontre une entree marquee stale : si une future est
+     * presente , il l'attend brievement ( borne {@value #STALE_REFRESH_WAIT_MS}
+     * ms ) afin de servir du frais quand le recompute est rapide ; sinon
+     * il sert directement le payload stale en cache ( statut STALE ) sans
+     * bloquer l'utilisateur . La future est nettoyee par le pipeline
+     * d'origine ( doFinally ) , ainsi un timeout cote read n'affecte pas
+     * la completion du compute en arriere-plan .
+     */
+    private final java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.CompletableFuture<Void>>
+            filterListPendingRefresh = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * Borne max d'attente cote lecture quand l'entree cache est stale et
+     * qu'un recompute tourne ( cf {@link #filterListPendingRefresh} ) .
+     * Choix : 1000 ms = compromis entre latence percue minimale et
+     * opportunite de servir du frais sur datatypes legers ( recompute &lt;
+     * 1s ) . Au-dela on bascule sur stale + toast frontend .
+     */
+    private static final long STALE_REFRESH_WAIT_MS = 1000L;
 
     @jakarta.annotation.PostConstruct
     void initFilterListCache() {
@@ -1712,9 +1746,49 @@ private PlatformTransactionManager transactionManager;
         // Cache hit : compose JSON {entries , variables} en O(N) sur cache entries ( ~ms ) .
         FilterListValue cached = filterListCache.get(cacheKey);
         if (cached != null) {
-            log.debug("filterList cache hit for {}", cacheKey);
+            // Stale-while-revalidate ( RFC 5861 ) : l'entree peut etre flaggee
+            // stale suite a un depot / publication recent ( cf refreshFilterListCache ) .
+            // Comportement :
+            //   - non stale          -> HIT immediat ( payload frais )
+            //   - stale + refresh    -> attend STALE_REFRESH_WAIT_MS ms le recompute ,
+            //                            renvoie le frais si arrive a temps ( HIT ) ,
+            //                            sinon renvoie le stale ( STALE ) sans bloquer .
+            //   - stale + no refresh -> renvoie le stale ( STALE ) directement .
+            // Quoi qu'il arrive , le payload retourne est servable ( le frontend
+            // affichera un toast informatif quand status == STALE ) .
+            if (!filterListCache.isStale(cacheKey)) {
+                log.debug("filterList cache hit for {}", cacheKey);
+                if (cacheMetrics != null) cacheMetrics.recordFilterListHit();
+                return composeResponse(cached, application, refType, language, CacheStatus.HIT);
+            }
+            // Stale : tenter une upgrade vers frais si recompute en cours .
+            log.debug("filterList cache hit ( stale ) for {} - attempting fast upgrade", cacheKey);
+            final java.util.concurrent.CompletableFuture<Void> pending = filterListPendingRefresh.get(cacheKey);
+            if (pending != null) {
+                try {
+                    pending.get(STALE_REFRESH_WAIT_MS, java.util.concurrent.TimeUnit.MILLISECONDS);
+                    // Recompute termine pendant l'attente : re-lecture du cache
+                    // ( la nouvelle entry a ete posee par le pipeline reactor ) .
+                    final FilterListValue refreshed = filterListCache.get(cacheKey);
+                    if (refreshed != null && !filterListCache.isStale(cacheKey)) {
+                        if (cacheMetrics != null) cacheMetrics.recordFilterListHit();
+                        return composeResponse(refreshed, application, refType, language, CacheStatus.HIT);
+                    }
+                    // Edge case : la future a complete mais le cache n'a pas ete
+                    // mis a jour ( refresh partial , erreur SQL silencieuse ) .
+                    // Fallback gracieux sur le stale .
+                } catch (java.util.concurrent.TimeoutException te) {
+                    log.debug("filterList stale wait timeout ( {} ms ) for {} - serving stale", STALE_REFRESH_WAIT_MS, cacheKey);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    log.debug("filterList stale wait interrupted for {} - serving stale", cacheKey);
+                } catch (java.util.concurrent.ExecutionException ee) {
+                    log.warn("filterList stale refresh failed for {} - serving stale", cacheKey, ee.getCause());
+                }
+            }
+            // Stale servi ( pas d'upgrade reussie ou pas de recompute en cours ) .
             if (cacheMetrics != null) cacheMetrics.recordFilterListHit();
-            return composeResponse(cached, application, refType, language, CacheStatus.HIT);
+            return composeResponse(cached, application, refType, language, CacheStatus.STALE);
         }
 
         // Cache miss : singleflight pour empecher le cache stampede .
@@ -1952,6 +2026,20 @@ private PlatformTransactionManager transactionManager;
     public void refreshFilterListCache(final Application application, final String refType) {
         log.info("filterList cache refresh started for {}::{}", application.getName(), refType);
         String cacheKey = application.getName() + "::" + refType;
+        // Stale-while-revalidate : flag l'entree comme stale ( no-op si pas
+        // dans le cache ) avant de declencher le recompute . Le read path
+        // ( getFilterListResult ) verra le flag et pourra :
+        //   1. servir le stale immediatement avec status STALE ( frontend toast ) ,
+        //   2. optionnellement attendre la future enregistree ci-dessous le
+        //      temps borne par STALE_REFRESH_WAIT_MS pour servir du frais .
+        if (filterListCache != null) filterListCache.markStale(cacheKey);
+        // Enregistre une future signalant la fin du recompute . Si une future
+        // existe deja pour cette cle ( recompute precedent encore en cours ) ,
+        // on la reutilise : le pipeline en cours servira aussi ce nouvel
+        // appel ( idempotence + dedup ) .
+        final java.util.concurrent.CompletableFuture<Void> refreshFuture =
+                filterListPendingRefresh.computeIfAbsent(cacheKey,
+                        k -> new java.util.concurrent.CompletableFuture<>());
         // Réutilise computeFilterListEntries() qui agrège les FilterList ( SQL
         // historique ) et les ColumnDistinctValues ( colonnes __FILTER_LIST__ ).
         // L'opération reste asynchrone via Mono.fromCallable + boundedElastic.
@@ -1973,6 +2061,18 @@ private PlatformTransactionManager transactionManager;
                 .doOnError(error -> log.warn(
                         "Failed to refresh filterList cache for {}::{}",
                         application.getName(), refType, error))
+                .doFinally(signalType -> {
+                    // Signale aux read-paths bloques en stale-wait que le
+                    // recompute est termine ( succes , erreur ou cancel ) .
+                    // {@code completeExceptionally} declenche un
+                    // ExecutionException cote consommateur ; {@code complete}
+                    // un retour normal . Le read path tente une re-lecture
+                    // du cache et bascule sur stale si rien n'a ete ecrit
+                    // ( cas refresh partial / erreur silencieuse ) .
+                    final java.util.concurrent.CompletableFuture<Void> done =
+                            filterListPendingRefresh.remove(cacheKey);
+                    if (done != null && !done.isDone()) done.complete(null);
+                })
                 .subscribe();
         // Audit OA_FULL_REVIEW (8/5/26) - les scopes d'autorisation ( cf.
         // AuthorizationService.getAuthorizationScopes ) ET les

@@ -47,6 +47,19 @@ public class MemoryCache<K, V> {
 
     private final String name;
     private final ConcurrentHashMap<K, Entry<V>> map = new ConcurrentHashMap<>();
+
+    /**
+     * Cles flaggees comme periemees ( stale-while-revalidate ) . Une entry
+     * peut etre presente dans {@link #map} ET dans {@link #staleKeys} en
+     * meme temps : la valeur reste servable ( cache hit ) , mais le caller
+     * sait qu'elle est obsolete et peut declencher un recompute en
+     * arriere-plan tout en evitant de bloquer l'utilisateur . Le flag est
+     * automatiquement nettoye par {@link #put} ( ecriture fraiche = plus
+     * stale ) et par les invalidations . Stocke en cle-set separe pour
+     * eviter de modifier le record {@link Entry} ( pas de breaking change
+     * pour les autres consommateurs de MemoryCache ) .
+     */
+    private final java.util.Set<K> staleKeys = ConcurrentHashMap.newKeySet();
     private volatile int maxEntries;
     private volatile long ttlMinutes;
 
@@ -91,11 +104,40 @@ public class MemoryCache<K, V> {
         if (map.size() >= maxEntries && !map.containsKey(key)) {
             map.entrySet().stream()
                     .min(Comparator.comparingLong(e -> e.getValue().timestamp()))
-                    .ifPresent(oldest -> map.remove(oldest.getKey()));
+                    .ifPresent(oldest -> {
+                        map.remove(oldest.getKey());
+                        staleKeys.remove(oldest.getKey());
+                    });
         }
         long now = System.currentTimeMillis();
         map.put(key, new Entry<>(value, now));
+        // Une ecriture fraiche annule le flag stale ( contrat
+        // stale-while-revalidate : put() = "j'ai le nouveau payload" ) .
+        staleKeys.remove(key);
         lastWriteAtMs = now;
+    }
+
+    /**
+     * Marque la cle comme periemee sans la supprimer ( pattern
+     * stale-while-revalidate , RFC 5861 ) . Les prochains {@link #get}
+     * continuent de servir la valeur ; le caller peut consulter
+     * {@link #isStale} pour decider de declencher un recompute en
+     * arriere-plan et d'informer l'utilisateur via un header / toast .
+     *
+     * <p>No-op si la cle n'est pas presente dans le cache : on ne marque
+     * stale qu'une entry qui existe ( sinon le flag n'aurait aucun effet
+     * et fuiterait jusqu'a la prochaine ecriture sur cette cle ) .
+     */
+    public void markStale(K key) {
+        if (key != null && map.containsKey(key)) staleKeys.add(key);
+    }
+
+    /**
+     * Vrai si la cle est presente dans le cache ET marquee stale . Faux
+     * sinon ( y compris cle absente ) .
+     */
+    public boolean isStale(K key) {
+        return key != null && staleKeys.contains(key);
     }
 
     /**
@@ -110,7 +152,10 @@ public class MemoryCache<K, V> {
 
     /** Retire une entrée par clé. */
     public void invalidate(K key) {
-        if (key != null) map.remove(key);
+        if (key != null) {
+            map.remove(key);
+            staleKeys.remove(key);
+        }
     }
 
     /**
@@ -121,6 +166,7 @@ public class MemoryCache<K, V> {
     public int invalidateMatching(Predicate<K> predicate) {
         int sizeBefore = map.size();
         map.keySet().removeIf(predicate);
+        staleKeys.removeIf(predicate);
         int removed = sizeBefore - map.size();
         if (removed > 0) log.info("MemoryCache[{}] : {} entrées invalidées", name, removed);
         return removed;
@@ -130,6 +176,7 @@ public class MemoryCache<K, V> {
     public void invalidateAll() {
         int sizeBefore = map.size();
         map.clear();
+        staleKeys.clear();
         // Reset le timestamp "Derniere MAJ" : un cache vide n'a plus de
         // notion de "dernier remplissage" coherent ; remettre a 0 ferme le
         // contrat de lastWriteAt() = "depuis demarrage / invalidation totale" .
