@@ -55,6 +55,12 @@ public class UserRolesService {
     private static final String ROLE_READER = "reader";
     private static final String ROLE_WRITER = "writer";
     private static final String ROLE_OPEN_ADOM_ADMIN = "openAdomAdmin";
+    private static final String ROLE_APPLICATION_CREATOR = "applicationCreator";
+    /** Default pattern stored alongside the applicationCreator membership in
+     *  {@code oresiuser.authorizations} . Matches any app name (regex) , which
+     *  is the policy used by the admin UI : either you can create apps or you
+     *  can't , no per-app filtering at this layer . */
+    private static final String APPLICATION_CREATOR_DEFAULT_PATTERN = ".*";
     private static final String ERR_UNKNOWN_GLOBAL_ROLE = "Unknown global role: ";
     private static final String ERR_UNKNOWN_APPLICATION_ROLE = "Unknown application role: ";
 
@@ -64,7 +70,7 @@ public class UserRolesService {
 
     /** Global role names allowed by the grant/revoke endpoints. */
     private static final Set<String> GLOBAL_ROLES =
-            Set.of(ROLE_OPEN_ADOM_ADMIN, ROLE_USER_MANAGER);
+            Set.of(ROLE_OPEN_ADOM_ADMIN, ROLE_USER_MANAGER, ROLE_APPLICATION_CREATOR);
 
     private final UserRepository userRepository;
     private final ApplicationRepository applicationRepository;
@@ -117,7 +123,10 @@ public class UserRolesService {
                 .filter(u -> matchesLogin(u, normalizedLogin))
                 .filter(u -> matchesState(u, normalizedState))
                 .map(u -> {
-                    CurrentUserRoles userRoles = loadUserRoles(u);
+                    // Direct memberships only : the list + detail UI must reflect
+                    // what can actually be revoked via this service . See
+                    // loadUserRolesDirect javadoc for the reasoning .
+                    CurrentUserRoles userRoles = loadUserRolesDirect(u);
                     Map<String, List<String>> apps = userRoles.applicationRoles();
                     int appCount = apps.size();
                     int globalCount = countGlobalRoles(userRoles);
@@ -153,7 +162,10 @@ public class UserRolesService {
             return Optional.empty();
         }
         OreSiUser user = userOpt.get();
-        CurrentUserRoles userRoles = loadUserRoles(user);
+        // Direct memberships only ( see loadUserRolesDirect javadoc ) : avoid
+        // exposing transitively-granted roles that hasPgMembership cannot find
+        // and revokeRole therefore cannot remove .
+        CurrentUserRoles userRoles = loadUserRolesDirect(user);
         Map<String, List<String>> appsByUuid = userRoles.applicationRoles();
 
         if (!caller.isOpenAdomAdmin() && !isVisibleToManagerByApps(appsByUuid, caller)) {
@@ -175,13 +187,110 @@ public class UserRolesService {
                 .sorted((a, b) -> a.applicationName().compareToIgnoreCase(b.applicationName()))
                 .toList();
 
+        // Accessible applications : chartes-signed apps + admin bypass ( an
+        // openAdomAdmin transparently sees every existing application ,
+        // aligned with the frontend UserView "Systèmes accessibles" panel ) .
+        boolean userIsAdmin = userRoles.memberOf().contains(ROLE_OPEN_ADOM_ADMIN);
+        List<UserDTO.AccessibleApp> accessible = computeAccessibleApps(user, userIsAdmin);
+
+        // Inherited global roles : roles the user has EFFECTIVELY ( via a
+        // transitive pg role membership chain , e.g. openAdomAdmin INHERITS
+        // applicationCreator ) but NOT directly . The admin UI must show
+        // these so an operator sees the complete effective rights picture ,
+        // aligned with the main frontend "Droits de création" toggle that
+        // reflects effective ( not direct ) status . Direct memberships
+        // already appear in {@link #globalRoles} and are revokable ; the
+        // inherited ones cannot be revoked without removing the parent role
+        // ( e.g. revoke openAdomAdmin to drop applicationCreator inheritance ) .
+        List<String> inherited = computeInheritedGlobalRoles(user, userRoles);
+
         return Optional.of(new UserDTO.UserDetail(
                 user.getId(),
                 user.getLogin(),
                 user.getEmail(),
                 user.getAccountstate() != null ? user.getAccountstate().name() : null,
                 globals,
-                apps));
+                apps,
+                accessible,
+                inherited));
+    }
+
+    /**
+     * Detects global roles the user effectively holds via inheritance but
+     * not via a direct {@code pg_auth_members} row . Uses {@code pg_has_role}
+     * to probe each managed global role , then subtracts the direct ones
+     * already reported in {@code globalRoles} to avoid duplicates .
+     *
+     * <p>Concretely : an {@code openAdomAdmin} automatically inherits
+     * {@code applicationCreator} via the PG role chain set up at bootstrap ,
+     * so the admin UI surfaces it as "( hérité via openAdomAdmin )" instead
+     * of silently hiding it ( which used to confuse operators toggling the
+     * "Droits de création d'applications" checkbox in the main frontend ) .
+     */
+    private List<String> computeInheritedGlobalRoles(OreSiUser user,
+                                                     CurrentUserRoles directRoles) {
+        Set<String> directNames = Set.copyOf(directRoles.memberOf());
+        return GLOBAL_ROLES.stream()
+                .filter(role -> !directNames.contains(role))
+                .filter(role -> hasEffectiveRole(user.getId(), role))
+                .sorted()
+                .toList();
+    }
+
+    /**
+     * Returns true if the user is EFFECTIVE member of the PG role , walking
+     * the membership tree transitively ( unlike {@link #hasPgMembership}
+     * which only checks the direct row ) . Backed by {@code pg_has_role}
+     * which is exactly the function PostgreSQL uses internally for SECURITY
+     * DEFINER checks .
+     */
+    private boolean hasEffectiveRole(UUID userId, String pgRoleName) {
+        try {
+            Boolean has = jdbcTemplate.queryForObject(
+                    "SELECT pg_has_role(?, ?, 'MEMBER')",
+                    Boolean.class, userId.toString(), pgRoleName);
+            return Boolean.TRUE.equals(has);
+        } catch (RuntimeException ex) {
+            // Role may not exist yet ( fresh install ) or PG may have raised
+            // permission denied ; best-effort : treat as no-inheritance .
+            log.debug("hasEffectiveRole failed for {} on {} : {}",
+                    userId, pgRoleName, ex.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Resolves the list of applications the given user can access . Mirrors
+     * the frontend {@code UserView.vue} composition :
+     * <ul>
+     *   <li>charte-signed apps : {@code user.chartes.keySet()} - the user
+     *       physically signed the charter , so they appear in the access list
+     *       even if they currently hold no PG role on the app ;</li>
+     *   <li>openAdomAdmin bypass : an admin transparently sees every existing
+     *       application ( the role grants unconditional access at the SQL
+     *       layer , so the UI must reflect that ) .</li>
+     * </ul>
+     * Apps whose UUID is no longer present in the {@code application} table
+     * ( deleted apps still referenced in stale chartes ) are skipped to avoid
+     * showing dangling chip labels in the admin UI .
+     */
+    private List<UserDTO.AccessibleApp> computeAccessibleApps(OreSiUser user, boolean userIsAdmin) {
+        Set<String> ids = new LinkedHashSet<>();
+        if (user.getChartes() != null) {
+            ids.addAll(user.getChartes().keySet());
+        }
+        if (userIsAdmin) {
+            applicationRepository.findAll().stream()
+                    .map(Application::getId)
+                    .map(UUID::toString)
+                    .forEach(ids::add);
+        }
+        return ids.stream()
+                .map(applicationRepository::tryFindApplication)
+                .flatMap(Optional::stream)
+                .map(app -> new UserDTO.AccessibleApp(app.getId(), app.getName()))
+                .sorted((a, b) -> a.applicationName().compareToIgnoreCase(b.applicationName()))
+                .toList();
     }
 
     // ---------------------------------------------------------------- //
@@ -195,15 +304,29 @@ public class UserRolesService {
      * {@code reader}/{@code writer} variants. En cas de succes , log un row GRANT
      * dans {@code oa_audit.role_grant_audit} ( best-effort ) .
      *
+     * <p>Retourne {@code true} si le rôle a réellement été accordé , {@code false}
+     * si l'utilisateur l'avait déjà ( no-op idempotent ) . Permet à l'UI de
+     * remonter un toast contextuel "Rôle attribué" vs "Rôle déjà attribué" .
+     *
      * @throws IllegalArgumentException if the role name is unknown
      * @throws AccessDeniedException    if the caller lacks the right scope
      */
     @Transactional
-    public void grantRole(UUID userId, UUID applicationId, String roleName) {
+    public boolean grantRole(UUID userId, UUID applicationId, String roleName) {
         Objects.requireNonNull(userId, "userId");
         Objects.requireNonNull(roleName, "roleName");
         requireGrantPermission(applicationId, roleName);
         ensureUserExists(userId);
+
+        // Pre-check : evite un GRANT inutile + permet de retourner false quand
+        // le role est deja accorde . Sans ce check , l'appel sql GRANT est
+        // idempotent ( pas d'erreur PG ) , mais l'audit + le retour HTTP ne
+        // peuvent pas distinguer "nouvelle attribution" de "deja membre" .
+        if (hasPgMembership(userId, applicationId, roleName)) {
+            log.info("grantRole no-op : user {} already member of role {} ( app {} )",
+                    userId, roleName, applicationId);
+            return false;
+        }
 
         if (applicationId == null) {
             grantGlobalRole(userId, roleName);
@@ -212,6 +335,7 @@ public class UserRolesService {
             grantApplicationRole(userId, application, roleName);
         }
         auditLogger.logGrant(userId, roleName, applicationId);
+        return true;
     }
 
     // ---------------------------------------------------------------- //
@@ -225,15 +349,34 @@ public class UserRolesService {
      * subsequent reads reflect the current PG state. En cas de succes , log un
      * row REVOKE dans {@code oa_audit.role_grant_audit} ( best-effort ) .
      *
+     * <p>Retourne {@code true} si le rôle a réellement été révoqué , {@code false}
+     * si l'utilisateur ne l'avait pas ( ou si l'état est incohérent : rôle PG
+     * present mais introuvable via {@code pg_auth_members} sous le nom logique
+     * passe ) . Permet à l'UI de remonter un toast "Rôle révoqué" vs "Aucun
+     * rôle à révoquer ( déjà absent ou incohérence post-portage )" .
+     *
      * @throws IllegalArgumentException if the role name is unknown
      * @throws AccessDeniedException    if the caller lacks the right scope
      */
     @Transactional
-    public void revokeRole(UUID userId, UUID applicationId, String roleName) {
+    public boolean revokeRole(UUID userId, UUID applicationId, String roleName) {
         Objects.requireNonNull(userId, "userId");
         Objects.requireNonNull(roleName, "roleName");
         requireGrantPermission(applicationId, roleName);
         ensureUserExists(userId);
+
+        // Pre-check : verifie la presence reelle de la membership PG avant
+        // d'executer le REVOKE . Sans ca , une base portee depuis l'ancien
+        // schema ( colonne authorizations vide mais membership PG present
+        // sous un format obsolete ) renvoie 200 OK avec revoked: true alors
+        // qu'aucune ligne n'a ete supprimee -> UI affiche succes mais
+        // l'utilisateur conserve le role apres refresh . Le pre-check
+        // garantit que le retour HTTP reflete la realite PG.
+        if (!hasPgMembership(userId, applicationId, roleName)) {
+            log.info("revokeRole no-op : user {} not member of role {} ( app {} )",
+                    userId, roleName, applicationId);
+            return false;
+        }
 
         if (applicationId == null) {
             revokeGlobalRole(userId, roleName);
@@ -242,6 +385,51 @@ public class UserRolesService {
             revokeApplicationRole(userId, application, roleName);
         }
         auditLogger.logRevoke(userId, roleName, applicationId);
+        return true;
+    }
+
+    // ---------------------------------------------------------------- //
+    //  pg membership probe                                             //
+    // ---------------------------------------------------------------- //
+
+    /**
+     * Resolve le nom PG attendu pour ( applicationId , roleName ) puis verifie
+     * la presence dans {@code pg_auth_members} pour cet utilisateur . Sert
+     * de garde idempotente aux operations grant / revoke ( cf. methodes
+     * publiques ) .
+     *
+     * <p>Pour les roles globaux ( {@code applicationId == null} ) le nom PG
+     * est directement {@code roleName} ( e.g. "openAdomAdmin" ) .
+     * Pour les roles applicatifs , on reconstruit le nom via
+     * {@link #buildAppRoleSqlName(UUID, String)} aligne sur la convention
+     * actuelle . Les anciens role names obsoletes ( format {@code _mgt_xxx}
+     * herite du portage de base ) ne sont pas reconnus ici et renverront
+     * {@code false} - c'est le comportement attendu : la revocation depuis
+     * l'UI ne doit pas pretendre supprimer une membership qu'elle ne sait
+     * pas adresser .
+     */
+    private boolean hasPgMembership(UUID userId, UUID applicationId, String roleName) {
+        final String pgRoleName = (applicationId == null)
+                ? roleName
+                : buildAppRoleSqlName(applicationId, roleName);
+        // pg_auth_members.member = user uuid stocke comme texte ( convention
+        // OpenADOM : chaque user est un role PG nomme avec son uuid ) .
+        // pg_auth_members.roleid = oid du role PG accorde .
+        final String sql = """
+                SELECT 1
+                FROM pg_auth_members am
+                JOIN pg_roles r_role   ON r_role.oid   = am.roleid
+                JOIN pg_roles r_member ON r_member.oid = am.member
+                WHERE r_role.rolname   = ?
+                  AND r_member.rolname = ?
+                LIMIT 1
+                """;
+        // Cast explicite vers ResultSetExtractor pour lever l'ambiguite avec
+        // l'overload RowCallbackHandler ( meme signature lambda ) .
+        final org.springframework.jdbc.core.ResultSetExtractor<Boolean> extractor =
+                rs -> rs.next();
+        return Boolean.TRUE.equals(
+                jdbcTemplate.query(sql, extractor, pgRoleName, userId.toString()));
     }
 
     // ---------------------------------------------------------------- //
@@ -425,6 +613,8 @@ public class UserRolesService {
     private void grantGlobalRole(UUID userId, String roleName) {
         switch (roleName) {
             case ROLE_OPEN_ADOM_ADMIN -> authenticationService.addUserRightopenAdomAdmin(userId);
+            case ROLE_APPLICATION_CREATOR ->
+                    authenticationService.addUserRightCreateApplication(userId, APPLICATION_CREATOR_DEFAULT_PATTERN);
             case ROLE_USER_MANAGER -> {
                 // No global userManager helper exists; this case is reserved for future
                 // expansion of the global scope. We refuse explicitly to avoid silent
@@ -449,6 +639,8 @@ public class UserRolesService {
     private void revokeGlobalRole(UUID userId, String roleName) {
         switch (roleName) {
             case ROLE_OPEN_ADOM_ADMIN -> authenticationService.deleteUserRightopenAdomAdmin(userId);
+            case ROLE_APPLICATION_CREATOR ->
+                    authenticationService.deleteUserRightCreateApplication(userId, APPLICATION_CREATOR_DEFAULT_PATTERN);
             case ROLE_USER_MANAGER -> throw new IllegalArgumentException(
                     "Global userManager revoke is not supported; revoke per application");
             default -> throw new IllegalArgumentException(ERR_UNKNOWN_GLOBAL_ROLE + roleName);
@@ -504,15 +696,47 @@ public class UserRolesService {
         return authenticationService.getCurrentUserRoles(user.getId().toString());
     }
 
+    /**
+     * Returns a {@link CurrentUserRoles} whose {@code memberOf} only contains
+     * roles the target user is a DIRECT member of in {@code pg_auth_members} .
+     *
+     * <p>The default {@link #loadUserRoles} relies on a recursive walk
+     * ( {@code WITH RECURSIVE membership_tree} ) which includes ancestors
+     * transitively . That is correct for authorization decisions , but for
+     * the admin UI it creates an asymmetry : a user inheriting
+     * {@code <app>_applicationManager} via a legacy intermediate role
+     * ( e.g. ported databases use {@code <app>_mgt_<hex>} as group ) is
+     * displayed with {@code applicationManager} in {@link UserDTO.UserDetail} ,
+     * but {@link #hasPgMembership} performs a non-recursive check and returns
+     * false , so {@link #revokeRole} no-ops -> the UI offers a revoke action
+     * that cannot succeed .
+     *
+     * <p>Using direct memberships for display + filtering closes that gap :
+     * only roles that the user truly holds as a direct PG grant are exposed ,
+     * and every exposed role can be revoked via this service . Roles inherited
+     * via legacy intermediates remain effective for authorization ( the
+     * recursive query is still used by the caller permission path ) but are
+     * not surfaced as actionable items in the admin UI .
+     */
+    private CurrentUserRoles loadUserRolesDirect(OreSiUser user) {
+        List<String> directMembers = userRepository.findDirectMemberOf(user.getId());
+        return new CurrentUserRoles(directMembers, false, user);
+    }
+
     private List<String> collectGlobalRoles(CurrentUserRoles userRoles) {
         if (userRoles == null || userRoles.memberOf() == null) {
             return List.of();
         }
+        // Whitelist-only filter : keep PG memberships whose name matches a role
+        // OpenADOM actually manages ( GLOBAL_ROLES ) . Legacy roles inherited from
+        // an old ported database ( e.g. "abispo" , "<old>_mgt_*" ) end up in
+        // pg_auth_members but cannot be granted nor revoked via this service
+        // because validateRoleName rejects them , so exposing them in the UI
+        // would lead to dead-end revoke attempts . Symetric to buildAppMembership
+        // which already filters out application-scoped roles whose UUID is not
+        // in the application table . Orphan cleanup is out of scope here .
         return userRoles.memberOf().stream()
-                .filter(r -> !APP_ROLE_PATTERN.matcher(r).matches())
-                // Skip the user's own SQL role (UUID = user id) which always appears
-                // in memberOf and would pollute the "global roles" column.
-                .filter(r -> !r.equals(userRoles.userId() != null ? userRoles.userId().toString() : ""))
+                .filter(GLOBAL_ROLES::contains)
                 .sorted()
                 .toList();
     }

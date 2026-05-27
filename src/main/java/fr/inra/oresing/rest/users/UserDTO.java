@@ -67,7 +67,23 @@ public final class UserDTO {
             String                  email,
             String                  accountState,
             List<RoleAttribution>   globalRoles,
-            List<AppMembership>     applications
+            List<AppMembership>     applications,
+            List<AccessibleApp>     accessibleApplications,
+            List<String>            inheritedGlobalRoles
+    ) {
+    }
+
+    /**
+     * 1 entry par application accessible au user via {@code oresiuser.chartes}
+     * ( charte signee ) . Distinct des {@link AppMembership} qui listent les
+     * roles PG : un user peut avoir signe la charte sans avoir de role app .
+     * Un {@code openAdomAdmin} est considere comme ayant acces a toutes les
+     * apps existantes ( meme sans charte signee ) , aligne avec le bypass
+     * applique cote frontend dans {@code UserView.vue} .
+     */
+    public record AccessibleApp(
+            UUID    applicationId,
+            String  applicationName
     ) {
     }
 

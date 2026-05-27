@@ -63,6 +63,35 @@ class UserRolesServiceTest {
         service = new UserRolesService(
                 userRepository, applicationRepository, authenticationService,
                 jdbcTemplate, auditRepository, auditLogger);
+
+        // UserRolesService now builds the display CurrentUserRoles from a
+        // DIRECT pg_auth_members query ( UserRepository.findDirectMemberOf )
+        // instead of the recursive authentication query . Existing tests
+        // configure roles via authenticationService.getCurrentUserRoles ;
+        // bridge that into findDirectMemberOf by reading the recursive
+        // stub's memberOf so every test keeps a single source of truth .
+        when(userRepository.findDirectMemberOf(any(UUID.class))).thenAnswer(inv -> {
+            UUID uid = inv.getArgument(0);
+            CurrentUserRoles cr = authenticationService.getCurrentUserRoles(uid.toString());
+            return cr == null ? List.of() : cr.memberOf();
+        });
+    }
+
+    /**
+     * Stub helper : fait croire au {@code UserRolesService.hasPgMembership}
+     * que la membership PG existe ( ou pas , selon {@code member} ) . A
+     * appeler dans les tests revoke pour autoriser le delegate vers
+     * {@code authenticationService.delete*} , et dans les tests grant
+     * pour simuler le cas "deja membre" / "pas encore membre" .
+     * <p>Signature : {@code query(String , ResultSetExtractor , Object... )}
+     * avec deux arguments positionnels ( pgRoleName + userId ) .
+     */
+    @SuppressWarnings("unchecked")
+    private void givenPgMembership(boolean member) {
+        when(jdbcTemplate.query(
+                anyString(),
+                any(org.springframework.jdbc.core.ResultSetExtractor.class),
+                any(), any())).thenReturn(member);
     }
 
     // ---------------------------------------------------------------- //
@@ -300,6 +329,38 @@ class UserRolesServiceTest {
     }
 
     @Test
+    @DisplayName("findDetail filters out legacy / orphan PG roles from globalRoles")
+    void detailGlobalRolesIgnoreOrphans() {
+        asAdmin();
+        OreSiUser alice = user(USER_ALICE, "alice", "alice@x", OreSiUser.OreSiUserStates.active);
+        when(userRepository.tryFindById(USER_ALICE)).thenReturn(Optional.of(alice));
+        // memberOf contains : a managed global ( openAdomAdmin ) , a self-uuid
+        // role , an app-scoped role with an unknown UUID , and two legacy /
+        // orphan PG names ( "abispo" , "legacy_mgt_xxx" ) inherited from a
+        // ported database . Only openAdomAdmin must surface in globalRoles ;
+        // the unknown-UUID app role is dropped silently by buildAppMembership ;
+        // the legacy names must NOT appear anywhere in the detail payload .
+        UUID unknownApp = UUID.fromString("00000000-0000-0000-0000-000000000099");
+        when(authenticationService.getCurrentUserRoles(USER_ALICE.toString()))
+                .thenReturn(roles(alice,
+                        "openAdomAdmin",
+                        USER_ALICE.toString(),
+                        unknownApp + "_reader",
+                        "abispo",
+                        "legacy_mgt_xxx"));
+        when(applicationRepository.tryFindApplication(unknownApp.toString()))
+                .thenReturn(Optional.empty());
+
+        Optional<UserDTO.UserDetail> result = service.findDetail(USER_ALICE);
+
+        assertTrue(result.isPresent());
+        UserDTO.UserDetail detail = result.get();
+        assertEquals(1, detail.globalRoles().size());
+        assertEquals("openAdomAdmin", detail.globalRoles().get(0).roleName());
+        assertTrue(detail.applications().isEmpty());
+    }
+
+    @Test
     @DisplayName("findDetail hides users outside the manager's scope")
     void detailScopedHidden() {
         asApplicationManager(APP_ID_A);
@@ -442,10 +503,28 @@ class UserRolesServiceTest {
         when(userRepository.tryFindById(USER_ALICE)).thenReturn(Optional.of(alice));
         Application appA = app(APP_ID_A, "appA");
         when(applicationRepository.findApplication(APP_ID_A)).thenReturn(appA);
+        givenPgMembership(true);
 
         service.revokeRole(USER_ALICE, APP_ID_A, "applicationManager");
 
         verify(authenticationService).deleteUserRightApplicationManager(USER_ALICE, appA);
+    }
+
+    @Test
+    @DisplayName("revoke returns false when user is not a PG member ( legacy port residue )")
+    void revokeNoopWhenNotMember() {
+        asAdmin();
+        OreSiUser alice = user(USER_ALICE, "alice", "alice@x", OreSiUser.OreSiUserStates.active);
+        when(userRepository.tryFindById(USER_ALICE)).thenReturn(Optional.of(alice));
+        when(applicationRepository.findApplication(APP_ID_A)).thenReturn(app(APP_ID_A, "appA"));
+        givenPgMembership(false);
+
+        boolean result = service.revokeRole(USER_ALICE, APP_ID_A, "applicationManager");
+
+        assertFalse(result);
+        verify(authenticationService, never())
+                .deleteUserRightApplicationManager(any(), any());
+        verify(auditLogger, never()).logRevoke(any(), any(), any());
     }
 
     @Test
@@ -461,6 +540,7 @@ class UserRolesServiceTest {
         when(userRepository.findById(USER_ALICE)).thenReturn(alice);
         when(applicationRepository.findApplication(APP_ID_A))
                 .thenReturn(app(APP_ID_A, "appA"));
+        givenPgMembership(true);
 
         service.revokeRole(USER_ALICE, APP_ID_A, "reader");
 
@@ -579,6 +659,7 @@ class UserRolesServiceTest {
         asAdmin();
         OreSiUser alice = user(USER_ALICE, "alice", "alice@x", OreSiUser.OreSiUserStates.active);
         when(userRepository.tryFindById(USER_ALICE)).thenReturn(Optional.of(alice));
+        givenPgMembership(true);
         when(applicationRepository.findApplication(APP_ID_A))
                 .thenReturn(app(APP_ID_A, "appA"));
 

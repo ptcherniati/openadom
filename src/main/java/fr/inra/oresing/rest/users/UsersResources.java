@@ -65,6 +65,12 @@ public class UsersResources {
 
     /**
      * Grants a role to the user. Empty {@code applicationId} means "global role".
+     *
+     * <p>Le champ {@code granted} dans la reponse reflete l'etat reel cote PG :
+     * {@code true} si la membership a ete creee , {@code false} si l'utilisateur
+     * etait deja membre ( no-op idempotent ) . Le client peut alors afficher
+     * un toast contextuel "Role attribue" vs "Role deja attribue" plutot que
+     * de presumer un succes systematique .
      */
     @Operation(summary = "Grant a role to a user.")
     @PostMapping(
@@ -74,16 +80,27 @@ public class UsersResources {
     public ResponseEntity<Map<String, Object>> grant(
             @PathVariable("userId") UUID userId,
             @RequestBody UserDTO.GrantRoleRequest request) {
-        service.grantRole(userId, request.applicationId(), request.roleName());
-        return ResponseEntity.ok(Map.of(
-                "userId", userId.toString(),
-                "applicationId", request.applicationId() == null ? null : request.applicationId().toString(),
-                "roleName", request.roleName(),
-                "granted", true));
+        boolean granted = service.grantRole(userId, request.applicationId(), request.roleName());
+        // Map.of rejects null values ( NPE ) and a global grant has a null
+        // applicationId by design , so build the response with a LinkedHashMap
+        // that tolerates nulls and preserves the field order .
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("userId", userId.toString());
+        body.put("applicationId", request.applicationId() == null ? null : request.applicationId().toString());
+        body.put("roleName", request.roleName());
+        body.put("granted", granted);
+        return ResponseEntity.ok(body);
     }
 
     /**
      * Revokes a role from the user. Body matches the grant payload for symmetry.
+     *
+     * <p>Le champ {@code revoked} reflete l'etat reel cote PG : {@code true}
+     * si la membership a ete supprimee , {@code false} si l'utilisateur n'etait
+     * pas membre ( e.g. base portee avec un format de role obsolete , role
+     * deja revoque par un autre admin , etc ) . Le client doit afficher une
+     * erreur dans ce dernier cas plutot que de pretendre que la revocation
+     * a fonctionne .
      */
     @Operation(summary = "Revoke a role from a user.")
     @DeleteMapping(
@@ -93,12 +110,13 @@ public class UsersResources {
     public ResponseEntity<Map<String, Object>> revoke(
             @PathVariable("userId") UUID userId,
             @RequestBody UserDTO.RevokeRoleRequest request) {
-        service.revokeRole(userId, request.applicationId(), request.roleName());
-        return ResponseEntity.ok(Map.of(
-                "userId", userId.toString(),
-                "applicationId", request.applicationId() == null ? null : request.applicationId().toString(),
-                "roleName", request.roleName(),
-                "revoked", true));
+        boolean revoked = service.revokeRole(userId, request.applicationId(), request.roleName());
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("userId", userId.toString());
+        body.put("applicationId", request.applicationId() == null ? null : request.applicationId().toString());
+        body.put("roleName", request.roleName());
+        body.put("revoked", revoked);
+        return ResponseEntity.ok(body);
     }
 
     // ---------------------------------------------------------------- //

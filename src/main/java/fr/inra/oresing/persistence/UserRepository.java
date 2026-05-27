@@ -120,6 +120,39 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
                 new MapSqlParameterSource("roleName", roleName), getJsonRowMapper());
     }
 
+    /**
+     * Returns the PG role names this user is a DIRECT member of , i.e. the
+     * rows of {@code pg_auth_members} where {@code member} is the role
+     * created for this user ( UUID = role name ) .
+     *
+     * <p>Unlike {@link #getRolesForRole(String)} which performs a recursive
+     * walk and returns transitive ancestors , this method intentionally
+     * stops at depth 1 . Callers that need to drive the admin UI ( list
+     * what can actually be revoked ) prefer the direct view ; callers that
+     * need to evaluate effective permissions stick to the recursive query .
+     *
+     * <p>Returned list is never null ; may be empty for a freshly created
+     * user with no grants .
+     */
+    public List<String> findDirectMemberOf(final UUID userId) {
+        // pg_auth_members has a composite primary key including the grantor ,
+        // so a role granted by two different admins yields two rows for the
+        // same ( roleid , member ) pair . SELECT DISTINCT collapses these
+        // duplicates so callers see one entry per role , which is what the
+        // admin UI expects ( a role is either held or not , the grantor
+        // multiplicity is an internal detail ) .
+        final String query = """
+                SELECT DISTINCT r.rolname
+                FROM pg_auth_members m
+                JOIN pg_roles user_role ON user_role.oid = m.member
+                JOIN pg_roles r        ON r.oid         = m.roleid
+                WHERE user_role.rolname = :userId
+                """;
+        return getNamedParameterJdbcTemplate().queryForList(query,
+                new MapSqlParameterSource("userId", userId.toString()),
+                String.class);
+    }
+
     public Map<String, List<String>> getRolesGrantedToRoles(List<String> roles) {
         Map<String, List<String>> result = new HashMap<>();
 
