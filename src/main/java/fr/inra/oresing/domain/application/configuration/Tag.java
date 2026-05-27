@@ -85,6 +85,7 @@ public sealed interface Tag {
         FILTER_LIST_TAG(FilterListTag.FILTER_LIST_TAG, w -> FilterListTag.instance(), FilterListTag.getTagPattern()),
         ORDER_STRICT_TAG(OrderStrictTag.ORDER_STRICT_TAG, w -> OrderStrictTag.instance(), OrderStrictTag.getTagPattern()),
         NO_TAG(NoTag.NO_TAG, w -> NoTag.instance(), NoTag.getTagPattern()),
+        BUSINESS_TAG(BusinessTag.BUSINESS_TAG, BusinessTag::buildBusinessTag, BusinessTag.getTagPattern()),
         DOMAIN_TAG(DomainTag.DOMAIN_TAG, DomainTag::buildDomainTag, DomainTag.getTagPattern());
         final Predicate<String> isA;
         final Function<String, Tag> build;
@@ -104,7 +105,7 @@ public sealed interface Tag {
 
         static Set<String> getReservedTagPatterns() {
             return Arrays.stream(values())
-                    .filter(tagDefinitions -> tagDefinitions != DOMAIN_TAG)
+                    .filter(tagDefinitions -> tagDefinitions != DOMAIN_TAG && tagDefinitions != BUSINESS_TAG)
                     .map(TagDefinitions::getTagPattern)
                     .collect(Collectors.toSet());
         }
@@ -151,6 +152,41 @@ public sealed interface Tag {
 
         public static String getTagPattern() {
             return DOMAIN_PATTERN;
+        }
+    }
+
+
+    /**
+     * Tag métier utilisateur au format {@code __PREFIX__} ou
+     * {@code __PREFIX_123__}. Le préfixe doit commencer par une majuscule et ne
+     * contenir que des majuscules, chiffres ou underscores ; le paramètre
+     * numérique final est optionnel. Les tags réservés sont évalués avant ce
+     * motif pour que, par exemple, {@code __ORDER_5__} reste un
+     * {@link OrderTag}.
+     */
+    record BusinessTag(TagDefinitions tagDefinition, String tagPrefix, Integer tagParameter) implements Tag {
+        public static final String BUSINESS_PATTERN = "^__([A-Z][A-Z0-9_]*?)(?:_(\\d+))?__$";
+        public static final Predicate<String> BUSINESS_TAG = w -> Pattern.compile(BUSINESS_PATTERN).matcher(w).matches()
+                && Arrays.stream(TagDefinitions.values())
+                .filter(tagDefinition -> tagDefinition != TagDefinitions.DOMAIN_TAG
+                        && tagDefinition != TagDefinitions.BUSINESS_TAG)
+                .noneMatch(tagDefinition -> Pattern.compile(tagDefinition.getTagPattern()).matcher(w).matches());
+
+        public BusinessTag(final String tagPrefix, final Integer tagParameter) {
+            this(TagDefinitions.BUSINESS_TAG, tagPrefix, tagParameter);
+        }
+
+        public static BusinessTag buildBusinessTag(final String tagName) {
+            final Matcher matcher = Pattern.compile(BUSINESS_PATTERN).matcher(tagName);
+            if (matcher.matches()) {
+                return new BusinessTag(matcher.group(1), Optional.ofNullable(matcher.group(2)).map(Integer::parseInt).orElse(null));
+            } else {
+                throw new SiOreIllegalArgumentException("unExpected error", Map.of("comment", "on ne doit jamais arriver ici (a cause du filter)"));
+            }
+        }
+
+        public static String getTagPattern() {
+            return BUSINESS_PATTERN;
         }
     }
 

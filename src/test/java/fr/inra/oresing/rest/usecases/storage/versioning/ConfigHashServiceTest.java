@@ -187,6 +187,7 @@ class ConfigHashServiceTest {
                 2,
                 false,
                 tags,
+                fr.inra.oresing.domain.application.configuration.FilterModel.NONE,
                 new LinkedHashSet<>(),
                 new LinkedHashMap<>(),
                 null,
