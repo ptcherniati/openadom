@@ -30,7 +30,7 @@ Le backend suit une architecture hexagonale :
 
 ## Pipeline d'import CSV (Cascade)
 
-Voir `documentations/features/ARCHITECTURE_DEPOT_FICHIER.md` pour la description complète.
+Voir `documentations/architecture/ARCHITECTURE_DEPOT_FICHIER.md` pour la description complète.
 Points clés :
 - Ordre de traitement par ligne : `computeComputedColumns()` → `check()` → `computeKeys()`
 - Mode récursif legacy : `chunkSizeLines = MAX_VALUE`, `parallelism = 1`.
@@ -52,6 +52,8 @@ openadom.http.streaming.timeout=6h
 
 ## Fichiers de documentation
 
+### `documentations/architecture/` — fonctionnalités implémentées (référence)
+
 | Document | Contenu |
 |----------|---------|
 | `ARCHITECTURE_DEPOT_FICHIER.md` | Filière d'import complète bout en bout |
@@ -59,6 +61,17 @@ openadom.http.streaming.timeout=6h
 | `PERF_IMPORT_REFERENCE_PRECOMPUTATION.md` | Optimisations cache référence (niveaux 1-4) |
 | `ERREURS_DEPOT_FICHIER.md` | Catalogue des codes d'erreur d'import |
 | `MODE_RECURSION_ORDONNEE.md` | Mode `__ORDER_STRICT__` |
-| `PORTAGE_DEVELOP.md` | Suivi du portage depuis `Refactoring_deposit` |
 | `REORGANISATION_USE_CASES.md` | Structure des 46 Use Cases |
-| `TESTCONTAINERS_CONTAINER_MIGRATION.md` | Migration optionnelle `@BeforeAll → @Container` |
+| `INDEPENDENCE_DOMAINE.md` | Découplage de la couche `domain` (Ports & Adapters) |
+| `CI_CD_USE_CASES.md` | Profils Maven et CI/CD des tests Use Cases |
+| `TICKET_TRANSACTION_BLOCK_DETECTION.md` | Détection des blocages transactionnels (implémenté) |
+
+### `documentations/features/` — en cours, propositions et suivi
+
+| Document | Contenu | Statut |
+|----------|---------|--------|
+| `ACCELERATED_FILTERS.md` | Filtres accélérés (filter model + GIN faits ; colonnes générées à venir) | Partiel |
+| `VERIFICATION_MIGRATION_CONFIGURATION.md` | Règles d'acceptation de migration de configuration | Étude en cours |
+| `TICKET_MAIL_NON_BLOCKING.md` | Découplage de l'envoi d'e-mail du thread HTTP | À implémenter |
+| `TESTCONTAINERS_CONTAINER_MIGRATION.md` | Migration optionnelle `@BeforeAll → @Container` | Non implémenté |
+| `PORTAGE_DEVELOP.md` | Suivi du portage depuis `Refactoring_deposit` | Méta / historique |

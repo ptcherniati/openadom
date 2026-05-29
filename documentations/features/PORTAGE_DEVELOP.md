@@ -603,12 +603,12 @@ répétant les mêmes valeurs (cas typiques : SWC/ACBB 16 colonnes de référenc
 
 | Fichier | Contenu |
 |---|---|
-| `documentations/features/ARCHITECTURE_DEPOT_FICHIER.md` | Filière d'import complète bout en bout : configuration YAML → phases de validation → parallélisme Cascade → cas récursif |
-| `documentations/features/ARCHITECTURE_LECTURE_CONFIGURATION.md` | Chaîne YAML → Configuration → JSONB PostgreSQL. Remplace `REFACTORING_ARBRE_HIERARCHIQUE.md`. Recettes concrètes pour ajouter une section YAML, un tag, un checker. |
-| `documentations/features/ERREURS_DEPOT_FICHIER.md` | Catalogue exhaustif des messages d'erreur produits par l'import (types, paramètres, exemples JSON, conditions de déclenchement) ✅ créé |
-| `documentations/features/MODE_RECURSION_ORDONNEE.md` | Documentation du tag `__ORDER_STRICT__` : tableau comparatif des modes (chunk size / parallélisme), activation par YAML ou par propriété Spring |
-| `documentations/features/PERF_IMPORT_REFERENCE_PRECOMPUTATION.md` | Spécification des 5 niveaux de cache référence : architecture, axes, thread-safety, cas d'usage SWC/ACBB |
-| `documentations/features/REORGANISATION_USE_CASES.md` | Historique et anomalies de la réorganisation use cases (dont GetFileUseCase orphelin, résolu par R-P1-3) |
+| `documentations/architecture/ARCHITECTURE_DEPOT_FICHIER.md` | Filière d'import complète bout en bout : configuration YAML → phases de validation → parallélisme Cascade → cas récursif |
+| `documentations/architecture/ARCHITECTURE_LECTURE_CONFIGURATION.md` | Chaîne YAML → Configuration → JSONB PostgreSQL. Remplace `REFACTORING_ARBRE_HIERARCHIQUE.md`. Recettes concrètes pour ajouter une section YAML, un tag, un checker. |
+| `documentations/architecture/ERREURS_DEPOT_FICHIER.md` | Catalogue exhaustif des messages d'erreur produits par l'import (types, paramètres, exemples JSON, conditions de déclenchement) ✅ créé |
+| `documentations/architecture/MODE_RECURSION_ORDONNEE.md` | Documentation du tag `__ORDER_STRICT__` : tableau comparatif des modes (chunk size / parallélisme), activation par YAML ou par propriété Spring |
+| `documentations/architecture/PERF_IMPORT_REFERENCE_PRECOMPUTATION.md` | Spécification des 5 niveaux de cache référence : architecture, axes, thread-safety, cas d'usage SWC/ACBB |
+| `documentations/architecture/REORGANISATION_USE_CASES.md` | Historique et anomalies de la réorganisation use cases (dont GetFileUseCase orphelin, résolu par R-P1-3) |
 | `documentations/features/TESTCONTAINERS_CONTAINER_MIGRATION.md` | Migration optionnelle `@BeforeAll → @Container` (Ryuk) : analyse coût/bénéfice |
 | `.github/copilot-instructions.md` | Instructions Copilot pour le projet (contexte architecture, règles de code) |
 

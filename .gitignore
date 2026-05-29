@@ -38,3 +38,11 @@ src/main/resources/docker/prometheus/prometheus.yml
 .failedTest.txt
 
 cascade-stubs/
+
+# Dossiers et fichiers caches a la racine (outils : .idea, .vscode, .claude,
+# .serena, .env, .attach_pid*, etc.) ignores par defaut, puis on reintegre
+# explicitement les fichiers de configuration versionnes.
+/.*
+!/.gitignore
+!/.gitlab*
+!/.env-default
