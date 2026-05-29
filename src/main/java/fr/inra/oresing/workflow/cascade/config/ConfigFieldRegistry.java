@@ -121,6 +121,16 @@ public class ConfigFieldRegistry {
                         ImportProperties.StagingStrategy.valueOf(s)))
                 .build());
 
+        register(ConfigField.enumField("intraDuplicatePolicy", ImportProperties.IntraDuplicatePolicy.class)
+                .description("P1-3 : doublons de cle naturelle ( hierarchicalKey_uniqueness ) intra-import , "
+                        + "detectes sur le staging avant l'UPSERT . OFF = aucun scan ( comportement historique ) . "
+                        + "WARN ( defaut ) = scan + log , import inchange ( meme resultat ) . "
+                        + "FAIL = erreur metier claire avant toute mutation .")
+                .getter(() -> importProperties.getIntraDuplicatePolicy().name())
+                .setter(s -> importProperties.setIntraDuplicatePolicy(
+                        ImportProperties.IntraDuplicatePolicy.valueOf(s)))
+                .build());
+
         register(ConfigField.enumField("pipelineMode", PipelineMode.class)
                 .description("STAGED = transform termine pour tous les chunks avant que le sink ne demarre ; ordre preserve . "
                         + "PIPELINED = pipeline transform / sink en parallele via une bounded queue ; "

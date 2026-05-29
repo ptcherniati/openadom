@@ -235,6 +235,30 @@ public class ImportProperties {
      */
     private volatile long finalizeLockRetryBackoffMaxMs = 60_000L;
 
+    /**
+     * P1-3 - Politique de détection des doublons de clé naturelle
+     * ( contrainte {@code hierarchicalKey_uniqueness} ) <b>intra-import</b> ,
+     * évaluée sur le staging avant la boucle UPSERT
+     * ( {@link fr.inra.oresing.workflow.cascade.IntraImportDuplicateDetector} ) .
+     */
+    public enum IntraDuplicatePolicy {
+        /** Aucun scan , comportement strictement identique à l'historique ( 0 overhead ) . */
+        OFF,
+        /** Scan + WARN détaillé , puis l'UPSERT se déroule comme avant ( même résultat ) . */
+        WARN,
+        /** Lève une erreur métier claire avant toute mutation si doublons détectés . */
+        FAIL
+    }
+
+    /**
+     * Politique {@link IntraDuplicatePolicy} appliquée au finalize DIRECT_COPY .
+     * Défaut {@code WARN} : garantit le même résultat final qu'avant tout en
+     * traçant les doublons . Surcharge via env var
+     * {@code CASCADE_IMPORT_INTRA_DUPLICATE_POLICY} ou property
+     * {@code cascade.import.intra-duplicate-policy} . Mutable à chaud ( oa-live ) .
+     */
+    private volatile IntraDuplicatePolicy intraDuplicatePolicy = IntraDuplicatePolicy.WARN;
+
     /** Strategy for the import sink path . */
     public enum SinkStrategy {
         /** Legacy : Source -&gt; Transform -&gt; MergingFileSink -&gt; merged.csv -&gt; storeAll(file) . */
@@ -303,6 +327,7 @@ public class ImportProperties {
     public int getGroovyCacheMaxEntries()     { return groovyCacheMaxEntries; }
     public boolean isOrderedRecursionMode()   { return orderedRecursionMode; }
     public boolean isUseColumnExtractionUpsert() { return useColumnExtractionUpsert; }
+    public IntraDuplicatePolicy getIntraDuplicatePolicy() { return intraDuplicatePolicy; }
 
     public void setChunkSizeLines(int v)      { this.chunkSizeLines = v; }
     public void setParallelism(int v)          { this.parallelism = v; }
@@ -329,4 +354,5 @@ public class ImportProperties {
     public void setGroovyCacheMaxEntries(int v)  { this.groovyCacheMaxEntries = v; }
     public void setOrderedRecursionMode(boolean v) { this.orderedRecursionMode = v; }
     public void setUseColumnExtractionUpsert(boolean v) { this.useColumnExtractionUpsert = v; }
+    public void setIntraDuplicatePolicy(IntraDuplicatePolicy v) { this.intraDuplicatePolicy = v; }
 }

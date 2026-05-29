@@ -45,6 +45,9 @@ public class BackendPidRegistryBridge {
         StagingFinalizeSql.setLockRetryBackoffInitialMsSupplier(importProperties::getFinalizeLockRetryBackoffInitialMs);
         StagingFinalizeSql.setLockRetryBackoffMaxMsSupplier(importProperties::getFinalizeLockRetryBackoffMaxMs);
 
+        // P1-3 : policy de detection doublons intra-import , editable a chaud .
+        StagingFinalizeSql.setIntraDuplicatePolicySupplier(importProperties::getIntraDuplicatePolicy);
+
         log.info("StagingFinalizeSql wired : BackendPidRegistry + useColumnExtractionUpsert={}"
                         + " + lockTimeout={}min , lockRetry max={} backoff={}ms cap={}ms",
                 importProperties.isUseColumnExtractionUpsert(),

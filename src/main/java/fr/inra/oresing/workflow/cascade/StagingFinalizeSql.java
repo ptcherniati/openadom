@@ -138,6 +138,23 @@ public final class StagingFinalizeSql {
     }
 
     /**
+     * P1-3 - Supplier dynamique vers {@code ImportProperties.getIntraDuplicatePolicy} .
+     * Lu a chaque finalize ( edition live oa-live ) . Defaut conservateur :
+     * {@code WARN} ( trace sans changer le resultat ) tant que non injecte .
+     */
+    private static volatile java.util.function.Supplier<
+            fr.inra.oresing.workflow.cascade.config.ImportProperties.IntraDuplicatePolicy>
+            intraDuplicatePolicySupplier =
+            () -> fr.inra.oresing.workflow.cascade.config.ImportProperties.IntraDuplicatePolicy.WARN;
+
+    /** Setter Spring bridge - injecte au boot Spring . */
+    public static void setIntraDuplicatePolicySupplier(java.util.function.Supplier<
+            fr.inra.oresing.workflow.cascade.config.ImportProperties.IntraDuplicatePolicy> supplier) {
+        intraDuplicatePolicySupplier = supplier != null ? supplier
+                : () -> fr.inra.oresing.workflow.cascade.config.ImportProperties.IntraDuplicatePolicy.WARN;
+    }
+
+    /**
      * Recupere le {@code pg_backend_pid()} de la connection courante et
      * l'enregistre dans le registry pour permettre une annulation reelle
      * du statement en cours via {@code pg_cancel_backend(pid)} depuis une
@@ -351,6 +368,17 @@ public final class StagingFinalizeSql {
                 .collect(Collectors.joining(","));
 
         boolean filtered = (correlationId != null && !correlationId.isBlank());
+
+        // P1-3 : detection des doublons de cle naturelle intra-import sur le
+        // staging , AVANT toute mutation ( refref rebuild + UPSERT ) . Read-only :
+        // un GROUP BY ... HAVING count(*) > 1 sur les 4 colonnes de la contrainte
+        // hierarchicalKey_uniqueness , extraites de data JSONB ( memes champs que
+        // l'UPSERT ) . Selon la policy : OFF ( no-op ) , WARN ( trace + import
+        // inchange = meme resultat ) , FAIL ( leve avant mutation = pas de 21000
+        // opaque ni merge silencieux ) . Placee ici pour garantir qu'un FAIL
+        // n'a aucun effet de bord ( refref deleteOldLinks ci-dessous mute deja ) .
+        IntraImportDuplicateDetector.check(connection, stagingTable,
+                filtered ? correlationId : null, intraDuplicatePolicySupplier.get());
 
         // Reconstruction reference_reference : SQL centralise dans
         // {@link RefrefRebuildSql} ( shared avec DataRepository.storeAll ) .
