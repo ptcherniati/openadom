@@ -123,14 +123,14 @@ create table Reference_Reference
 );
 CREATE INDEX IF NOT EXISTS ref_refslinkedto_index
     ON ReferenceValue USING gin (refsLinkedTo);
-CREATE INDEX IF NOT EXISTS referenceType_refValue_gin_idx
-    ON referencevalue USING gin
-        (
-         (('"'||referencetype||'"')::jsonb),
-         refvalues jsonb_path_ops
-            )
-    WITH (fastupdate =True)
-    TABLESPACE pg_default;
+-- Note : l'ancien GIN statique global « referenceType_refValue_gin_idx »
+-- ( ((referencetype)::jsonb, refvalues jsonb_path_ops) ) a ete supprime .
+-- Il etait entierement redondant avec les GIN partiels par datatype crees
+-- par AuthorizationIndex.createIndex() ( USING gin (refvalues jsonb_path_ops)
+-- WHERE referencetype = '<dt>' ) , plus petits et plus selectifs , et il
+-- neutralisait la differentiation des filtres ( cf.
+-- documentations/features/ACCELERATED_FILTERS.md §3 ) . Les schemas existants
+-- sont nettoyes par la migration V5 .
 
 CREATE INDEX IF NOT EXISTS referencetype_idx
     ON referencevalue USING btree
