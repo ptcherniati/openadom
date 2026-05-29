@@ -3,6 +3,7 @@ package fr.inra.oresing.rest.admin.test;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -59,7 +60,7 @@ public class AdminTestResources {
     @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
     @PostMapping(value = "/mail", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<MailTestResult> sendTestMail(@RequestBody MailTestRequest request) {
+    public ResponseEntity<MailTestResult> sendTestMail(@Valid @RequestBody MailTestRequest request) {
         return ResponseEntity.ok(mailTestService.send(request));
     }
 
@@ -75,7 +76,7 @@ public class AdminTestResources {
     @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
     @PostMapping(value = "/filesender", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<FileSenderTestResult> sendTestFile(@RequestBody FileSenderTestRequest request) {
+    public ResponseEntity<FileSenderTestResult> sendTestFile(@Valid @RequestBody FileSenderTestRequest request) {
         return ResponseEntity.ok(fileSenderTestService.send(request));
     }
 }

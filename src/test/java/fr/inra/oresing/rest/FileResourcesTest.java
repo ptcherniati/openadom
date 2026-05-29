@@ -55,7 +55,8 @@ class FileResourcesTest {
                 getAllUsersUseCase,
                 getReferencedBinaryFilesUseCase,
                 mock(PublishLifecycleService.class),
-                mock(org.springframework.web.servlet.LocaleResolver.class));
+                mock(org.springframework.web.servlet.LocaleResolver.class),
+                mock(fr.inra.oresing.rest.binaryFile.BinaryFileNormalizedDownloadService.class));
     }
 
     // ─── constantes ───────────────────────────────────────────────────────────

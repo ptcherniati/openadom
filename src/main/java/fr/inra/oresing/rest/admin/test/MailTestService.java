@@ -1,8 +1,10 @@
 package fr.inra.oresing.rest.admin.test;
 
 import fr.inra.oresing.config.AlertsProperties;
+import fr.inra.oresing.domain.exceptions.MailServiceUnavailableException;
 import fr.inra.oresing.mail.EmailService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.MailException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -83,7 +85,11 @@ public class MailTestService {
             log.info("MailTest OK -> recipients={} subject=\"{}\" duration={}ms",
                     recipients, subject, duration);
             return MailTestResult.ok(recipients, duration);
-        } catch (RuntimeException e) {
+        } catch (MailServiceUnavailableException | MailException e) {
+            // Catches deliberement etroit : MailException = erreurs SMTP /
+            // configuration ; MailServiceUnavailableException = wrapper interne
+            // sur la chaine RETRY . Autres RuntimeException ( bug code ) sont
+            // re-throw pour eviter de masquer une regression .
             long duration = durationMs(start);
             log.warn("MailTest KO -> recipients={} subject=\"{}\" duration={}ms error={}",
                     recipients, subject, duration, e.getMessage());
