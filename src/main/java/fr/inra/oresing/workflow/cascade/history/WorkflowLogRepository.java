@@ -43,9 +43,21 @@ public class WorkflowLogRepository {
     private static final String DELETE_BY_CORRELATION_ID_SQL =
             "DELETE FROM oa_audit.workflow_log WHERE correlation_id = ?::uuid";
 
-    /** Suppression totale ( admin ) . */
-    private static final String DELETE_ALL_SQL =
-            "DELETE FROM oa_audit.workflow_log";
+    /**
+     * Suppression totale ( admin ) par batch via ctid : evite un unique
+     * {@code DELETE FROM ... } sans WHERE qui , sur 1M+ lignes , tient un
+     * verrou + bloque les lectures d'historique pendant 30 s+ . Chaque
+     * batch ( {@link #DELETE_ALL_BATCH_SIZE} lignes ) s'auto-committe ,
+     * gardant les verrous courts ( cf audit Q-5 ) . TRUNCATE ecarte :
+     * exige le privilege TRUNCATE / ownership sur oa_audit que le role
+     * applicatif n'a pas forcement ( DELETE direct deja autorise ) .
+     */
+    private static final String DELETE_ALL_BATCH_SQL =
+            "DELETE FROM oa_audit.workflow_log WHERE ctid IN ("
+            + "SELECT ctid FROM oa_audit.workflow_log LIMIT ?)";
+
+    /** Taille de batch pour la purge totale ( compromis verrou court / nb d'iterations ) . */
+    private static final int DELETE_ALL_BATCH_SIZE = 10_000;
 
     private static final String INSERT_START_SQL = """
             SELECT oa_audit.record_workflow_start(
@@ -484,7 +496,15 @@ public class WorkflowLogRepository {
      * @return nombre de lignes supprimees
      */
     public int deleteAll() {
-        return jdbcTemplate.update(DELETE_ALL_SQL);
+        // Boucle de batchs auto-commites : verrous courts , lectures
+        // d'historique non bloquees pendant la purge ( cf audit Q-5 ) .
+        int total = 0;
+        int batch;
+        do {
+            batch = jdbcTemplate.update(DELETE_ALL_BATCH_SQL, DELETE_ALL_BATCH_SIZE);
+            total += batch;
+        } while (batch == DELETE_ALL_BATCH_SIZE);
+        return total;
     }
 
     /**

@@ -36,8 +36,12 @@ class WorkflowLogRepositoryDeleteUnitTest {
 
     private static final String DELETE_BY_ID_SQL =
             "DELETE FROM oa_audit.workflow_log WHERE correlation_id = ?::uuid";
-    private static final String DELETE_ALL_SQL =
-            "DELETE FROM oa_audit.workflow_log";
+    // Q-5 : purge totale par batchs ctid ( verrous courts ) au lieu d'un
+    // unique DELETE sans WHERE .
+    private static final String DELETE_ALL_BATCH_SQL =
+            "DELETE FROM oa_audit.workflow_log WHERE ctid IN ("
+            + "SELECT ctid FROM oa_audit.workflow_log LIMIT ?)";
+    private static final int BATCH = 10_000;
 
     private JdbcTemplate jdbcTemplate;
     private WorkflowLogRepository repository;
@@ -85,28 +89,41 @@ class WorkflowLogRepositoryDeleteUnitTest {
     }
 
     @Test
-    void deleteAll_returnsRowCountFromJdbc() {
-        when(jdbcTemplate.update(DELETE_ALL_SQL)).thenReturn(742);
+    void deleteAll_singleBatch_returnsRowCount() {
+        // Un seul batch incomplet ( < BATCH ) -> la boucle s'arrete , total = 742 .
+        when(jdbcTemplate.update(DELETE_ALL_BATCH_SQL, BATCH)).thenReturn(742);
 
         int deleted = repository.deleteAll();
 
         assertEquals(742, deleted);
-        verify(jdbcTemplate, times(1)).update(DELETE_ALL_SQL);
+        verify(jdbcTemplate, times(1)).update(DELETE_ALL_BATCH_SQL, BATCH);
     }
 
     @Test
-    void deleteAll_emptyTable_returns0() {
-        when(jdbcTemplate.update(DELETE_ALL_SQL)).thenReturn(0);
+    void deleteAll_multipleBatches_loopsUntilBelowBatchSize() {
+        // 2 batchs pleins ( BATCH ) puis un incomplet ( 123 ) -> total = 2*BATCH + 123 .
+        when(jdbcTemplate.update(DELETE_ALL_BATCH_SQL, BATCH))
+                .thenReturn(BATCH, BATCH, 123);
+
+        int deleted = repository.deleteAll();
+
+        assertEquals(2 * BATCH + 123, deleted);
+        verify(jdbcTemplate, times(3)).update(DELETE_ALL_BATCH_SQL, BATCH);
+    }
+
+    @Test
+    void deleteAll_emptyTable_returns0_singleBatch() {
+        when(jdbcTemplate.update(DELETE_ALL_BATCH_SQL, BATCH)).thenReturn(0);
 
         int deleted = repository.deleteAll();
 
         assertEquals(0, deleted);
-        verify(jdbcTemplate).update(DELETE_ALL_SQL);
+        verify(jdbcTemplate, times(1)).update(DELETE_ALL_BATCH_SQL, BATCH);
     }
 
     @Test
     void deleteAll_neverCallsDeleteByIdSql() {
-        when(jdbcTemplate.update(DELETE_ALL_SQL)).thenReturn(0);
+        when(jdbcTemplate.update(DELETE_ALL_BATCH_SQL, BATCH)).thenReturn(0);
 
         repository.deleteAll();
 
