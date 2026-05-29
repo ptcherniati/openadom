@@ -196,7 +196,7 @@ class WorkflowLogRepositoryTest {
     void deleteOlderThanZeroReturnsZero() {
         int result = repo.deleteOlderThan(0);
         assertThat(result).isZero();
-        verify(jdbcTemplate, never()).update(any(String.class), (Object[]) any());
+        verify(jdbcTemplate, never()).queryForObject(anyString(), eq(Integer.class), (Object[]) any());
     }
 
     @Test
@@ -204,15 +204,25 @@ class WorkflowLogRepositoryTest {
     void deleteOlderThanNegativeReturnsZero() {
         int result = repo.deleteOlderThan(-1);
         assertThat(result).isZero();
-        verify(jdbcTemplate, never()).update(any(String.class), (Object[]) any());
+        verify(jdbcTemplate, never()).queryForObject(anyString(), eq(Integer.class), (Object[]) any());
     }
 
     @Test
-    @DisplayName("deleteOlderThan(30) délègue au jdbcTemplate")
+    @DisplayName("deleteOlderThan(30) délègue au jdbcTemplate ( queryForObject : fonction SQL retourne un rowset )")
     void deleteOlderThanDelegates() {
-        when(jdbcTemplate.update(any(String.class), (Object[]) any())).thenReturn(5);
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), (Object[]) any()))
+                .thenReturn(5);
         int result = repo.deleteOlderThan(30);
         assertThat(result).isEqualTo(5);
-        verify(jdbcTemplate, times(1)).update(any(String.class), (Object[]) any());
+        verify(jdbcTemplate, times(1)).queryForObject(anyString(), eq(Integer.class), (Object[]) any());
+    }
+
+    @Test
+    @DisplayName("deleteOlderThan(30) : queryForObject retourne null -> 0")
+    void deleteOlderThanNullReturnsZero() {
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), (Object[]) any()))
+                .thenReturn(null);
+        int result = repo.deleteOlderThan(30);
+        assertThat(result).isZero();
     }
 }
