@@ -341,7 +341,8 @@ vocabulaire de `MigrationStatus`/`MigrationWarning`.
 
 | Cas | Conduite | Statut cible | Justification |
 |---|---|---|---|
-| `I18nSimpleChange`, `I18nDisplayPattenChanged`, `I18nImportHeaderChange`, titres/descriptions, tags, commentaire, `defaultLanguage` | **Autoriser** | `APPROVED` / `IgnorableChange` | Purement libellés/affichage : **aucune contrainte d'intégrité**. `I18nImportHeaderChange` ne touche que le mapping d'import des **prochains** dépôts. **Déjà géré** comme `IgnorableChange` pour la branche `data` de `Internationalizations`. |
+| `I18nSimpleChange`, `I18nImportHeaderChange`, titres/descriptions, tags, commentaire, `defaultLanguage` | **Autoriser** | `APPROVED` / `IgnorableChange` | Purement libellés/affichage : **aucune contrainte d'intégrité**. `I18nImportHeaderChange` ne touche que le mapping d'import des **prochains** dépôts. **Déjà géré** comme `IgnorableChange` pour la branche `data` de `Internationalizations`. |
+| `I18nDisplayPattenChanged` | **Réaliser un recalcul** (POST) | `APPROVED` (auto) ou `REQUIRES_CONFIRMATION` | **Exception** : ce n'est pas un simple libellé. Les clés `__display_*` sont **précalculées et stockées** dans `refvalues` puis recopiées chez les référents (`refsLinkedTo`). Un changement de pattern les rend **périmées** ⇒ il faut **rejouer la construction des display** et la propager aux dépendants (cf. §7.5, plan §8.3 palier 2.d). `FORBIDDEN` si le pattern référence un composant supprimé. |
 
 ### 4.9 Changements non classés (`UnresolvableChange`)
 
@@ -727,16 +728,26 @@ qu'une fois le précédent vert.
 
 | Palier | Cas (`ConfigurationChange`) | Conduite (§4) | Effort | Risque |
 |---|---|---|---|---|
-| **2.a — Trivial / sans intégrité** | `I18nSimpleChange`, `I18nDisplayPattenChanged`, `I18nImportHeaderChange`, tags, commentaire, `defaultLanguage`, `CheckerRemoved`, `CheckerDefinitionChanged` (élargissement) | Autoriser | S | faible |
+| **2.a — Trivial / sans intégrité** | `I18nSimpleChange`, `I18nImportHeaderChange`, tags, commentaire, `defaultLanguage`, `CheckerRemoved`, `CheckerDefinitionChanged` (élargissement) | Autoriser | S | faible |
 | **2.b — Simple, conditionné aux données** | `DataRemoved`, `ComponentAdded` (non requis), `ComponenRemoved` | Autoriser / Avertir selon `DataInfo` | S→M | moyen |
 | **2.c — Modéré** | `ComponentAdded` (requis), `CheckerAdded`, `CheckerDefinitionChanged` (resserrement), `SubmissionChanged` | Avertir / demander valeur par défaut | M | moyen |
-| **2.d — Complexe / structurel** | `NaturalKeyChanged`, `AuthorizationChanged`, `HierarchieChanged`, `CheckerTypeChanged` | Confirmer / interdire + recalcul | L | élevé |
+| **2.d — Complexe / structurel (recalcul)** | `NaturalKeyChanged`, `AuthorizationChanged`, `HierarchieChanged`, `CheckerTypeChanged`, `I18nDisplayPattenChanged` | Confirmer / interdire + **recalcul** | L | élevé |
 | **2.e — Corrélation** | Renommage (`Removed`+`Added`), clé+composant ensemble, dépendances A→B | Lot corrélé / graphe DAG | L | élevé |
 
-- [ ] **2.a** Détection + règles des cas triviaux (i18n, métadonnées, checker relâché)
+> **⚠️ Cas `I18nDisplayPattenChanged` (≠ libellé).** Bien que `i18nDisplayPattern` soit de
+> l'internationalisation, ce **n'est pas** un simple libellé : les clés d'affichage `__display_*`
+> sont **précalculées et stockées** dans `refvalues` (§7.5) et **recopiées** chez les référents via
+> `refsLinkedTo`. Un changement de pattern rend donc ces displays **périmés** ⇒ il faut **rejouer la
+> construction des display** (action POST de recalcul, propagée aux dépendants via le graphe du
+> §7.4). On le classe donc en **2.d** et non en 2.a, et son action de recalcul est portée par la
+> Phase 3 (« Recalcul transactionnel des `__display_*` », §8.4 / §7.5). À l'inverse,
+> `I18nSimpleChange` et `I18nImportHeaderChange` restent triviaux (libellé / mapping des **prochains**
+> imports, sans donnée stockée à recomposer).
+
+- [ ] **2.a** Détection + règles des cas triviaux (i18n libellé, métadonnées, checker relâché)
 - [ ] **2.b** `DataRemoved` / `Component*` conditionnés à `DataInfo`
 - [ ] **2.c** Composant requis, checker resserré, soumission (warnings/valeurs par défaut)
-- [ ] **2.d** Clé naturelle, autorisations, hiérarchie, type de checker (recalcul/interdiction)
+- [ ] **2.d** Clé naturelle, autorisations, hiérarchie, type de checker, **`I18nDisplayPattenChanged`** (recalcul des `__display_*` / interdiction)
 - [ ] **2.e (F)** Étape de corrélation + graphe de dépendances *avant* le moteur de règles
 
 ### 8.4 Phase 3 — Industrialisation avancée
@@ -779,10 +790,10 @@ Réutilise au maximum le code existant (`CACHED_ROTATION`, `configHash`) plutôt
 | 1 | Test « aucun atome avalé » | §7.3 | S | faible | A |
 | 1 | Atomicité du refus | §7.3 | S | moyen | A, D2 |
 | 1 | `VerifyDataConsistencyAction` | §7.6 | M | moyen | C |
-| 2.a | Cas triviaux (i18n, métadonnées, checker relâché) | §4.5/4.8 | S | faible | Phase 1 |
+| 2.a | Cas triviaux (i18n libellé, métadonnées, checker relâché) | §4.5/4.8 | S | faible | Phase 1 |
 | 2.b | `DataRemoved`/`Component*` conditionnés | §4.1/4.2 | S→M | moyen | C |
 | 2.c | Composant requis, checker resserré, soumission | §4.2/4.5/4.7 | M | moyen | C |
-| 2.d | Clé/autorisation/hiérarchie/type checker | §4.3/4.4/4.6 | L | élevé | C, §7.6 |
+| 2.d | Clé/autorisation/hiérarchie/type checker, `I18nDisplayPattenChanged` (recalcul) | §4.3/4.4/4.6/7.5 | L | élevé | C, §7.6 |
 | 2.e | Corrélation / graphe de dépendances | F / §7.4 | L | élevé | 2.d |
 | 3 | Backup/purge/restore | §7.6 | L | élevé | C, 2.d |
 | 3 | Recalcul `__display_*` | §7.5 | L | élevé | F |
