@@ -876,15 +876,30 @@ public class OreSiResources {
                     // nom du fichier CSV en erreur pour le template d'email
                     boolean isReference = !application.isData(dataName);
                     String errorFileName = finalDataFile == null ? null : finalDataFile.fileName();
-                    sendUploadErrorsMailUseCase.execute(
-                            locale,
-                            localizedApplicationName,
-                            localizedDataName,
-                            errorFileName,
-                            isReference,
-                            currentUser,
-                            errorsToJson
-                    );
+                    // Mail de notification best-effort : une panne SMTP ne doit
+                    // JAMAIS masquer l'erreur de validation reelle ni faire
+                    // rollback le depot ( sinon : 503 "messagerie indisponible"
+                    // a la place des vraies erreurs , et la row workflow_log
+                    // reste coincee IN_PROGRESS car le terminal FAILED est
+                    // perdu dans le rollback ) . On avale donc toute
+                    // RuntimeException mail ( meme pattern que
+                    // VersioningService.safeSendUploadSuccessMail ) puis on
+                    // relance l'InvalidDatasetContentException d'origine .
+                    try {
+                        sendUploadErrorsMailUseCase.execute(
+                                locale,
+                                localizedApplicationName,
+                                localizedDataName,
+                                errorFileName,
+                                isReference,
+                                currentUser,
+                                errorsToJson
+                        );
+                    } catch (RuntimeException mailFailure) {
+                        log.warn("Notification mail d'erreurs d'import non envoyee ( non bloquant ) "
+                                        + "pour application={} dataName={} fichier={} : {}",
+                                nameOrId, dataName, errorFileName, mailFailure.getMessage());
+                    }
                     throw invalidDatasetContentException;
                 } catch (IOException e) {
                     throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);

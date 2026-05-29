@@ -156,4 +156,23 @@ public record WorkflowLogEntry(
                 startTime, null, null, STATUS_IN_PROGRESS,
                 0L, 0L, 0, bytesTotal, List.of(), null, null, null, null);
     }
+
+    /**
+     * Construit l'entry terminale {@code FAILED} persistee via
+     * {@link WorkflowLogWriter#recordEnd} ( UPSERT idempotent
+     * {@code WHERE status='IN_PROGRESS'} ) . Utilisee comme filet quand la
+     * transaction d'une operation ( ex. depot ) est annulee et que
+     * l'ecriture terminale normale ne s'est pas declenchee : evite qu'une
+     * row reste coincee IN_PROGRESS ( invisible dans l'historique ) .
+     */
+    public static WorkflowLogEntry failedMarker(
+            UUID correlationId, String workflowType, UUID userId, String userLogin,
+            String applicationName, String dataType, String resourceName,
+            Instant startTime, Instant endTime, String fatalError) {
+        return new WorkflowLogEntry(
+                correlationId, workflowType, userId, userLogin,
+                applicationName, dataType, resourceName,
+                startTime, endTime, null, STATUS_FAILED,
+                0L, 0L, 0, 0L, List.of(), fatalError, null, null, null);
+    }
 }

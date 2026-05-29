@@ -57,4 +57,36 @@ class WorkflowLogEntryTest {
         // ( cf V4__workflow_log_pre_persist.sql : status = 'IN_PROGRESS' ) .
         assertThat(WorkflowLogEntry.STATUS_IN_PROGRESS).isEqualTo("IN_PROGRESS");
     }
+
+    @Test
+    @DisplayName("failedMarker ( ) produit une entry terminale FAILED avec endTime + fatalError")
+    void failedMarker_has_failed_status_endtime_and_message() {
+        UUID corrId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        Instant start = Instant.now().minusSeconds(3);
+        Instant end = Instant.now();
+
+        WorkflowLogEntry e = WorkflowLogEntry.failedMarker(
+                corrId, WorkflowLogEntry.TYPE_IMPORT,
+                userId, "alice", "app1", "data1", "deferred-csv:" + corrId,
+                start, end, "Depot interrompu ( transaction annulee )");
+
+        assertThat(e.correlationId()).isEqualTo(corrId);
+        assertThat(e.workflowType()).isEqualTo(WorkflowLogEntry.TYPE_IMPORT);
+        assertThat(e.userId()).isEqualTo(userId);
+        assertThat(e.userLogin()).isEqualTo("alice");
+        assertThat(e.applicationName()).isEqualTo("app1");
+        assertThat(e.dataType()).isEqualTo("data1");
+        assertThat(e.resourceName()).isEqualTo("deferred-csv:" + corrId);
+        assertThat(e.startTime()).isEqualTo(start);
+        assertThat(e.endTime()).isEqualTo(end);
+        assertThat(e.status()).isEqualTo(WorkflowLogEntry.STATUS_FAILED);
+        assertThat(e.fatalError()).contains("transaction annulee");
+        // Compteurs neutres + pas de stage : entry minimale de filet rollback .
+        assertThat(e.recordsProcessed()).isZero();
+        assertThat(e.recordsFailed()).isZero();
+        assertThat(e.duration()).isNull();
+        assertThat(e.failedStage()).isNull();
+        assertThat(e.errors()).isEmpty();
+    }
 }

@@ -451,6 +451,20 @@ public class DataService {
                 boolean preCreated        = preCreateImportWorkflowLog(freshCid, application, refType, userId);
                 phaseEmitterTargetCid     = preCreated ? freshCid : null;
                 preGeneratedCidForCascade = preCreated ? freshCid.toString() : null;
+                // Filet anti-IN_PROGRESS-coince : si la tx outer
+                // ( CreateDataUseCase @Transactional ) rollback APRES la
+                // pre-creation ( fichier invalide , FK , OOM , mail HS ... ) ,
+                // l'ecriture terminale COMPLETED ( souvent un afterCommit de
+                // la cascade deferred ) ne se declenche jamais et la row
+                // resterait IN_PROGRESS , invisible dans l'historique
+                // ( exclut IN_PROGRESS ) jusqu'au zombie sweeper ( ~10 min ) .
+                // On force donc un FAILED immediat au rollback . recordEnd
+                // est idempotent ( UPSERT WHERE status='IN_PROGRESS' ) : sur
+                // commit normal le COMPLETED a deja flip la row -> ce FAILED
+                // est un no-op .
+                if (preCreated) {
+                    registerImportFailureOnRollback(freshCid, application, refType, userId);
+                }
             }
             final java.util.function.Consumer<String> phaseEmitter =
                     (phaseEmitterTargetCid != null && workflowLogRepository != null)
@@ -572,6 +586,71 @@ public class DataService {
                     cid, ex.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Enregistre une synchronisation de transaction qui , si la tx outer
+     * ( {@code CreateDataUseCase.@Transactional} ) est ROLLED_BACK , ecrit
+     * une row terminale {@code FAILED} pour le workflow IMPORT pre-cree
+     * {@code cid} . Garantit qu'un depot rate devient FAILED immediatement
+     * ( visible dans l'historique oa-live ) au lieu de rester coince
+     * IN_PROGRESS jusqu'au {@code WorkflowZombieSweeper} .
+     *
+     * <p>Best-effort + idempotent : {@code recordEnd} fait un UPSERT
+     * {@code WHERE status='IN_PROGRESS'} ; sur un commit normal le terminal
+     * COMPLETED a deja flip la row , donc ce FAILED est un no-op . Toute
+     * exception est avalee ( ne doit jamais perturber le flux de depot ) .
+     */
+    private void registerImportFailureOnRollback(java.util.UUID cid,
+                                                 Application application,
+                                                 String refType,
+                                                 String userId) {
+        if (workflowLogWriter == null
+                || !org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+            return;
+        }
+        final java.util.UUID userUuid;
+        try {
+            userUuid = java.util.UUID.fromString(userId);
+        } catch (RuntimeException ex) {
+            return;
+        }
+        String userLogin = null;
+        try {
+            fr.inra.oresing.domain.OreSiUser current =
+                    serviceContainer.authenticationService().getCurrentUser();
+            if (current != null) {
+                userLogin = current.getLogin();
+            }
+        } catch (RuntimeException ignored) {
+            /* login best-effort */
+        }
+        final String appName = application != null ? application.getName() : null;
+        final String userLoginFinal = userLogin;
+        final java.time.Instant startTime = java.time.Instant.now();
+        org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                new org.springframework.transaction.support.TransactionSynchronization() {
+                    @Override
+                    public void afterCompletion(int status) {
+                        if (status != STATUS_ROLLED_BACK) {
+                            return;
+                        }
+                        try {
+                            fr.inra.oresing.workflow.cascade.history.WorkflowLogEntry failed =
+                                    fr.inra.oresing.workflow.cascade.history.WorkflowLogEntry.failedMarker(
+                                            cid,
+                                            fr.inra.oresing.workflow.cascade.history.WorkflowLogEntry.TYPE_IMPORT,
+                                            userUuid, userLoginFinal, appName, refType,
+                                            "deferred-csv:" + cid,
+                                            startTime, java.time.Instant.now(),
+                                            "Depot interrompu ( transaction annulee )");
+                            workflowLogWriter.recordEnd(failed);
+                        } catch (RuntimeException ex) {
+                            log.warn("[{}] recordEnd FAILED on rollback echoue ( sweeper prendra le relais ) : {}",
+                                    cid, ex.getMessage());
+                        }
+                    }
+                });
     }
 
     public HierarchicalReferenceAsTree getHierarchicalReferenceAsTree(final Application application, final String lowestLevelReference) {
