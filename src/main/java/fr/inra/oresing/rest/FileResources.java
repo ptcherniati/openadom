@@ -42,6 +42,7 @@ public class FileResources {
     private final GetReferencedBinaryFilesUseCase getReferencedBinaryFilesUseCase;
     private final PublishLifecycleService publishLifecycleService;
     private final LocaleResolver localeResolver;
+    private final fr.inra.oresing.rest.binaryFile.BinaryFileNormalizedDownloadService normalizedDownloadService;
 
     public FileResources(
             GetFileWithDataUseCase getFileWithDataUseCase,
@@ -49,13 +50,46 @@ public class FileResources {
             GetAllUsersUseCase getAllUsersUseCase,
             GetReferencedBinaryFilesUseCase getReferencedBinaryFilesUseCase,
             PublishLifecycleService publishLifecycleService,
-            LocaleResolver localeResolver) {
+            LocaleResolver localeResolver,
+            fr.inra.oresing.rest.binaryFile.BinaryFileNormalizedDownloadService normalizedDownloadService) {
         this.getFileWithDataUseCase = getFileWithDataUseCase;
         this.getFileUseCase = getFileUseCase;
         this.getAllUsersUseCase = getAllUsersUseCase;
         this.getReferencedBinaryFilesUseCase = getReferencedBinaryFilesUseCase;
         this.publishLifecycleService = publishLifecycleService;
         this.localeResolver = localeResolver;
+        this.normalizedDownloadService = normalizedDownloadService;
+    }
+
+    @Operation(summary = "Telecharger le CSV normalise ( processed_data ) d'un binaryfile")
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
+    @GetMapping(value = "/applications/{name}/file/{id}/normalized",
+            produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity<StreamingResponseBody> getNormalizedFile(
+            @PathVariable("name") final String name,
+            @PathVariable("id") final UUID id) {
+        var result = normalizedDownloadService.openNormalizedStream(name, id);
+        if (!result.hasContent()) {
+            // Pas de processed_data ( fichier pre-feature ou capture echouee ) .
+            // 204 No Content : la ressource existe mais n'a pas de variante normalisee .
+            return ResponseEntity.noContent().build();
+        }
+        InputStream is = result.stream();
+        StreamingResponseBody body = outputStream -> {
+            try (InputStream src = is) {
+                FileCopyUtils.copy(src, outputStream);
+            }
+        };
+        // Filename : metadata du binaryfile + suffixe .normalized.csv pour
+        // distinguer de l'original telecharge via /file/{id} .
+        String filename = getFileUseCase.execute(name, id)
+                .map(BinaryFile::getName)
+                .map(n -> n.replaceFirst("(?i)\\.(csv|txt)$", "") + ".normalized.csv")
+                .orElse(id + ".normalized.csv");
+        return ResponseEntity.ok()
+                .contentLength(result.sizeBytes())
+                .header(HEADER_CONTENT_DISPOSITION, HEADER_ATTACHMENT_FILENAME.formatted(filename))
+                .body(body);
     }
 
     public static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
