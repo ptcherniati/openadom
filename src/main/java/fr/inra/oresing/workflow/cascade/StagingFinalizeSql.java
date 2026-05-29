@@ -70,6 +70,14 @@ public final class StagingFinalizeSql {
     private static volatile java.util.function.IntSupplier lockRetryMaxAttemptsSupplier = () -> 3;
     private static volatile java.util.function.LongSupplier lockRetryBackoffInitialMsSupplier = () -> 1000L;
     private static volatile java.util.function.LongSupplier lockRetryBackoffMaxMsSupplier     = () -> 60_000L;
+    // S-5 : work_mem / maintenance_work_mem appliques en SET LOCAL au finalize .
+    // Defaut vide = pas d'override ( garde le default cluster ) .
+    private static volatile java.util.function.Supplier<String> workMemSupplier            = () -> "";
+    private static volatile java.util.function.Supplier<String> maintenanceWorkMemSupplier = () -> "";
+
+    /** Format Postgres memory unit accepte ( ex 64MB , 1GB , 524288kB , 256 ) . */
+    private static final java.util.regex.Pattern MEM_SETTING =
+            java.util.regex.Pattern.compile("^\\d+(kB|MB|GB|TB)?$");
 
     /** Setter Spring bridge - injecte au boot Spring depuis ImportProperties . */
     public static void setLockTimeoutMinutesSupplier(java.util.function.IntSupplier s) {
@@ -87,6 +95,45 @@ public final class StagingFinalizeSql {
     }
 
     /** Setter Spring bridge - injecte au boot Spring depuis ImportProperties . */
+    public static void setWorkMemSupplier(java.util.function.Supplier<String> s) {
+        workMemSupplier = s != null ? s : () -> "";
+    }
+    public static void setMaintenanceWorkMemSupplier(java.util.function.Supplier<String> s) {
+        maintenanceWorkMemSupplier = s != null ? s : () -> "";
+    }
+
+    /**
+     * Emet un {@code SET LOCAL <param> = '<value>'} si {@code value} est un
+     * reglage memoire Postgres valide ( {@link #MEM_SETTING} ) . No-op si vide /
+     * null . Valeur invalide -> log warn + skip ( jamais d'injection : on
+     * n'interpole que des valeurs validees ) . {@code param} est une constante
+     * interne ( work_mem / maintenance_work_mem ) , jamais une entree externe .
+     */
+    private static void applyMemorySetLocal(Connection connection, String param, String value) {
+        if (value == null || value.isBlank()) return;
+        String v = value.trim();
+        if (!isValidMemorySetting(v)) {
+            log.warn("StagingFinalize : SET LOCAL {} ignore , valeur invalide '{}' ( attendu ex 256MB , 1GB )", param, value);
+            return;
+        }
+        try (PreparedStatement ps = connection.prepareStatement("SET LOCAL " + param + " = '" + v + "'")) {
+            ps.execute();
+        } catch (SQLException ex) {
+            log.warn("StagingFinalize : SET LOCAL {} = '{}' echoue ( best-effort ) : {}", param, v, ex.getMessage());
+        }
+    }
+
+    /**
+     * Valide un reglage memoire Postgres ( {@code 256MB} , {@code 1GB} ,
+     * {@code 524288kB} , {@code 65536} ... ) avant interpolation dans un
+     * {@code SET LOCAL} . Garde-fou anti-injection : seule une valeur conforme
+     * est interpolee . {@code null} / vide -> false ( l'appelant no-op avant ) .
+     * Package-private pour test unitaire .
+     */
+    static boolean isValidMemorySetting(String value) {
+        return value != null && MEM_SETTING.matcher(value.trim()).matches();
+    }
+
     public static void setLockRetryBackoffMaxMsSupplier(java.util.function.LongSupplier s) {
         lockRetryBackoffMaxMsSupplier = s != null ? s : () -> 60_000L;
     }
@@ -332,6 +379,16 @@ public final class StagingFinalizeSql {
                 ps.execute();
             }
         }
+
+        // S-5 : SET LOCAL work_mem / maintenance_work_mem pour la session
+        // finalize . work_mem accelere les tris / hash / agregats ( agregat de
+        // detection doublons , JOIN refref , resolution ON CONFLICT ) ;
+        // maintenance_work_mem sert aux operations de maintenance ( index ,
+        // VACUUM cible ) . LOCAL = portee transaction , reset auto . Vide =
+        // garde le default cluster ( iso-resultat : la memoire de travail
+        // n'affecte que la vitesse / le plan , jamais les lignes produites ) .
+        applyMemorySetLocal(connection, "work_mem", workMemSupplier.get());
+        applyMemorySetLocal(connection, "maintenance_work_mem", maintenanceWorkMemSupplier.get());
 
         // P1a : SET LOCAL synchronous_commit = local . Pendant le finalize ,
         // un crash kernel/disk perdrait au pire l'import en cours ( WAL replay

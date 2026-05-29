@@ -48,6 +48,10 @@ public class BackendPidRegistryBridge {
         // P1-3 : policy de detection doublons intra-import , editable a chaud .
         StagingFinalizeSql.setIntraDuplicatePolicySupplier(importProperties::getIntraDuplicatePolicy);
 
+        // S-5 : work_mem / maintenance_work_mem du finalize , editables a chaud .
+        StagingFinalizeSql.setWorkMemSupplier(importProperties::getFinalizeWorkMem);
+        StagingFinalizeSql.setMaintenanceWorkMemSupplier(importProperties::getFinalizeMaintenanceWorkMem);
+
         log.info("StagingFinalizeSql wired : BackendPidRegistry + useColumnExtractionUpsert={}"
                         + " + lockTimeout={}min , lockRetry max={} backoff={}ms cap={}ms",
                 importProperties.isUseColumnExtractionUpsert(),

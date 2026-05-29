@@ -103,6 +103,21 @@ public class ConfigFieldRegistry {
                 .notBlank()
                 .build());
 
+        // ---- S-5 : memoire de travail de la session finalize ( hot ) ----
+        register(ConfigField.stringField("finalizeWorkMem")
+                .description("SET LOCAL work_mem du finalize ( tris / hash / agregats ) . "
+                        + "Format Postgres ( ex 256MB , 1GB ) . Vide = default cluster .")
+                .getter(importProperties::getFinalizeWorkMem)
+                .setter(importProperties::setFinalizeWorkMem)
+                .build());
+
+        register(ConfigField.stringField("finalizeMaintenanceWorkMem")
+                .description("SET LOCAL maintenance_work_mem du finalize ( index / VACUUM ) . "
+                        + "Format Postgres ( ex 512MB , 1GB ) . Vide = default cluster .")
+                .getter(importProperties::getFinalizeMaintenanceWorkMem)
+                .setter(importProperties::setFinalizeMaintenanceWorkMem)
+                .build());
+
         // ---- ImportProperties hot enums ----
         register(ConfigField.enumField("sinkStrategy", ImportProperties.SinkStrategy.class)
                 .description("MERGE_FILE = pipeline legacy fichier merge -> storeAll . "

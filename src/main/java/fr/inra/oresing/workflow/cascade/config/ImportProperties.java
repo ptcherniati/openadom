@@ -236,6 +236,23 @@ public class ImportProperties {
     private volatile long finalizeLockRetryBackoffMaxMs = 60_000L;
 
     /**
+     * S-5 - {@code SET LOCAL work_mem} applique a la session finalize
+     * ( tris / hash / agregats : agregat de detection doublons , JOIN refref ,
+     * ON CONFLICT ) . Format Postgres ( ex {@code "256MB"} , {@code "1GB"} ) .
+     * Vide = pas d'override ( garde le default cluster , iso-resultat ) .
+     * <p>Surcharge via {@code CASCADE_IMPORT_FINALIZE_WORK_MEM} .
+     */
+    private volatile String finalizeWorkMem = "";
+
+    /**
+     * S-5 - {@code SET LOCAL maintenance_work_mem} pour la session finalize
+     * ( utile aux operations de maintenance : (re)creation d'index , VACUUM
+     * cible ) . Format Postgres . Vide = pas d'override .
+     * <p>Surcharge via {@code CASCADE_IMPORT_FINALIZE_MAINTENANCE_WORK_MEM} .
+     */
+    private volatile String finalizeMaintenanceWorkMem = "";
+
+    /**
      * P1-3 - Politique de détection des doublons de clé naturelle
      * ( contrainte {@code hierarchicalKey_uniqueness} ) <b>intra-import</b> ,
      * évaluée sur le staging avant la boucle UPSERT
@@ -323,6 +340,8 @@ public class ImportProperties {
     public int  getFinalizeLockRetryMaxAttempts()       { return finalizeLockRetryMaxAttempts; }
     public long getFinalizeLockRetryBackoffInitialMs()  { return finalizeLockRetryBackoffInitialMs; }
     public long getFinalizeLockRetryBackoffMaxMs()      { return finalizeLockRetryBackoffMaxMs; }
+    public String getFinalizeWorkMem()                  { return finalizeWorkMem; }
+    public String getFinalizeMaintenanceWorkMem()       { return finalizeMaintenanceWorkMem; }
     public int getReferenceCacheMaxEntries()  { return referenceCacheMaxEntries; }
     public int getGroovyCacheMaxEntries()     { return groovyCacheMaxEntries; }
     public boolean isOrderedRecursionMode()   { return orderedRecursionMode; }
@@ -350,6 +369,8 @@ public class ImportProperties {
     public void setFinalizeLockRetryMaxAttempts(int v)      { this.finalizeLockRetryMaxAttempts = v; }
     public void setFinalizeLockRetryBackoffInitialMs(long v) { this.finalizeLockRetryBackoffInitialMs = v; }
     public void setFinalizeLockRetryBackoffMaxMs(long v)     { this.finalizeLockRetryBackoffMaxMs = v; }
+    public void setFinalizeWorkMem(String v)                 { this.finalizeWorkMem = v != null ? v : ""; }
+    public void setFinalizeMaintenanceWorkMem(String v)      { this.finalizeMaintenanceWorkMem = v != null ? v : ""; }
     public void setReferenceCacheMaxEntries(int v) { this.referenceCacheMaxEntries = v; }
     public void setGroovyCacheMaxEntries(int v)  { this.groovyCacheMaxEntries = v; }
     public void setOrderedRecursionMode(boolean v) { this.orderedRecursionMode = v; }
