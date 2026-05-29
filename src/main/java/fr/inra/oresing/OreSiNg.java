@@ -54,6 +54,10 @@ import java.util.concurrent.Executor;
 
 @SpringBootApplication(scanBasePackages = "fr.inra.oresing")
 @EnableScheduling
+@org.springframework.boot.context.properties.EnableConfigurationProperties({
+        fr.inra.oresing.config.AlertsProperties.class,
+        fr.inra.oresing.config.BrandingProperties.class
+})
 public class OreSiNg implements WebMvcConfigurer {
 
     private final MigrateService migrate;
