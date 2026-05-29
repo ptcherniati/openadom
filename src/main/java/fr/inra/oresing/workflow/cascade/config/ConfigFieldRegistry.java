@@ -103,7 +103,15 @@ public class ConfigFieldRegistry {
                 .notBlank()
                 .build());
 
-        // ---- S-5 : memoire de travail de la session finalize ( hot ) ----
+        register(ConfigField.intField("finalizeBatchSize")
+                .description("Taille de batch de l'UPSERT staging -> table finale ( lignes par iteration ) . "
+                        + "Moins d'iterations sur gros volume , verrous tenus un peu plus longtemps par batch . "
+                        + "<= 0 -> defaut 50000 .")
+                .getter(importProperties::getFinalizeBatchSize)
+                .setter(importProperties::setFinalizeBatchSize)
+                .build());
+
+        // ---- Memoire de travail de la session finalize ( hot ) ----
         register(ConfigField.stringField("finalizeWorkMem")
                 .description("SET LOCAL work_mem du finalize ( tris / hash / agregats ) . "
                         + "Format Postgres ( ex 256MB , 1GB ) . Vide = default cluster .")
@@ -137,7 +145,7 @@ public class ConfigFieldRegistry {
                 .build());
 
         register(ConfigField.enumField("intraDuplicatePolicy", ImportProperties.IntraDuplicatePolicy.class)
-                .description("P1-3 : doublons de cle naturelle ( hierarchicalKey_uniqueness ) intra-import , "
+                .description("Doublons de cle naturelle ( hierarchicalKey_uniqueness ) intra-import , "
                         + "detectes sur le staging avant l'UPSERT . OFF = aucun scan ( comportement historique ) . "
                         + "WARN ( defaut ) = scan + log , import inchange ( meme resultat ) . "
                         + "FAIL = erreur metier claire avant toute mutation .")

@@ -19,7 +19,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
- * Tests unitaires {@link IntraImportDuplicateDetector} ( P1-3 ) . On mocke le
+ * Tests unitaires {@link IntraImportDuplicateDetector} . On mocke le
  * JDBC et on verifie : le SQL genere ( fige toute regression de cle ) , le
  * no-op {@code OFF} / {@code null} , le cas nominal sans doublon ( aucun scan
  * sample ) , et les politiques {@code WARN} ( pas d'exception ) / {@code FAIL}

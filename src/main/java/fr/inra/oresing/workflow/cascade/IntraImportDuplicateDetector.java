@@ -14,7 +14,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * P1-3 - Détection des doublons de clé naturelle ( contrainte
+ * Détection des doublons de clé naturelle ( contrainte
  * {@code hierarchicalKey_uniqueness} ) <b>intra-import</b> , directement sur
  * la table de staging , AVANT la boucle UPSERT de
  * {@link StagingFinalizeSql#runFinalize} .

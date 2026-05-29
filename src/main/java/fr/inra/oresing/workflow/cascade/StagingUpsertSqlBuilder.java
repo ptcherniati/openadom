@@ -52,13 +52,13 @@ public final class StagingUpsertSqlBuilder {
      * compatibilite bit-a-bit lors de la mise en place du feature flag .
      */
     public static String buildJsonbPopulateRecord(String stagingTable, String targetTableSqlId,
-                                                  String columnList, boolean filtered) {
+                                                  String columnList, boolean filtered, int batchLimit) {
         return "WITH batch AS ("
                 + "   DELETE FROM " + stagingTable
                 + "   WHERE ctid IN ("
                 + "     SELECT ctid FROM " + stagingTable
                 + (filtered ? "     WHERE correlation_id = ?" : "")
-                + "     LIMIT " + StagingFinalizeSql.BULK_INSERT_BATCH_SIZE
+                + "     LIMIT " + batchLimit
                 + "   )"
                 + "   RETURNING data"
                 + " )"
@@ -94,7 +94,7 @@ public final class StagingUpsertSqlBuilder {
      */
     public static String buildColumnExtraction(String stagingTable, String targetTableSqlId,
                                                String[] targetColumns, Map<String, String> columnPgTypes,
-                                               boolean filtered) {
+                                               boolean filtered, int batchLimit) {
         String columnList = String.join(",",
                 java.util.Arrays.stream(targetColumns).map(String::toLowerCase).toList());
         StringBuilder selectExprs = new StringBuilder();
@@ -107,7 +107,7 @@ public final class StagingUpsertSqlBuilder {
                 + "   WHERE ctid IN ("
                 + "     SELECT ctid FROM " + stagingTable
                 + (filtered ? "     WHERE correlation_id = ?" : "")
-                + "     LIMIT " + StagingFinalizeSql.BULK_INSERT_BATCH_SIZE
+                + "     LIMIT " + batchLimit
                 + "   )"
                 + "   RETURNING data"
                 + " )"

@@ -236,7 +236,7 @@ public class ImportProperties {
     private volatile long finalizeLockRetryBackoffMaxMs = 60_000L;
 
     /**
-     * S-5 - {@code SET LOCAL work_mem} applique a la session finalize
+     * {@code SET LOCAL work_mem} applique a la session finalize
      * ( tris / hash / agregats : agregat de detection doublons , JOIN refref ,
      * ON CONFLICT ) . Format Postgres ( ex {@code "256MB"} , {@code "1GB"} ) .
      * Vide = pas d'override ( garde le default cluster , iso-resultat ) .
@@ -245,7 +245,7 @@ public class ImportProperties {
     private volatile String finalizeWorkMem = "";
 
     /**
-     * S-5 - {@code SET LOCAL maintenance_work_mem} pour la session finalize
+     * {@code SET LOCAL maintenance_work_mem} pour la session finalize
      * ( utile aux operations de maintenance : (re)creation d'index , VACUUM
      * cible ) . Format Postgres . Vide = pas d'override .
      * <p>Surcharge via {@code CASCADE_IMPORT_FINALIZE_MAINTENANCE_WORK_MEM} .
@@ -253,7 +253,18 @@ public class ImportProperties {
     private volatile String finalizeMaintenanceWorkMem = "";
 
     /**
-     * P1-3 - Politique de détection des doublons de clé naturelle
+     * Taille de batch de l'UPSERT staging -> table finale ( lignes par
+     * iteration : DELETE ... RETURNING LIMIT N + INSERT ... ON CONFLICT ) .
+     * Moins d'iterations sur gros volume ( 50M = 500 batches a 100k au lieu de
+     * 1000 a 50k ) , au prix de verrous tenus un peu plus longtemps par batch .
+     * Resolu UNE fois au debut du finalize ( snapshot coherent ) . Defaut
+     * 50000 ( iso-comportement ) . {@code <= 0} -> fallback sur le defaut .
+     * <p>Surcharge via {@code CASCADE_IMPORT_FINALIZE_BATCH_SIZE} . Mutable a chaud .
+     */
+    private volatile int finalizeBatchSize = 50_000;
+
+    /**
+     * Politique de détection des doublons de clé naturelle
      * ( contrainte {@code hierarchicalKey_uniqueness} ) <b>intra-import</b> ,
      * évaluée sur le staging avant la boucle UPSERT
      * ( {@link fr.inra.oresing.workflow.cascade.IntraImportDuplicateDetector} ) .
@@ -342,6 +353,7 @@ public class ImportProperties {
     public long getFinalizeLockRetryBackoffMaxMs()      { return finalizeLockRetryBackoffMaxMs; }
     public String getFinalizeWorkMem()                  { return finalizeWorkMem; }
     public String getFinalizeMaintenanceWorkMem()       { return finalizeMaintenanceWorkMem; }
+    public int    getFinalizeBatchSize()                { return finalizeBatchSize; }
     public int getReferenceCacheMaxEntries()  { return referenceCacheMaxEntries; }
     public int getGroovyCacheMaxEntries()     { return groovyCacheMaxEntries; }
     public boolean isOrderedRecursionMode()   { return orderedRecursionMode; }
@@ -371,6 +383,7 @@ public class ImportProperties {
     public void setFinalizeLockRetryBackoffMaxMs(long v)     { this.finalizeLockRetryBackoffMaxMs = v; }
     public void setFinalizeWorkMem(String v)                 { this.finalizeWorkMem = v != null ? v : ""; }
     public void setFinalizeMaintenanceWorkMem(String v)      { this.finalizeMaintenanceWorkMem = v != null ? v : ""; }
+    public void setFinalizeBatchSize(int v)                  { this.finalizeBatchSize = v; }
     public void setReferenceCacheMaxEntries(int v) { this.referenceCacheMaxEntries = v; }
     public void setGroovyCacheMaxEntries(int v)  { this.groovyCacheMaxEntries = v; }
     public void setOrderedRecursionMode(boolean v) { this.orderedRecursionMode = v; }

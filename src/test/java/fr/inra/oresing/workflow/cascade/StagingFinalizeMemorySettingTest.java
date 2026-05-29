@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests du garde-fou {@link StagingFinalizeSql#isValidMemorySetting} ( S-5 ) :
+ * Tests du garde-fou {@link StagingFinalizeSql#isValidMemorySetting} :
  * seule une valeur de reglage memoire Postgres conforme est acceptee avant
  * interpolation dans un {@code SET LOCAL work_mem / maintenance_work_mem} .
  * Empeche toute injection SQL via la config .
@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author R.YAHIAOUI
  */
 @Tag("domain.model")
-@DisplayName("StagingFinalizeSql - validation reglage memoire ( S-5 )")
+@DisplayName("StagingFinalizeSql - validation reglage memoire")
 class StagingFinalizeMemorySettingTest {
 
     @Test
@@ -27,6 +27,16 @@ class StagingFinalizeMemorySettingTest {
         assertThat(StagingFinalizeSql.isValidMemorySetting("65536")).isTrue();      // sans unite = kB Postgres
         assertThat(StagingFinalizeSql.isValidMemorySetting("2TB")).isTrue();
         assertThat(StagingFinalizeSql.isValidMemorySetting("  512MB  ")).isTrue();  // trim
+    }
+
+    @Test
+    @DisplayName("resolveBatchSize : <= 0 -> defaut 50000 , borne 1M , sinon valeur")
+    void resolveBatchSize() {
+        assertThat(StagingFinalizeSql.resolveBatchSize(0)).isEqualTo(50_000);
+        assertThat(StagingFinalizeSql.resolveBatchSize(-5)).isEqualTo(50_000);
+        assertThat(StagingFinalizeSql.resolveBatchSize(100_000)).isEqualTo(100_000);
+        assertThat(StagingFinalizeSql.resolveBatchSize(5_000_000)).isEqualTo(1_000_000); // borne
+        assertThat(StagingFinalizeSql.resolveBatchSize(1)).isEqualTo(1);
     }
 
     @Test

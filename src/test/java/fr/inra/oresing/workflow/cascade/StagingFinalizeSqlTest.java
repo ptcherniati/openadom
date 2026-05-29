@@ -1,5 +1,8 @@
 package fr.inra.oresing.workflow.cascade;
 
+import fr.inra.oresing.workflow.cascade.config.ImportProperties;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.invocation.InvocationOnMock;
@@ -40,6 +43,23 @@ class StagingFinalizeSqlTest {
     private static void wireCreateStatementMock(Connection conn) throws Exception {
         Statement stmt = mock(Statement.class);
         when(conn.createStatement()).thenReturn(stmt);
+    }
+
+    /**
+     * Ces tests ciblent la boucle UPSERT , pas la detection de doublons :
+     * on desactive la detection ( policy OFF ) pour qu'aucune requete
+     * d'agregat sur le staging ne soit emise vers le mock ( sinon NPE sur
+     * le ResultSet non stube ) . Reset au defaut apres chaque test .
+     */
+    @BeforeEach
+    void disableDuplicateDetection() {
+        StagingFinalizeSql.setIntraDuplicatePolicySupplier(
+                () -> ImportProperties.IntraDuplicatePolicy.OFF);
+    }
+
+    @AfterEach
+    void resetDuplicateDetection() {
+        StagingFinalizeSql.setIntraDuplicatePolicySupplier(null);
     }
 
     @Test

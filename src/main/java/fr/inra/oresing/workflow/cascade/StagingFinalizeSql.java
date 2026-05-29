@@ -70,10 +70,12 @@ public final class StagingFinalizeSql {
     private static volatile java.util.function.IntSupplier lockRetryMaxAttemptsSupplier = () -> 3;
     private static volatile java.util.function.LongSupplier lockRetryBackoffInitialMsSupplier = () -> 1000L;
     private static volatile java.util.function.LongSupplier lockRetryBackoffMaxMsSupplier     = () -> 60_000L;
-    // S-5 : work_mem / maintenance_work_mem appliques en SET LOCAL au finalize .
+    // work_mem / maintenance_work_mem appliques en SET LOCAL au finalize .
     // Defaut vide = pas d'override ( garde le default cluster ) .
     private static volatile java.util.function.Supplier<String> workMemSupplier            = () -> "";
     private static volatile java.util.function.Supplier<String> maintenanceWorkMemSupplier = () -> "";
+    // Taille de batch UPSERT , lue a chaud ; defaut = constante JVM-prop ci-dessus .
+    private static volatile java.util.function.IntSupplier batchSizeSupplier = () -> BULK_INSERT_BATCH_SIZE;
 
     /** Format Postgres memory unit accepte ( ex 64MB , 1GB , 524288kB , 256 ) . */
     private static final java.util.regex.Pattern MEM_SETTING =
@@ -100,6 +102,20 @@ public final class StagingFinalizeSql {
     }
     public static void setMaintenanceWorkMemSupplier(java.util.function.Supplier<String> s) {
         maintenanceWorkMemSupplier = s != null ? s : () -> "";
+    }
+    public static void setBatchSizeSupplier(java.util.function.IntSupplier s) {
+        batchSizeSupplier = s != null ? s : () -> BULK_INSERT_BATCH_SIZE;
+    }
+
+    /**
+     * Resout la taille de batch effective : la valeur fournie si {@code > 0} ,
+     * sinon le defaut {@link #BULK_INSERT_BATCH_SIZE} ( garde-fou contre une
+     * config 0 / negative ) . Bornee a 1M pour eviter un LIMIT delirant .
+     * Package-private pour test unitaire .
+     */
+    static int resolveBatchSize(int configured) {
+        if (configured <= 0) return BULK_INSERT_BATCH_SIZE;
+        return Math.min(configured, 1_000_000);
     }
 
     /**
@@ -185,7 +201,7 @@ public final class StagingFinalizeSql {
     }
 
     /**
-     * P1-3 - Supplier dynamique vers {@code ImportProperties.getIntraDuplicatePolicy} .
+     * Supplier dynamique vers {@code ImportProperties.getIntraDuplicatePolicy} .
      * Lu a chaque finalize ( edition live oa-live ) . Defaut conservateur :
      * {@code WARN} ( trace sans changer le resultat ) tant que non injecte .
      */
@@ -380,7 +396,7 @@ public final class StagingFinalizeSql {
             }
         }
 
-        // S-5 : SET LOCAL work_mem / maintenance_work_mem pour la session
+        // SET LOCAL work_mem / maintenance_work_mem pour la session
         // finalize . work_mem accelere les tris / hash / agregats ( agregat de
         // detection doublons , JOIN refref , resolution ON CONFLICT ) ;
         // maintenance_work_mem sert aux operations de maintenance ( index ,
@@ -426,7 +442,7 @@ public final class StagingFinalizeSql {
 
         boolean filtered = (correlationId != null && !correlationId.isBlank());
 
-        // P1-3 : detection des doublons de cle naturelle intra-import sur le
+        // Detection des doublons de cle naturelle intra-import sur le
         // staging , AVANT toute mutation ( refref rebuild + UPSERT ) . Read-only :
         // un GROUP BY ... HAVING count(*) > 1 sur les 4 colonnes de la contrainte
         // hierarchicalKey_uniqueness , extraites de data JSONB ( memes champs que
@@ -459,6 +475,12 @@ public final class StagingFinalizeSql {
         //
         // Le builder centralise les deux strategies + permet rollback trivial via flag .
         // Cf StagingUpsertSqlBuilder javadoc .
+        // Taille de batch resolue UNE fois ici ( snapshot ) : la meme valeur
+        // alimente le LIMIT du SQL ET la condition de fin de boucle ( derniere
+        // batch partielle ) , garantissant leur coherence pour ce finalize meme
+        // si la config est editee a chaud entre deux imports .
+        final int batchSize = resolveBatchSize(batchSizeSupplier.getAsInt());
+
         final boolean useColumnExtraction = useColumnExtractionUpsertSupplier.getAsBoolean();
         String batchInsertSql = null;
         if (useColumnExtraction) {
@@ -472,7 +494,7 @@ public final class StagingFinalizeSql {
                 java.util.Map<String, String> pgTypes =
                         StagingUpsertSqlBuilder.fetchColumnPgTypes(connection, schema, table);
                 batchInsertSql = StagingUpsertSqlBuilder.buildColumnExtraction(
-                        stagingTable, targetTableSqlId, targetColumns, pgTypes, filtered);
+                        stagingTable, targetTableSqlId, targetColumns, pgTypes, filtered, batchSize);
                 log.debug("StagingFinalize : using P4b column extraction strategy for {}", targetTableSqlId);
             } catch (RuntimeException | SQLException ex) {
                 log.warn("StagingFinalize : P4b column extraction failed ( {} ) , fallback legacy jsonb_populate_record",
@@ -482,7 +504,7 @@ public final class StagingFinalizeSql {
         }
         if (batchInsertSql == null) {
             batchInsertSql = StagingUpsertSqlBuilder.buildJsonbPopulateRecord(
-                    stagingTable, targetTableSqlId, columnList, filtered);
+                    stagingTable, targetTableSqlId, columnList, filtered, batchSize);
         }
 
         // Phase A L2 : boucle UPSERT pilotee par {@code affected} - on
@@ -510,7 +532,7 @@ public final class StagingFinalizeSql {
             if (UPSERT_BATCH_TIMEOUT_SECONDS > 0) {
                 ps.setQueryTimeout(UPSERT_BATCH_TIMEOUT_SECONDS);
             }
-            final int batchSize = BULK_INSERT_BATCH_SIZE;
+            // batchSize resolu plus haut ( snapshot , = LIMIT du SQL ) .
             final int maxBatches = 100_000;
             int batchNum = 0;
             long totalAffected = 0L;
