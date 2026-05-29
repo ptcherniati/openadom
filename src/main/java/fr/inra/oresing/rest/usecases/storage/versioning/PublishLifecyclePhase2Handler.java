@@ -124,6 +124,13 @@ public class PublishLifecyclePhase2Handler {
     private final WorkflowLogRepository logRepository;
 
     /**
+     * Compensation saga ( audit P0-4 ) : forward-recovery de la suppression
+     * de la binaryfile si la phase DELETE_FILE_ROW echoue alors que les rows
+     * ont deja ete supprimees . Cf {@code DeleteFileRowCompensationHandler} .
+     */
+    private final fr.inra.oresing.monitoring.compensation.CompensationLogService compensationLogService;
+
+    /**
      * P0 UX fix : registry in-memory des workflows actifs ( consume par
      * {@code DashboardService.listInProgress} ) . Le PARENT publish est
      * enregistre en Phase 1 ; on appelle {@code finish(parentCid)} ici en
@@ -194,7 +201,8 @@ public class PublishLifecyclePhase2Handler {
             org.springframework.transaction.PlatformTransactionManager txManager,
             fr.inra.oresing.workflow.cascade.BackendPidRegistry backendPidRegistry,
             HeartbeatService            heartbeatService,
-            WorkflowLogRepository       logRepository) {
+            WorkflowLogRepository       logRepository,
+            fr.inra.oresing.monitoring.compensation.CompensationLogService compensationLogService) {
         this.serviceContainer       = serviceContainer;
         this.repository             = repository;
         this.logWriter              = logWriter;
@@ -206,6 +214,7 @@ public class PublishLifecyclePhase2Handler {
         this.txManager              = txManager;
         this.heartbeatService       = heartbeatService;
         this.logRepository          = logRepository;
+        this.compensationLogService = compensationLogService;
     }
 
     /**
@@ -805,8 +814,46 @@ public class PublishLifecyclePhase2Handler {
             });
 
             scope.run(fr.inra.oresing.workflow.WorkflowPhase.DELETE_FILE_ROW, () -> {
-                newRequiresNewTx().executeWithoutResult(status ->
-                        serviceContainer.binaryFileService().removeFile(application, ev.fileId()));
+                // Audit P0-4 : forward-recovery compensee . Les rows sont deja
+                // supprimees ( phase DELETE_ROWS committee ) ; si la suppression
+                // de la binaryfile echoue/crash maintenant , on aurait une
+                // binaryfile orpheline ( fichier visible sans donnees ) . On
+                // enregistre donc une compensation AVANT ( tx propre committe ) :
+                //  - succes -> confirm() ( supprime la row compensation ) ;
+                //  - echec  -> compensateNow() ( retry synchrone immediat ) puis
+                //    rethrow ; si ca echoue aussi , le CompensationSweeper
+                //    terminera la suppression ( idempotent + smart-check
+                //    anti-perte ) . Best-effort : un echec du record() ne doit
+                //    pas bloquer la suppression nominale .
+                java.util.UUID compId = null;
+                try {
+                    compId = compensationLogService.record(
+                            fr.inra.oresing.monitoring.compensation.handlers.DeleteFileRowCompensationHandler.OP_TYPE,
+                            application.getName(), "binaryfile", ev.fileId().toString(),
+                            ev.correlationId(), ev.userId(), ev.userLogin(),
+                            java.util.Map.of("dataName", ev.dataName() == null ? "" : ev.dataName()));
+                } catch (RuntimeException recEx) {
+                    log.warn("[{}] record compensation DELETE_FILE_ROW echoue ( best-effort , "
+                            + "sweeper orphan TTL en filet ) : {}", ev.correlationId(), recEx.getMessage());
+                }
+                final java.util.UUID compIdFinal = compId;
+                try {
+                    newRequiresNewTx().executeWithoutResult(status ->
+                            serviceContainer.binaryFileService().removeFile(application, ev.fileId()));
+                    if (compIdFinal != null) {
+                        compensationLogService.confirm(compIdFinal);
+                    }
+                } catch (RuntimeException delEx) {
+                    if (compIdFinal != null) {
+                        try {
+                            compensationLogService.compensateNow(compIdFinal);
+                        } catch (RuntimeException compEx) {
+                            log.warn("[{}] compensateNow DELETE_FILE_ROW echoue ( sweeper prendra le relais ) : {}",
+                                    ev.correlationId(), compEx.getMessage());
+                        }
+                    }
+                    throw delEx;
+                }
             });
         }
         if (progressReporter != null) {
