@@ -55,6 +55,8 @@ public class SecurityConfig {
     // #470 - Endpoint public exposant la durée d'expiration du JWT ,
     // pour que le frontend aligne son timer d'inactivité sur le TTL serveur.
     public static final String API_V_1_SESSION_CONFIG = "/api/v1/session/config";
+    /** Branding ( titre + favicon ) - charge par les SPAs avant login . */
+    public static final String API_V_1_BRANDING = "/api/v1/branding";
     public static final String BASE = "/";
     public static final long MAX_AGE = 3600L;
     @Value("${allowed.origin}")
@@ -96,6 +98,7 @@ public class SecurityConfig {
                                         BASE,
                                         API_V_1_LOGOUT,
                                         API_V_1_SESSION_CONFIG,
+                                        API_V_1_BRANDING,
                                         UPLOAD,
                                         ADMIN,
                                         POOLS,
