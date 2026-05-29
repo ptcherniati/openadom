@@ -46,6 +46,8 @@ public class MigrateService {
     private DataSource dataSource;
     @Setter
     private Application application;
+    @Value("${app.filterModel.legacyDefault:false}")
+    private boolean filterModelLegacyDefault;
     @Autowired
     private BeanFactory beanFactory;
 
@@ -133,7 +135,8 @@ public class MigrateService {
     private void updateAuthorizationIndexes(Flyway flyway) {
         long t0 = System.nanoTime();
         try (Connection connection = flyway.getConfiguration().getDataSource().getConnection()) {
-            AuthorizationIndex authorizationIndex = new AuthorizationIndex(application, null);
+            AuthorizationIndex authorizationIndex = new AuthorizationIndex(application, null, filterModelLegacyDefault);
+            java.util.Set<String> extraIndexes = java.util.Set.of();
 
             // AUDIT 06-05-26 #3 option A : si tous les index attendus existent
             // deja en DB et qu aucun extra n est present , on skip totalement
@@ -161,6 +164,7 @@ public class MigrateService {
                 missing.removeAll(actual);
                 java.util.Set<String> extra = new java.util.HashSet<>(actual);
                 extra.removeAll(expected);
+                extraIndexes = extra;
                 log.info("updateAuthorizationIndexes : diff detecte pour {} ( manquants={} , obsoletes={} ) -> rebuild complet",
                         application.getName(), missing.size(), extra.size());
             } catch (SQLException diffErr) {
@@ -168,8 +172,12 @@ public class MigrateService {
                         diffErr.getMessage());
             }
 
-            String createIndexesSql = authorizationIndex.createIndexes();
             try (Statement statement = connection.createStatement()) {
+                for (String extraIndex : extraIndexes) {
+                    log.info("updateAuthorizationIndexes : drop index obsolete {}.{}", application.getName(), extraIndex);
+                    statement.execute("DROP INDEX IF EXISTS " + quoteIdentifier(application.getName()) + "." + quoteIdentifier(extraIndex));
+                }
+                String createIndexesSql = authorizationIndex.createIndexes();
                 statement.execute(createIndexesSql);
             }
             long ms = (System.nanoTime() - t0) / 1_000_000L;
@@ -178,6 +186,10 @@ public class MigrateService {
         } catch (SQLException e) {
             log.error("Erreur lors de la création des index d'autorisation pour l'application {}", application.getName(), e);
         }
+    }
+
+    private static String quoteIdentifier(String identifier) {
+        return "\"" + identifier.replace("\"", "\"\"") + "\"";
     }
 
     private String getCurrentDatabase() {

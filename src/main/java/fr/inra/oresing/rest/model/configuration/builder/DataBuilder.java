@@ -31,6 +31,10 @@ public record DataBuilder(RootBuilder rootBuilder) {
         final Boolean allowUnexpectedColumns = Optional.ofNullable(jsonNode.get("OA_allowUnexpectedColumns"))
                 .map(JsonNode::asBoolean)
                 .orElse(false);
+        final FilterModel filterModel = Optional.ofNullable(jsonNode.get(ConfigurationSchemaNode.OA_FILTER_MODEL))
+                .map(JsonNode::asText)
+                .map(FilterModel::valueOf)
+                .orElseGet(FilterModel::defaultValue);
         final Map localizationNames = rootBuilder.getMapper().convertValue(jsonNode.findPath(ConfigurationSchemaNode.OA_I_18_N), Map.class);
         try {
             i18n = i18n.add(
@@ -162,6 +166,7 @@ public record DataBuilder(RootBuilder rootBuilder) {
                         firstRowLine,
                         allowUnexpectedColumns,
                         tags,
+                        filterModel,
                         naturalKeys,
                         componentDescriptions,
                         submissionParsing.result(),

@@ -4,7 +4,9 @@ import com.google.common.base.Strings;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Authorization;
 import fr.inra.oresing.domain.application.configuration.AuthorizationScopeComponentData;
+import fr.inra.oresing.domain.application.configuration.ComponentDescription;
 import fr.inra.oresing.domain.application.configuration.Ltree;
+import fr.inra.oresing.domain.application.configuration.FilterModel;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.authorization.request.*;
@@ -15,13 +17,17 @@ import org.apache.commons.collections4.CollectionUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public record AuthorizationIndex(Application application, Set<String> dataNames) {
+public record AuthorizationIndex(Application application, Set<String> dataNames, boolean legacyDefault) {
     public AuthorizationIndex {
         dataNames = CollectionUtils.isEmpty(dataNames) ? Set.copyOf(application.getAllDataNames()) : dataNames;
     }
 
     public AuthorizationIndex(Application application) {
-        this(application,  Set.copyOf(application.getAllDataNames()));
+        this(application, Set.copyOf(application.getAllDataNames()), false);
+    }
+
+    public AuthorizationIndex(Application application, Set<String> dataNames) {
+        this(application, dataNames, false);
     }
 
     public String createIndexes() {
@@ -73,21 +79,56 @@ public record AuthorizationIndex(Application application, Set<String> dataNames)
 
     public String createIndex(String dataname) {
         StringBuilder indexSql = new StringBuilder();
+        FilterModel filterModel = effectiveFilterModel(dataname);
 
-        // Index partiel pour referencetype et refvalues (toujours créé)
-        indexSql.append(String.format("""
-                        CREATE INDEX IF NOT EXISTS %1$s_refvalues_index
-                        ON %2$s.referencevalue USING gin
-                        (
-                            refvalues jsonb_path_ops
-                        )
-                        WHERE referencetype = '%3$s';
-                        
-                        """,
-                indexName(dataname),
-                application().getName(),
-                dataname
-        ));
+        if (filterModel == FilterModel.LEGACY_GIN) {
+            indexSql.append(String.format("""
+                            CREATE INDEX IF NOT EXISTS %1$s_refvalues_index
+                            ON %2$s.referencevalue USING gin
+                            (
+                                refvalues jsonb_path_ops
+                            )
+                            WHERE referencetype = '%3$s';
+                            
+                            """,
+                    indexName(dataname),
+                    application().getName(),
+                    dataname
+            ));
+        } else if (filterModel == FilterModel.DEFINED_FILTERS) {
+            application().findData(dataname)
+                    .map(StandardDataDescription::componentDescriptions)
+                    .stream()
+                    .flatMap(components -> components.entrySet().stream())
+                    .forEach(componentEntry -> {
+                        String componentKey = componentEntry.getKey();
+                        ComponentDescription componentDescription = componentEntry.getValue();
+                        if (componentDescription.isFilterableAsList()) {
+                            indexSql.append(String.format("""
+                                            CREATE INDEX IF NOT EXISTS %1$s
+                                            ON %2$s.referencevalue ((refvalues->>'%3$s'))
+                                            WHERE referencetype = '%4$s';
+                                            
+                                            """,
+                                    filterColumnIndexName(dataname, componentKey, false),
+                                    application().getName(),
+                                    componentKey,
+                                    dataname));
+                        }
+                        if (componentDescription.isFilterableAsText()) {
+                            indexSql.append(String.format("""
+                                            CREATE INDEX IF NOT EXISTS %1$s
+                                            ON %2$s.referencevalue USING gin (lower(refvalues->>'%3$s') gin_trgm_ops)
+                                            WHERE referencetype = '%4$s';
+                                            
+                                            """,
+                                    filterColumnIndexName(dataname, componentKey, true),
+                                    application().getName(),
+                                    componentKey,
+                                    dataname));
+                        }
+                    });
+        }
 
         final boolean[] hasRequiredAuthorizations = {false};
         final boolean[] hasTimeScope = {false};
@@ -249,12 +290,13 @@ public record AuthorizationIndex(Application application, Set<String> dataNames)
     }
 
     /**
-     * Suffixe le plus long parmi {@code _refvalues_index} ( 16 ),
-     * {@code _auth_index} ( 11 ) et {@code _timescope_index} ( 16 ).
+     * Suffixe fixe le plus long parmi {@code _refvalues_index} ( 16 ),
+     * {@code _auth_index} ( 11 ), {@code _timescope_index} ( 16 ) et
+     * {@code _filter_<col>_text_index}.
      * Réservé en amont pour que la troncature laisse toujours la place
      * au suffixe ajouté par {@link #createIndex(String)}.
      */
-    private static final int RESERVED_SUFFIX_LENGTH = "_timescope_index".length();
+    private static final int RESERVED_SUFFIX_LENGTH = "_filter__text_index".length();
 
     public String indexName(String dataname) {
         // Construit le préfixe nominal puis garantit qu'il rentre dans
@@ -284,8 +326,23 @@ public record AuthorizationIndex(Application application, Set<String> dataNames)
                 : dataNames();
         for (String dataname : dataNamesForIndexes) {
             String prefix = indexName(dataname);
-            // _refvalues_index : toujours genere
-            expected.add(prefix + "_refvalues_index");
+            FilterModel filterModel = effectiveFilterModel(dataname);
+            if (filterModel == FilterModel.LEGACY_GIN) {
+                expected.add(prefix + "_refvalues_index");
+            } else if (filterModel == FilterModel.DEFINED_FILTERS) {
+                application().findData(dataname)
+                        .map(StandardDataDescription::componentDescriptions)
+                        .stream()
+                        .flatMap(components -> components.entrySet().stream())
+                        .forEach(componentEntry -> {
+                            if (componentEntry.getValue().isFilterableAsList()) {
+                                expected.add(filterColumnIndexName(dataname, componentEntry.getKey(), false));
+                            }
+                            if (componentEntry.getValue().isFilterableAsText()) {
+                                expected.add(filterColumnIndexName(dataname, componentEntry.getKey(), true));
+                            }
+                        });
+            }
             // _auth_index / _timescope_index : conditionnels selon
             // configuration authorization.scope / timescope
             application().findData(dataname)
@@ -300,5 +357,25 @@ public record AuthorizationIndex(Application application, Set<String> dataNames)
                     });
         }
         return expected;
+    }
+
+    private FilterModel effectiveFilterModel(String dataname) {
+        FilterModel declared = application().findData(dataname)
+                .map(dataDescription -> Optional.ofNullable(application().resolveFilterModel(dataDescription))
+                        .orElseGet(dataDescription::filterModel))
+                .orElseGet(FilterModel::defaultValue);
+        if (legacyDefault() && declared == FilterModel.NONE) {
+            return FilterModel.LEGACY_GIN;
+        }
+        return declared;
+    }
+
+    private String filterColumnIndexName(String dataname, String componentKey, boolean isText) {
+        return PgIdentifier.truncateSafe(indexName(dataname) + filterColumnIndexSuffix(componentKey, isText), 0);
+    }
+
+    private String filterColumnIndexSuffix(String componentKey, boolean isText) {
+        String safeComponentKey = componentKey.replaceAll("[^A-Za-z0-9_]", "_");
+        return "_filter_" + safeComponentKey + (isText ? "_text_index" : "_index");
     }
 }

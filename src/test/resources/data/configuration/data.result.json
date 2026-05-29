@@ -157,7 +157,10 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": false,
-    "order": 9999
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
   "experimental_plot": {
     "separator": ";",
@@ -209,7 +212,10 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": false,
-    "order": 9999
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
   "variables": {
     "separator": ";",
@@ -386,7 +392,10 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": false,
-    "order": 9999
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
   "type_de_sites": {
     "separator": ";",
@@ -538,7 +547,10 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": false,
-    "order": 9999
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
   "site_theme_datatype": {
     "separator": ";",
@@ -756,7 +768,10 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": false,
-    "order": 9999
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
   "variables_et_unites_par_types_de_donnees": {
     "separator": ";",
@@ -933,7 +948,10 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": false,
-    "order": 9999
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
   "sites": {
     "separator": ";",
@@ -1163,7 +1181,10 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": false,
-    "order": 9999
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
   "tr_plot_plo": {
     "separator": ";",
@@ -1210,7 +1231,10 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": false,
-    "order": 9999
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
   "themes": {
     "separator": ";",
@@ -1362,7 +1386,10 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": false,
-    "order": 9999
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
   "t_teledetection_tel": {
     "separator": ";",
@@ -1920,7 +1947,10 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": false,
-    "order": 9999
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
   "unites": {
     "separator": ";",
@@ -2097,7 +2127,10 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": false,
-    "order": 9999
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
   "projet": {
     "separator": ";",
@@ -2282,7 +2315,10 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": false,
-    "order": 9999
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
   "plot": {
     "separator": ";",
@@ -2334,7 +2370,10 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": false,
-    "order": 9999
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
   "valeurs_qualitatives": {
     "separator": ";",
@@ -2512,7 +2551,10 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": false,
-    "order": 9999
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
   "type_de_fichiers": {
     "separator": ";",
@@ -2663,7 +2705,10 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": true,
-    "order": 9999
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
   "tr_flag_fla": {
     "separator": ";",
@@ -2710,7 +2755,10 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": false,
-    "order": 9999
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
   "pem": {
     "separator": ";",
@@ -3256,7 +3304,10 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": false,
-    "order": 2
+    "order": 2,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
   "proprietes_taxon": {
     "separator": ";",
@@ -3644,7 +3695,10 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": false,
-    "order": 9999
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
   "taxon": {
     "separator": ";",
@@ -4129,6 +4183,9 @@
     "filterableAsList": false,
     "filterableAsText": false,
     "hidden": false,
-    "order": 9999
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   }
 }

@@ -10,6 +10,7 @@ import fr.inra.oresing.domain.exceptions.application.SiOreConfigurationFormatExc
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Map;
 
 public record ApplicationdescriptionBuilder(RootBuilder rootBuilder) {
@@ -33,6 +34,9 @@ public record ApplicationdescriptionBuilder(RootBuilder rootBuilder) {
         final Locale locale = Locale.of(applicationNode.findPath(ConfigurationSchemaNode.OA_DEFAULT_LANGUAGE).asText("fr"));
         final String name = applicationNode.findPath(ConfigurationSchemaNode.OA_NAME).asText();
         String comment1 = Strings.isNullOrEmpty(comment) ? applicationNode.findPath(ConfigurationSchemaNode.OA_COMMENT).asText("no comment") : comment;
+        Boolean filterModelAppliesToDataOnly = Optional.ofNullable(applicationNode.get(ConfigurationSchemaNode.OA_FILTER_MODEL_APPLIES_TO_DATA_ONLY))
+                .map(JsonNode::asBoolean)
+                .orElse(false);
         try {
             i18n1 = i18n1.add(
                     Internationalizations.APPLICATION,
@@ -48,7 +52,7 @@ public record ApplicationdescriptionBuilder(RootBuilder rootBuilder) {
         }
         final ApplicationDescription applicationDescription;
         try {
-            applicationDescription = new ApplicationDescription(name, version, locale, comment1);
+            applicationDescription = new ApplicationDescription(name, version, locale, comment1, filterModelAppliesToDataOnly);
         } catch (final IllegalArgumentException e) {
             switch (e.getMessage()) {
                 case "BAD_VERSION_NUMBER" ->

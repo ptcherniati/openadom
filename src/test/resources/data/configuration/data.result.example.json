@@ -1,1948 +1,2284 @@
 {
-  "tr_zone_etude_zet" : {
-    "separator" : ";",
-    "headerLine" : 1,
-    "firstRowLine" : 2,
-    "allowUnexpectedColumns" : false,
-    "tags" : [ {
-      "tagDefinition" : "DOMAIN_TAG",
-      "tagName" : "data"
-    }, {
-      "tagDefinition" : "DOMAIN_TAG",
-      "tagName" : "context"
-    } ],
-    "naturalKey" : [ "zet_chemin_parent", "zet_nom_key" ],
-    "componentDescriptions" : {
-      "tze_type_nom" : {
-        "type" : "BasicComponent",
-        "componentKey" : "tze_type_nom",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Site",
-        "exportHeaderName" : "tze_type_nom",
-        "langRestrictions" : [ ],
-        "required" : true,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "ReferenceChecker",
-          "componentKey" : "tze_type_nom",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "refType" : "tr_type_zone_etude_tze",
-          "isRecursive" : false,
-          "isParent" : true
+  "tr_zone_etude_zet": {
+    "separator": ";",
+    "headerLine": 1,
+    "firstRowLine": 2,
+    "allowUnexpectedColumns": false,
+    "tags": [
+      {
+        "tagDefinition": "DOMAIN_TAG",
+        "tagName": "data"
+      },
+      {
+        "tagDefinition": "DOMAIN_TAG",
+        "tagName": "context"
+      }
+    ],
+    "naturalKey": [
+      "zet_chemin_parent",
+      "zet_nom_key"
+    ],
+    "componentDescriptions": {
+      "tze_type_nom": {
+        "type": "BasicComponent",
+        "componentKey": "tze_type_nom",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Site",
+        "exportHeaderName": "tze_type_nom",
+        "langRestrictions": [],
+        "required": true,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "ReferenceChecker",
+          "componentKey": "tze_type_nom",
+          "multiplicity": "ONE",
+          "required": true,
+          "refType": "tr_type_zone_etude_tze",
+          "isRecursive": false,
+          "isParent": true
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : true,
-        "referenceCheckerType" : "tr_type_zone_etude_tze",
-        "chartDescription" : null
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": true,
+        "referenceCheckerType": "tr_type_zone_etude_tze",
+        "chartDescription": null
       },
-      "zet_description_en" : {
-        "type" : "BasicComponent",
-        "componentKey" : "zet_description_en",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "English site description",
-        "exportHeaderName" : "zet_description_en",
-        "langRestrictions" : [ "en" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+      "zet_description_en": {
+        "type": "BasicComponent",
+        "componentKey": "zet_description_en",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "English site description",
+        "exportHeaderName": "zet_description_en",
+        "langRestrictions": [
+          "en"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "zet_nom_fr" : {
-        "type" : "BasicComponent",
-        "componentKey" : "zet_nom_fr",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Nom du site en français",
-        "exportHeaderName" : "zet_nom_fr",
-        "langRestrictions" : [ "fr" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+      "zet_nom_fr": {
+        "type": "BasicComponent",
+        "componentKey": "zet_nom_fr",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Nom du site en français",
+        "exportHeaderName": "zet_nom_fr",
+        "langRestrictions": [
+          "fr"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "zet_nom_key" : {
-        "type" : "BasicComponent",
-        "componentKey" : "zet_nom_key",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Nom codique du site",
-        "exportHeaderName" : null,
-        "langRestrictions" : [ "fr", "en" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+      "zet_nom_key": {
+        "type": "BasicComponent",
+        "componentKey": "zet_nom_key",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Nom codique du site",
+        "exportHeaderName": null,
+        "langRestrictions": [
+          "fr",
+          "en"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "zet_computed_key" : {
-        "type" : "ComputedComponent",
-        "componentKey" : "zet_computed_key",
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "exportHeaderName" : "zet_computed_key",
-        "langRestrictions" : [ ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "ReferenceChecker",
-          "componentKey" : "zet_computed_key",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "refType" : "tr_zone_etude_zet",
-          "isRecursive" : true,
-          "isParent" : true
+      "zet_computed_key": {
+        "type": "ComputedComponent",
+        "componentKey": "zet_computed_key",
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "exportHeaderName": "zet_computed_key",
+        "langRestrictions": [],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "ReferenceChecker",
+          "componentKey": "zet_computed_key",
+          "multiplicity": "ONE",
+          "required": false,
+          "refType": "tr_zone_etude_zet",
+          "isRecursive": true,
+          "isParent": true
         },
-        "computationChecker" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return OA_buildCompositeKey(['zet_chemin_parent','zet_nom_key']);\n",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
+        "computationChecker": {
+          "type": "ComputationChecker",
+          "multiplicity": "ONE",
+          "required": false,
+          "expression": "return OA_buildCompositeKey(['zet_chemin_parent','zet_nom_key']);\n",
+          "references": null,
+          "exceptionMessages": [],
+          "codify": false,
+          "data": null
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : true,
-        "referenceCheckerType" : "tr_zone_etude_zet",
-        "chartDescription" : null,
-        "importHeader" : "zet_computed_key"
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": true,
+        "referenceCheckerType": "tr_zone_etude_zet",
+        "chartDescription": null,
+        "importHeader": "zet_computed_key"
       },
-      "zet_nom_en" : {
-        "type" : "BasicComponent",
-        "componentKey" : "zet_nom_en",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "English site name",
-        "exportHeaderName" : "zet_nom_en",
-        "langRestrictions" : [ "en" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+      "zet_nom_en": {
+        "type": "BasicComponent",
+        "componentKey": "zet_nom_en",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "English site name",
+        "exportHeaderName": "zet_nom_en",
+        "langRestrictions": [
+          "en"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "zet_description_fr" : {
-        "type" : "BasicComponent",
-        "componentKey" : "zet_description_fr",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Description du site en français",
-        "exportHeaderName" : "zet_description_fr",
-        "langRestrictions" : [ "fr" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+      "zet_description_fr": {
+        "type": "BasicComponent",
+        "componentKey": "zet_description_fr",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Description du site en français",
+        "exportHeaderName": "zet_description_fr",
+        "langRestrictions": [
+          "fr"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "zet_chemin_parent" : {
-        "type" : "BasicComponent",
-        "componentKey" : "zet_chemin_parent",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Nom du site parent",
-        "exportHeaderName" : "zet_chemin_parent",
-        "langRestrictions" : [ "en" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "ReferenceChecker",
-          "componentKey" : "zet_chemin_parent",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "refType" : "tr_zone_etude_zet",
-          "isRecursive" : true,
-          "isParent" : true
+      "zet_chemin_parent": {
+        "type": "BasicComponent",
+        "componentKey": "zet_chemin_parent",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Nom du site parent",
+        "exportHeaderName": "zet_chemin_parent",
+        "langRestrictions": [
+          "en"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "ReferenceChecker",
+          "componentKey": "zet_chemin_parent",
+          "multiplicity": "ONE",
+          "required": false,
+          "refType": "tr_zone_etude_zet",
+          "isRecursive": true,
+          "isParent": true
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : true,
-        "referenceCheckerType" : "tr_zone_etude_zet",
-        "chartDescription" : null
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": true,
+        "referenceCheckerType": "tr_zone_etude_zet",
+        "chartDescription": null
       }
     },
-    "submission" : null,
-    "authorization" : null,
-    "validations" : { },
-    "depends" : [ {
-      "type" : "DependsParent",
-      "references" : "tr_type_zone_etude_tze",
-      "component" : "tze_type_nom"
-    }, {
-      "type" : "DependsParent",
-      "references" : "tr_zone_etude_zet",
-      "component" : "zet_computed_key"
-    }, {
-      "type" : "DependsParent",
-      "references" : "tr_zone_etude_zet",
-      "component" : "zet_chemin_parent"
-    } ],
-    "migrations" : null,
-    "filterable" : false,
-    "filterableAsList" : false,
-    "filterableAsText" : false,
-    "hidden" : false,
-    "order" : 9999
+    "submission": null,
+    "authorization": null,
+    "validations": {},
+    "depends": [
+      {
+        "type": "DependsParent",
+        "references": "tr_type_zone_etude_tze",
+        "component": "tze_type_nom"
+      },
+      {
+        "type": "DependsParent",
+        "references": "tr_zone_etude_zet",
+        "component": "zet_computed_key"
+      },
+      {
+        "type": "DependsParent",
+        "references": "tr_zone_etude_zet",
+        "component": "zet_chemin_parent"
+      }
+    ],
+    "migrations": null,
+    "filterable": false,
+    "filterableAsList": false,
+    "filterableAsText": false,
+    "hidden": false,
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
-  "tr_type_zone_etude_tze" : {
-    "separator" : ";",
-    "headerLine" : 1,
-    "firstRowLine" : 2,
-    "allowUnexpectedColumns" : false,
-    "tags" : [ {
-      "tagDefinition" : "DOMAIN_TAG",
-      "tagName" : "context"
-    } ],
-    "naturalKey" : [ "tze_nom_key" ],
-    "componentDescriptions" : {
-      "tze_nom_key" : {
-        "type" : "BasicComponent",
-        "componentKey" : "tze_nom_key",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Nom codique du type de site",
-        "exportHeaderName" : null,
-        "langRestrictions" : [ "fr", "en" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+  "tr_type_zone_etude_tze": {
+    "separator": ";",
+    "headerLine": 1,
+    "firstRowLine": 2,
+    "allowUnexpectedColumns": false,
+    "tags": [
+      {
+        "tagDefinition": "DOMAIN_TAG",
+        "tagName": "context"
+      }
+    ],
+    "naturalKey": [
+      "tze_nom_key"
+    ],
+    "componentDescriptions": {
+      "tze_nom_key": {
+        "type": "BasicComponent",
+        "componentKey": "tze_nom_key",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Nom codique du type de site",
+        "exportHeaderName": null,
+        "langRestrictions": [
+          "fr",
+          "en"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "tze_nom_fr" : {
-        "type" : "BasicComponent",
-        "componentKey" : "tze_nom_fr",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Nom du type de site en français",
-        "exportHeaderName" : "tze_nom_fr",
-        "langRestrictions" : [ "fr" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+      "tze_nom_fr": {
+        "type": "BasicComponent",
+        "componentKey": "tze_nom_fr",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Nom du type de site en français",
+        "exportHeaderName": "tze_nom_fr",
+        "langRestrictions": [
+          "fr"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "tze_definition_fr" : {
-        "type" : "BasicComponent",
-        "componentKey" : "tze_definition_fr",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Description du type de site en français",
-        "exportHeaderName" : "tze_definition_fr",
-        "langRestrictions" : [ "fr" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+      "tze_definition_fr": {
+        "type": "BasicComponent",
+        "componentKey": "tze_definition_fr",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Description du type de site en français",
+        "exportHeaderName": "tze_definition_fr",
+        "langRestrictions": [
+          "fr"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "tze_nom_en" : {
-        "type" : "BasicComponent",
-        "componentKey" : "tze_nom_en",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "English type site name",
-        "exportHeaderName" : "tze_nom_en",
-        "langRestrictions" : [ "en" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+      "tze_nom_en": {
+        "type": "BasicComponent",
+        "componentKey": "tze_nom_en",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "English type site name",
+        "exportHeaderName": "tze_nom_en",
+        "langRestrictions": [
+          "en"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "tze_definition_en" : {
-        "type" : "BasicComponent",
-        "componentKey" : "tze_definition_en",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "English type site description",
-        "exportHeaderName" : "tze_definition_en",
-        "langRestrictions" : [ "en" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+      "tze_definition_en": {
+        "type": "BasicComponent",
+        "componentKey": "tze_definition_en",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "English type site description",
+        "exportHeaderName": "tze_definition_en",
+        "langRestrictions": [
+          "en"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       }
     },
-    "submission" : null,
-    "authorization" : null,
-    "validations" : { },
-    "depends" : [ ],
-    "migrations" : null,
-    "filterable" : false,
-    "filterableAsList" : false,
-    "filterableAsText" : false,
-    "hidden" : false,
-    "order" : 9999
+    "submission": null,
+    "authorization": null,
+    "validations": {},
+    "depends": [],
+    "migrations": null,
+    "filterable": false,
+    "filterableAsList": false,
+    "filterableAsText": false,
+    "hidden": false,
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
-  "tr_propriete_taxon_ptx" : {
-    "separator" : ";",
-    "headerLine" : 1,
-    "firstRowLine" : 2,
-    "allowUnexpectedColumns" : false,
-    "tags" : [ {
-      "tagDefinition" : "DOMAIN_TAG",
-      "tagName" : "context"
-    } ],
-    "naturalKey" : [ "ptx_propriete" ],
-    "componentDescriptions" : {
-      "ptx_date" : {
-        "type" : "BasicComponent",
-        "componentKey" : "ptx_date",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Date",
-        "exportHeaderName" : "ptx_date",
-        "langRestrictions" : [ ],
-        "required" : true,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "DateChecker",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "pattern" : "dd/MM/yyyy",
-          "min" : [ 2013, 1, 1 ],
-          "max" : [ 2013, 12, 31 ],
-          "duration" : "1 Day"
+  "tr_propriete_taxon_ptx": {
+    "separator": ";",
+    "headerLine": 1,
+    "firstRowLine": 2,
+    "allowUnexpectedColumns": false,
+    "tags": [
+      {
+        "tagDefinition": "DOMAIN_TAG",
+        "tagName": "context"
+      }
+    ],
+    "naturalKey": [
+      "ptx_propriete"
+    ],
+    "componentDescriptions": {
+      "ptx_date": {
+        "type": "BasicComponent",
+        "componentKey": "ptx_date",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Date",
+        "exportHeaderName": "ptx_date",
+        "langRestrictions": [],
+        "required": true,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "DateChecker",
+          "multiplicity": "ONE",
+          "required": true,
+          "pattern": "dd/MM/yyyy",
+          "min": [
+            2013,
+            1,
+            1
+          ],
+          "max": [
+            2013,
+            12,
+            31
+          ],
+          "duration": "1 Day"
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "ptx_propriete" : {
-        "type" : "BasicComponent",
-        "componentKey" : "ptx_propriete",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Proprieté",
-        "exportHeaderName" : null,
-        "langRestrictions" : [ ],
-        "required" : true,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "StringChecker",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "pattern" : null
+      "ptx_propriete": {
+        "type": "BasicComponent",
+        "componentKey": "ptx_propriete",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Proprieté",
+        "exportHeaderName": null,
+        "langRestrictions": [],
+        "required": true,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "StringChecker",
+          "multiplicity": "ONE",
+          "required": true,
+          "pattern": null
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       }
     },
-    "submission" : null,
-    "authorization" : null,
-    "validations" : { },
-    "depends" : [ ],
-    "migrations" : null,
-    "filterable" : false,
-    "filterableAsList" : false,
-    "filterableAsText" : false,
-    "hidden" : false,
-    "order" : 9999
+    "submission": null,
+    "authorization": null,
+    "validations": {},
+    "depends": [],
+    "migrations": null,
+    "filterable": false,
+    "filterableAsList": false,
+    "filterableAsText": false,
+    "hidden": false,
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
-  "tr_projet_pro" : {
-    "separator" : ";",
-    "headerLine" : 1,
-    "firstRowLine" : 2,
-    "allowUnexpectedColumns" : false,
-    "tags" : [ {
-      "tagDefinition" : "DOMAIN_TAG",
-      "tagName" : "data"
-    }, {
-      "tagDefinition" : "DOMAIN_TAG",
-      "tagName" : "context"
-    } ],
-    "naturalKey" : [ "pro_nom_key" ],
-    "componentDescriptions" : {
-      "pro_nom_key" : {
-        "type" : "BasicComponent",
-        "componentKey" : "pro_nom_key",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Nom codique du projet",
-        "exportHeaderName" : null,
-        "langRestrictions" : [ "fr", "en" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+  "tr_projet_pro": {
+    "separator": ";",
+    "headerLine": 1,
+    "firstRowLine": 2,
+    "allowUnexpectedColumns": false,
+    "tags": [
+      {
+        "tagDefinition": "DOMAIN_TAG",
+        "tagName": "data"
       },
-      "pro_nom_fr" : {
-        "type" : "BasicComponent",
-        "componentKey" : "pro_nom_fr",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Nom du projet en français",
-        "exportHeaderName" : "pro_nom_fr",
-        "langRestrictions" : [ "fr" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+      {
+        "tagDefinition": "DOMAIN_TAG",
+        "tagName": "context"
+      }
+    ],
+    "naturalKey": [
+      "pro_nom_key"
+    ],
+    "componentDescriptions": {
+      "pro_nom_key": {
+        "type": "BasicComponent",
+        "componentKey": "pro_nom_key",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Nom codique du projet",
+        "exportHeaderName": null,
+        "langRestrictions": [
+          "fr",
+          "en"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "pro_definition_fr" : {
-        "type" : "BasicComponent",
-        "componentKey" : "pro_definition_fr",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Définition du projet en français",
-        "exportHeaderName" : "pro_definition_fr",
-        "langRestrictions" : [ "fr" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+      "pro_nom_fr": {
+        "type": "BasicComponent",
+        "componentKey": "pro_nom_fr",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Nom du projet en français",
+        "exportHeaderName": "pro_nom_fr",
+        "langRestrictions": [
+          "fr"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "pro_nom_en" : {
-        "type" : "BasicComponent",
-        "componentKey" : "pro_nom_en",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "English project name",
-        "exportHeaderName" : "pro_nom_en",
-        "langRestrictions" : [ "en" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+      "pro_definition_fr": {
+        "type": "BasicComponent",
+        "componentKey": "pro_definition_fr",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Définition du projet en français",
+        "exportHeaderName": "pro_definition_fr",
+        "langRestrictions": [
+          "fr"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "pro_definition_en" : {
-        "type" : "BasicComponent",
-        "componentKey" : "pro_definition_en",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "English project definition",
-        "exportHeaderName" : "pro_definition_en",
-        "langRestrictions" : [ "en" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+      "pro_nom_en": {
+        "type": "BasicComponent",
+        "componentKey": "pro_nom_en",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "English project name",
+        "exportHeaderName": "pro_nom_en",
+        "langRestrictions": [
+          "en"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
+      },
+      "pro_definition_en": {
+        "type": "BasicComponent",
+        "componentKey": "pro_definition_en",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "English project definition",
+        "exportHeaderName": "pro_definition_en",
+        "langRestrictions": [
+          "en"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       }
     },
-    "submission" : null,
-    "authorization" : null,
-    "validations" : { },
-    "depends" : [ ],
-    "migrations" : null,
-    "filterable" : false,
-    "filterableAsList" : false,
-    "filterableAsText" : false,
-    "hidden" : false,
-    "order" : 9999
+    "submission": null,
+    "authorization": null,
+    "validations": {},
+    "depends": [],
+    "migrations": null,
+    "filterable": false,
+    "filterableAsList": false,
+    "filterableAsText": false,
+    "hidden": false,
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
-  "tr_taxon_tax" : {
-    "separator" : ";",
-    "headerLine" : 1,
-    "firstRowLine" : 2,
-    "allowUnexpectedColumns" : false,
-    "tags" : [ {
-      "tagDefinition" : "DOMAIN_TAG",
-      "tagName" : "context"
-    } ],
-    "naturalKey" : [ "tax_taxon" ],
-    "componentDescriptions" : {
-      "tax_taxon" : {
-        "type" : "BasicComponent",
-        "componentKey" : "tax_taxon",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Nom du taxon",
-        "exportHeaderName" : null,
-        "langRestrictions" : [ ],
-        "required" : true,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "StringChecker",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "pattern" : null
+  "tr_taxon_tax": {
+    "separator": ";",
+    "headerLine": 1,
+    "firstRowLine": 2,
+    "allowUnexpectedColumns": false,
+    "tags": [
+      {
+        "tagDefinition": "DOMAIN_TAG",
+        "tagName": "context"
+      }
+    ],
+    "naturalKey": [
+      "tax_taxon"
+    ],
+    "componentDescriptions": {
+      "tax_taxon": {
+        "type": "BasicComponent",
+        "componentKey": "tax_taxon",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Nom du taxon",
+        "exportHeaderName": null,
+        "langRestrictions": [],
+        "required": true,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "StringChecker",
+          "multiplicity": "ONE",
+          "required": true,
+          "pattern": null
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "tax_propriete_taxon" : {
-        "type" : "DynamicComponent",
-        "componentKey" : "tax_propriete_taxon",
-        "defaultValue" : null,
-        "exportHeaderName" : "tax_propriete_taxon",
-        "langRestrictions" : [ ],
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "prefix" : "pt_",
-        "reference" : "tr_propriete_taxon_ptx",
-        "referenceColumnToLookForHeader" : "ptx_propriete",
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null,
-        "importHeader" : "tax_propriete_taxon"
+      "tax_propriete_taxon": {
+        "type": "DynamicComponent",
+        "componentKey": "tax_propriete_taxon",
+        "defaultValue": null,
+        "exportHeaderName": "tax_propriete_taxon",
+        "langRestrictions": [],
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "prefix": "pt_",
+        "reference": "tr_propriete_taxon_ptx",
+        "referenceColumnToLookForHeader": "ptx_propriete",
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null,
+        "importHeader": "tax_propriete_taxon"
       }
     },
-    "submission" : null,
-    "authorization" : null,
-    "validations" : { },
-    "depends" : [ ],
-    "migrations" : null,
-    "filterable" : false,
-    "filterableAsList" : false,
-    "filterableAsText" : false,
-    "hidden" : false,
-    "order" : 9999
+    "submission": null,
+    "authorization": null,
+    "validations": {},
+    "depends": [],
+    "migrations": null,
+    "filterable": false,
+    "filterableAsList": false,
+    "filterableAsText": false,
+    "hidden": false,
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
-  "t_data_dat" : {
-    "separator" : ";",
-    "headerLine" : 4,
-    "firstRowLine" : 7,
-    "allowUnexpectedColumns" : false,
-    "tags" : [ {
-      "tagDefinition" : "DOMAIN_TAG",
-      "tagName" : "context"
-    }, {
-      "tagDefinition" : "DATA_TAG"
-    } ],
-    "naturalKey" : [ "dat_date" ],
-    "componentDescriptions" : {
-      "smp::smp_qc" : {
-        "type" : "PatternComponentAdjacents",
-        "componentKey" : "smp_qc",
-        "importHeaderPattern" : "{$1}_qc",
-        "tags" : [ {
-          "tagDefinition" : "DOMAIN_TAG",
-          "tagName" : "data"
-        } ],
-        "exportHeaderName" : "smp::smp_qc",
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "langRestrictions" : [ ],
-        "checker" : {
-          "type" : "IntegerChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "min" : 0,
-          "max" : 2
-        },
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null,
-        "importHeader" : "smp_qc"
+  "t_data_dat": {
+    "separator": ";",
+    "headerLine": 4,
+    "firstRowLine": 7,
+    "allowUnexpectedColumns": false,
+    "tags": [
+      {
+        "tagDefinition": "DOMAIN_TAG",
+        "tagName": "context"
       },
-      "smp::smp_sd" : {
-        "type" : "PatternComponentAdjacents",
-        "componentKey" : "smp_sd",
-        "importHeaderPattern" : "{$1}_sd",
-        "tags" : [ {
-          "tagDefinition" : "DOMAIN_TAG",
-          "tagName" : "data"
-        } ],
-        "exportHeaderName" : "smp::smp_sd",
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "langRestrictions" : [ ],
-        "checker" : {
-          "type" : "FloatChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "min" : 0.0,
-          "max" : 500.0
+      {
+        "tagDefinition": "DATA_TAG"
+      }
+    ],
+    "naturalKey": [
+      "dat_date"
+    ],
+    "componentDescriptions": {
+      "smp::smp_qc": {
+        "type": "PatternComponentAdjacents",
+        "componentKey": "smp_qc",
+        "importHeaderPattern": "{$1}_qc",
+        "tags": [
+          {
+            "tagDefinition": "DOMAIN_TAG",
+            "tagName": "data"
+          }
+        ],
+        "exportHeaderName": "smp::smp_qc",
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "langRestrictions": [],
+        "checker": {
+          "type": "IntegerChecker",
+          "multiplicity": "ONE",
+          "required": false,
+          "min": 0,
+          "max": 2
         },
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null,
-        "importHeader" : "smp_sd"
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null,
+        "importHeader": "smp_qc"
       },
-      "dat_date_heure" : {
-        "type" : "ComputedComponent",
-        "componentKey" : "dat_date_heure",
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "exportHeaderName" : "dat_date_heure",
-        "langRestrictions" : [ ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "DateChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "pattern" : "dd/MM/yyyy HH:mm:ss",
-          "min" : [ -999999999, 1, 1, 0, 0 ],
-          "max" : [ 999999999, 12, 31, 23, 59, 59, 999999999 ],
-          "duration" : null
+      "smp::smp_sd": {
+        "type": "PatternComponentAdjacents",
+        "componentKey": "smp_sd",
+        "importHeaderPattern": "{$1}_sd",
+        "tags": [
+          {
+            "tagDefinition": "DOMAIN_TAG",
+            "tagName": "data"
+          }
+        ],
+        "exportHeaderName": "smp::smp_sd",
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "langRestrictions": [],
+        "checker": {
+          "type": "FloatChecker",
+          "multiplicity": "ONE",
+          "required": false,
+          "min": 0.0,
+          "max": 500.0
         },
-        "computationChecker" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return datum.dat_date + \" \" + datum.dat_heure\n",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null,
-        "importHeader" : "dat_date_heure"
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null,
+        "importHeader": "smp_sd"
       },
-      "dat_heure" : {
-        "type" : "BasicComponent",
-        "componentKey" : "dat_heure",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "dat_heure",
-        "exportHeaderName" : null,
-        "langRestrictions" : [ ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+      "dat_date_heure": {
+        "type": "ComputedComponent",
+        "componentKey": "dat_date_heure",
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "exportHeaderName": "dat_date_heure",
+        "langRestrictions": [],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "DateChecker",
+          "multiplicity": "ONE",
+          "required": false,
+          "pattern": "dd/MM/yyyy HH:mm:ss",
+          "min": [
+            -999999999,
+            1,
+            1,
+            0,
+            0
+          ],
+          "max": [
+            999999999,
+            12,
+            31,
+            23,
+            59,
+            59,
+            999999999
+          ],
+          "duration": null
+        },
+        "computationChecker": {
+          "type": "ComputationChecker",
+          "multiplicity": "ONE",
+          "required": false,
+          "expression": "return datum.dat_date + \" \" + datum.dat_heure\n",
+          "references": null,
+          "exceptionMessages": [],
+          "codify": false,
+          "data": null
+        },
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null,
+        "importHeader": "dat_date_heure"
       },
-      "smp::smp_profondeur" : {
-        "type" : "PatternComponentQualifiers",
-        "componentKey" : "smp_profondeur",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "DOMAIN_TAG",
-          "tagName" : "data"
-        } ],
-        "exportHeaderName" : "smp_profondeur",
-        "langRestrictions" : [ ],
-        "patternNumber" : 1,
-        "checker" : {
-          "type" : "FloatChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "min" : 0.0,
-          "max" : 500.0
-        },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null,
-        "importHeader" : "smp_profondeur"
+      "dat_heure": {
+        "type": "BasicComponent",
+        "componentKey": "dat_heure",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "dat_heure",
+        "exportHeaderName": null,
+        "langRestrictions": [],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "smp::smp_repetition" : {
-        "type" : "PatternComponentQualifiers",
-        "componentKey" : "smp_repetition",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "DOMAIN_TAG",
-          "tagName" : "data"
-        } ],
-        "exportHeaderName" : "smp_repetition",
-        "langRestrictions" : [ ],
-        "patternNumber" : 2,
-        "checker" : {
-          "type" : "IntegerChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "min" : 0,
-          "max" : 10
+      "smp::smp_profondeur": {
+        "type": "PatternComponentQualifiers",
+        "componentKey": "smp_profondeur",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "DOMAIN_TAG",
+            "tagName": "data"
+          }
+        ],
+        "exportHeaderName": "smp_profondeur",
+        "langRestrictions": [],
+        "patternNumber": 1,
+        "checker": {
+          "type": "FloatChecker",
+          "multiplicity": "ONE",
+          "required": false,
+          "min": 0.0,
+          "max": 500.0
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null,
-        "importHeader" : "smp_repetition"
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null,
+        "importHeader": "smp_profondeur"
       },
-      "dat_start_date" : {
-        "type" : "ConstantComponent",
-        "componentKey" : "dat_start_date",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "constantImportHeader" : {
-          "type" : "ColumnConstantHeaderByHeaderName",
-          "rowNumber" : 5,
-          "headerName" : "dat_date",
-          "langRestrictions" : [ ]
+      "smp::smp_repetition": {
+        "type": "PatternComponentQualifiers",
+        "componentKey": "smp_repetition",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "DOMAIN_TAG",
+            "tagName": "data"
+          }
+        ],
+        "exportHeaderName": "smp_repetition",
+        "langRestrictions": [],
+        "patternNumber": 2,
+        "checker": {
+          "type": "IntegerChecker",
+          "multiplicity": "ONE",
+          "required": false,
+          "min": 0,
+          "max": 10
         },
-        "exportHeaderName" : "dat_start_date",
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null,
-        "importHeader" : "dat_start_date"
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null,
+        "importHeader": "smp_repetition"
       },
-      "swc::swc_qc" : {
-        "type" : "PatternComponentAdjacents",
-        "componentKey" : "swc_qc",
-        "importHeaderPattern" : "{$1}_qc",
-        "tags" : [ {
-          "tagDefinition" : "DOMAIN_TAG",
-          "tagName" : "data"
-        } ],
-        "exportHeaderName" : "swc::swc_qc",
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "langRestrictions" : [ ],
-        "checker" : {
-          "type" : "IntegerChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "min" : 0,
-          "max" : 2
+      "dat_start_date": {
+        "type": "ConstantComponent",
+        "componentKey": "dat_start_date",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "constantImportHeader": {
+          "type": "ColumnConstantHeaderByHeaderName",
+          "rowNumber": 5,
+          "headerName": "dat_date",
+          "langRestrictions": []
         },
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null,
-        "importHeader" : "swc_qc"
+        "exportHeaderName": "dat_start_date",
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null,
+        "importHeader": "dat_start_date"
       },
-      "swc::swc_sd" : {
-        "type" : "PatternComponentAdjacents",
-        "componentKey" : "swc_sd",
-        "importHeaderPattern" : "{$1}_sd",
-        "tags" : [ {
-          "tagDefinition" : "DOMAIN_TAG",
-          "tagName" : "data"
-        } ],
-        "exportHeaderName" : "swc::swc_sd",
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "langRestrictions" : [ ],
-        "checker" : {
-          "type" : "FloatChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "min" : 0.0,
-          "max" : 500.0
+      "swc::swc_qc": {
+        "type": "PatternComponentAdjacents",
+        "componentKey": "swc_qc",
+        "importHeaderPattern": "{$1}_qc",
+        "tags": [
+          {
+            "tagDefinition": "DOMAIN_TAG",
+            "tagName": "data"
+          }
+        ],
+        "exportHeaderName": "swc::swc_qc",
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "langRestrictions": [],
+        "checker": {
+          "type": "IntegerChecker",
+          "multiplicity": "ONE",
+          "required": false,
+          "min": 0,
+          "max": 2
         },
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null,
-        "importHeader" : "swc_sd"
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null,
+        "importHeader": "swc_qc"
       },
-      "dat_type_site" : {
-        "type" : "ConstantComponent",
-        "componentKey" : "dat_type_site",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "required" : true,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "StringChecker",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "pattern" : null
+      "swc::swc_sd": {
+        "type": "PatternComponentAdjacents",
+        "componentKey": "swc_sd",
+        "importHeaderPattern": "{$1}_sd",
+        "tags": [
+          {
+            "tagDefinition": "DOMAIN_TAG",
+            "tagName": "data"
+          }
+        ],
+        "exportHeaderName": "swc::swc_sd",
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "langRestrictions": [],
+        "checker": {
+          "type": "FloatChecker",
+          "multiplicity": "ONE",
+          "required": false,
+          "min": 0.0,
+          "max": 500.0
         },
-        "constantImportHeader" : {
-          "type" : "FileConstantHeader",
-          "rowNumber" : 1,
-          "columnNumber" : 2
-        },
-        "exportHeaderName" : "dat_type_site",
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null,
-        "importHeader" : "dat_type_site"
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null,
+        "importHeader": "swc_sd"
       },
-      "dat_end_date" : {
-        "type" : "ConstantComponent",
-        "componentKey" : "dat_end_date",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "constantImportHeader" : {
-          "type" : "ColumnConstantHeaderByHeaderName",
-          "rowNumber" : 6,
-          "headerName" : "dat_date",
-          "langRestrictions" : [ ]
+      "dat_type_site": {
+        "type": "ConstantComponent",
+        "componentKey": "dat_type_site",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "required": true,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "StringChecker",
+          "multiplicity": "ONE",
+          "required": true,
+          "pattern": null
         },
-        "exportHeaderName" : "dat_end_date",
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null,
-        "importHeader" : "dat_end_date"
+        "constantImportHeader": {
+          "type": "FileConstantHeader",
+          "rowNumber": 1,
+          "columnNumber": 2
+        },
+        "exportHeaderName": "dat_type_site",
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null,
+        "importHeader": "dat_type_site"
       },
-      "swc::swc_repetition" : {
-        "type" : "PatternComponentQualifiers",
-        "componentKey" : "swc_repetition",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "DOMAIN_TAG",
-          "tagName" : "data"
-        } ],
-        "exportHeaderName" : "swc_repetition",
-        "langRestrictions" : [ ],
-        "patternNumber" : 2,
-        "checker" : {
-          "type" : "IntegerChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "min" : 0,
-          "max" : 10
+      "dat_end_date": {
+        "type": "ConstantComponent",
+        "componentKey": "dat_end_date",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "constantImportHeader": {
+          "type": "ColumnConstantHeaderByHeaderName",
+          "rowNumber": 6,
+          "headerName": "dat_date",
+          "langRestrictions": []
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null,
-        "importHeader" : "swc_repetition"
+        "exportHeaderName": "dat_end_date",
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null,
+        "importHeader": "dat_end_date"
       },
-      "smp" : {
-        "type" : "PatternComponent",
-        "componentKey" : "smp",
-        "defaultValue" : null,
-        "exportHeaderName" : "smp",
-        "langRestrictions" : [ ],
-        "tags" : [ {
-          "tagDefinition" : "DOMAIN_TAG",
-          "tagName" : "context"
-        } ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "FloatChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "min" : 0.0,
-          "max" : 2000.0
+      "swc::swc_repetition": {
+        "type": "PatternComponentQualifiers",
+        "componentKey": "swc_repetition",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "DOMAIN_TAG",
+            "tagName": "data"
+          }
+        ],
+        "exportHeaderName": "swc_repetition",
+        "langRestrictions": [],
+        "patternNumber": 2,
+        "checker": {
+          "type": "IntegerChecker",
+          "multiplicity": "ONE",
+          "required": false,
+          "min": 0,
+          "max": 10
         },
-        "patternForComponents" : "SMP_(.*)_(.*)",
-        "patternComponentQualifiers" : {
-          "smp_profondeur" : {
-            "type" : "PatternComponentQualifiers",
-            "componentKey" : "smp_profondeur",
-            "defaultValue" : null,
-            "tags" : [ {
-              "tagDefinition" : "DOMAIN_TAG",
-              "tagName" : "data"
-            } ],
-            "exportHeaderName" : "smp_profondeur",
-            "langRestrictions" : [ ],
-            "patternNumber" : 1,
-            "checker" : {
-              "type" : "FloatChecker",
-              "multiplicity" : "ONE",
-              "required" : false,
-              "min" : 0.0,
-              "max" : 500.0
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null,
+        "importHeader": "swc_repetition"
+      },
+      "smp": {
+        "type": "PatternComponent",
+        "componentKey": "smp",
+        "defaultValue": null,
+        "exportHeaderName": "smp",
+        "langRestrictions": [],
+        "tags": [
+          {
+            "tagDefinition": "DOMAIN_TAG",
+            "tagName": "context"
+          }
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "FloatChecker",
+          "multiplicity": "ONE",
+          "required": false,
+          "min": 0.0,
+          "max": 2000.0
+        },
+        "patternForComponents": "SMP_(.*)_(.*)",
+        "patternComponentQualifiers": {
+          "smp_profondeur": {
+            "type": "PatternComponentQualifiers",
+            "componentKey": "smp_profondeur",
+            "defaultValue": null,
+            "tags": [
+              {
+                "tagDefinition": "DOMAIN_TAG",
+                "tagName": "data"
+              }
+            ],
+            "exportHeaderName": "smp_profondeur",
+            "langRestrictions": [],
+            "patternNumber": 1,
+            "checker": {
+              "type": "FloatChecker",
+              "multiplicity": "ONE",
+              "required": false,
+              "min": 0.0,
+              "max": 500.0
             },
-            "submissionAuthorizationScope" : null,
-            "filterable" : false,
-            "filterableAsList" : false,
-            "filterableAsText" : false,
-            "hidden" : false,
-            "reference" : false,
-            "referenceCheckerType" : "StringChecker",
-            "chartDescription" : null,
-            "importHeader" : "smp_profondeur"
+            "submissionAuthorizationScope": null,
+            "filterable": false,
+            "filterableAsList": false,
+            "filterableAsText": false,
+            "hidden": false,
+            "reference": false,
+            "referenceCheckerType": "StringChecker",
+            "chartDescription": null,
+            "importHeader": "smp_profondeur"
           },
-          "smp_repetition" : {
-            "type" : "PatternComponentQualifiers",
-            "componentKey" : "smp_repetition",
-            "defaultValue" : null,
-            "tags" : [ {
-              "tagDefinition" : "DOMAIN_TAG",
-              "tagName" : "data"
-            } ],
-            "exportHeaderName" : "smp_repetition",
-            "langRestrictions" : [ ],
-            "patternNumber" : 2,
-            "checker" : {
-              "type" : "IntegerChecker",
-              "multiplicity" : "ONE",
-              "required" : false,
-              "min" : 0,
-              "max" : 10
+          "smp_repetition": {
+            "type": "PatternComponentQualifiers",
+            "componentKey": "smp_repetition",
+            "defaultValue": null,
+            "tags": [
+              {
+                "tagDefinition": "DOMAIN_TAG",
+                "tagName": "data"
+              }
+            ],
+            "exportHeaderName": "smp_repetition",
+            "langRestrictions": [],
+            "patternNumber": 2,
+            "checker": {
+              "type": "IntegerChecker",
+              "multiplicity": "ONE",
+              "required": false,
+              "min": 0,
+              "max": 10
             },
-            "submissionAuthorizationScope" : null,
-            "filterable" : false,
-            "filterableAsList" : false,
-            "filterableAsText" : false,
-            "hidden" : false,
-            "reference" : false,
-            "referenceCheckerType" : "StringChecker",
-            "chartDescription" : null,
-            "importHeader" : "smp_repetition"
+            "submissionAuthorizationScope": null,
+            "filterable": false,
+            "filterableAsList": false,
+            "filterableAsText": false,
+            "hidden": false,
+            "reference": false,
+            "referenceCheckerType": "StringChecker",
+            "chartDescription": null,
+            "importHeader": "smp_repetition"
           }
         },
-        "patternComponentAdjacents" : {
-          "smp_sd" : {
-            "type" : "PatternComponentAdjacents",
-            "componentKey" : "smp_sd",
-            "importHeaderPattern" : "{$1}_sd",
-            "tags" : [ {
-              "tagDefinition" : "DOMAIN_TAG",
-              "tagName" : "data"
-            } ],
-            "exportHeaderName" : "smp::smp_sd",
-            "required" : false,
-            "mandatory" : "OPTIONAL",
-            "langRestrictions" : [ ],
-            "checker" : {
-              "type" : "FloatChecker",
-              "multiplicity" : "ONE",
-              "required" : false,
-              "min" : 0.0,
-              "max" : 500.0
+        "patternComponentAdjacents": {
+          "smp_sd": {
+            "type": "PatternComponentAdjacents",
+            "componentKey": "smp_sd",
+            "importHeaderPattern": "{$1}_sd",
+            "tags": [
+              {
+                "tagDefinition": "DOMAIN_TAG",
+                "tagName": "data"
+              }
+            ],
+            "exportHeaderName": "smp::smp_sd",
+            "required": false,
+            "mandatory": "OPTIONAL",
+            "langRestrictions": [],
+            "checker": {
+              "type": "FloatChecker",
+              "multiplicity": "ONE",
+              "required": false,
+              "min": 0.0,
+              "max": 500.0
             },
-            "filterable" : false,
-            "filterableAsList" : false,
-            "filterableAsText" : false,
-            "hidden" : false,
-            "reference" : false,
-            "referenceCheckerType" : "StringChecker",
-            "chartDescription" : null,
-            "importHeader" : "smp_sd"
+            "filterable": false,
+            "filterableAsList": false,
+            "filterableAsText": false,
+            "hidden": false,
+            "reference": false,
+            "referenceCheckerType": "StringChecker",
+            "chartDescription": null,
+            "importHeader": "smp_sd"
           },
-          "smp_qc" : {
-            "type" : "PatternComponentAdjacents",
-            "componentKey" : "smp_qc",
-            "importHeaderPattern" : "{$1}_qc",
-            "tags" : [ {
-              "tagDefinition" : "DOMAIN_TAG",
-              "tagName" : "data"
-            } ],
-            "exportHeaderName" : "smp::smp_qc",
-            "required" : false,
-            "mandatory" : "OPTIONAL",
-            "langRestrictions" : [ ],
-            "checker" : {
-              "type" : "IntegerChecker",
-              "multiplicity" : "ONE",
-              "required" : false,
-              "min" : 0,
-              "max" : 2
+          "smp_qc": {
+            "type": "PatternComponentAdjacents",
+            "componentKey": "smp_qc",
+            "importHeaderPattern": "{$1}_qc",
+            "tags": [
+              {
+                "tagDefinition": "DOMAIN_TAG",
+                "tagName": "data"
+              }
+            ],
+            "exportHeaderName": "smp::smp_qc",
+            "required": false,
+            "mandatory": "OPTIONAL",
+            "langRestrictions": [],
+            "checker": {
+              "type": "IntegerChecker",
+              "multiplicity": "ONE",
+              "required": false,
+              "min": 0,
+              "max": 2
             },
-            "filterable" : false,
-            "filterableAsList" : false,
-            "filterableAsText" : false,
-            "hidden" : false,
-            "reference" : false,
-            "referenceCheckerType" : "StringChecker",
-            "chartDescription" : null,
-            "importHeader" : "smp_qc"
+            "filterable": false,
+            "filterableAsList": false,
+            "filterableAsText": false,
+            "hidden": false,
+            "reference": false,
+            "referenceCheckerType": "StringChecker",
+            "chartDescription": null,
+            "importHeader": "smp_qc"
           }
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null,
-        "importHeader" : "smp"
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null,
+        "importHeader": "smp"
       },
-      "dat_date" : {
-        "type" : "BasicComponent",
-        "componentKey" : "dat_date",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "dat_date",
-        "exportHeaderName" : null,
-        "langRestrictions" : [ ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+      "dat_date": {
+        "type": "BasicComponent",
+        "componentKey": "dat_date",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "dat_date",
+        "exportHeaderName": null,
+        "langRestrictions": [],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "dat_site" : {
-        "type" : "ConstantComponent",
-        "componentKey" : "dat_site",
-        "defaultValue" : null,
-        "tags" : [ ],
-        "required" : true,
-        "mandatory" : "MANDATORY",
-        "checker" : {
-          "type" : "ReferenceChecker",
-          "componentKey" : "dat_site",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "refType" : "tr_zone_etude_zet",
-          "isRecursive" : false,
-          "isParent" : false
+      "dat_site": {
+        "type": "ConstantComponent",
+        "componentKey": "dat_site",
+        "defaultValue": null,
+        "tags": [],
+        "required": true,
+        "mandatory": "MANDATORY",
+        "checker": {
+          "type": "ReferenceChecker",
+          "componentKey": "dat_site",
+          "multiplicity": "ONE",
+          "required": true,
+          "refType": "tr_zone_etude_zet",
+          "isRecursive": false,
+          "isParent": false
         },
-        "constantImportHeader" : {
-          "type" : "SubmissionComponent"
+        "constantImportHeader": {
+          "type": "SubmissionComponent"
         },
-        "exportHeaderName" : "dat_site",
-        "submissionAuthorizationScope" : "tr_zone_etude_zet",
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : true,
-        "referenceCheckerType" : "tr_zone_etude_zet",
-        "chartDescription" : null,
-        "importHeader" : "dat_site"
+        "exportHeaderName": "dat_site",
+        "submissionAuthorizationScope": "tr_zone_etude_zet",
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": true,
+        "referenceCheckerType": "tr_zone_etude_zet",
+        "chartDescription": null,
+        "importHeader": "dat_site"
       },
-      "swc::swc_profondeur" : {
-        "type" : "PatternComponentQualifiers",
-        "componentKey" : "swc_profondeur",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "DOMAIN_TAG",
-          "tagName" : "data"
-        } ],
-        "exportHeaderName" : "swc_profondeur",
-        "langRestrictions" : [ ],
-        "patternNumber" : 1,
-        "checker" : {
-          "type" : "FloatChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "min" : 0.0,
-          "max" : 500.0
+      "swc::swc_profondeur": {
+        "type": "PatternComponentQualifiers",
+        "componentKey": "swc_profondeur",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "DOMAIN_TAG",
+            "tagName": "data"
+          }
+        ],
+        "exportHeaderName": "swc_profondeur",
+        "langRestrictions": [],
+        "patternNumber": 1,
+        "checker": {
+          "type": "FloatChecker",
+          "multiplicity": "ONE",
+          "required": false,
+          "min": 0.0,
+          "max": 500.0
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null,
-        "importHeader" : "swc_profondeur"
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null,
+        "importHeader": "swc_profondeur"
       },
-      "swc" : {
-        "type" : "PatternComponent",
-        "componentKey" : "swc",
-        "defaultValue" : null,
-        "exportHeaderName" : "swc",
-        "langRestrictions" : [ ],
-        "tags" : [ {
-          "tagDefinition" : "DOMAIN_TAG",
-          "tagName" : "context"
-        } ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "FloatChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "min" : 0.0,
-          "max" : 2000.0
+      "swc": {
+        "type": "PatternComponent",
+        "componentKey": "swc",
+        "defaultValue": null,
+        "exportHeaderName": "swc",
+        "langRestrictions": [],
+        "tags": [
+          {
+            "tagDefinition": "DOMAIN_TAG",
+            "tagName": "context"
+          }
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "FloatChecker",
+          "multiplicity": "ONE",
+          "required": false,
+          "min": 0.0,
+          "max": 2000.0
         },
-        "patternForComponents" : "SWC_(.*)_(.*)",
-        "patternComponentQualifiers" : {
-          "swc_profondeur" : {
-            "type" : "PatternComponentQualifiers",
-            "componentKey" : "swc_profondeur",
-            "defaultValue" : null,
-            "tags" : [ {
-              "tagDefinition" : "DOMAIN_TAG",
-              "tagName" : "data"
-            } ],
-            "exportHeaderName" : "swc_profondeur",
-            "langRestrictions" : [ ],
-            "patternNumber" : 1,
-            "checker" : {
-              "type" : "FloatChecker",
-              "multiplicity" : "ONE",
-              "required" : false,
-              "min" : 0.0,
-              "max" : 500.0
+        "patternForComponents": "SWC_(.*)_(.*)",
+        "patternComponentQualifiers": {
+          "swc_profondeur": {
+            "type": "PatternComponentQualifiers",
+            "componentKey": "swc_profondeur",
+            "defaultValue": null,
+            "tags": [
+              {
+                "tagDefinition": "DOMAIN_TAG",
+                "tagName": "data"
+              }
+            ],
+            "exportHeaderName": "swc_profondeur",
+            "langRestrictions": [],
+            "patternNumber": 1,
+            "checker": {
+              "type": "FloatChecker",
+              "multiplicity": "ONE",
+              "required": false,
+              "min": 0.0,
+              "max": 500.0
             },
-            "submissionAuthorizationScope" : null,
-            "filterable" : false,
-            "filterableAsList" : false,
-            "filterableAsText" : false,
-            "hidden" : false,
-            "reference" : false,
-            "referenceCheckerType" : "StringChecker",
-            "chartDescription" : null,
-            "importHeader" : "swc_profondeur"
+            "submissionAuthorizationScope": null,
+            "filterable": false,
+            "filterableAsList": false,
+            "filterableAsText": false,
+            "hidden": false,
+            "reference": false,
+            "referenceCheckerType": "StringChecker",
+            "chartDescription": null,
+            "importHeader": "swc_profondeur"
           },
-          "swc_repetition" : {
-            "type" : "PatternComponentQualifiers",
-            "componentKey" : "swc_repetition",
-            "defaultValue" : null,
-            "tags" : [ {
-              "tagDefinition" : "DOMAIN_TAG",
-              "tagName" : "data"
-            } ],
-            "exportHeaderName" : "swc_repetition",
-            "langRestrictions" : [ ],
-            "patternNumber" : 2,
-            "checker" : {
-              "type" : "IntegerChecker",
-              "multiplicity" : "ONE",
-              "required" : false,
-              "min" : 0,
-              "max" : 10
+          "swc_repetition": {
+            "type": "PatternComponentQualifiers",
+            "componentKey": "swc_repetition",
+            "defaultValue": null,
+            "tags": [
+              {
+                "tagDefinition": "DOMAIN_TAG",
+                "tagName": "data"
+              }
+            ],
+            "exportHeaderName": "swc_repetition",
+            "langRestrictions": [],
+            "patternNumber": 2,
+            "checker": {
+              "type": "IntegerChecker",
+              "multiplicity": "ONE",
+              "required": false,
+              "min": 0,
+              "max": 10
             },
-            "submissionAuthorizationScope" : null,
-            "filterable" : false,
-            "filterableAsList" : false,
-            "filterableAsText" : false,
-            "hidden" : false,
-            "reference" : false,
-            "referenceCheckerType" : "StringChecker",
-            "chartDescription" : null,
-            "importHeader" : "swc_repetition"
+            "submissionAuthorizationScope": null,
+            "filterable": false,
+            "filterableAsList": false,
+            "filterableAsText": false,
+            "hidden": false,
+            "reference": false,
+            "referenceCheckerType": "StringChecker",
+            "chartDescription": null,
+            "importHeader": "swc_repetition"
           }
         },
-        "patternComponentAdjacents" : {
-          "swc_sd" : {
-            "type" : "PatternComponentAdjacents",
-            "componentKey" : "swc_sd",
-            "importHeaderPattern" : "{$1}_sd",
-            "tags" : [ {
-              "tagDefinition" : "DOMAIN_TAG",
-              "tagName" : "data"
-            } ],
-            "exportHeaderName" : "swc::swc_sd",
-            "required" : false,
-            "mandatory" : "OPTIONAL",
-            "langRestrictions" : [ ],
-            "checker" : {
-              "type" : "FloatChecker",
-              "multiplicity" : "ONE",
-              "required" : false,
-              "min" : 0.0,
-              "max" : 500.0
+        "patternComponentAdjacents": {
+          "swc_sd": {
+            "type": "PatternComponentAdjacents",
+            "componentKey": "swc_sd",
+            "importHeaderPattern": "{$1}_sd",
+            "tags": [
+              {
+                "tagDefinition": "DOMAIN_TAG",
+                "tagName": "data"
+              }
+            ],
+            "exportHeaderName": "swc::swc_sd",
+            "required": false,
+            "mandatory": "OPTIONAL",
+            "langRestrictions": [],
+            "checker": {
+              "type": "FloatChecker",
+              "multiplicity": "ONE",
+              "required": false,
+              "min": 0.0,
+              "max": 500.0
             },
-            "filterable" : false,
-            "filterableAsList" : false,
-            "filterableAsText" : false,
-            "hidden" : false,
-            "reference" : false,
-            "referenceCheckerType" : "StringChecker",
-            "chartDescription" : null,
-            "importHeader" : "swc_sd"
+            "filterable": false,
+            "filterableAsList": false,
+            "filterableAsText": false,
+            "hidden": false,
+            "reference": false,
+            "referenceCheckerType": "StringChecker",
+            "chartDescription": null,
+            "importHeader": "swc_sd"
           },
-          "swc_qc" : {
-            "type" : "PatternComponentAdjacents",
-            "componentKey" : "swc_qc",
-            "importHeaderPattern" : "{$1}_qc",
-            "tags" : [ {
-              "tagDefinition" : "DOMAIN_TAG",
-              "tagName" : "data"
-            } ],
-            "exportHeaderName" : "swc::swc_qc",
-            "required" : false,
-            "mandatory" : "OPTIONAL",
-            "langRestrictions" : [ ],
-            "checker" : {
-              "type" : "IntegerChecker",
-              "multiplicity" : "ONE",
-              "required" : false,
-              "min" : 0,
-              "max" : 2
+          "swc_qc": {
+            "type": "PatternComponentAdjacents",
+            "componentKey": "swc_qc",
+            "importHeaderPattern": "{$1}_qc",
+            "tags": [
+              {
+                "tagDefinition": "DOMAIN_TAG",
+                "tagName": "data"
+              }
+            ],
+            "exportHeaderName": "swc::swc_qc",
+            "required": false,
+            "mandatory": "OPTIONAL",
+            "langRestrictions": [],
+            "checker": {
+              "type": "IntegerChecker",
+              "multiplicity": "ONE",
+              "required": false,
+              "min": 0,
+              "max": 2
             },
-            "filterable" : false,
-            "filterableAsList" : false,
-            "filterableAsText" : false,
-            "hidden" : false,
-            "reference" : false,
-            "referenceCheckerType" : "StringChecker",
-            "chartDescription" : null,
-            "importHeader" : "swc_qc"
+            "filterable": false,
+            "filterableAsList": false,
+            "filterableAsText": false,
+            "hidden": false,
+            "reference": false,
+            "referenceCheckerType": "StringChecker",
+            "chartDescription": null,
+            "importHeader": "swc_qc"
           }
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null,
-        "importHeader" : "swc"
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null,
+        "importHeader": "swc"
       }
     },
-    "submission" : {
-      "strategy" : "OA_VERSIONING",
-      "fileNameParsing" : {
-        "pattern" : "(.*)_(.*)_(.*).csv",
-        "authorizationScopes" : [ "dat_site" ],
-        "startDate" : 2,
-        "endDate" : 3
+    "submission": {
+      "strategy": "OA_VERSIONING",
+      "fileNameParsing": {
+        "pattern": "(.*)_(.*)_(.*).csv",
+        "authorizationScopes": [
+          "dat_site"
+        ],
+        "startDate": 2,
+        "endDate": 3
       },
-      "submissionScope" : {
-        "referenceScopes" : [ {
-          "reference" : "tr_zone_etude_zet",
-          "component" : "dat_site"
-        } ],
-        "timescope" : {
-          "component" : "dat_date_heure"
+      "submissionScope": {
+        "referenceScopes": [
+          {
+            "reference": "tr_zone_etude_zet",
+            "component": "dat_site"
+          }
+        ],
+        "timescope": {
+          "component": "dat_date_heure"
         }
       }
     },
-    "authorization" : {
-      "authorizationScope" : [ {
-        "component" : "dat_site",
-        "data" : "tr_zone_etude_zet"
-      } ],
-      "timeScope" : "dat_date_heure"
+    "authorization": {
+      "authorizationScope": [
+        {
+          "component": "dat_site",
+          "data": "tr_zone_etude_zet"
+        }
+      ],
+      "timeScope": "dat_date_heure"
     },
-    "validations" : {
-      "type_site_validation" : {
-        "checkers" : {
-          "dat_type_site" : {
-            "type" : "ReferenceChecker",
-            "componentKey" : "dat_type_site",
-            "multiplicity" : "ONE",
-            "required" : true,
-            "refType" : "tr_type_zone_etude_tze",
-            "isRecursive" : false,
-            "isParent" : true
+    "validations": {
+      "type_site_validation": {
+        "checkers": {
+          "dat_type_site": {
+            "type": "ReferenceChecker",
+            "componentKey": "dat_type_site",
+            "multiplicity": "ONE",
+            "required": true,
+            "refType": "tr_type_zone_etude_tze",
+            "isRecursive": false,
+            "isParent": true
           }
         },
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "columns" : [ "dat_type_site" ],
-        "required" : true,
-        "mandatory" : "OPTIONAL"
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "columns": [
+          "dat_type_site"
+        ],
+        "required": true,
+        "mandatory": "OPTIONAL"
       },
-      "site_validation" : {
-        "checkers" : {
-          "dat_site" : {
-            "type" : "ReferenceChecker",
-            "componentKey" : "dat_site",
-            "multiplicity" : "ONE",
-            "required" : true,
-            "refType" : "tr_zone_etude_zet",
-            "isRecursive" : true,
-            "isParent" : true
+      "site_validation": {
+        "checkers": {
+          "dat_site": {
+            "type": "ReferenceChecker",
+            "componentKey": "dat_site",
+            "multiplicity": "ONE",
+            "required": true,
+            "refType": "tr_zone_etude_zet",
+            "isRecursive": true,
+            "isParent": true
           }
         },
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "columns" : [ "dat_site" ],
-        "required" : true,
-        "mandatory" : "OPTIONAL"
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "columns": [
+          "dat_site"
+        ],
+        "required": true,
+        "mandatory": "OPTIONAL"
       },
-      "start_date_validation" : {
-        "checkers" : {
-          "dat_start_date" : {
-            "type" : "DateChecker",
-            "multiplicity" : "ONE",
-            "required" : false,
-            "pattern" : "dd/MM/yyyy",
-            "min" : [ 2004, 1, 1 ],
-            "max" : [ 999999999, 12, 31, 23, 59, 59, 999999999 ],
-            "duration" : "1 Day"
+      "start_date_validation": {
+        "checkers": {
+          "dat_start_date": {
+            "type": "DateChecker",
+            "multiplicity": "ONE",
+            "required": false,
+            "pattern": "dd/MM/yyyy",
+            "min": [
+              2004,
+              1,
+              1
+            ],
+            "max": [
+              999999999,
+              12,
+              31,
+              23,
+              59,
+              59,
+              999999999
+            ],
+            "duration": "1 Day"
           }
         },
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "columns" : [ "dat_start_date" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL"
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "columns": [
+          "dat_start_date"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL"
       },
-      "end_date_validation" : {
-        "checkers" : {
-          "dat_end_date" : {
-            "type" : "DateChecker",
-            "multiplicity" : "ONE",
-            "required" : false,
-            "pattern" : "dd/MM/yyyy",
-            "min" : [ 2004, 1, 1 ],
-            "max" : [ 999999999, 12, 31, 23, 59, 59, 999999999 ],
-            "duration" : "1 Day"
+      "end_date_validation": {
+        "checkers": {
+          "dat_end_date": {
+            "type": "DateChecker",
+            "multiplicity": "ONE",
+            "required": false,
+            "pattern": "dd/MM/yyyy",
+            "min": [
+              2004,
+              1,
+              1
+            ],
+            "max": [
+              999999999,
+              12,
+              31,
+              23,
+              59,
+              59,
+              999999999
+            ],
+            "duration": "1 Day"
           }
         },
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "columns" : [ "dat_end_date" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL"
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "columns": [
+          "dat_end_date"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL"
       },
-      "date_validation" : {
-        "checkers" : {
-          "dat_end_date" : {
-            "type" : "DateChecker",
-            "multiplicity" : "ONE",
-            "required" : true,
-            "pattern" : "dd/MM/yyyy",
-            "min" : [ 2004, 1, 1 ],
-            "max" : [ 999999999, 12, 31, 23, 59, 59, 999999999 ],
-            "duration" : "1 Day"
+      "date_validation": {
+        "checkers": {
+          "dat_end_date": {
+            "type": "DateChecker",
+            "multiplicity": "ONE",
+            "required": true,
+            "pattern": "dd/MM/yyyy",
+            "min": [
+              2004,
+              1,
+              1
+            ],
+            "max": [
+              999999999,
+              12,
+              31,
+              23,
+              59,
+              59,
+              999999999
+            ],
+            "duration": "1 Day"
           }
         },
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "columns" : [ "dat_end_date" ],
-        "required" : true,
-        "mandatory" : "OPTIONAL"
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "columns": [
+          "dat_end_date"
+        ],
+        "required": true,
+        "mandatory": "OPTIONAL"
       },
-      "interval_date_validation" : {
-        "checkers" : {
-          "dat_end_date" : {
-            "type" : "GroovyExpressionChecker",
-            "multiplicity" : "ONE",
-            "required" : true,
-            "expression" : "if (datum.data_dat == null) {\n                                throw new fr.inra.oresing.domain.groovy.exception.GroovyException(\n                                        \"MISSING_DATE\"\n                                );\n                            };\n                            java.time.LocalDate date = java.time.LocalDate.parse(datum.data_dat, DateTimeFormatter.ofPattern(\"dd/MM/yyyy\")); if (datum.start_date_dat != null) {\n                                try {\n                                    java.time.LocalDate startDate = java.time.LocalDate.parse(datum.start_date_dat, DateTimeFormatter.ofPattern(\"dd/MM/yyyy\"));\n                                    if (startDate.isAfter(date)) {\n                                        throw new fr.inra.oresing.domain.groovy.exception.GroovyException(\n                                                \"DATE_NOT_IN_INTERVAL\",\n                                                java.util.Map.of(\n                                                        \"date\", date,\n                                                        \"dateDebut\", datum.start_date_dat,\n                                                        \"dateFin\", datum.end_date_dat\n                                                )\n                                        )\n                                    }\n                                } catch (java.time.format.DateTimeParseException e) {\n                                    throw new fr.inra.oresing.domain.groovy.exception.GroovyException(\n                                            \"BAD_DATE_FORMAT\",\n                                            java.util.Map.of(\n                                                    \"date\", datum.start_date_dat\n                                            )\n                                    )\n                                }\n                            };\n                            if (datum.end_date_dat != null) {\n                                try {\n                                    java.time.LocalDate endDate = java.time.LocalDate.parse(datum.end_date_dat, DateTimeFormatter.ofPattern(\"dd/MM/yyyy\"));\n                                    if (endDate.isBefore(date)) {\n                                        throw new fr.inra.oresing.domain.groovy.exception.GroovyException(\n                                                \"DATE_NOT_IN_INTERVAL\",\n                                                java.util.Map.of(\n                                                        \"date\", date,\n                                                        \"dateDebut\", datum.start_date_dat,\n                                                        \"dateFin\", datum.end_date_dat\n                                                )\n                                        )\n                                    }\n                                } catch (java.time.format.DateTimeParseException e) {\n                                    throw new fr.inra.oresing.domain.groovy.exception.GroovyException(\n                                            \"BAD_DATE_FORMAT\",\n                                            java.util.Map.of(\n                                                    \"date\", datum.end_date_dat\n                                            )\n                                    )\n                                }\n                            };\n                            return true;\n",
-            "references" : null,
-            "exceptionMessages" : [ "DATE_NOT_IN_INTERVAL", "MISSING_DATE", "BAD_DATE_FORMAT" ],
-            "codify" : true,
-            "data" : null
+      "interval_date_validation": {
+        "checkers": {
+          "dat_end_date": {
+            "type": "GroovyExpressionChecker",
+            "multiplicity": "ONE",
+            "required": true,
+            "expression": "if (datum.data_dat == null) {\n                                throw new fr.inra.oresing.domain.groovy.exception.GroovyException(\n                                        \"MISSING_DATE\"\n                                );\n                            };\n                            java.time.LocalDate date = java.time.LocalDate.parse(datum.data_dat, DateTimeFormatter.ofPattern(\"dd/MM/yyyy\")); if (datum.start_date_dat != null) {\n                                try {\n                                    java.time.LocalDate startDate = java.time.LocalDate.parse(datum.start_date_dat, DateTimeFormatter.ofPattern(\"dd/MM/yyyy\"));\n                                    if (startDate.isAfter(date)) {\n                                        throw new fr.inra.oresing.domain.groovy.exception.GroovyException(\n                                                \"DATE_NOT_IN_INTERVAL\",\n                                                java.util.Map.of(\n                                                        \"date\", date,\n                                                        \"dateDebut\", datum.start_date_dat,\n                                                        \"dateFin\", datum.end_date_dat\n                                                )\n                                        )\n                                    }\n                                } catch (java.time.format.DateTimeParseException e) {\n                                    throw new fr.inra.oresing.domain.groovy.exception.GroovyException(\n                                            \"BAD_DATE_FORMAT\",\n                                            java.util.Map.of(\n                                                    \"date\", datum.start_date_dat\n                                            )\n                                    )\n                                }\n                            };\n                            if (datum.end_date_dat != null) {\n                                try {\n                                    java.time.LocalDate endDate = java.time.LocalDate.parse(datum.end_date_dat, DateTimeFormatter.ofPattern(\"dd/MM/yyyy\"));\n                                    if (endDate.isBefore(date)) {\n                                        throw new fr.inra.oresing.domain.groovy.exception.GroovyException(\n                                                \"DATE_NOT_IN_INTERVAL\",\n                                                java.util.Map.of(\n                                                        \"date\", date,\n                                                        \"dateDebut\", datum.start_date_dat,\n                                                        \"dateFin\", datum.end_date_dat\n                                                )\n                                        )\n                                    }\n                                } catch (java.time.format.DateTimeParseException e) {\n                                    throw new fr.inra.oresing.domain.groovy.exception.GroovyException(\n                                            \"BAD_DATE_FORMAT\",\n                                            java.util.Map.of(\n                                                    \"date\", datum.end_date_dat\n                                            )\n                                    )\n                                }\n                            };\n                            return true;\n",
+            "references": null,
+            "exceptionMessages": [
+              "DATE_NOT_IN_INTERVAL",
+              "MISSING_DATE",
+              "BAD_DATE_FORMAT"
+            ],
+            "codify": true,
+            "data": null
           }
         },
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "columns" : [ "dat_end_date" ],
-        "required" : true,
-        "mandatory" : "OPTIONAL"
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "columns": [
+          "dat_end_date"
+        ],
+        "required": true,
+        "mandatory": "OPTIONAL"
       }
     },
-    "depends" : [ {
-      "type" : "DependsReferences",
-      "references" : "tr_zone_etude_zet",
-      "component" : "dat_site"
-    } ],
-    "migrations" : null,
-    "filterable" : false,
-    "filterableAsList" : false,
-    "filterableAsText" : false,
-    "hidden" : false,
-    "order" : 9999
+    "depends": [
+      {
+        "type": "DependsReferences",
+        "references": "tr_zone_etude_zet",
+        "component": "dat_site"
+      }
+    ],
+    "migrations": null,
+    "filterable": false,
+    "filterableAsList": false,
+    "filterableAsText": false,
+    "hidden": false,
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   },
-  "tr_espece_spe" : {
-    "separator" : ";",
-    "headerLine" : 1,
-    "firstRowLine" : 2,
-    "allowUnexpectedColumns" : false,
-    "tags" : [ {
-      "tagDefinition" : "DOMAIN_TAG",
-      "tagName" : "data"
-    } ],
-    "naturalKey" : [ "spe_species" ],
-    "componentDescriptions" : {
-      "spe_date" : {
-        "type" : "BasicComponent",
-        "componentKey" : "spe_date",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Date",
-        "exportHeaderName" : "spe_date",
-        "langRestrictions" : [ ],
-        "required" : true,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "DateChecker",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "pattern" : "dd/MM/yyyy",
-          "min" : [ 2013, 1, 1 ],
-          "max" : [ 2013, 12, 31 ],
-          "duration" : "1 Day"
+  "tr_espece_spe": {
+    "separator": ";",
+    "headerLine": 1,
+    "firstRowLine": 2,
+    "allowUnexpectedColumns": false,
+    "tags": [
+      {
+        "tagDefinition": "DOMAIN_TAG",
+        "tagName": "data"
+      }
+    ],
+    "naturalKey": [
+      "spe_species"
+    ],
+    "componentDescriptions": {
+      "spe_date": {
+        "type": "BasicComponent",
+        "componentKey": "spe_date",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Date",
+        "exportHeaderName": "spe_date",
+        "langRestrictions": [],
+        "required": true,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "DateChecker",
+          "multiplicity": "ONE",
+          "required": true,
+          "pattern": "dd/MM/yyyy",
+          "min": [
+            2013,
+            1,
+            1
+          ],
+          "max": [
+            2013,
+            12,
+            31
+          ],
+          "duration": "1 Day"
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "spe_species" : {
-        "type" : "BasicComponent",
-        "componentKey" : "spe_species",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Espèce",
-        "exportHeaderName" : "spe_species",
-        "langRestrictions" : [ ],
-        "required" : true,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "StringChecker",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "pattern" : "SPE_.*"
+      "spe_species": {
+        "type": "BasicComponent",
+        "componentKey": "spe_species",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Espèce",
+        "exportHeaderName": "spe_species",
+        "langRestrictions": [],
+        "required": true,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "StringChecker",
+          "multiplicity": "ONE",
+          "required": true,
+          "pattern": "SPE_.*"
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "spe_tool" : {
-        "type" : "BasicComponent",
-        "componentKey" : "spe_tool",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Outil",
-        "exportHeaderName" : "spe_tool",
-        "langRestrictions" : [ ],
-        "required" : true,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "GroovyExpressionChecker",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "expression" : "import fr.inra.oresing.domain.groovy.exception.GroovyException; List<String> values = [\"T_11\", \"T_12\", \"U_13\", \"U_14\"]; if(values.contains(value)){\n    return true;\n}; throw new GroovyException(\n                        \"BAD_VALUE\",\n                        java.util.Map.of(\"valeur\", value, \"valeurs\",values)\n                );\n",
-          "references" : null,
-          "exceptionMessages" : [ "BAD_VALUE" ],
-          "codify" : true,
-          "data" : null
+      "spe_tool": {
+        "type": "BasicComponent",
+        "componentKey": "spe_tool",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Outil",
+        "exportHeaderName": "spe_tool",
+        "langRestrictions": [],
+        "required": true,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "GroovyExpressionChecker",
+          "multiplicity": "ONE",
+          "required": true,
+          "expression": "import fr.inra.oresing.domain.groovy.exception.GroovyException; List<String> values = [\"T_11\", \"T_12\", \"U_13\", \"U_14\"]; if(values.contains(value)){\n    return true;\n}; throw new GroovyException(\n                        \"BAD_VALUE\",\n                        java.util.Map.of(\"valeur\", value, \"valeurs\",values)\n                );\n",
+          "references": null,
+          "exceptionMessages": [
+            "BAD_VALUE"
+          ],
+          "codify": true,
+          "data": null
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "spe_is_iso" : {
-        "type" : "BasicComponent",
-        "componentKey" : "spe_is_iso",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "HIDDEN_TAG"
-        } ],
-        "importHeader" : "iso",
-        "exportHeaderName" : null,
-        "langRestrictions" : [ ],
-        "required" : true,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "BooleanChecker",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "isTrue" : false
+      "spe_is_iso": {
+        "type": "BasicComponent",
+        "componentKey": "spe_is_iso",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "HIDDEN_TAG"
+          }
+        ],
+        "importHeader": "iso",
+        "exportHeaderName": null,
+        "langRestrictions": [],
+        "required": true,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "BooleanChecker",
+          "multiplicity": "ONE",
+          "required": true,
+          "isTrue": false
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : true,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": true,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "spe_definition_fr" : {
-        "type" : "BasicComponent",
-        "componentKey" : "spe_definition_fr",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Défintion de l'espèce en français",
-        "exportHeaderName" : null,
-        "langRestrictions" : [ "fr" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+      "spe_definition_fr": {
+        "type": "BasicComponent",
+        "componentKey": "spe_definition_fr",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Défintion de l'espèce en français",
+        "exportHeaderName": null,
+        "langRestrictions": [
+          "fr"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "spe_site" : {
-        "type" : "BasicComponent",
-        "componentKey" : "spe_site",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Site",
-        "exportHeaderName" : "spe_site",
-        "langRestrictions" : [ ],
-        "required" : true,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "ReferenceChecker",
-          "componentKey" : "spe_site",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "refType" : "tr_zone_etude_zet",
-          "isRecursive" : true,
-          "isParent" : true
+      "spe_site": {
+        "type": "BasicComponent",
+        "componentKey": "spe_site",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Site",
+        "exportHeaderName": "spe_site",
+        "langRestrictions": [],
+        "required": true,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "ReferenceChecker",
+          "componentKey": "spe_site",
+          "multiplicity": "ONE",
+          "required": true,
+          "refType": "tr_zone_etude_zet",
+          "isRecursive": true,
+          "isParent": true
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : true,
-        "referenceCheckerType" : "tr_zone_etude_zet",
-        "chartDescription" : null
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": true,
+        "referenceCheckerType": "tr_zone_etude_zet",
+        "chartDescription": null
       },
-      "spe_heure" : {
-        "type" : "BasicComponent",
-        "componentKey" : "spe_heure",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Heure",
-        "exportHeaderName" : "spe_heure",
-        "langRestrictions" : [ ],
-        "required" : true,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "DateChecker",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "pattern" : "HH:mm:ss",
-          "min" : [ 8, 0 ],
-          "max" : [ 17, 0 ],
-          "duration" : null
+      "spe_heure": {
+        "type": "BasicComponent",
+        "componentKey": "spe_heure",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Heure",
+        "exportHeaderName": "spe_heure",
+        "langRestrictions": [],
+        "required": true,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "DateChecker",
+          "multiplicity": "ONE",
+          "required": true,
+          "pattern": "HH:mm:ss",
+          "min": [
+            8,
+            0
+          ],
+          "max": [
+            17,
+            0
+          ],
+          "duration": null
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "spe_weight" : {
-        "type" : "BasicComponent",
-        "componentKey" : "spe_weight",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "expression" : "0",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
+      "spe_weight": {
+        "type": "BasicComponent",
+        "componentKey": "spe_weight",
+        "defaultValue": {
+          "type": "ComputationChecker",
+          "multiplicity": "ONE",
+          "required": true,
+          "expression": "0",
+          "references": null,
+          "exceptionMessages": [],
+          "codify": false,
+          "data": null
         },
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Quantité",
-        "exportHeaderName" : "spe_weight",
-        "langRestrictions" : [ ],
-        "required" : true,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "FloatChecker",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "min" : 0.0,
-          "max" : 2000.0
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Quantité",
+        "exportHeaderName": "spe_weight",
+        "langRestrictions": [],
+        "required": true,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "FloatChecker",
+          "multiplicity": "ONE",
+          "required": true,
+          "min": 0.0,
+          "max": 2000.0
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "spe_definition_en" : {
-        "type" : "BasicComponent",
-        "componentKey" : "spe_definition_en",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "English species definition",
-        "exportHeaderName" : null,
-        "langRestrictions" : [ "en" ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : null,
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+      "spe_definition_en": {
+        "type": "BasicComponent",
+        "componentKey": "spe_definition_en",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "English species definition",
+        "exportHeaderName": null,
+        "langRestrictions": [
+          "en"
+        ],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": null,
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       },
-      "spe_date_heure" : {
-        "type" : "ComputedComponent",
-        "componentKey" : "spe_date_heure",
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "exportHeaderName" : "spe_date_heure",
-        "langRestrictions" : [ ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "DateChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "pattern" : "dd/MM/yyyy HH:mm:ss",
-          "min" : [ -999999999, 1, 1, 0, 0 ],
-          "max" : [ 999999999, 12, 31, 23, 59, 59, 999999999 ],
-          "duration" : null
+      "spe_date_heure": {
+        "type": "ComputedComponent",
+        "componentKey": "spe_date_heure",
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "exportHeaderName": "spe_date_heure",
+        "langRestrictions": [],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "DateChecker",
+          "multiplicity": "ONE",
+          "required": false,
+          "pattern": "dd/MM/yyyy HH:mm:ss",
+          "min": [
+            -999999999,
+            1,
+            1,
+            0,
+            0
+          ],
+          "max": [
+            999999999,
+            12,
+            31,
+            23,
+            59,
+            59,
+            999999999
+          ],
+          "duration": null
         },
-        "computationChecker" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return datum.date + \" \" + datum.heure\n",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
+        "computationChecker": {
+          "type": "ComputationChecker",
+          "multiplicity": "ONE",
+          "required": false,
+          "expression": "return datum.date + \" \" + datum.heure\n",
+          "references": null,
+          "exceptionMessages": [],
+          "codify": false,
+          "data": null
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null,
-        "importHeader" : "spe_date_heure"
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null,
+        "importHeader": "spe_date_heure"
       },
-      "spe_repetition" : {
-        "type" : "BasicComponent",
-        "componentKey" : "spe_repetition",
-        "defaultValue" : null,
-        "tags" : [ {
-          "tagDefinition" : "NO_TAG",
-          "tagName" : "no_tag"
-        } ],
-        "importHeader" : "Répétition",
-        "exportHeaderName" : "spe_repetition",
-        "langRestrictions" : [ ],
-        "required" : false,
-        "mandatory" : "OPTIONAL",
-        "checker" : {
-          "type" : "IntegerChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "min" : 0,
-          "max" : 10
+      "spe_repetition": {
+        "type": "BasicComponent",
+        "componentKey": "spe_repetition",
+        "defaultValue": null,
+        "tags": [
+          {
+            "tagDefinition": "NO_TAG",
+            "tagName": "no_tag"
+          }
+        ],
+        "importHeader": "Répétition",
+        "exportHeaderName": "spe_repetition",
+        "langRestrictions": [],
+        "required": false,
+        "mandatory": "OPTIONAL",
+        "checker": {
+          "type": "IntegerChecker",
+          "multiplicity": "ONE",
+          "required": false,
+          "min": 0,
+          "max": 10
         },
-        "submissionAuthorizationScope" : null,
-        "filterable" : false,
-        "filterableAsList" : false,
-        "filterableAsText" : false,
-        "hidden" : false,
-        "reference" : false,
-        "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "submissionAuthorizationScope": null,
+        "filterable": false,
+        "filterableAsList": false,
+        "filterableAsText": false,
+        "hidden": false,
+        "reference": false,
+        "referenceCheckerType": "StringChecker",
+        "chartDescription": null
       }
     },
-    "submission" : null,
-    "authorization" : null,
-    "validations" : { },
-    "depends" : [ {
-      "type" : "DependsParent",
-      "references" : "tr_zone_etude_zet",
-      "component" : "spe_site"
-    } ],
-    "migrations" : null,
-    "filterable" : false,
-    "filterableAsList" : false,
-    "filterableAsText" : false,
-    "hidden" : false,
-    "order" : 9999
+    "submission": null,
+    "authorization": null,
+    "validations": {},
+    "depends": [
+      {
+        "type": "DependsParent",
+        "references": "tr_zone_etude_zet",
+        "component": "spe_site"
+      }
+    ],
+    "migrations": null,
+    "filterable": false,
+    "filterableAsList": false,
+    "filterableAsText": false,
+    "hidden": false,
+    "order": 9999,
+    "OA_filterModel": "NONE",
+    "definedFilters": false,
+    "legacyGin": false
   }
 }

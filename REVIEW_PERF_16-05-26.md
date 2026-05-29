@@ -274,3 +274,12 @@ Items in this section have been implemented and deployed without further validat
 
 All five items in section 11 remain pending user validation . No code touched .
 
+## Annexe — modèle de filtres et coût des index
+
+Le modèle `OA_filterModel` permet de choisir le coût d'indexation par datatype :
+
+- `NONE` : aucun index de filtre sur `refvalues`, empreinte minimale ; recommandé pour les datatypes peu filtrés ou volumineux en écriture.
+- `LEGACY_GIN` : conserve le GIN historique sur `refvalues jsonb_path_ops`, avec un surcoût estimé de 15 à 40 % de la table selon la largeur JSONB et la cardinalité ; recommandé pour compatibilité ou filtres JSONB génériques.
+- `DEFINED_FILTERS` : crée seulement les index des colonnes marquées `__FILTER_TEXT__` / `__FILTER_LIST__`. Un B-tree de liste coûte typiquement 2 à 5 % par colonne ; un GIN trigramme texte est plus coûteux mais ciblé sur les champs de recherche libre.
+
+Recommandations : `NONE` par défaut pour réduire le footprint, `DEFINED_FILTERS` pour les référentiels consultés par quelques filtres connus, `LEGACY_GIN` uniquement pour les profils nécessitant l'ancien comportement global ou pendant une phase de migration via `app.filterModel.legacyDefault=true`.

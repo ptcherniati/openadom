@@ -16,6 +16,48 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * Taxonomie des tags posés dans {@code OA_tags} (sur une colonne, une validation
+ * ou un datatype) et exposés tels quels dans la {@link Configuration} JSON.
+ *
+ * <h2>Familles de tags</h2>
+ * <ul>
+ *   <li><b>Tags système réservés</b> (sous-types de {@link DefinedTag}) : motif fixe
+ *       {@code __XXX__}, comportement câblé dans le backend. Ils sont évalués
+ *       <em>avant</em> les tags utilisateur (ordre des constantes
+ *       {@link TagDefinitions}), si bien qu'un motif réservé l'emporte toujours sur
+ *       un {@link BusinessTag} de même forme. Exemples : {@link HiddenTag},
+ *       {@link DataTag}, {@link ReferenceTag}, {@link OrderTag},
+ *       {@link OrderStrictTag}, {@link StepTag} et les {@link FilterTag}.</li>
+ *   <li><b>Tags utilisateur libres</b> : {@link BusinessTag} ({@code __PREFIX__} /
+ *       {@code __PREFIX_123__}) et {@link DomainTag} (mot-clé en minuscules). Ils ne
+ *       déclenchent aucun traitement backend ; ils servent au classement et au
+ *       filtrage côté frontend.</li>
+ * </ul>
+ *
+ * <h2>Tags et filtres / choix de l'indexation</h2>
+ * Deux mécanismes orthogonaux pilotent l'indexation de
+ * {@code referencevalue.refvalues} :
+ * <ol>
+ *   <li>Le {@link FilterModel} déclaré au niveau du datatype décide de la
+ *       <em>stratégie d'index</em> globale ({@code NONE}, {@code LEGACY_GIN} ou
+ *       {@code DEFINED_FILTERS}).</li>
+ *   <li>En mode {@link FilterModel#DEFINED_FILTERS}, ce sont les {@link FilterTag}
+ *       posés colonne par colonne ({@link FilterTextTag} → index GIN trigram ;
+ *       {@link FilterListTag} → index B-tree d'égalité) qui déterminent
+ *       <em>quelles colonnes</em> reçoivent un index sélectif. La règle d'éligibilité
+ *       est portée par {@link ComponentDescription#isFilterableAsText()} /
+ *       {@link ComponentDescription#isFilterableAsList()} et la génération SQL par
+ *       {@code AuthorizationIndex#createIndex(String)}.</li>
+ * </ol>
+ *
+ * <p><b>Évolution prévue (regroupement par niveau).</b> Le tag {@link StepTag}
+ * ({@code __STEP_xxx__}) est introduit comme jalon : il porte un niveau numérique
+ * destiné, à terme, à regrouper les colonnes d'un même niveau au sein d'un index
+ * commun (index composite par « étage »). Il est aujourd'hui reconnu, validé et
+ * sérialisé, mais n'altère pas encore la génération des index ; voir
+ * {@link StepTag} pour le détail.
+ */
 public sealed interface Tag {
     String RESERVED_TAG_NAME = "RESERVED_TAG_NAME";
     String BAD_TAG_NAME = "BAD_TAG_NAME";
@@ -84,7 +126,9 @@ public sealed interface Tag {
         FILTER_TEXT_TAG(FilterTextTag.FILTER_TEXT_TAG, w -> FilterTextTag.instance(), FilterTextTag.getTagPattern()),
         FILTER_LIST_TAG(FilterListTag.FILTER_LIST_TAG, w -> FilterListTag.instance(), FilterListTag.getTagPattern()),
         ORDER_STRICT_TAG(OrderStrictTag.ORDER_STRICT_TAG, w -> OrderStrictTag.instance(), OrderStrictTag.getTagPattern()),
+        STEP_TAG(StepTag.STEP_TAG, StepTag::buildStepTag, StepTag.getTagPattern()),
         NO_TAG(NoTag.NO_TAG, w -> NoTag.instance(), NoTag.getTagPattern()),
+        BUSINESS_TAG(BusinessTag.BUSINESS_TAG, BusinessTag::buildBusinessTag, BusinessTag.getTagPattern()),
         DOMAIN_TAG(DomainTag.DOMAIN_TAG, DomainTag::buildDomainTag, DomainTag.getTagPattern());
         final Predicate<String> isA;
         final Function<String, Tag> build;
@@ -104,7 +148,7 @@ public sealed interface Tag {
 
         static Set<String> getReservedTagPatterns() {
             return Arrays.stream(values())
-                    .filter(tagDefinitions -> tagDefinitions != DOMAIN_TAG)
+                    .filter(tagDefinitions -> tagDefinitions != DOMAIN_TAG && tagDefinitions != BUSINESS_TAG)
                     .map(TagDefinitions::getTagPattern)
                     .collect(Collectors.toSet());
         }
@@ -119,7 +163,7 @@ public sealed interface Tag {
         }
     }
 
-    sealed interface DefinedTag extends Tag permits DataTag, FilterTag, HiddenTag, NoTag, OrderTag, OrderStrictTag, ReferenceTag {
+    sealed interface DefinedTag extends Tag permits DataTag, FilterTag, HiddenTag, NoTag, OrderTag, OrderStrictTag, ReferenceTag, StepTag {
 
     }
 
@@ -151,6 +195,41 @@ public sealed interface Tag {
 
         public static String getTagPattern() {
             return DOMAIN_PATTERN;
+        }
+    }
+
+
+    /**
+     * Tag métier utilisateur au format {@code __PREFIX__} ou
+     * {@code __PREFIX_123__}. Le préfixe doit commencer par une majuscule et ne
+     * contenir que des majuscules, chiffres ou underscores ; le paramètre
+     * numérique final est optionnel. Les tags réservés sont évalués avant ce
+     * motif pour que, par exemple, {@code __ORDER_5__} reste un
+     * {@link OrderTag}.
+     */
+    record BusinessTag(TagDefinitions tagDefinition, String tagPrefix, Integer tagParameter) implements Tag {
+        public static final String BUSINESS_PATTERN = "^__([A-Z][A-Z0-9_]*?)(?:_(\\d+))?__$";
+        public static final Predicate<String> BUSINESS_TAG = w -> Pattern.compile(BUSINESS_PATTERN).matcher(w).matches()
+                && Arrays.stream(TagDefinitions.values())
+                .filter(tagDefinition -> tagDefinition != TagDefinitions.DOMAIN_TAG
+                        && tagDefinition != TagDefinitions.BUSINESS_TAG)
+                .noneMatch(tagDefinition -> Pattern.compile(tagDefinition.getTagPattern()).matcher(w).matches());
+
+        public BusinessTag(final String tagPrefix, final Integer tagParameter) {
+            this(TagDefinitions.BUSINESS_TAG, tagPrefix, tagParameter);
+        }
+
+        public static BusinessTag buildBusinessTag(final String tagName) {
+            final Matcher matcher = Pattern.compile(BUSINESS_PATTERN).matcher(tagName);
+            if (matcher.matches()) {
+                return new BusinessTag(matcher.group(1), Optional.ofNullable(matcher.group(2)).map(Integer::parseInt).orElse(null));
+            } else {
+                throw new SiOreIllegalArgumentException("unExpected error", Map.of("comment", "on ne doit jamais arriver ici (a cause du filter)"));
+            }
+        }
+
+        public static String getTagPattern() {
+            return BUSINESS_PATTERN;
         }
     }
 
@@ -354,6 +433,57 @@ public sealed interface Tag {
 
         public static String getTagPattern() {
             return ORDER_STRICT_PATTERN;
+        }
+    }
+
+    /**
+     * Tag système paramétré {@code __STEP_xxx__} (où {@code xxx} est un entier ≥ 0)
+     * marquant le <b>niveau de regroupement</b> d'une colonne en vue de l'indexation.
+     *
+     * <p><b>Statut : jalon / exemple.</b> Ce tag est volontairement introduit pour
+     * préparer une future fonctionnalité : permettre de définir des regroupements
+     * d'index par niveau (un index composite par « étage » plutôt qu'un index par
+     * colonne). À ce stade, le tag est reconnu par {@link #buildTag(String)},
+     * validé comme tag réservé (il l'emporte sur un {@link BusinessTag} de même
+     * forme) et sérialisé dans la {@link Configuration} JSON, mais il n'altère pas
+     * encore la génération SQL des index (cf. {@code AuthorizationIndex}). Il sert
+     * de point d'ancrage stable pour le frontend et les configurations YAML.
+     *
+     * <p>Motif : {@code __STEP_(\d+)__}. Le paramètre numérique est obligatoire et
+     * accessible via {@link #stepLevel()} ; il dénote le niveau de regroupement.
+     * Le motif sans paramètre ({@code __STEP__}) n'est <em>pas</em> capté ici et
+     * reste un {@link BusinessTag} libre.
+     *
+     * <p>Exemple YAML :
+     * <pre>{@code
+     * OA_data:
+     *   especes:
+     *     OA_components:
+     *       genre:
+     *         OA_tags: [ __STEP_1__ ]   # niveau 1 du regroupement d'index
+     *       espece:
+     *         OA_tags: [ __STEP_2__ ]   # niveau 2 du regroupement d'index
+     * }</pre>
+     */
+    record StepTag(TagDefinitions tagDefinition, int stepLevel) implements DefinedTag {
+        public static final Pattern STEP_TAG_PATTERN = Pattern.compile("__STEP_(\\d+)__");
+        public static final Predicate<String> STEP_TAG = w -> STEP_TAG_PATTERN.matcher(w).matches();
+
+        public StepTag(final int stepLevel) {
+            this(TagDefinitions.STEP_TAG, stepLevel);
+        }
+
+        public static StepTag buildStepTag(final String tagName) {
+            final Matcher matcher = STEP_TAG_PATTERN.matcher(tagName);
+            if (matcher.matches()) {
+                return new StepTag(Integer.parseInt(matcher.group(1)));
+            } else {
+                throw new SiOreIllegalArgumentException("unExpected error", Map.of("comment", "on ne doit jamais arriver ici (a cause du filter)"));
+            }
+        }
+
+        public static String getTagPattern() {
+            return STEP_TAG_PATTERN.pattern();
         }
     }
 

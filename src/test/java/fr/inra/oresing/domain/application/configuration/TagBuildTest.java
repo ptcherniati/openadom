@@ -60,6 +60,14 @@ class TagBuildTest {
     }
 
     @Test
+    @DisplayName("buildTag(__STEP_4__) retourne StepTag avec niveau=4")
+    void buildStepTag() {
+        Tag tag = Tag.buildTag("__STEP_4__");
+        assertThat(tag).isInstanceOf(Tag.StepTag.class);
+        assertThat(((Tag.StepTag) tag).stepLevel()).isEqualTo(4);
+    }
+
+    @Test
     @DisplayName("buildTag(__ORDER_3__) retourne OrderTag avec ordre=3")
     void buildOrderTag() {
         Tag tag = Tag.buildTag("__ORDER_3__");
