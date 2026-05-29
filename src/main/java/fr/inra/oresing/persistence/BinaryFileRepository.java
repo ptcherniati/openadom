@@ -527,7 +527,11 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
      * @return taille en octets , 0 si NULL ou fichier inexistant
      */
     public long findProcessedSize(UUID fileId) {
-        String query = "SELECT COALESCE(processed_size, 0) FROM %s WHERE id = ?::uuid"
+        // MAX(...) agrege : renvoie toujours exactement 1 ligne meme si le
+        // fichier n'existe pas ( -> NULL -> COALESCE 0 ) . Sans l'agregat ,
+        // queryForObject leve EmptyResultDataAccessException sur 0 ligne
+        // ( fichier inexistant ) -> 500 au lieu du 204 attendu .
+        String query = "SELECT COALESCE(MAX(processed_size), 0) FROM %s WHERE id = ?::uuid"
                 .formatted(getTable().getSqlIdentifier());
         Long size = jdbcTemplate.queryForObject(query, Long.class, fileId.toString());
         return size != null ? size : 0L;

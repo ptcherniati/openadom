@@ -62,7 +62,14 @@ public class FileResources {
     }
 
     @Operation(summary = "Telecharger le CSV normalise ( processed_data ) d'un binaryfile")
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
+    // DATA_READ_SOME et non DATA_READ : un binaryfile brut deposge ( CSV
+    // original ) n'a pas toujours de dataset/datatype resolvable dans
+    // params.binaryFiledataset , donc le dataName du token reste null et
+    // DATA_READ ( scope par dataName ) refuse -> AccessDenied -> 401 ( le
+    // handler mappe AccessDenied en 401 ) -> deconnexion cote SPA . On
+    // exige donc "lire au moins une donnee de l'application" , droit que
+    // possede tout reader / uploader / admin , sans dependre du dataName .
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ_SOME')")
     @GetMapping(value = "/applications/{name}/file/{id}/normalized",
             produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> getNormalizedFile(
@@ -96,7 +103,10 @@ public class FileResources {
     public static final String HEADER_ATTACHMENT_FILENAME = "attachment;filename=%1$s";
 
     @Operation(summary = "Télécharger le contenu binaire d'un fichier")
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
+    // DATA_READ_SOME : cf justification sur getNormalizedFile . Le fichier
+    // binaire brut peut ne pas avoir de dataName resolvable ; on autorise
+    // le telechargement a quiconque peut lire des donnees de l'application .
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ_SOME')")
     @GetMapping(value = "/applications/{name}/file/{id}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> getFile(
             @PathVariable("name") final String name,
