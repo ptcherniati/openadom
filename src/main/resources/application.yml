@@ -223,8 +223,12 @@ info:
 
 logging:
   level:
-    root: INFO
-    fr.inra.oresing: DEBUG
+    # Both levels are env-driven so deployment ( local / preprod / prod )
+    # can pin verbosity without rebuilding the image . Fallback chain :
+    # - root         <- BACKEND_LOG_LEVEL ( default INFO )
+    # - fr.inra.oresing <- LOGGING_LEVEL_FR_INRA_ORESING , else BACKEND_LOG_LEVEL , else INFO
+    root: ${BACKEND_LOG_LEVEL:INFO}
+    fr.inra.oresing: ${LOGGING_LEVEL_FR_INRA_ORESING:${BACKEND_LOG_LEVEL:INFO}}
     # org.springframework.jdbc: TRACE
     # org.flywaydb: DEBUG
     # org.springframework.security: TRACE

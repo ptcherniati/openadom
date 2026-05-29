@@ -455,7 +455,14 @@ public class WorkflowLogRepository {
             log.warn("retentionDays <= 0 ({}) : rotation desactivee", retentionDays);
             return 0;
         }
-        return jdbcTemplate.update(DELETE_OLDER_THAN_SQL, retentionDays);
+        // SQL is `SELECT oa_audit.delete_workflow_logs_older_than(?::int)` which
+        // returns a result set ( 1 row , 1 int column with deleted count ) .
+        // `update()` calls JDBC executeUpdate() which fails with
+        // `A result was returned when none was expected` on PostgreSQL .
+        // Use queryForObject to consume the result row .
+        Integer deleted = jdbcTemplate.queryForObject(
+                DELETE_OLDER_THAN_SQL, Integer.class, retentionDays);
+        return deleted == null ? 0 : deleted;
     }
 
     /**

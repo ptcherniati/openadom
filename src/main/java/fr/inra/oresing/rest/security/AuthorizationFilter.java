@@ -287,8 +287,12 @@ public class AuthorizationFilter extends GenericFilterBean {
     }
 
     private Optional<String> getWithFileId(OreSiAuthenticationToken oreSiAuthenticationToken, String path) {
+        // Capture l'UUID strict puis ignore tout suffixe ( ex /info ,
+        // /normalized , /publication-state ) . Sans cette restriction le
+        // greedy (.*) tente de parser l'UUID + suffixe -> IllegalArgumentException
+        // "UUID string too large" -> 500 sur les endpoints derives .
         Pattern pattern = Pattern
-                .compile("/api/v1/applications/(%s)/file/(.*)".formatted(oreSiAuthenticationToken.getApplicationName()));
+                .compile("/api/v1/applications/(%s)/file/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(?:/.*)?".formatted(oreSiAuthenticationToken.getApplicationName()));
         final Optional<UUID> optionalUUID = Optional.ofNullable(path)
                 .map(pattern::matcher)
                 .map(m -> m.matches() ? m.group(2) : null)
