@@ -97,9 +97,15 @@ Le finalize import utilise le pool main (partagé HTTP). Burst d'imports → UI 
 ### [ ] P1-D - max_connections cohérent
 main + streaming + cascade + marge admin ≤ max_connections. Config DB + pools.
 
-### [ ] Récursif OOM - cap / chunk
-Import récursif = accumulation mémoire totale → OOM à 10M récursif. Cap taille ou chunk.
-**Code-faisable.**
+### [x] Récursif OOM - cap ( garde-fou résilience )
+> FAIT : `RecursiveReferenceImportTooLargeException` ( 413 ) + garde dans
+> `DataService.addData` ( compte les lignes du buffer disque pour un référentiel
+> récursif , rejette AVANT le transform si > seuil → évite l'OOM-crash JVM qui
+> tomberait tous les users ; catch dédié pour ne pas être avalé par le fallback
+> legacy ) . Config `cascade.import.recursive-max-rows` ( application.properties +
+> cascade.env ) , **défaut 0 = désactivé** ( iso ; poser une vraie valeur par profil
+> selon la heap ) . Full-suite 4342 tests , 0F/0E . Le vrai fix ( récursif streamé )
+> reste un gros chantier algo séparé.
 
 ### [ ] PgBouncer (infra - aval requis)
 Pooler transaction-mode devant PG. La vraie réponse scaling 10+ users. **Infra, non auto.**

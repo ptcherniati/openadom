@@ -116,6 +116,17 @@ public class DataService {
     @Value("${openadom.cache.filter-list.enabled:true}")
     private boolean filterListCacheEnabled;
 
+    /**
+     * Garde-fou résilience : nombre de lignes maximum d'un import de référentiel
+     * RÉCURSIF . Le récursif accumule tout le fichier en mémoire ( résolution
+     * parent→enfant ) ; au-delà la JVM OOM et crash pour tous les users . Au-delà
+     * de ce seuil l'import est rejeté ( 413 ) en amont . {@code 0} = désactivé
+     * ( illimité , comportement historique ) . Configurable via
+     * {@code CASCADE_IMPORT_RECURSIVE_MAX_ROWS} .
+     */
+    @Value("${cascade.import.recursive-max-rows:0}")
+    private long recursiveImportMaxRows;
+
     @Setter
     ServiceContainer serviceContainer;
     private final OreSiRepository repo;
@@ -354,6 +365,23 @@ public class DataService {
                 try (InputStream src = file) {
                     Files.copy(src, csvBufferFile, StandardCopyOption.REPLACE_EXISTING);
                 }
+                // Garde-fou resilience : un referentiel recursif accumule tout le
+                // fichier en memoire ( resolution parent->enfant ) -> OOM JVM +
+                // crash backend pour tous les users au-dela d'un certain volume .
+                // On rejette EN AMONT ( 413 ) si le fichier depasse le plafond .
+                // 0 = desactive ( comportement historique ) . Comptage sequentiel
+                // sur le buffer disque = memoire constante .
+                if (recursiveImportMaxRows > 0) {
+                    final long rows;
+                    try (java.util.stream.Stream<String> lines =
+                                 Files.lines(csvBufferFile, StandardCharsets.UTF_8)) {
+                        rows = lines.count();
+                    }
+                    if (rows > recursiveImportMaxRows) {
+                        throw new fr.inra.oresing.workflow.guard.RecursiveReferenceImportTooLargeException(
+                                refType, rows, recursiveImportMaxRows);
+                    }
+                }
                 // Extraction des columns naturalKey + separator depuis la config
                 fr.inra.oresing.domain.application.configuration.StandardDataDescription dataDescription =
                         application.getConfiguration().dataDescription().get(refType);
@@ -390,6 +418,10 @@ public class DataService {
                     log.debug("[Axe B] prescan skip refType={} : config naturalKey absente/vide ( fallback legacy )", refType);
                 }
                 effectiveInputStream = Files.newInputStream(csvBufferFile);
+            } catch (fr.inra.oresing.workflow.guard.RecursiveReferenceImportTooLargeException tooLarge) {
+                // Rejet VOLONTAIRE du garde-fou recursif : ne PAS retomber sur le
+                // fallback legacy ( qui lancerait l'import et OOM ) -> on propage le 413 .
+                throw tooLarge;
             } catch (RuntimeException | IOException ex) {
                 // Fallback graceful : retombe sur le chemin legacy ( hint=null ) .
                 // CRUCIAL : on conserve le csvBufferFile pour fournir un
