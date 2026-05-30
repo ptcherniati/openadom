@@ -126,8 +126,27 @@ main + streaming + cascade + marge admin ≤ max_connections. Config DB + pools.
 > selon la heap ) . Full-suite 4342 tests , 0F/0E . Le vrai fix ( récursif streamé )
 > reste un gros chantier algo séparé.
 
-### [ ] PgBouncer (infra - aval requis)
-Pooler transaction-mode devant PG. La vraie réponse scaling 10+ users. **Infra, non auto.**
+### [x] PgBouncer (infra) - IMPLÉMENTÉ derrière toggle, OFF par défaut
+Pooler transaction-mode devant PG. La vraie réponse scaling 10+ users : multiplexe
+les transactions courtes du backend sur un petit jeu stable de connexions PG, donc
+`max_connections` n'est plus le plafond et la churn de connexions disparaît.
+
+> **Livré ( local_deployment, EN )** : toggle unique `PGBOUNCER_ENABLED`
+> ( `config/infra/pgbouncer.env`, **défaut false = comportement actuel, zéro changement** ).
+> À true, `start.sh` : (1) active le profil compose `pgbouncer` ( service
+> `infra/pgbouncer/compose.yml`, image `edoburu/pgbouncer`, mode `transaction`,
+> `max_prepared_statements=256` pour le cache prepared JDBC, `scram-sha-256` ),
+> (2) repointe le **pool MAIN** Hikari vers `pgbouncer:6432`.
+>
+> **Le pool STREAMING reste en DIRECT sur Postgres** ( `SPRING_DATASOURCE_STREAMING_URL`,
+> backend `application.properties` découplé avec fallback iso quand le toggle est off ) :
+> les curseurs serveur 6h des exports ZIP/CSV ne doivent jamais transiter par un pooler
+> en mode transaction. Locks advisory xact-level, TEMP ON COMMIT DROP et SET LOCAL
+> restent transaction-scoped → sûrs sous transaction pooling.
+>
+> Validé : `docker compose config` off → main+streaming direct ( iso ) ; on → main
+> `pgbouncer:6432`, streaming direct, service présent. **Test live à faire** ( la suite
+> backend se connecte en direct aux Testcontainers, ne couvre PAS PgBouncer ).
 
 ### [ ] WAL / checkpoint tuning (infra)
 max_wal_size, checkpoint_completion_target, disque WAL. **Config DB, aval requis.**
