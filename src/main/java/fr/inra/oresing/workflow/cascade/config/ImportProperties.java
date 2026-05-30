@@ -88,8 +88,14 @@ public class ImportProperties {
      *
      * <p>Feature flag pour rollback trivial : {@code OPENADOM_PUBLISH_USE_COLUMN_EXTRACTION_UPSERT=true}
      * dans env ou edition live via oa-live admin .
+     *
+     * <p>Defaut {@code false} : le path column-extraction tombe en fallback legacy sur
+     * les schemas a colonne reservee quotee ( ex {@code "authorization"} ) + type PG
+     * custom ( coercion jsonb_populate_record vs cast texte non garantie iso ) . On
+     * reste donc sur {@code jsonb_populate_record} ( prouve , iso ) tant que le path
+     * extraction n'est pas valide bout-en-bout sur ces cas . Activable a chaud si besoin .
      */
-    private volatile boolean useColumnExtractionUpsert = true;
+    private volatile boolean useColumnExtractionUpsert = false;
 
     /**
      * Active le mode « récursion ordonnée » globalement : les parents sont garantis
@@ -253,6 +259,17 @@ public class ImportProperties {
     private volatile String finalizeMaintenanceWorkMem = "";
 
     /**
+     * {@code SET LOCAL gin_pending_list_limit} pour la session finalize . Buffer
+     * la pending list des index GIN ( referencevalue : refValues , refsLinkedTo )
+     * pour flush 1 fois par batch UPSERT au lieu de N fois quand le defaut cluster
+     * ( 4MB ) sature en plein batch . S'applique PAR index GIN ( attention RAM en
+     * finalize parallele : N_gin x valeur x connexions ) . Format Postgres .
+     * Vide = pas d'override ( garde le default cluster ) .
+     * <p>Surcharge via {@code CASCADE_IMPORT_FINALIZE_GIN_PENDING_LIST_LIMIT} .
+     */
+    private volatile String finalizeGinPendingListLimit = "";
+
+    /**
      * Taille de batch de l'UPSERT staging -> table finale ( lignes par
      * iteration : DELETE ... RETURNING LIMIT N + INSERT ... ON CONFLICT ) .
      * Moins d'iterations sur gros volume ( 50M = 500 batches a 100k au lieu de
@@ -353,6 +370,7 @@ public class ImportProperties {
     public long getFinalizeLockRetryBackoffMaxMs()      { return finalizeLockRetryBackoffMaxMs; }
     public String getFinalizeWorkMem()                  { return finalizeWorkMem; }
     public String getFinalizeMaintenanceWorkMem()       { return finalizeMaintenanceWorkMem; }
+    public String getFinalizeGinPendingListLimit()      { return finalizeGinPendingListLimit; }
     public int    getFinalizeBatchSize()                { return finalizeBatchSize; }
     public int getReferenceCacheMaxEntries()  { return referenceCacheMaxEntries; }
     public int getGroovyCacheMaxEntries()     { return groovyCacheMaxEntries; }
@@ -383,6 +401,7 @@ public class ImportProperties {
     public void setFinalizeLockRetryBackoffMaxMs(long v)     { this.finalizeLockRetryBackoffMaxMs = v; }
     public void setFinalizeWorkMem(String v)                 { this.finalizeWorkMem = v != null ? v : ""; }
     public void setFinalizeMaintenanceWorkMem(String v)      { this.finalizeMaintenanceWorkMem = v != null ? v : ""; }
+    public void setFinalizeGinPendingListLimit(String v)     { this.finalizeGinPendingListLimit = v != null ? v : ""; }
     public void setFinalizeBatchSize(int v)                  { this.finalizeBatchSize = v; }
     public void setReferenceCacheMaxEntries(int v) { this.referenceCacheMaxEntries = v; }
     public void setGroovyCacheMaxEntries(int v)  { this.groovyCacheMaxEntries = v; }

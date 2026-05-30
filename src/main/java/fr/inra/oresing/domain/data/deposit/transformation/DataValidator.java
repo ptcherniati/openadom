@@ -178,6 +178,13 @@ public class DataValidator {
     }
 
     static boolean matchingTarget(RowWithReferenceDatum rowWithReferenceDatum, LineChecker<? extends FieldType<?>> lineChecker) {
+        // Le target du checker et son premier segment de pattern sont invariants
+        // par checker : on les calcule UNE fois au lieu de re-splitter la chaine
+        // dans le predicat execute pour CHAQUE colonne produite. Sur l'import,
+        // matchingTarget est appele par ( ligne x checker ) ; l'ancien code
+        // faisait un split() par ( ligne x checker x colonne ).
+        final DataColumn target = lineChecker.target();
+        final String targetFirstSegment = target.column().split(Column.COLUMN_IN_COLUMN_SEPARATOR)[0];
         return rowWithReferenceDatum.referenceDatum().values()
                 .entrySet()
                 .stream()
@@ -195,8 +202,8 @@ public class DataValidator {
                                 );
                     }
                     return Stream.of(entry.getKey());
-                }).noneMatch(column -> column.equals(lineChecker.target()) ||
-                                       column.column().equals(lineChecker.target().column().split(Column.COLUMN_IN_COLUMN_SEPARATOR)[0]));
+                }).noneMatch(column -> column.equals(target) ||
+                                       column.column().equals(targetFirstSegment));
     }
 
     /**

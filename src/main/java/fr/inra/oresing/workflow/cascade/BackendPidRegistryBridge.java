@@ -51,6 +51,7 @@ public class BackendPidRegistryBridge {
         // work_mem / maintenance_work_mem du finalize , editables a chaud .
         StagingFinalizeSql.setWorkMemSupplier(importProperties::getFinalizeWorkMem);
         StagingFinalizeSql.setMaintenanceWorkMemSupplier(importProperties::getFinalizeMaintenanceWorkMem);
+        StagingFinalizeSql.setGinPendingListLimitSupplier(importProperties::getFinalizeGinPendingListLimit);
 
         // Taille de batch UPSERT du finalize , editable a chaud .
         StagingFinalizeSql.setBatchSizeSupplier(importProperties::getFinalizeBatchSize);

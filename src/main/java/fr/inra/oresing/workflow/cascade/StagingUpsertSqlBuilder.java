@@ -172,10 +172,19 @@ public final class StagingUpsertSqlBuilder {
         // information_schema.columns expose udt_name = nom natif Postgres du type
         // ( uuid , jsonb , ltree , text , timestamptz , ... ) . Plus precis que
         // data_type qui retourne des libelles SQL standard parfois ambigus .
+        //
+        // Match case-insensitive sur schema + table : le nom de table arrive ici
+        // tel qu'ecrit dans l'identifiant SQL ( ex : "referenceValue" ) , mais
+        // Postgres replie les identifiants non quotes en minuscules au catalogue
+        // ( table reelle = "referencevalue" ) . Une comparaison exacte ne trouvait
+        // donc AUCUNE colonne -> IllegalStateException -> fallback systematique sur
+        // le legacy jsonb_populate_record ( 20-30% plus lent ) a CHAQUE import .
+        // lower()=lower() resout le lookup que l'identifiant soit quote ou non ,
+        // sans changer les colonnes/types resolus ( iso-resultat ) .
         final String query = """
                 SELECT column_name , udt_name
                 FROM information_schema.columns
-                WHERE table_schema = ? AND table_name = ?
+                WHERE lower(table_schema) = lower(?) AND lower(table_name) = lower(?)
                 """;
         Map<String, String> result = new java.util.HashMap<>();
         try (var ps = conn.prepareStatement(query)) {

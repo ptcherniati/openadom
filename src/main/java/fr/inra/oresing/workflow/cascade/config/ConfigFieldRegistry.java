@@ -126,6 +126,14 @@ public class ConfigFieldRegistry {
                 .setter(importProperties::setFinalizeMaintenanceWorkMem)
                 .build());
 
+        register(ConfigField.stringField("finalizeGinPendingListLimit")
+                .description("SET LOCAL gin_pending_list_limit du finalize ( buffer pending list "
+                        + "des index GIN , flush 1x/batch UPSERT au lieu de N ) . Format Postgres "
+                        + "( ex 128MB ) . S'applique PAR index GIN . Vide = default cluster ( 4MB ) .")
+                .getter(importProperties::getFinalizeGinPendingListLimit)
+                .setter(importProperties::setFinalizeGinPendingListLimit)
+                .build());
+
         // ---- ImportProperties hot enums ----
         register(ConfigField.enumField("sinkStrategy", ImportProperties.SinkStrategy.class)
                 .description("MERGE_FILE = pipeline legacy fichier merge -> storeAll . "

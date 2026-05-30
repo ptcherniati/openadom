@@ -51,17 +51,7 @@ public class InternationalizationDisplay {
             Strings.isNullOrEmpty(displaysName.get(DataColumn.forDisplayName(DataColumn.DEFAULT)).toJsonForFrontend().toString())) {
             String defaultDisplay = dataImporterContext.getNaturalKeyColumns()
                     .stream()
-                    .map(columnName ->
-                            refValues.values().entrySet()
-                                    .stream()
-                                    .filter(entry -> entry.getKey().column().equals(columnName))
-                                    .map(Map.Entry::getValue)
-                                    .map(DataColumnValue::toJsonForFrontend)
-                                    .map(Object::toString)
-                                    .findFirst()
-                                    .orElse("")
-
-                    )
+                    .map(columnName -> lookupDisplayValue(refValues, columnName))
                     .collect(Collectors.joining(AsynchroneFileImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
 
             displaysName.put(DataColumn.forDisplayName(DataColumn.DEFAULT), new DataColumnSingleValue(
@@ -95,17 +85,7 @@ public class InternationalizationDisplay {
             Strings.isNullOrEmpty(displaysDescription.get(DataColumn.forDisplayName(DataColumn.DEFAULT)).toJsonForFrontend().toString())) {
             String defaultDisplay = dataImporterContext.getNaturalKeyColumns()
                     .stream()
-                    .map(columnName ->
-                            refValues.values().entrySet()
-                                    .stream()
-                                    .filter(entry -> entry.getKey().column().equals(columnName))
-                                    .map(Map.Entry::getValue)
-                                    .map(DataColumnValue::toJsonForFrontend)
-                                    .map(Object::toString)
-                                    .findFirst()
-                                    .orElse("")
-
-                    )
+                    .map(columnName -> lookupDisplayValue(refValues, columnName))
                     .collect(Collectors.joining(AsynchroneFileImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
             displaysDescription.put(DataColumn.forDisplayDescription(DataColumn.DEFAULT), new DataColumnSingleValue(
                             StringType.getStringTypeFromStringValue(
@@ -116,6 +96,21 @@ public class InternationalizationDisplay {
 
         }
         return displaysDescription;
+    }
+
+    /**
+     * Recupere la valeur frontend d'une colonne du datum par lookup direct O(1)
+     * sur la map, au lieu d'un scan lineaire filter+findFirst des entrees. La cle
+     * {@link DataColumn} est un record a composant unique : son egalite est
+     * l'egalite de la chaine {@code column}, donc une map ne peut contenir deux
+     * cles equivalentes. Le lookup retourne donc exactement la meme entree que
+     * l'ancien {@code filter(key.column().equals(columnName)).findFirst()}
+     * ( iso-resultat ). Colonne absente -&gt; chaine vide ( comme l'ancien
+     * {@code orElse("")} ).
+     */
+    private static String lookupDisplayValue(final DataDatum refValues, final String columnName) {
+        DataColumnValue value = refValues.values().get(new DataColumn(columnName));
+        return value == null ? "" : value.toJsonForFrontend().toString();
     }
 
     /**

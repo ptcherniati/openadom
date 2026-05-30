@@ -74,6 +74,11 @@ public final class StagingFinalizeSql {
     // Defaut vide = pas d'override ( garde le default cluster ) .
     private static volatile java.util.function.Supplier<String> workMemSupplier            = () -> "";
     private static volatile java.util.function.Supplier<String> maintenanceWorkMemSupplier = () -> "";
+    // gin_pending_list_limit applique en SET LOCAL au finalize . Buffer la
+    // pending list des index GIN ( refValues , refsLinkedTo ) pour flush 1 fois
+    // par batch au lieu de N fois quand le defaut cluster ( 4MB ) sature en plein
+    // batch . S'applique PAR index GIN . Defaut vide = garde le default cluster .
+    private static volatile java.util.function.Supplier<String> ginPendingListLimitSupplier = () -> "";
     // Taille de batch UPSERT , lue a chaud ; defaut = constante JVM-prop ci-dessus .
     private static volatile java.util.function.IntSupplier batchSizeSupplier = () -> BULK_INSERT_BATCH_SIZE;
 
@@ -102,6 +107,9 @@ public final class StagingFinalizeSql {
     }
     public static void setMaintenanceWorkMemSupplier(java.util.function.Supplier<String> s) {
         maintenanceWorkMemSupplier = s != null ? s : () -> "";
+    }
+    public static void setGinPendingListLimitSupplier(java.util.function.Supplier<String> s) {
+        ginPendingListLimitSupplier = s != null ? s : () -> "";
     }
     public static void setBatchSizeSupplier(java.util.function.IntSupplier s) {
         batchSizeSupplier = s != null ? s : () -> BULK_INSERT_BATCH_SIZE;
@@ -405,6 +413,10 @@ public final class StagingFinalizeSql {
         // n'affecte que la vitesse / le plan , jamais les lignes produites ) .
         applyMemorySetLocal(connection, "work_mem", workMemSupplier.get());
         applyMemorySetLocal(connection, "maintenance_work_mem", maintenanceWorkMemSupplier.get());
+        // gin_pending_list_limit : reduit les flush de pending list GIN en plein
+        // batch UPSERT ( 3 index GIN sur referencevalue ) . Iso-resultat : ne
+        // change que le buffer + le moment du flush , pas le contenu de l'index .
+        applyMemorySetLocal(connection, "gin_pending_list_limit", ginPendingListLimitSupplier.get());
 
         // P1a : SET LOCAL synchronous_commit = local . Pendant le finalize ,
         // un crash kernel/disk perdrait au pire l'import en cours ( WAL replay
