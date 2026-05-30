@@ -90,9 +90,28 @@ Configurable (`cascade.import.max-concurrent-global`). 429 si dépassé.
 
 ## PHASE 1 - Infra / résilience (effort moyen)
 
-### [ ] P1-C - Pool Hikari cascade dédié (#308)
-Le finalize import utilise le pool main (partagé HTTP). Burst d'imports → UI starve.
-3e pool (cascade) isolé. **Code-faisable.**
+### [~] P1-C - Pool Hikari cascade dédié (#308) - CONÇU, IMPL DIFFÉRÉE
+> **Analyse de conception faite.** Carte des connexions cascade :
+> - binaryfile INSERT + COPY→staging ( synchrone , dans la tx requête via
+>   `TransactionAwareDataSourceProxy` pour FK-visibility + atomicité ) → **NON déplaçable**.
+> - **finalize deferred** ( UPSERT staging→final , en afterCommit , connexion fraîche
+>   hors tx caller - `TxAwareDeferredRunner` ) → **déplaçable** ( post-commit , atomique
+>   en soi ) . C'est la connexion lourde + longue.
+> **Design retenu** : DataSource à routage tx-aware donné à la cascade —
+> tx active → connexion requête ( inchangé ) ; hors tx ( finalize deferred ) → pool
+> cascade dédié. Isole la connexion lourde SANS toucher l'atomicité. + bean Hikari
+> `cascadePool` configurable ( `SPRING_DATASOURCE_CASCADE_*` ) + métriques Micrometer
+> + remontée oa-live ( affichage / hot-resize MXBean ) .
+> **Impl DIFFÉRÉE** : gain marginal **faible** ( P1-A cap global = 6 imports max →
+> ≤6 connexions finalize sur pool main 30 → HTTP pas starvé ) ; **risque atomicité
+> réel** sur le wrapper ; **PgBouncer** ( infra ) répond mieux au scaling connexions
+> sans toucher le modèle tx. À implémenter SI symptôme réel ( latence HTTP mesurée
+> pendant imports ) . Cf. analyse session 30/05.
+
+### [i] Cohérence pools / max_connections - VÉRIFIÉE OK
+> Pas de sur-souscription : dev = main 15 + streaming 5 = 20 ≤ max_connections 30
+> ( marge 10 ) ; prod = 40 ≤ 150. WAL/checkpoint déjà tunés ( max_wal_size 4GB ,
+> checkpoint_completion_target 0.9 ) . Rien à corriger.
 
 ### [ ] P1-D - max_connections cohérent
 main + streaming + cascade + marge admin ≤ max_connections. Config DB + pools.
