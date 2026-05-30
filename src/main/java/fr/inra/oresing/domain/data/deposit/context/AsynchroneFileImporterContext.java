@@ -45,6 +45,11 @@ public record AsynchroneFileImporterContext(
         ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences,
         ImmutableMap<HkPatternKey, UUID> storedReferencesByHkPattern,
         Map<NaturalKeyPattern, UUID> naturalKeyPatternIndex,
+        // Index O(1) naturalKey -> hierarchicalKey , maintenu en parallele de
+        // afterPreloadReferenceUuids via putAfterPreload . Remplace le scan O(N)
+        // keySet().stream().filter(naturalKey).findFirst() de
+        // WithRecursion.getHierarchicalKey ( O(N^2) sur l'import recursif ) .
+        Map<Ltree, Ltree> naturalKeyToHierarchicalKeyIndex,
         // PERF : prev type was {@code SetMultimap} backed by
         // {@code Multimaps.synchronizedSetMultimap(HashMultimap.create())} which
         // serialized all N parallel transform workers on a global mutex for
@@ -262,11 +267,17 @@ public record AsynchroneFileImporterContext(
         // Mutable ConcurrentHashMap car WithRecursion ajoute des entries
         // pendant la phase transform via putAfterPreload .
         Map<NaturalKeyPattern, UUID> nkIndex = new ConcurrentHashMap<>(storedReferences.size() * 2);
+        Map<Ltree, Ltree> nkToHkIndex = new ConcurrentHashMap<>(storedReferences.size() * 2);
         for (Map.Entry<DataValue.LineIdentityColumnName, UUID> entry : storedReferences.entrySet()) {
             DataValue.LineIdentityColumnName k = entry.getKey();
             nkIndex.putIfAbsent(
                     new NaturalKeyPattern(k.naturalKey(), k.patternColomnName()),
                     entry.getValue());
+            // findFirst historique = match arbitraire ; putIfAbsent ( premier vu )
+            // est deterministe et iso ( meme naturalKey -> meme hierarchicalKey ) .
+            if (k.naturalKey() != null && k.hierarchicalKey() != null) {
+                nkToHkIndex.putIfAbsent(k.naturalKey(), k.hierarchicalKey());
+            }
         }
 
         // Axe A.3 : si recursif + hint fourni , pre-populated lazy loader
@@ -297,6 +308,7 @@ public record AsynchroneFileImporterContext(
                 storedReferences,
                 hkIndex,
                 nkIndex,
+                nkToHkIndex,
                 new ConcurrentHashMap<>(),
                 new HashSet<>(),
                 displayNamesByReferenceAndNaturalKey,
@@ -412,6 +424,11 @@ public record AsynchroneFileImporterContext(
         Map<NaturalKeyPattern, UUID> idx = naturalKeyPatternIndex();
         if (idx != null) {
             idx.put(new NaturalKeyPattern(key.naturalKey(), key.patternColomnName()), value);
+        }
+        Map<Ltree, Ltree> nkToHk = naturalKeyToHierarchicalKeyIndex();
+        if (nkToHk != null && key.naturalKey() != null && key.hierarchicalKey() != null) {
+            // putIfAbsent : premier vu gagne ( = semantique findFirst historique ) .
+            nkToHk.putIfAbsent(key.naturalKey(), key.hierarchicalKey());
         }
     }
 

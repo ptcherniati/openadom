@@ -55,12 +55,23 @@ public record WithRecursion(
 
     @Override
     public Ltree getHierarchicalKey(final Ltree naturalKey, final DataDatum referenceDatum, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
-        Optional<DataValue.LineIdentityColumnName> registerId = dataImporterContext().afterPreloadReferenceUuids().keySet()
-                .stream()
-                .filter(lineIdentityColumnName -> lineIdentityColumnName.naturalKey().equals(naturalKey))
-                .findFirst();
-        if (registerId.isPresent()) {
-            return registerId.get().hierarchicalKey();
+        // Lookup O(1) via l'index naturalKey -> hierarchicalKey ( maintenu par
+        // putAfterPreload ) au lieu du scan O(N) du keySet par ligne ( O(N^2) ) .
+        Map<Ltree, Ltree> nkToHk = dataImporterContext().naturalKeyToHierarchicalKeyIndex();
+        if (nkToHk != null) {
+            Ltree indexed = nkToHk.get(naturalKey);
+            if (indexed != null) {
+                return indexed;
+            }
+        } else {
+            // Fallback defensif ( index absent : contextes pre-fix ) : scan historique .
+            Optional<DataValue.LineIdentityColumnName> registerId = dataImporterContext().afterPreloadReferenceUuids().keySet()
+                    .stream()
+                    .filter(lineIdentityColumnName -> lineIdentityColumnName.naturalKey().equals(naturalKey))
+                    .findFirst();
+            if (registerId.isPresent()) {
+                return registerId.get().hierarchicalKey();
+            }
         }
         String parentType = dataImporterContext()
                 .contextConstants().dataConfiguration()
@@ -166,11 +177,34 @@ public record WithRecursion(
 
     @Override
     public void addKnownIdToReferenceValues(DataValue.LineIdentityColumnName key, UUID uuid) {
+        ImmutableSet<UUID> uuids = ImmutableSet.of(uuid);
+        if (orderedMode) {
+            // Mode ordonne ( mono-thread garanti ) : ajout INCREMENTAL O(1) .
+            // L'ancien chemin reconstruisait toute la map des valeurs connues
+            // + l'index + les special chars a CHAQUE ligne ( setReferenceValues
+            // full ) -> O(N) par ligne -> O(N^2) sur l'import . Ici on ajoute la
+            // seule entree nouvelle a l'accumulateur contexte ( putAfterPreload )
+            // et a l'overlay de chaque ReferenceType self-type ( addReferenceValue ) .
+            // Iso-resultat : base immuable + overlay accumule == ancienne map complete .
+            if (!dataImporterContext().afterPreloadReferenceUuids().containsKey(key)) {
+                addReferenceValuesForSelfType(key, uuids);
+            }
+            for (LineChecker lineChecker : dataImporterContext().transformedLineCheckers()) {
+                if (lineChecker.checkerDescription() instanceof ReferenceChecker referenceChecker && referenceChecker.refType().equals(dataImporterContext().contextConstants().refType())) {
+                    ((ReferenceType) lineChecker.fieldTypeForOne()).addReferenceValue(key, uuids);
+                }
+            }
+            return;
+        }
+        // Mode non-ordonne ( workers paralleles ) : chemin historique full-rebuild .
+        // setReferenceValues remplace atomiquement l'index ( AtomicReference ) , donc
+        // sur thread-safe ; on ne bascule PAS sur l'incremental ( index/specialChars
+        // HashMap/HashSet non thread-safe en ecriture concurrente ) .
         Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValuesForSelfType = getReferenceValuesForSelfType();
         Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = new HashMap<>(referenceValuesForSelfType);
         if (!referenceValues.containsKey(key)) {
-            referenceValues.put(key, ImmutableSet.of(uuid));
-            addReferenceValuesForSelfType(key, ImmutableSet.of(uuid));
+            referenceValues.put(key, uuids);
+            addReferenceValuesForSelfType(key, uuids);
         }
         for (LineChecker lineChecker : dataImporterContext().transformedLineCheckers()) {
             if (lineChecker.checkerDescription() instanceof ReferenceChecker referenceChecker && referenceChecker.refType().equals(dataImporterContext().contextConstants().refType())) {

@@ -162,6 +162,40 @@ class ReferenceTypeTest {
     }
 
     /**
+     * Iso-resultat : l'ajout INCREMENTAL ( addReferenceValue , mode recursif
+     * ordonne ) doit donner exactement les memes resultats de check() que le
+     * rebuild complet historique ( setReferenceValues avec la map entiere ) ,
+     * pour la valeur de base , la valeur ajoutee , et une valeur absente .
+     */
+    @Test
+    @Tag("PERF")
+    void addReferenceValueIsoWithFullSetReferenceValues() {
+        UUID uuidA = UUID.randomUUID();
+        String valA = "geneve";
+        DataValue.LineIdentityColumnName keyA = new DataValue.LineIdentityColumnName(
+                Ltree.fromSql(valA), Ltree.fromSql(valA), "");
+
+        // Chemin historique : rebuild complet ( base + nouvelle entree ) .
+        ReferenceType full = buildReference();
+        full.setReferenceValues(new ImmutableMap.Builder<DataValue.LineIdentityColumnName, ImmutableSet<UUID>>()
+                .putAll(referenceValues)
+                .put(keyA, ImmutableSet.of(uuidA))
+                .build());
+
+        // Nouveau chemin : ajout incremental O(1) de la seule entree nouvelle .
+        ReferenceType incr = buildReference();
+        incr.addReferenceValue(keyA, ImmutableSet.of(uuidA));
+
+        for (String v : java.util.List.of(goodValue, valA, "annecy")) {
+            var rf = (ReferenceValidationCheckResult) full.check(v, checker);
+            var ri = (ReferenceValidationCheckResult) incr.check(v, checker);
+            Assertions.assertEquals(rf.isSuccess(), ri.isSuccess(), "success diverge pour " + v);
+            Assertions.assertEquals(rf.matchedReferenceId(), ri.matchedReferenceId(), "uuid diverge pour " + v);
+            Assertions.assertEquals(rf.matchedReferenceHierarchicalKey(), ri.matchedReferenceHierarchicalKey(), "hk diverge pour " + v);
+        }
+    }
+
+    /**
      * R-P2-2 — setReferenceValues() doit invalider seenOnce et precomputedResults.
      */
     @Test
