@@ -1181,9 +1181,118 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     public Flux<DataRows> findAllByDataTypeFlux(final DownloadDatasetQuery downloadDatasetQuery,
                                                 final org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate template) {
         final SqlRequest sqlRequest = DataRequestBuilder.buildSelectRequest(downloadDatasetQuery);
-        final Stream<DataRows> result = template.queryForStream(
-                sqlRequest.sql(), sqlRequest.parameterSource(), new JsonRowMapper<DataRows>());
+        // Curseur serveur reel ( P5-A ) : on N'utilise PAS queryForStream sur un
+        // template a auto-commit=true , car le driver PG materialise alors TOUT
+        // le resultset en heap avant la 1ere ligne -> OOM sur extract multi-M .
+        // On emprunte une connexion , passe SA auto-commit a false ( requis pour
+        // un curseur serveur PG ) + fetchSize , et on restaure / libere au close
+        // du Stream ( ferme par Flux.fromStream en fin de consommation ) . Portee
+        // STRICTEMENT cette requete : le pool streaming reste auto-commit=true ,
+        // les autres usages ( charte / LO / additional files ) sont inchanges .
+        final Stream<DataRows> result = streamWithServerCursor(
+                template, sqlRequest.sql(), sqlRequest.parameterSource());
         return Flux.<DataRows>fromStream(result);
+    }
+
+    /** Taille de batch du curseur serveur des extracts streaming . */
+    private static final int STREAM_FETCH_SIZE = 2000;
+
+    /**
+     * Ouvre un curseur serveur PostgreSQL pour une requete a parametres nommes
+     * et l'expose en {@link Stream} a memoire constante . La connexion est
+     * empruntee au pool du {@code template} , passee en {@code auto-commit=false}
+     * ( indispensable au curseur ) , et entierement liberee dans {@code onClose}
+     * ( RS + statement fermes , rollback de la tx read-only , auto-commit
+     * restaure , connexion rendue au pool ) . {@link reactor.core.publisher.Flux#fromStream}
+     * appelle {@code close()} en fin / annulation , donc la consommation HTTP
+     * normale libere la connexion .
+     */
+    private Stream<DataRows> streamWithServerCursor(
+            final org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate template,
+            final String namedSql,
+            final org.springframework.jdbc.core.namedparam.SqlParameterSource paramSource) {
+        final javax.sql.DataSource ds = template.getJdbcTemplate().getDataSource();
+        if (ds == null) {
+            throw new IllegalStateException("streamWithServerCursor : DataSource du template streaming introuvable");
+        }
+        final org.springframework.jdbc.core.namedparam.ParsedSql parsed =
+                org.springframework.jdbc.core.namedparam.NamedParameterUtils.parseSqlStatement(namedSql);
+        final String sql = org.springframework.jdbc.core.namedparam.NamedParameterUtils
+                .substituteNamedParameters(parsed, paramSource);
+        final Object[] values = org.springframework.jdbc.core.namedparam.NamedParameterUtils
+                .buildValueArray(parsed, paramSource, null);
+        final java.util.List<org.springframework.jdbc.core.SqlParameter> declared =
+                org.springframework.jdbc.core.namedparam.NamedParameterUtils.buildSqlParameterList(parsed, paramSource);
+        final org.springframework.jdbc.core.PreparedStatementCreatorFactory pscf =
+                new org.springframework.jdbc.core.PreparedStatementCreatorFactory(sql, declared);
+        pscf.setResultSetType(java.sql.ResultSet.TYPE_FORWARD_ONLY);
+        pscf.setUpdatableResults(false);
+        final org.springframework.jdbc.core.PreparedStatementCreator psc = pscf.newPreparedStatementCreator(values);
+
+        java.sql.Connection con = null;
+        java.sql.PreparedStatement ps = null;
+        java.sql.ResultSet rs = null;
+        boolean prevAutoCommit = true;
+        boolean ok = false;
+        try {
+            con = ds.getConnection();
+            prevAutoCommit = con.getAutoCommit();
+            con.setAutoCommit(false);
+            ps = psc.createPreparedStatement(con);
+            ps.setFetchSize(STREAM_FETCH_SIZE);
+            rs = ps.executeQuery();
+
+            final java.sql.Connection fCon = con;
+            final java.sql.PreparedStatement fPs = ps;
+            final java.sql.ResultSet fRs = rs;
+            final boolean fPrev = prevAutoCommit;
+            final JsonRowMapper<DataRows> mapper = new JsonRowMapper<>();
+            final java.util.Iterator<DataRows> it = new java.util.Iterator<>() {
+                private int rowNum = 0;
+                private Boolean hasNext;
+                @Override public boolean hasNext() {
+                    try {
+                        if (hasNext == null) hasNext = fRs.next();
+                        return hasNext;
+                    } catch (java.sql.SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                @Override public DataRows next() {
+                    try {
+                        if (hasNext == null) hasNext = fRs.next();
+                        if (!hasNext) throw new java.util.NoSuchElementException();
+                        hasNext = null;
+                        return mapper.mapRow(fRs, rowNum++);
+                    } catch (java.sql.SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            };
+            ok = true;
+            return java.util.stream.StreamSupport.stream(
+                            java.util.Spliterators.spliteratorUnknownSize(
+                                    it, java.util.Spliterator.ORDERED), false)
+                    .onClose(() -> closeCursorQuietly(fRs, fPs, fCon, fPrev));
+        } catch (java.sql.SQLException e) {
+            throw new RuntimeException("streamWithServerCursor : ouverture curseur echouee", e);
+        } finally {
+            if (!ok) {
+                closeCursorQuietly(rs, ps, con, prevAutoCommit);
+            }
+        }
+    }
+
+    /** Liberation idempotente du curseur + retour de la connexion au pool . */
+    private void closeCursorQuietly(java.sql.ResultSet rs, java.sql.PreparedStatement ps,
+                                    java.sql.Connection con, boolean prevAutoCommit) {
+        if (rs != null) try { rs.close(); } catch (java.sql.SQLException ignored) { /* best effort */ }
+        if (ps != null) try { ps.close(); } catch (java.sql.SQLException ignored) { /* best effort */ }
+        if (con != null) {
+            try { con.rollback(); } catch (java.sql.SQLException ignored) { /* read-only : libere la tx curseur */ }
+            try { con.setAutoCommit(prevAutoCommit); } catch (java.sql.SQLException ignored) { /* best effort */ }
+            try { con.close(); } catch (java.sql.SQLException ignored) { /* retour pool Hikari */ }
+        }
     }
 
     public Flux<FilterList> getFilterList(final String dataName) {

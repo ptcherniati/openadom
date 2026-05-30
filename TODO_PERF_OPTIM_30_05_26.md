@@ -30,16 +30,14 @@ reset ; mvn clean ; mvn --batch-mode test -Pall-tests -Dsurefire.excludedGroups=
 
 ## PHASE 0 - Quick wins (faible risque, gros ROI, iso, indépendants)
 
-### [~] P5-A - Vrai curseur streaming sur l'extract (🔴 anti-OOM download) - REVERTÉ, À REFAIRE CHIRURGICAL
-> 1ère tentative ( pool streaming `auto-commit=false` + `defaultRowFetchSize` ) a causé
-> **195 échecs full-suite** (115F+80E) - prouvé par baseline 0/0 vs P5-A-seul 115/80.
-> Cause : flipper auto-commit sur TOUT le pool streaming casse la sémantique tx des autres
-> usages (charte, additional files, fixtures de test) → connexions en tx ouverte non drainées
-> → cascade. **Reverté** (streaming = baseline exact).
-> **À refaire chirurgical** : curseur par-requête sur la SEULE query d'extract volumineuse,
-> via le chemin `ConnectionCallback` setAutoCommit(false)+fetchSize+restore qui existe déjà
-> (`DataRepository` L201-319), SANS toucher le pool. Réécrire `findAllByDataTypeFlux` pour
-> router sur ce chemin. Nécessite son propre cycle de test.
+### [x] P5-A - Vrai curseur streaming sur l'extract (🔴 anti-OOM download) - FAIT CHIRURGICAL
+> v1 ( pool `auto-commit=false` pool-wide ) cassait 195 tests → reverté.
+> **v2 chirurgical** : `DataRepository.streamWithServerCursor` - emprunte UNE connexion,
+> `auto-commit=false` + `fetchSize=2000` pour CETTE requête ( curseur serveur PG, mémoire
+> constante ), libère tout au `close()` du Stream ( RS + stmt + rollback read-only +
+> auto-commit restauré + connexion rendue au pool ). `findAllByDataTypeFlux` routé dessus.
+> Portée stricte : le pool streaming reste auto-commit=true, charte/LO/additional inchangés.
+> **Full-suite : 4342 tests, 0F/0E** ( vs v1 = 115F/80E ) → zéro régression. OOM extract éliminé.
 **Problème** : `spring.datasource.streaming.hikari.auto-commit=true` + aucun `fetchSize`
 → le driver PG rapatrie TOUT le resultset en heap avant la 1ère ligne → OOM à 5-10M.
 Le `Flux<DataRow>` itère un resultset déjà matérialisé (faux streaming).
