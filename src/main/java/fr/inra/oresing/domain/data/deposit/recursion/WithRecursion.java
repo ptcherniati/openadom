@@ -177,39 +177,21 @@ public record WithRecursion(
 
     @Override
     public void addKnownIdToReferenceValues(DataValue.LineIdentityColumnName key, UUID uuid) {
+        // Ajout INCREMENTAL O(1) ( les 2 modes ) . L'ancien chemin reconstruisait
+        // toute la map des valeurs connues + l'index + les special chars et
+        // re-poussait via setReferenceValues a CHAQUE ligne -> O(N) par ligne ->
+        // O(N^2) sur l'import . Ici : la seule entree nouvelle dans l'accumulateur
+        // contexte ( putAfterPreload ) + l'overlay de chaque ReferenceType self-type
+        // ( addReferenceValue , thread-safe : overlay + index + specialChars
+        // concurrents ) . Iso-resultat : base immuable + overlay accumule ==
+        // ancienne map complete ( cf ReferenceTypeTest.addReferenceValueIso... ) .
         ImmutableSet<UUID> uuids = ImmutableSet.of(uuid);
-        if (orderedMode) {
-            // Mode ordonne ( mono-thread garanti ) : ajout INCREMENTAL O(1) .
-            // L'ancien chemin reconstruisait toute la map des valeurs connues
-            // + l'index + les special chars a CHAQUE ligne ( setReferenceValues
-            // full ) -> O(N) par ligne -> O(N^2) sur l'import . Ici on ajoute la
-            // seule entree nouvelle a l'accumulateur contexte ( putAfterPreload )
-            // et a l'overlay de chaque ReferenceType self-type ( addReferenceValue ) .
-            // Iso-resultat : base immuable + overlay accumule == ancienne map complete .
-            if (!dataImporterContext().afterPreloadReferenceUuids().containsKey(key)) {
-                addReferenceValuesForSelfType(key, uuids);
-            }
-            for (LineChecker lineChecker : dataImporterContext().transformedLineCheckers()) {
-                if (lineChecker.checkerDescription() instanceof ReferenceChecker referenceChecker && referenceChecker.refType().equals(dataImporterContext().contextConstants().refType())) {
-                    ((ReferenceType) lineChecker.fieldTypeForOne()).addReferenceValue(key, uuids);
-                }
-            }
-            return;
-        }
-        // Mode non-ordonne ( workers paralleles ) : chemin historique full-rebuild .
-        // setReferenceValues remplace atomiquement l'index ( AtomicReference ) , donc
-        // sur thread-safe ; on ne bascule PAS sur l'incremental ( index/specialChars
-        // HashMap/HashSet non thread-safe en ecriture concurrente ) .
-        Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValuesForSelfType = getReferenceValuesForSelfType();
-        Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = new HashMap<>(referenceValuesForSelfType);
-        if (!referenceValues.containsKey(key)) {
-            referenceValues.put(key, uuids);
+        if (!dataImporterContext().afterPreloadReferenceUuids().containsKey(key)) {
             addReferenceValuesForSelfType(key, uuids);
         }
         for (LineChecker lineChecker : dataImporterContext().transformedLineCheckers()) {
             if (lineChecker.checkerDescription() instanceof ReferenceChecker referenceChecker && referenceChecker.refType().equals(dataImporterContext().contextConstants().refType())) {
-                ReferenceType fieldType = (ReferenceType) lineChecker.fieldTypeForOne();
-                fieldType.setReferenceValues(ImmutableMap.copyOf(referenceValues));
+                ((ReferenceType) lineChecker.fieldTypeForOne()).addReferenceValue(key, uuids);
             }
         }
     }

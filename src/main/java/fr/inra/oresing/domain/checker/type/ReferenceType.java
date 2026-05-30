@@ -38,7 +38,13 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
     ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues;
     Ltree value;
     DataValue.LineIdentityColumnName lineIdentityColumnName;
-    private Set<String> knownSpecialCharacters = new HashSet<>();
+    // Set concurrent : alimente incrementalement par addReferenceValue ( import
+    // recursif , potentiellement multi-worker ) + lu par check() . newKeySet =
+    // iteration weakly-consistent ( pas de ConcurrentModificationException ) .
+    private Set<String> knownSpecialCharacters = ConcurrentHashMap.newKeySet();
+
+    /** Regex precompile ( evitait un Pattern.compile par cle dans le hot path ) . */
+    private static final java.util.regex.Pattern SINGLE_UPPERCASE = java.util.regex.Pattern.compile("[A-Z]");
 
     // ─── R-P2-1 : index O(1) naturalKey → LineIdentityColumnName ──────────────
     // Construit une seule fois dans le constructeur original.
@@ -87,6 +93,9 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
         this.precomputedResults = new ConcurrentHashMap<>();
         this.incrementalReferenceValues = new ConcurrentHashMap<>();
         buildNaturalKeyIndex(referenceValues);
+        // Base special chars construite une fois ici ( les ajouts ulterieurs
+        // passent par addReferenceValue -> addKnownSpecialCharacters incremental ) .
+        buildKnownSpecialCharacters(referenceValues);
         // TRANSFORM iter2 #1 : partager l'index avec les copies ; pas de rebuild .
         clone = () -> new ReferenceType(target, refType, referenceValues, transformer,
                 this.lineIdentityColumnName, this.seenOnce, this.precomputedResults,
@@ -182,7 +191,7 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
     /** Variante incrementale de {@link #buildKnownSpecialCharacters} pour UNE naturalKey . */
     private void addKnownSpecialCharacters(Ltree naturalKey) {
         String nk = naturalKey.getSql();
-        if (nk.matches("[A-Z]")) {
+        if (SINGLE_UPPERCASE.matcher(nk).matches()) {
             knownSpecialCharacters.addAll(getSpecialCharacters(nk));
         }
     }
@@ -193,7 +202,9 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
      * dans {@link #check}. Rebuild complet à chaque appel de setReferenceValues.
      */
     private void buildNaturalKeyIndex(ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues) {
-        Map<Ltree, DataValue.LineIdentityColumnName> index = HashMap.newHashMap(referenceValues.size() * 2);
+        // ConcurrentHashMap : addReferenceValue ( import recursif ) peut y inserer
+        // de maniere incrementale pendant que check() lit ; thread-safe sans verrou .
+        Map<Ltree, DataValue.LineIdentityColumnName> index = new ConcurrentHashMap<>(referenceValues.size() * 2);
         for (DataValue.LineIdentityColumnName key : referenceValues.keySet()) {
             index.put(key.naturalKey(), key);
         }
@@ -201,13 +212,18 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
     }
 
     private void buildKnownSpecialCharacters(ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues) {
-        this.knownSpecialCharacters = referenceValues.keySet().stream()
+        // Nouveau set concurrent assigne atomiquement ( la reference du champ
+        // n'est pas final ) ; les lecteurs voient l'ancien ou le nouveau , jamais
+        // un etat partiel . Garde le champ en set concurrent pour les ajouts
+        // incrementaux ulterieurs ( addKnownSpecialCharacters ) .
+        Set<String> rebuilt = ConcurrentHashMap.newKeySet();
+        referenceValues.keySet().stream()
                 .map(DataValue.LineIdentityColumnName::naturalKey)
                 .map(Ltree::getSql)
-                .filter(naturalKey -> naturalKey.matches("[A-Z]"))
+                .filter(naturalKey -> SINGLE_UPPERCASE.matcher(naturalKey).matches())
                 .map(this::getSpecialCharacters)
-                .flatMap(Set::stream)
-                .collect(Collectors.toSet());
+                .forEach(rebuilt::addAll);
+        this.knownSpecialCharacters = rebuilt;
     }
 
     private Set<String> getSpecialCharacters(String naturalKey) {

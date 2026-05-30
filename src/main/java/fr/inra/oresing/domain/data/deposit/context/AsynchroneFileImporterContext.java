@@ -370,17 +370,24 @@ public record AsynchroneFileImporterContext(
         // sans maintenir l'index ) , fallback sur scan O(N) defensif .
         Map<NaturalKeyPattern, UUID> idx = naturalKeyPatternIndex();
         if (idx != null) {
+            // Index autoritatif ( pre-rempli depuis storedReferences + maintenu
+            // par putAfterPreload ) : un hit -> retour O(1) , un MISS = la cle est
+            // vraiment absente -> on NE scanne PAS . L'ancien scan O(N) du entrySet
+            // sur chaque miss ( = chaque nouvelle ligne ) etait O(N^2) sur l'import .
+            // On tombe directement sur le lazy loader DB ( import incremental ) .
             UUID hit = idx.get(new NaturalKeyPattern(naturalKey, patternColumnName));
             if (hit != null) return Optional.of(hit);
-        }
-        Optional<UUID> scanHit = afterPreloadReferenceUuids().entrySet().stream()
-                .filter(entry -> entry.getKey().naturalKey().equals(naturalKey) &&
-                                 entry.getKey().patternColomnName().equals(patternColumnName)
-                )
-                .map(Map.Entry::getValue)
-                .findFirst();
-        if (scanHit.isPresent()) {
-            return scanHit;
+        } else {
+            // Index absent ( contexte legacy pre-fix ) : scan defensif O(N) .
+            Optional<UUID> scanHit = afterPreloadReferenceUuids().entrySet().stream()
+                    .filter(entry -> entry.getKey().naturalKey().equals(naturalKey) &&
+                                     entry.getKey().patternColomnName().equals(patternColumnName)
+                    )
+                    .map(Map.Entry::getValue)
+                    .findFirst();
+            if (scanHit.isPresent()) {
+                return scanHit;
+            }
         }
         // Axe A.3 : fallback lazy DB lookup pour le cas incremental
         // import ou un parent existe deja en BDD mais n'etait pas dans
