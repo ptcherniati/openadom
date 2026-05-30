@@ -32,7 +32,7 @@ class StrategyOptionsResolverTest {
                 new ConfigFieldRegistryTest.FakePoolReloader();
         fr.inra.oresing.workflow.cascade.ImportRateLimiter importRl =
                 new fr.inra.oresing.workflow.cascade.ImportRateLimiter(
-                        3, null, null, null);
+                        3, 6, null, null, null);
         fr.inra.oresing.workflow.cascade.ExtractionRateLimiter extractionRl =
                 new fr.inra.oresing.workflow.cascade.ExtractionRateLimiter(
                         5, 0L, null, null, null);

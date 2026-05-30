@@ -35,8 +35,9 @@ class ImportRateLimiterTest {
         metrics = mock(OpenadomMetrics.class);
         logWriter = mock(WorkflowLogWriter.class);
         authService = mock(AuthenticationService.class);
-        // max 2 imports concurrents par utilisateur pour les tests
-        rateLimiter = new ImportRateLimiter(2, metrics, logWriter, authService);
+        // max 2 imports/user , global large ( 100 ) pour ne pas interferer avec
+        // les tests per-user .
+        rateLimiter = new ImportRateLimiter(2, 100, metrics, logWriter, authService);
         // resolveCurrentLogin() appelle authService.getCurrentUserRoles().userLogin()
         // Le try/catch dans la méthode intercepte RuntimeException, on peut lancer
         Mockito.doThrow(new RuntimeException("no user context in test"))
@@ -60,8 +61,58 @@ class ImportRateLimiterTest {
         @Test
         @DisplayName("max = 1 est valide")
         void maxOneIsValid() {
-            ImportRateLimiter rl = new ImportRateLimiter(1, metrics, logWriter, authService);
+            ImportRateLimiter rl = new ImportRateLimiter(1, 100, metrics, logWriter, authService);
             assertThat(rl.getMaxConcurrentPerUser()).isEqualTo(1);
+        }
+    }
+
+    // ------------------------------------------------------------------ //
+    //  Plafond global ( tous utilisateurs confondus )                     //
+    // ------------------------------------------------------------------ //
+
+    @Nested
+    @DisplayName("Plafond global")
+    class GlobalCapTest {
+
+        @Test
+        @DisplayName("le cap global rejette au-dela de N imports tous users confondus")
+        void globalCapRejectsAcrossUsers() {
+            // per-user large ( 10 ) , global = 2 : le 3e import ( meme user different )
+            // doit etre rejete par le plafond global .
+            ImportRateLimiter rl = new ImportRateLimiter(10, 2, metrics, logWriter, authService);
+            Mockito.doThrow(new RuntimeException("no user context"))
+                    .when(authService).getCurrentUserRoles();
+
+            rl.acquireOrThrow("u1");
+            rl.acquireOrThrow("u2");
+            assertThatThrownBy(() -> rl.acquireOrThrow("u3"))
+                    .isInstanceOf(ImportRateLimitExceededException.class);
+
+            // apres release d'un slot global , une nouvelle acquisition repasse .
+            rl.release("u1");
+            assertDoesNotThrow(() -> rl.acquireOrThrow("u3"));
+            rl.release("u2");
+            rl.release("u3");
+        }
+
+        @Test
+        @DisplayName("le slot per-user est relache si le plafond global rejette")
+        void perUserSlotReleasedOnGlobalReject() {
+            // global=1 : u1 prend le seul slot global . u2 est rejete globalement ;
+            // son slot per-user ne doit PAS rester bloque -> apres release de u1 ,
+            // u2 peut acquerir .
+            ImportRateLimiter rl = new ImportRateLimiter(10, 1, metrics, logWriter, authService);
+            Mockito.doThrow(new RuntimeException("no user context"))
+                    .when(authService).getCurrentUserRoles();
+
+            rl.acquireOrThrow("u1");
+            assertThatThrownBy(() -> rl.acquireOrThrow("u2"))
+                    .isInstanceOf(ImportRateLimitExceededException.class);
+            // u2 n'apparait pas comme occupant un slot ( per-user relache ) .
+            assertThat(rl.snapshotUsedSlots()).doesNotContainKey("u2");
+            rl.release("u1");
+            assertDoesNotThrow(() -> rl.acquireOrThrow("u2"));
+            rl.release("u2");
         }
     }
 

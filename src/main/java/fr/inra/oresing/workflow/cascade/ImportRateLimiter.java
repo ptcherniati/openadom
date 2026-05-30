@@ -38,21 +38,30 @@ public class ImportRateLimiter {
 
     private final Map<String, Semaphore> userSlots = new ConcurrentHashMap<>();
     private volatile int                 maxConcurrentPerUser;
+    // Plafond GLOBAL ( tous utilisateurs confondus ) : filet anti-meltdown a
+    // 10 users . Sans lui , 10 users x quota per-user = N imports lourds 5-10M
+    // simultanes -> saturation CPU / IO / connexions . Fixe au demarrage
+    // ( config ) ; un import qui le depasse est rejete 429 ( comme per-user ) .
+    private final int                    maxConcurrentGlobal;
+    private final Semaphore              globalSlots;
     private final OpenadomMetrics       metrics;
     private final WorkflowLogWriter     logWriter;
     private final AuthenticationService authenticationService;
 
     public ImportRateLimiter(
             @Value("${cascade.import.max-concurrent-per-user:3}") final int maxConcurrentPerUser,
+            @Value("${cascade.import.max-concurrent-global:6}") final int maxConcurrentGlobal,
             OpenadomMetrics metrics,
             WorkflowLogWriter logWriter,
             AuthenticationService authenticationService) {
         this.maxConcurrentPerUser  = maxConcurrentPerUser;
+        this.maxConcurrentGlobal   = Math.max(1, maxConcurrentGlobal);
+        this.globalSlots           = new Semaphore(this.maxConcurrentGlobal, true);
         this.metrics               = metrics;
         this.logWriter             = logWriter;
         this.authenticationService = authenticationService;
-        log.info("ImportRateLimiter ready : max {} imports concurrents par utilisateur",
-                maxConcurrentPerUser);
+        log.info("ImportRateLimiter ready : max {} imports/user , max {} imports globaux",
+                maxConcurrentPerUser, this.maxConcurrentGlobal);
     }
 
     /**
@@ -86,6 +95,17 @@ public class ImportRateLimiter {
             metrics.recordImportRateLimited();
             logRejection(userId);
             throw new ImportRateLimitExceededException(userId, active, maxConcurrentPerUser);
+        }
+        // Plafond GLOBAL : pris APRES le per-user . S'il est atteint , on relache
+        // le slot per-user deja acquis ( sinon il resterait bloque ) et on rejette .
+        if (!globalSlots.tryAcquire()) {
+            sem.release();
+            int activeGlobal = maxConcurrentGlobal - globalSlots.availablePermits();
+            log.warn("Quota GLOBAL d'imports atteint : {}/{} ( demande user {} )",
+                    activeGlobal, maxConcurrentGlobal, userId);
+            metrics.recordImportRateLimited();
+            logRejection(userId);
+            throw new ImportRateLimitExceededException(userId, activeGlobal, maxConcurrentGlobal);
         }
     }
 
@@ -138,6 +158,10 @@ public class ImportRateLimiter {
         if (userId == null) {
             return;
         }
+        // Relache le slot GLOBAL ( pris dans acquireOrThrow apres le per-user ) .
+        // Appele uniquement apres un acquire reussi ( try/finally cote caller ) ,
+        // donc l'appairage acquire/release du semaphore global est respecte .
+        globalSlots.release();
         userSlots.compute(userId, (uid, sem) -> {
             if (sem == null) {
                 return null;
