@@ -37,9 +37,27 @@ public class MaintenanceModeService {
 
     private final Path flagPath;
 
+    /**
+     * Drapeau « accès admin autorisé en maintenance » , voisin du drapeau
+     * principal. Présent => le reverse-proxy laisse passer les requêtes
+     * porteuses du cookie de contournement ( {@link #getBypassSecret()} ) ;
+     * absent => blocage total sauf routes exemptées.
+     */
+    private final Path adminBypassFlagPath;
+    /**
+     * Secret partagé backend <-> proxy ( même valeur via la variable
+     * d'environnement {@code OPENADOM_MAINTENANCE_BYPASS_SECRET} ) . Le backend
+     * le pose comme valeur du cookie {@code oa_maint_bypass} ; nginx compare le
+     * cookie reçu à ce secret . Vide => contournement inopérant.
+     */
+    private final String bypassSecret;
+
     public MaintenanceModeService(
-            @Value("${openadom.maintenance.flag-path:/maintenance/maintenance.flag}") String flagPath) {
+            @Value("${openadom.maintenance.flag-path:/maintenance/maintenance.flag}") String flagPath,
+            @Value("${openadom.maintenance.bypass-secret:}") String bypassSecret) {
         this.flagPath = Path.of(flagPath);
+        this.adminBypassFlagPath = this.flagPath.resolveSibling("maintenance-allow-admins.flag");
+        this.bypassSecret = bypassSecret == null ? "" : bypassSecret.strip();
     }
 
     /** @return {@code true} si le mode maintenance est actif ( drapeau présent ). */
@@ -47,11 +65,28 @@ public class MaintenanceModeService {
         return Files.exists(flagPath);
     }
 
+    /** @return {@code true} si l'accès admin ( cookie de contournement ) est autorisé. */
+    public boolean isAdminBypassEnabled() {
+        return Files.exists(adminBypassFlagPath);
+    }
+
+    /**
+     * Secret du cookie de contournement ( valeur à poser dans le cookie
+     * {@code oa_maint_bypass} ) , ou chaîne vide si non configuré.
+     */
+    public String getBypassSecret() {
+        return bypassSecret;
+    }
+
     /**
      * Active la maintenance : crée le drapeau ( + le répertoire parent au besoin ).
      * Idempotent. Écrit un horodatage + une raison optionnelle, à titre de trace.
+     *
+     * @param allowAdmins {@code true} : pose aussi le drapeau d'accès admin
+     *                    ( le proxy laisse passer le cookie de contournement ) ;
+     *                    {@code false} : le retire ( blocage total ) .
      */
-    public void enable(String reason) {
+    public void enable(String reason, boolean allowAdmins) {
         try {
             Path parent = flagPath.getParent();
             if (parent != null) {
@@ -59,21 +94,37 @@ public class MaintenanceModeService {
             }
             String payload = "enabled_at=" + Instant.now()
                     + (reason != null && !reason.isBlank() ? "\nreason=" + reason.strip() : "")
+                    + "\nallow_admins=" + allowAdmins
                     + "\n";
             Files.writeString(flagPath, payload, StandardCharsets.UTF_8);
-            log.warn("Mode maintenance ACTIVÉ ( drapeau {} )", flagPath);
+            setAdminBypass(allowAdmins);
+            log.warn("Mode maintenance ACTIVÉ ( drapeau {} , accès admin={} )", flagPath, allowAdmins);
         } catch (IOException e) {
             throw new UncheckedIOException("Impossible d'activer le mode maintenance ( écriture " + flagPath + " )", e);
         }
     }
 
-    /** Désactive la maintenance : supprime le drapeau. Idempotent. */
+    /** Désactive la maintenance : supprime les deux drapeaux. Idempotent. */
     public void disable() {
         try {
             boolean removed = Files.deleteIfExists(flagPath);
+            Files.deleteIfExists(adminBypassFlagPath);
             log.warn("Mode maintenance DÉSACTIVÉ ( drapeau {} , supprimé={} )", flagPath, removed);
         } catch (IOException e) {
             throw new UncheckedIOException("Impossible de désactiver le mode maintenance ( suppression " + flagPath + " )", e);
+        }
+    }
+
+    /** Pose ( true ) ou retire ( false ) le drapeau d'accès admin. Idempotent. */
+    private void setAdminBypass(boolean allow) throws IOException {
+        if (allow) {
+            if (bypassSecret.isEmpty()) {
+                log.warn("Accès admin en maintenance demandé mais OPENADOM_MAINTENANCE_BYPASS_SECRET est vide "
+                        + "- le cookie de contournement ne pourra pas être validé par le proxy.");
+            }
+            Files.writeString(adminBypassFlagPath, "enabled_at=" + Instant.now() + "\n", StandardCharsets.UTF_8);
+        } else {
+            Files.deleteIfExists(adminBypassFlagPath);
         }
     }
 }

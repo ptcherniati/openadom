@@ -19,7 +19,11 @@ class MaintenanceModeServiceTest {
     Path tmp;
 
     private MaintenanceModeService serviceOn(Path flag) {
-        return new MaintenanceModeService(flag.toString());
+        return new MaintenanceModeService(flag.toString(), "test-secret");
+    }
+
+    private Path adminFlagOf(Path flag) {
+        return flag.resolveSibling("maintenance-allow-admins.flag");
     }
 
     @Test
@@ -28,7 +32,7 @@ class MaintenanceModeServiceTest {
         MaintenanceModeService service = serviceOn(flag);
 
         assertFalse(service.isEnabled());
-        service.enable("bench");
+        service.enable("bench", false);
         assertTrue(service.isEnabled());
         assertTrue(Files.exists(flag));
         service.disable();
@@ -41,7 +45,7 @@ class MaintenanceModeServiceTest {
         Path flag = tmp.resolve("nested/dir/maintenance.flag");
         MaintenanceModeService service = serviceOn(flag);
 
-        service.enable(null);
+        service.enable(null, false);
         assertTrue(service.isEnabled());
         assertTrue(Files.exists(flag));
     }
@@ -51,12 +55,41 @@ class MaintenanceModeServiceTest {
         Path flag = tmp.resolve("maintenance.flag");
         MaintenanceModeService service = serviceOn(flag);
 
-        service.enable("once");
-        service.enable("twice"); // ne doit pas échouer
+        service.enable("once", false);
+        service.enable("twice", false); // ne doit pas échouer
         assertTrue(service.isEnabled());
 
         service.disable();
         service.disable(); // suppression d'un drapeau déjà absent : no-op
         assertFalse(service.isEnabled());
+    }
+
+    @Test
+    void allow_admins_creates_then_clears_the_bypass_flag() {
+        Path flag = tmp.resolve("maintenance.flag");
+        MaintenanceModeService service = serviceOn(flag);
+
+        // Activation avec accès admin : le drapeau de contournement est posé.
+        service.enable("upgrade", true);
+        assertTrue(service.isAdminBypassEnabled());
+        assertTrue(Files.exists(adminFlagOf(flag)));
+
+        // Réactivation sans accès admin : le drapeau de contournement est retiré.
+        service.enable("upgrade", false);
+        assertFalse(service.isAdminBypassEnabled());
+        assertFalse(Files.exists(adminFlagOf(flag)));
+
+        // Activation admin puis désactivation totale : les deux drapeaux partent.
+        service.enable("upgrade", true);
+        assertTrue(service.isAdminBypassEnabled());
+        service.disable();
+        assertFalse(service.isEnabled());
+        assertFalse(service.isAdminBypassEnabled());
+    }
+
+    @Test
+    void bypass_secret_is_exposed() {
+        Path flag = tmp.resolve("maintenance.flag");
+        assertTrue("test-secret".equals(serviceOn(flag).getBypassSecret()));
     }
 }
