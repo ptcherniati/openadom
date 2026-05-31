@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -41,11 +42,36 @@ public class AdminTestResources {
 
     private final MailTestService mailTestService;
     private final FileSenderTestService fileSenderTestService;
+    private final String mailFrom;
+    private final String fileSenderUser;
+    private final String fileSenderBaseUrl;
 
     public AdminTestResources(MailTestService mailTestService,
-                              FileSenderTestService fileSenderTestService) {
+                              FileSenderTestService fileSenderTestService,
+                              @Value("${spring.mail.from:openadom@inrae.fr}") String mailFrom,
+                              @Value("${filesender.username:}") String fileSenderUser,
+                              @Value("${filesender.baseurl:}") String fileSenderBaseUrl) {
         this.mailTestService = mailTestService;
         this.fileSenderTestService = fileSenderTestService;
+        this.mailFrom = mailFrom;
+        this.fileSenderUser = fileSenderUser;
+        this.fileSenderBaseUrl = fileSenderBaseUrl;
+    }
+
+    /**
+     * Expéditeur effectif des intégrations ( affiché en lecture seule dans
+     * l'IHM admin pour confirmer la config ) : {@code from} SMTP +
+     * compte / URL FileSender .
+     */
+    public record SenderInfo(String mailFrom, String fileSenderUser, String fileSenderBaseUrl) {
+    }
+
+    @Operation(summary = "Expéditeur effectif ( SMTP + FileSender )")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
+    @GetMapping("/sender-info")
+    public ResponseEntity<SenderInfo> senderInfo() {
+        return ResponseEntity.ok(new SenderInfo(mailFrom, fileSenderUser, fileSenderBaseUrl));
     }
 
     @Operation(summary = "Valeurs par defaut pour le test mail")
