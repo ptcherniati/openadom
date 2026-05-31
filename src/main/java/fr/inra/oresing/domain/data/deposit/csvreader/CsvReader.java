@@ -68,9 +68,19 @@ public class CsvReader {
     }
 
     /**
-     * Étant donné les clé hiérarchiques qu'on a rencontré (normalement une seule par ligne), vérifie s'il y a des doublons et calcul des erreurs le cas échéant
+     * Étant donné les clé hiérarchiques qu'on a rencontré (normalement une seule par ligne), vérifie s'il y a des doublons et calcul des erreurs le cas échéant.
+     *
+     * <p>Le nombre d'erreurs de doublon remontées est borné par {@code maxErrors}
+     * ( cf {@code cascade.import.max-errors-threshold} ) : sans cette borne , un
+     * fichier truffé de doublons ( ex référentiel récursif avec clé naturelle sous-
+     * spécifiée ) génère des dizaines de milliers d'objets erreur en mémoire JVM
+     * + noie l'utilisateur + alourdit le mail . Borne appliquée par clé ET au total
+     * pour couvrir aussi le cas d'une clé unique avec un très grand nombre de
+     * collisions ( explosion N² ) . Iso-verdict : l'import reste rejeté , seul le
+     * volume d'erreurs remontées est plafonné . {@code maxErrors <= 0} = pas de borne.
      */
-    public Set<CsvRowValidationCheckResult> getHierarchicalKeysConflictErrors(final Map<Ltree, Set<Long>> hierarchicalKeys) {
+    public Set<CsvRowValidationCheckResult> getHierarchicalKeysConflictErrors(final Map<Ltree, Set<Long>> hierarchicalKeys, final int maxErrors) {
+        final long cap = maxErrors > 0 ? maxErrors : Long.MAX_VALUE;
         return hierarchicalKeys.entrySet().stream()
                 .filter(entry -> entry.getValue().size() > 1)
                 .flatMap(entry -> {
@@ -78,8 +88,12 @@ public class CsvReader {
                     // pour reutiliser buildCsvRowValidationCheckResult sans casser sa signature .
                     Map.Entry<Ltree, Collection<Long>> adapted =
                             new AbstractMap.SimpleImmutableEntry<>(entry.getKey(), entry.getValue());
-                    return buildCsvRowValidationCheckResult().apply(adapted);
+                    // .limit(cap) par clé : une seule clé avec N collisions ne génère
+                    // pas N-1 objets erreur ( le flatMap externe ne court-circuite pas
+                    // le sous-flux ) .
+                    return buildCsvRowValidationCheckResult().apply(adapted).limit(cap);
                 })
+                .limit(cap)
                 .collect(Collectors.toSet());
     }
 

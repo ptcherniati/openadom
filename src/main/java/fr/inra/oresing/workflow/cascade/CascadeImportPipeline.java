@@ -972,7 +972,7 @@ public class CascadeImportPipeline {
                 final boolean processedDirDeferred = deferredMergeFile;
 
                 updateWorkflowPhase(corrUuid, WorkflowLogEntry.STATUS_LOADING_DB, finalFileSize);
-                dataImporter.treatErrors();
+                dataImporter.treatErrors(effMaxErrorsThreshold);
 
                 if (runnerWillFinalize.get()) {
                     // Mode deferred : le runner emettra COMPLETED en afterCommit .

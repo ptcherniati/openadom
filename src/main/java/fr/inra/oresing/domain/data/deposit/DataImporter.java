@@ -410,8 +410,21 @@ public class DataImporter {
     }
 
     public void treatErrors() {
+        // Borne par defaut historique ( 100 ) quand l'appelant ne fournit pas de
+        // seuil ; preserve le comportement des appels existants hors cascade .
+        treatErrors(100);
+    }
+
+    /**
+     * @param maxErrors plafond du nombre d'erreurs de doublon de cle naturelle
+     *                  remontees ( cf {@code cascade.import.max-errors-threshold} ) .
+     *                  Evite l'accumulation memoire + le flot d'erreurs sur un
+     *                  fichier truffe de doublons ( ex referentiel recursif a cle
+     *                  sous-specifiee ) . <= 0 = pas de borne.
+     */
+    public void treatErrors(int maxErrors) {
         try {
-            final Set<CsvRowValidationCheckResult> hierarchicalKeysConflictErrors = csvReader.getHierarchicalKeysConflictErrors(getDataImporterContext().encounteredHierarchicalKeysForConflictDetection());
+            final Set<CsvRowValidationCheckResult> hierarchicalKeysConflictErrors = csvReader.getHierarchicalKeysConflictErrors(getDataImporterContext().encounteredHierarchicalKeysForConflictDetection(), maxErrors);
             getDataImporterContext().allErrors().addAll(hierarchicalKeysConflictErrors);
 
             if (!recursionStrategy.dataImporterContext().missingParentLine().isEmpty()) {
