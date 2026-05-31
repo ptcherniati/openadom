@@ -1063,22 +1063,35 @@ public class DashboardService {
      * @return {@code true} si WorkflowEventBus a signale au moins un listener
      */
     private boolean cancelOneWorkflow(UUID cid, String reason) {
+        // 1. Signaux mémoire ( instantanés ) : flag cascade + coordinator . Ils
+        // enregistrent l'intention d'annulation indépendamment de la DB , donc
+        // un échec / différé du SQL ci-dessous ne perd jamais le cancel .
         boolean signalled = WorkflowEventBus.getInstance().cancel(cid.toString(), reason);
         if (publishLifecycleCoordinator != null) {
             publishLifecycleCoordinator.markCancelled(cid);
         }
-        try {
-            workflowLogRepository.markCancelled(cid, reason);
-        } catch (RuntimeException ex) {
-            log.warn("markCancelled SQL failed for {} : {} ( signal envoye au registry / event bus quand meme )",
-                    cid, ex.getMessage());
-        }
+        // 2. Signal SQL-level ( pg_cancel_backend ) AVANT le UPDATE workflow_log .
+        // Ordre crucial : pg_cancel_backend tourne sur une connexion dédiée , ne
+        // dépend PAS du verrou de la row workflow_log ( que la tx du finalize
+        // détient ) , et c'est lui qui peut réellement interrompre un batch UPSERT
+        // en cours . On l'envoie donc en premier pour maximiser la chance de
+        // couper avant le COMMIT ( point de non-retour ) .
         if (backendPidRegistry != null && jdbcTemplate != null) {
             try {
                 backendPidRegistry.cancelBackend(jdbcTemplate, cid);
             } catch (RuntimeException ex) {
                 log.warn("pg_cancel_backend failed for {} : {}", cid, ex.getMessage());
             }
+        }
+        // 3. UPDATE workflow_log -> CANCELLED . Non bloquant depuis V18
+        // ( SET lock_timeout=2s + catch lock_not_available -> retourne -1 ) : si
+        // la row est verrouillée par un finalize actif , on ne bloque plus le
+        // endpoint . Le worker écrira l'état terminal réel à sa sortie .
+        try {
+            workflowLogRepository.markCancelled(cid, reason);
+        } catch (RuntimeException ex) {
+            log.warn("markCancelled SQL failed for {} : {} ( signal envoye au registry / event bus quand meme )",
+                    cid, ex.getMessage());
         }
         return signalled;
     }
