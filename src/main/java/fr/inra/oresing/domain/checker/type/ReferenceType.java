@@ -10,6 +10,8 @@ import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.checker.CheckerTarget;
 import fr.inra.oresing.domain.checker.LineChecker;
+import fr.inra.oresing.domain.checker.type.reference.MapBackedReferenceResolver;
+import fr.inra.oresing.domain.checker.type.reference.ReferenceResolver;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.ReferenceValidationCheckResult;
@@ -21,8 +23,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -34,27 +34,17 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
     public Set<UUID> uuid;
     protected CheckerTarget target;
     protected LineChecker.Transformer transformer;
-    @Getter
-    ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues;
     Ltree value;
     DataValue.LineIdentityColumnName lineIdentityColumnName;
-    // Set concurrent : alimente incrementalement par addReferenceValue ( import
-    // recursif , potentiellement multi-worker ) + lu par check() . newKeySet =
-    // iteration weakly-consistent ( pas de ConcurrentModificationException ) .
-    private Set<String> knownSpecialCharacters = ConcurrentHashMap.newKeySet();
 
-    /** Regex precompile ( evitait un Pattern.compile par cle dans le hot path ) . */
-    private static final java.util.regex.Pattern SINGLE_UPPERCASE = java.util.regex.Pattern.compile("[A-Z]");
-
-    // ─── R-P2-1 : index O(1) naturalKey → LineIdentityColumnName ──────────────
-    // Construit une seule fois dans le constructeur original.
-    // TRANSFORM iter2 #1 : volatile + partagé via copy() pour eviter un rebuild
-    // O(N) HashMap (jusqu'a 50k entrees) a chaque copy() per row sur le hot path
-    // toJsonForFrontend. Profile async-profiler: 357 samples (18% CPU) sur
-    // ReferenceType.<init> -> buildNaturalKeyIndex / HashMap.put.
-    // volatile car reassigne lors de setReferenceValues, lu depuis workers
-    // Cascade en parallele.
-    private final AtomicReference<Map<Ltree, DataValue.LineIdentityColumnName>> naturalKeyIndexRef = new AtomicReference<>(new HashMap<>());
+    /**
+     * Résolution des références ( valeurs de base + overlay incrémental + index
+     * O(1) naturalKey + caractères spéciaux ) déléguée à cette stratégie
+     * ( {@link ReferenceResolver} ). PARTAGÉE entre l'instance d'origine et ses
+     * copies par worker ( cf {@link #copy()} ) : les lectures concurrentes voient
+     * le même état et l'index n'est jamais reconstruit à la copie.
+     */
+    private final ReferenceResolver resolver;
 
     // ─── R-P2-2 : cache lazy partagé entre l'original et toutes ses copies ────
     // ConcurrentHashMap → thread-safe pour les workers Cascade parallèles.
@@ -65,72 +55,47 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
     private final Set<Ltree> seenOnce;
     private final Map<Ltree, DataValue.LineIdentityColumnName> precomputedResults;
 
-    // Overlay incremental des valeurs ajoutees EN COURS d'import recursif ORDONNE
-    // ( une entree par ligne via addReferenceValue ) , au lieu de reconstruire
-    // toute la map + l'index + les special chars a chaque ligne ( ancien
-    // setReferenceValues full = O(N) par ligne -> O(N^2) ) . Partage entre
-    // l'original et ses copies ( comme naturalKeyIndex ) . ConcurrentHashMap
-    // pour la lecture cross-worker ; les mutations ( addReferenceValue ) ne
-    // sont emises QUE depuis le mode ordonne mono-thread ( cf WithRecursion ) ,
-    // donc l'index HashMap + le HashSet specialChars mutes en parallele
-    // restent sans risque . Lookup : resolveUuids() = referenceValues puis overlay .
-    private final Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> incrementalReferenceValues;
     /** Plafond du cache. Configurable via cascade.import.reference-cache-max-entries. */
     private final AtomicInteger maxCacheEntriesRef = new AtomicInteger(5_000);
 
-    /** Constructeur principal (instance originale, crée ses propres caches). */
+    /**
+     * Constructeur principal ( instance originale ) : crée ses propres caches
+     * mémo et un {@link MapBackedReferenceResolver} eager à partir des valeurs
+     * fournies. Délègue au constructeur canonique ( DRY ).
+     */
     public ReferenceType(final CheckerTarget target, final String refType,
                          final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues,
                          final LineChecker.Transformer transformer,
                          DataValue.LineIdentityColumnName lineIdentityColumnName) {
-        super();
-        this.target = target;
-        this.refType = refType;
-        this.referenceValues = referenceValues;
-        this.transformer = transformer;
-        this.lineIdentityColumnName = lineIdentityColumnName;
-        this.seenOnce = ConcurrentHashMap.newKeySet();
-        this.precomputedResults = new ConcurrentHashMap<>();
-        this.incrementalReferenceValues = new ConcurrentHashMap<>();
-        buildNaturalKeyIndex(referenceValues);
-        // Base special chars construite une fois ici ( les ajouts ulterieurs
-        // passent par addReferenceValue -> addKnownSpecialCharacters incremental ) .
-        buildKnownSpecialCharacters(referenceValues);
-        // TRANSFORM iter2 #1 : partager l'index avec les copies ; pas de rebuild .
-        clone = () -> new ReferenceType(target, refType, referenceValues, transformer,
-                this.lineIdentityColumnName, this.seenOnce, this.precomputedResults,
-                this.naturalKeyIndexRef.get(), this.incrementalReferenceValues);
+        this(target, refType, transformer, lineIdentityColumnName,
+                ConcurrentHashMap.newKeySet(),
+                new ConcurrentHashMap<>(),
+                new MapBackedReferenceResolver(referenceValues));
     }
 
     /**
-     * Constructeur de copie partagée (utilisé par copy() et clone).
-     * Les caches {@code seenOnce}, {@code precomputedResults} et l'index
-     * {@code naturalKeyIndex} sont PARTAGÉS avec l'instance parente → les
-     * résultats calculés par un worker bénéficient à tous les autres workers
-     * sans recalcul, et l'index O(N) n'est jamais reconstruit lors d'un copy().
+     * Constructeur canonique ( utilisé par {@link #copy()} et {@code clone} ).
+     * Les caches mémo {@code seenOnce} / {@code precomputedResults} ET le
+     * {@link ReferenceResolver} sont PARTAGÉS avec l'instance parente → les
+     * résultats calculés par un worker bénéficient à tous les autres, et l'index
+     * O(N) du resolver n'est jamais reconstruit lors d'un {@code copy()}.
      */
     ReferenceType(final CheckerTarget target, final String refType,
-                  final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues,
                   final LineChecker.Transformer transformer,
                   DataValue.LineIdentityColumnName lineIdentityColumnName,
                   Set<Ltree> sharedSeenOnce,
                   Map<Ltree, DataValue.LineIdentityColumnName> sharedPrecomputedResults,
-                  Map<Ltree, DataValue.LineIdentityColumnName> sharedNaturalKeyIndex,
-                  Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> sharedIncrementalReferenceValues) {
+                  ReferenceResolver sharedResolver) {
         super();
         this.target = target;
         this.refType = refType;
-        this.referenceValues = referenceValues;
         this.transformer = transformer;
         this.lineIdentityColumnName = lineIdentityColumnName;
         this.seenOnce = sharedSeenOnce;
         this.precomputedResults = sharedPrecomputedResults;
-        this.incrementalReferenceValues = sharedIncrementalReferenceValues;
-        // TRANSFORM iter2 #1 : pas de rebuild ; on partage l'index immuable .
-        this.naturalKeyIndexRef.set(sharedNaturalKeyIndex);
-        clone = () -> new ReferenceType(target, refType, referenceValues, transformer,
-                this.lineIdentityColumnName, this.seenOnce, this.precomputedResults,
-                this.naturalKeyIndexRef.get(), this.incrementalReferenceValues);
+        this.resolver = sharedResolver;
+        clone = () -> new ReferenceType(target, refType, transformer,
+                this.lineIdentityColumnName, this.seenOnce, this.precomputedResults, this.resolver);
     }
 
     /** Configure le plafond du cache. Appelé depuis DataImporter après importProperties. */
@@ -152,9 +117,13 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
         // → addKnownIdToReferenceValues ajoute des UUID parents en cours de traitement).
         seenOnce.clear();
         precomputedResults.clear();
-        this.referenceValues = referenceValues;
-        buildNaturalKeyIndex(referenceValues);
-        buildKnownSpecialCharacters(referenceValues);
+        resolver.replaceBase(referenceValues);
+    }
+
+    /** Vue des valeurs de base ( hors overlay incrémental ), lue par CsvReader
+     *  pour la fusion pré-chargé + incréments à la construction des checkers. */
+    public ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> getReferenceValues() {
+        return resolver.baseValues();
     }
 
     /**
@@ -171,67 +140,12 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
      * {@link #setReferenceValues} ( cf WithRecursion.addKnownIdToReferenceValues ) .
      */
     public void addReferenceValue(DataValue.LineIdentityColumnName key, ImmutableSet<UUID> uuids) {
-        if (referenceValues.containsKey(key) || incrementalReferenceValues.containsKey(key)) {
-            return;
-        }
-        incrementalReferenceValues.put(key, uuids);
-        naturalKeyIndexRef.get().put(key.naturalKey(), key);
-        addKnownSpecialCharacters(key.naturalKey());
+        resolver.register(key, uuids);
     }
 
-    /**
-     * Resolution des UUID d'une cle : map de base immuable d'abord , puis overlay
-     * incremental ( valeurs ajoutees pendant l'import recursif ordonne ) .
-     */
+    /** Délègue au {@link ReferenceResolver} : base d'abord, puis overlay incrémental. */
     private ImmutableSet<UUID> resolveUuids(DataValue.LineIdentityColumnName key) {
-        ImmutableSet<UUID> base = referenceValues.get(key);
-        return base != null ? base : incrementalReferenceValues.get(key);
-    }
-
-    /** Variante incrementale de {@link #buildKnownSpecialCharacters} pour UNE naturalKey . */
-    private void addKnownSpecialCharacters(Ltree naturalKey) {
-        String nk = naturalKey.getSql();
-        if (SINGLE_UPPERCASE.matcher(nk).matches()) {
-            knownSpecialCharacters.addAll(getSpecialCharacters(nk));
-        }
-    }
-
-    /**
-     * R-P2-1 — Construit l'index O(1) naturalKey → LineIdentityColumnName.
-     * Remplace le scan O(N) {@code referenceValues.keySet().stream().filter(...).findFirst()}
-     * dans {@link #check}. Rebuild complet à chaque appel de setReferenceValues.
-     */
-    private void buildNaturalKeyIndex(ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues) {
-        // ConcurrentHashMap : addReferenceValue ( import recursif ) peut y inserer
-        // de maniere incrementale pendant que check() lit ; thread-safe sans verrou .
-        Map<Ltree, DataValue.LineIdentityColumnName> index = new ConcurrentHashMap<>(referenceValues.size() * 2);
-        for (DataValue.LineIdentityColumnName key : referenceValues.keySet()) {
-            index.put(key.naturalKey(), key);
-        }
-        this.naturalKeyIndexRef.set(index);
-    }
-
-    private void buildKnownSpecialCharacters(ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues) {
-        // Nouveau set concurrent assigne atomiquement ( la reference du champ
-        // n'est pas final ) ; les lecteurs voient l'ancien ou le nouveau , jamais
-        // un etat partiel . Garde le champ en set concurrent pour les ajouts
-        // incrementaux ulterieurs ( addKnownSpecialCharacters ) .
-        Set<String> rebuilt = ConcurrentHashMap.newKeySet();
-        referenceValues.keySet().stream()
-                .map(DataValue.LineIdentityColumnName::naturalKey)
-                .map(Ltree::getSql)
-                .filter(naturalKey -> SINGLE_UPPERCASE.matcher(naturalKey).matches())
-                .map(this::getSpecialCharacters)
-                .forEach(rebuilt::addAll);
-        this.knownSpecialCharacters = rebuilt;
-    }
-
-    private Set<String> getSpecialCharacters(String naturalKey) {
-        Predicate<String> containsSpecialCharacter = naturalKey::contains;
-        return Ltree.KNOWN_SYMBOL_CODES
-                .stream()
-                .filter(containsSpecialCharacter)
-                .collect(Collectors.toSet());
+        return resolver.resolveUuids(key);
     }
 
     @Override
@@ -246,7 +160,7 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
 
     @Override
     public CheckerValidationCheckResult check(final String rawValue, final LineChecker lineChecker) {
-        final String localRawValue = Ltree.escapeToLabel(rawValue, knownSpecialCharacters);
+        final String localRawValue = Ltree.escapeToLabel(rawValue, resolver.knownSpecialCharacters());
         final CheckerTarget target = lineChecker.target();
         value = Ltree.fromSql(localRawValue);
 
@@ -261,7 +175,7 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
         }
 
         // ── R-P2-1 : lookup O(1) via l'index naturalKey ─────────────────────────
-        DataValue.LineIdentityColumnName foundKey = naturalKeyIndexRef.get().get(value);
+        DataValue.LineIdentityColumnName foundKey = resolver.findKey(value);
         if (foundKey != null) {
             value = foundKey.naturalKey();
             uuid = resolveUuids(foundKey);
@@ -286,7 +200,7 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
                 target.getInternationalizedKey("invalidReference"),
                 ImmutableMap.of(
                         "component", ((DataColumn) target).column(),
-                        "referenceValues", Optional.ofNullable(referenceValues)
+                        "referenceValues", Optional.ofNullable(resolver.baseValues())
                                 .filter(MapUtils::isNotEmpty)
                                 .map(Map::keySet)
                                 .orElseGet(HashSet::new)
@@ -306,21 +220,19 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
 
     @Override
     public FieldType copy() {
-        // R-P2-2 + TRANSFORM iter2 #1 : copie avec partage des caches seenOnce
-        // + precomputedResults + naturalKeyIndex → les workers Cascade
-        // parallèles partagent les caches ET l'index O(N) n'est jamais
-        // reconstruit (auparavant 357 samples / 18% CPU sur le hot path
-        // toJsonForFrontend → ReferenceType.<init>).
+        // R-P2-2 + TRANSFORM iter2 #1 : copie avec partage des caches mémo
+        // ( seenOnce + precomputedResults ) ET du ReferenceResolver → les workers
+        // Cascade parallèles partagent les caches, et l'index O(N) du resolver
+        // n'est jamais reconstruit (auparavant 357 samples / 18% CPU sur le hot
+        // path toJsonForFrontend → ReferenceType.<init>).
         final ReferenceType referenceType = new ReferenceType(
                 this.target,
                 this.refType,
-                this.referenceValues,
                 this.transformer,
                 this.lineIdentityColumnName,
-                this.seenOnce,          // partagé
+                this.seenOnce,           // partagé
                 this.precomputedResults, // partagé
-                this.naturalKeyIndexRef.get(), // partagé : pas de rebuild O(N)
-                this.incrementalReferenceValues // partagé : overlay incremental ordonne
+                this.resolver            // partagé : base + overlay + index + special chars
         );
         referenceType.value = value;
         referenceType.maxCacheEntriesRef.set(this.maxCacheEntriesRef.get());
