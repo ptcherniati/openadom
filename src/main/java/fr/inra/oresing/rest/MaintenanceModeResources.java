@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Duration;
+import java.util.List;
 
 /**
  * Endpoint d'administration du <b>mode maintenance</b> de l'instance ( global,
@@ -54,6 +55,10 @@ public class MaintenanceModeResources {
         this.maintenanceModeService = maintenanceModeService;
     }
 
+    /** État de maintenance d'un service : {@code gated=true} => en maintenance. */
+    public record MaintenanceServiceStatus(String service, boolean gated) {
+    }
+
     /**
      * État courant du mode maintenance.
      *
@@ -62,8 +67,10 @@ public class MaintenanceModeResources {
      * @param adminAccessToken  jeton d'accès courant ( 6 car ) pour construire le
      *                          lien d'auto-récupération du cookie ; {@code null}
      *                          si l'accès admin n'est pas autorisé.
+     * @param services          état de chaque service connu ( périmètre ) .
      */
-    public record MaintenanceStatus(boolean enabled, boolean allowAdmins, String adminAccessToken) {
+    public record MaintenanceStatus(boolean enabled, boolean allowAdmins, String adminAccessToken,
+                                    List<MaintenanceServiceStatus> services) {
     }
 
     /**
@@ -72,8 +79,11 @@ public class MaintenanceModeResources {
      * @param enabled      cible.
      * @param reason       optionnelle ( tracée dans le drapeau ) .
      * @param allowAdmins  laisser les admins accéder aux services en maintenance.
+     * @param services     services à mettre en maintenance ( {@code null}/vide =
+     *                     tous ) . Ignoré quand {@code enabled=false}.
      */
-    public record MaintenanceToggleRequest(boolean enabled, String reason, boolean allowAdmins) {
+    public record MaintenanceToggleRequest(boolean enabled, String reason, boolean allowAdmins,
+                                           List<String> services) {
     }
 
     @Operation(summary = "État du mode maintenance")
@@ -88,7 +98,7 @@ public class MaintenanceModeResources {
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MaintenanceStatus> toggle(@RequestBody MaintenanceToggleRequest request) {
         if (request.enabled()) {
-            maintenanceModeService.enable(request.reason(), request.allowAdmins());
+            maintenanceModeService.enable(request.reason(), request.allowAdmins(), request.services());
             // Si l'accès admin est autorisé , on pose immédiatement le cookie de
             // contournement sur la réponse : l'admin qui active la maintenance
             // peut tester l'appli aussitôt , depuis n'importe quelle IP.
@@ -120,9 +130,14 @@ public class MaintenanceModeResources {
     }
 
     private MaintenanceStatus currentStatus() {
+        java.util.Set<String> gated = maintenanceModeService.gatedServices();
+        List<MaintenanceServiceStatus> services = maintenanceModeService.knownServices().stream()
+                .map(s -> new MaintenanceServiceStatus(s, gated.contains(s)))
+                .toList();
         return new MaintenanceStatus(maintenanceModeService.isEnabled(),
                 maintenanceModeService.isAdminBypassEnabled(),
-                maintenanceModeService.getAdminAccessToken());
+                maintenanceModeService.getAdminAccessToken(),
+                services);
     }
 
     private ResponseEntity<MaintenanceStatus> withBypassCookie(ResponseCookie cookie, MaintenanceStatus body) {

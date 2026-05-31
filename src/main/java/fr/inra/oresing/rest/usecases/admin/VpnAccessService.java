@@ -44,13 +44,10 @@ import java.util.Map;
 public class VpnAccessService {
 
     /**
-     * Services exposés par nginx, dans l'ordre d'affichage. Source de vérité
-     * partagée avec nginx.conf ( un {@code location} par service ) et la liste
-     * {@code SERVICES} de l'entrypoint du proxy.
+     * Services exposés par nginx. Source de vérité unique : {@link ProxyServices#NAMES}
+     * ( partagée avec le mode maintenance par service ) .
      */
-    public static final List<String> KNOWN_SERVICES = List.of(
-            "frontend", "backend", "grafana", "pgadmin",
-            "oa-live", "actuator", "shiny", "postgrest", "graphql");
+    public static final List<String> KNOWN_SERVICES = ProxyServices.NAMES;
 
     private final Path gatedDir;
 

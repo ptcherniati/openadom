@@ -53,11 +53,20 @@ public class MaintenanceModeService {
      */
     private final String bypassSecret;
 
+    /**
+     * Répertoire des drapeaux « par service » : un fichier {@code services/<svc>}
+     * présent => ce service sert la page de maintenance ( 503 ) . Lu par le proxy
+     * via {@code maintenance-guard.conf} ( {@code if -f} par requête ) . Permet de
+     * mettre en maintenance tout ou un sous-ensemble de services.
+     */
+    private final Path servicesDir;
+
     public MaintenanceModeService(
             @Value("${openadom.maintenance.flag-path:/maintenance/maintenance.flag}") String flagPath,
             @Value("${openadom.maintenance.bypass-secret:}") String bypassSecret) {
         this.flagPath = Path.of(flagPath);
         this.adminBypassFlagPath = this.flagPath.resolveSibling("maintenance-allow-admins.flag");
+        this.servicesDir = this.flagPath.resolveSibling("services");
         this.bypassSecret = bypassSecret == null ? "" : bypassSecret.strip();
     }
 
@@ -107,15 +116,36 @@ public class MaintenanceModeService {
         return bypassSecret;
     }
 
+    /** @return services connus + état gaté courant ( ordre d'affichage ) . */
+    public java.util.List<String> knownServices() {
+        return ProxyServices.NAMES;
+    }
+
+    /** @return ensemble des services actuellement en maintenance ( drapeau présent ) . */
+    public java.util.Set<String> gatedServices() {
+        java.util.Set<String> gated = new java.util.LinkedHashSet<>();
+        for (String service : ProxyServices.NAMES) {
+            if (Files.exists(serviceFlag(service))) {
+                gated.add(service);
+            }
+        }
+        return gated;
+    }
+
     /**
-     * Active la maintenance : crée le drapeau ( + le répertoire parent au besoin ).
-     * Idempotent. Écrit un horodatage + une raison optionnelle, à titre de trace.
+     * Active la maintenance : crée le drapeau maître ( + le répertoire parent au
+     * besoin ) et positionne le périmètre par service. Idempotent. Écrit un
+     * horodatage + une raison optionnelle, à titre de trace.
      *
      * @param allowAdmins {@code true} : pose aussi le drapeau d'accès admin
      *                    ( le proxy laisse passer le cookie de contournement ) ;
      *                    {@code false} : le retire ( blocage total ) .
+     * @param services    services à mettre en maintenance ( sous-ensemble de
+     *                    {@link ProxyServices#NAMES} ; {@code null} ou vide =
+     *                    tous les services connus ) . Les services absents de
+     *                    l'ensemble sont rouverts.
      */
-    public void enable(String reason, boolean allowAdmins) {
+    public void enable(String reason, boolean allowAdmins, java.util.Collection<String> services) {
         try {
             Path parent = flagPath.getParent();
             if (parent != null) {
@@ -127,21 +157,50 @@ public class MaintenanceModeService {
                     + "\n";
             Files.writeString(flagPath, payload, StandardCharsets.UTF_8);
             setAdminBypass(allowAdmins);
-            log.warn("Mode maintenance ACTIVÉ ( drapeau {} , accès admin={} )", flagPath, allowAdmins);
+            applyServiceScope(services);
+            log.warn("Mode maintenance ACTIVÉ ( accès admin={} , services={} )", allowAdmins, gatedServices());
         } catch (IOException e) {
             throw new UncheckedIOException("Impossible d'activer le mode maintenance ( écriture " + flagPath + " )", e);
         }
     }
 
-    /** Désactive la maintenance : supprime les deux drapeaux. Idempotent. */
+    /** Désactive la maintenance : supprime drapeau maître, accès admin et tous les drapeaux par service. Idempotent. */
     public void disable() {
         try {
             boolean removed = Files.deleteIfExists(flagPath);
             Files.deleteIfExists(adminBypassFlagPath);
+            for (String service : ProxyServices.NAMES) {
+                Files.deleteIfExists(serviceFlag(service));
+            }
             log.warn("Mode maintenance DÉSACTIVÉ ( drapeau {} , supprimé={} )", flagPath, removed);
         } catch (IOException e) {
             throw new UncheckedIOException("Impossible de désactiver le mode maintenance ( suppression " + flagPath + " )", e);
         }
+    }
+
+    /**
+     * Positionne le périmètre : pose un drapeau pour chaque service demandé
+     * ( filtré sur les services connus ) , retire les autres. {@code null}/vide
+     * => tous les services connus.
+     */
+    private void applyServiceScope(java.util.Collection<String> services) throws IOException {
+        Files.createDirectories(servicesDir);
+        java.util.Set<String> wanted = (services == null || services.isEmpty())
+                ? new java.util.LinkedHashSet<>(ProxyServices.NAMES)
+                : new java.util.LinkedHashSet<>(services);
+        for (String service : ProxyServices.NAMES) {
+            Path flag = serviceFlag(service);
+            if (wanted.contains(service)) {
+                Files.writeString(flag, "enabled_at=" + Instant.now() + "\n", StandardCharsets.UTF_8);
+            } else {
+                Files.deleteIfExists(flag);
+            }
+        }
+    }
+
+    /** Chemin du drapeau d'un service. Le nom est validé contre {@link ProxyServices#NAMES}. */
+    private Path serviceFlag(String service) {
+        return servicesDir.resolve(service);
     }
 
     /**
