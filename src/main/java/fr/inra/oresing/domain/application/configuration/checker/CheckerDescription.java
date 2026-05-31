@@ -8,6 +8,9 @@ import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.checker.type.*;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
+import fr.inra.oresing.domain.data.deposit.reference.EagerReferenceLoadingStrategy;
+import fr.inra.oresing.domain.data.deposit.reference.ReferenceLoadContext;
+import fr.inra.oresing.domain.data.deposit.reference.RepositoryReferenceIdLoader;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 
 import java.util.Map;
@@ -50,7 +53,15 @@ public sealed interface CheckerDescription permits
     default <F extends FieldType<?>> F buildFieldtype(final DataRepository repository, final PublishContext.PublishContextBuilder publishContextBuilder, final CheckerTarget target, final LineChecker.LineTransformer transformer) {
         return (F) switch (this) {
             case final ReferenceChecker referenceChecker -> {
-                final ImmutableMap<DataValue.LineIdentityColumnName, UUID> referenceIdPerKeys = repository.getDataIdPerKeys(referenceChecker.refType());
+                // Chargement via la stratégie ( SPI ) : défaut Eager = full preload,
+                // strictement iso au comportement historique. La Phase 3 injectera
+                // ici la stratégie configurée ( bornée / paresseuse ) sans toucher
+                // au reste du switch.
+                final ImmutableMap<DataValue.LineIdentityColumnName, UUID> referenceIdPerKeys =
+                        new EagerReferenceLoadingStrategy().loadIdsPerKey(
+                                new RepositoryReferenceIdLoader(repository),
+                                referenceChecker.refType(),
+                                ReferenceLoadContext.nonRecursive());
                 final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = getUUidByNaturalKey(referenceIdPerKeys);
                 yield new ReferenceType(target, referenceChecker.refType(), referenceValues, transformer, null);
             }
