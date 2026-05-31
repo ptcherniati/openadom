@@ -18,6 +18,9 @@ import fr.inra.oresing.domain.data.deposit.PublishContext;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.data.deposit.context.hierarchicalkey.HierarchicalKeyFactory;
 import fr.inra.oresing.domain.data.deposit.recursion.RecursionStrategy;
+import fr.inra.oresing.domain.data.deposit.reference.ReferenceLoadContext;
+import fr.inra.oresing.domain.data.deposit.reference.ReferenceLoadingStrategyResolver;
+import fr.inra.oresing.domain.data.deposit.reference.RepositoryReferenceIdLoader;
 import fr.inra.oresing.domain.data.deposit.storage.KeysAndReferenceDatumAfterChecking;
 import fr.inra.oresing.domain.data.deposit.validation.transformer.data.RowWithReferenceDatum;
 import fr.inra.oresing.domain.data.menu.MenuType;
@@ -235,15 +238,19 @@ public record AsynchroneFileImporterContext(
         // ( O(N_ref_size) RAM ) . Sur des refs 10M+ rows cela evite l'OOM .
         // Sans hint -> fallback legacy ( full preload ) pour preserver la
         // coherence quand le pre-scan n'est pas disponible .
-        ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences;
-        if (!isRecursive) {
-            storedReferences = ImmutableMap.of();
-        } else if (naturalKeysHint != null && !naturalKeysHint.isEmpty()) {
-            storedReferences = referenceValueRepository.getDataIdPerKeysByNaturalKeys(
-                    constants.refType(), naturalKeysHint);
-        } else {
-            storedReferences = referenceValueRepository.getDataIdPerKeys(constants.refType());
-        }
+        // Décision « quoi charger » centralisée dans ReferenceLoadingStrategyResolver
+        // ( strictement iso à l'arbre historique : non récursif -> rien ;
+        // récursif + hint -> borné O(|hint|) ; récursif sans hint -> full preload ).
+        // Ajouter une stratégie ( ex. paresseuse ) = une branche dans le résolveur,
+        // sans toucher ici ( OCP ).
+        final ReferenceLoadContext referenceLoadContext = isRecursive
+                ? ReferenceLoadContext.recursive(naturalKeysHint)
+                : ReferenceLoadContext.nonRecursive();
+        ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences =
+                new ReferenceLoadingStrategyResolver()
+                        .resolve(referenceLoadContext)
+                        .loadIdsPerKey(new RepositoryReferenceIdLoader(referenceValueRepository),
+                                constants.refType(), referenceLoadContext);
 
         // B4 / #5 : index O(1) pour {@link #getIdForSameHierarchicalKeyInDatabase}.
         // Cette methode est appelee par ligne par DataTransformer ; sur un
