@@ -32,13 +32,13 @@ public class FileSenderTestService {
 
     public static final String DEFAULT_SUBJECT = "[OpenADOM] Fichier de test administrateur";
     public static final String DEFAULT_MESSAGE = """
-            Ce transfert FileSender est un test envoye depuis l'IHM
-            d'administration OpenADOM .
+            Ce transfert est un test envoyé depuis la console d'administration
+            OpenADOM.
 
-            Si vous recevez ce mail avec un lien de telechargement
-            fonctionnel , la connexion backend -> FileSender ( REST API
-            FILE_SENDER_BASE_URL + identifiant FILE_SENDER_USER_NAME )
-            est operationnelle .
+            Si vous recevez ce message avec un lien de téléchargement
+            fonctionnel, le service de transfert de fichiers ( FileSender ) est
+            opérationnel : OpenADOM peut bien transmettre les fichiers volumineux
+            à ses utilisateurs.
             """;
 
     private static final String TEST_APP_NAME = "openadom-admin-test";

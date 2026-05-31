@@ -28,15 +28,15 @@ import java.util.List;
 public class MailTestService {
 
     /** Valeurs par defaut servies par {@code GET /sample} pour pre-remplir l'IHM . */
-    public static final String DEFAULT_SUBJECT = "[OpenADOM] Mail de test administrateur";
+    public static final String DEFAULT_SUBJECT = "[OpenADOM] Message de test administrateur";
     public static final String DEFAULT_BODY = """
-            Ceci est un mail de test envoye depuis l'IHM d'administration OpenADOM .
+            Ceci est un message de test envoyé depuis la console d'administration OpenADOM.
 
-            Si vous recevez ce message , la configuration SMTP du backend
-            ( SPRING_MAIL_HOST , SPRING_MAIL_PORT , SPRING_MAIL_USERNAME ,
-            SPRING_MAIL_PASSWORD , MAIL_FROM ) est fonctionnelle .
+            Si vous le recevez, la configuration de la messagerie est opérationnelle :
+            OpenADOM peut bien envoyer ses courriels ( notifications, demandes de droits,
+            alertes ).
 
-            Action : aucune . Ce message peut etre supprime .
+            Aucune action n'est requise. Ce message peut être supprimé.
             """;
 
     private final EmailService emailService;
