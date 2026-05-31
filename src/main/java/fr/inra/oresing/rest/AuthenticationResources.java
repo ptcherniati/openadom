@@ -120,6 +120,11 @@ public class AuthenticationResources {
     public Map<String, Object> refresh(HttpServletResponse response) {
         UUID userId = OreSiApiRequestContext.getRequestClient().id();
         jwtExtractor.refreshJwtInResponse(response, userId);
+        // Réémet le cookie d'identité avec le même TTL que le JWT fraîchement
+        // émis : sur une session active qui roule au-delà de login + TTL , le
+        // cookie oa_uid ne périme plus avant le JWT ( sinon le rideau nginx
+        // de blocage utilisateur lâchait après le TTL initial ).
+        response.addHeader(HttpHeaders.SET_COOKIE, identityCookie(userId).toString());
         return Map.of("status", "refreshed", "jwtExpirationSeconds", jwtExpirationSeconds);
     }
 
