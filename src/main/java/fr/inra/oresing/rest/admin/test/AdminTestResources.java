@@ -43,35 +43,59 @@ public class AdminTestResources {
     private final MailTestService mailTestService;
     private final FileSenderTestService fileSenderTestService;
     private final String mailFrom;
+    private final String mailHost;
+    private final String mailPort;
+    private final String mailUsername;
+    private final boolean mailStarttls;
     private final String fileSenderUser;
     private final String fileSenderBaseUrl;
 
     public AdminTestResources(MailTestService mailTestService,
                               FileSenderTestService fileSenderTestService,
                               @Value("${spring.mail.from:openadom@inrae.fr}") String mailFrom,
+                              @Value("${spring.mail.host:}") String mailHost,
+                              @Value("${spring.mail.port:}") String mailPort,
+                              @Value("${spring.mail.username:}") String mailUsername,
+                              @Value("${spring.mail.properties.mail.smtp.starttls.enable:false}") boolean mailStarttls,
                               @Value("${filesender.username:}") String fileSenderUser,
                               @Value("${filesender.baseurl:}") String fileSenderBaseUrl) {
         this.mailTestService = mailTestService;
         this.fileSenderTestService = fileSenderTestService;
         this.mailFrom = mailFrom;
+        this.mailHost = mailHost;
+        this.mailPort = mailPort;
+        this.mailUsername = mailUsername;
+        this.mailStarttls = mailStarttls;
         this.fileSenderUser = fileSenderUser;
         this.fileSenderBaseUrl = fileSenderBaseUrl;
     }
 
     /**
-     * Expéditeur effectif des intégrations ( affiché en lecture seule dans
-     * l'IHM admin pour confirmer la config ) : {@code from} SMTP +
-     * compte / URL FileSender .
+     * Configuration effective des intégrations ( affichée en lecture seule dans
+     * l'IHM admin pour confirmer la config ) : serveur / port / expéditeur /
+     * compte SMTP + compte / URL FileSender .
+     *
+     * <p>Aucun secret n'est exposé : le mot de passe SMTP et la clé API
+     * FileSender ne sont jamais lus côté backend ni renvoyés ; l'IHM affiche
+     * une valeur masquée.
      */
-    public record SenderInfo(String mailFrom, String fileSenderUser, String fileSenderBaseUrl) {
+    public record SenderInfo(String mailFrom,
+                             String mailHost,
+                             String mailPort,
+                             String mailUsername,
+                             boolean mailStarttls,
+                             String fileSenderUser,
+                             String fileSenderBaseUrl) {
     }
 
-    @Operation(summary = "Expéditeur effectif ( SMTP + FileSender )")
+    @Operation(summary = "Configuration effective ( SMTP + FileSender , sans secret )")
     @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
     @GetMapping("/sender-info")
     public ResponseEntity<SenderInfo> senderInfo() {
-        return ResponseEntity.ok(new SenderInfo(mailFrom, fileSenderUser, fileSenderBaseUrl));
+        return ResponseEntity.ok(new SenderInfo(
+                mailFrom, mailHost, mailPort, mailUsername, mailStarttls,
+                fileSenderUser, fileSenderBaseUrl));
     }
 
     @Operation(summary = "Valeurs par defaut pour le test mail")
