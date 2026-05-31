@@ -126,6 +126,33 @@ main + streaming + cascade + marge admin ≤ max_connections. Config DB + pools.
 > selon la heap ) . Full-suite 4342 tests , 0F/0E . Le vrai fix ( récursif streamé )
 > reste un gros chantier algo séparé.
 
+### [ ] BUG - seuil d'erreurs non respecté sur référentiel récursif (détection doublons)
+Constaté en live ( import ticket_507 `t_soil_water_content_swc` , 31/05 ) : `maxErrors=100`
+configuré ( `CASCADE_IMPORT_MAX_ERRORS_THRESHOLD` / `ImportProperties.maxErrorsThreshold` ) ,
+mais l'UI remonte **2865 erreurs** « ... a le même identifiant ... que les lignes [...] ».
+L'import a tourné ~243s ( 4 cores ) avant de jeter `InvalidDatasetContentException`.
+
+> **Cause** : deux chemins d'erreurs distincts.
+> - Pipeline cascade ( transform/sink ) : **borné** par `withMaxErrors(100)` ( cf.
+>   `CascadeImportPipeline` ~L646 ) → OK.
+> - **Détection des doublons de clé naturelle du référentiel RÉCURSIF**
+>   ( `WithRecursion` , message « même identifiant que les lignes » ) : chemin
+>   séparé qui **n'honore PAS `maxErrorsThreshold`** → accumule TOUTES les erreurs
+>   ( 2865 ) au lieu d'aborter à 100.
+>
+> **Impact** ( aligné scaling 5-10M ) :
+> 1. perf : on parcourt + construit la liste d'erreurs complète au lieu de couper tôt ;
+> 2. mémoire : 2865 objets erreur , chacun portant la **liste des numéros de lignes
+>    dupliquées** → s'ajoute au risque OOM récursif déjà identifié ( la liste d'erreurs
+>    elle-même peut gonfler la heap sur un 10M plein de doublons ) ;
+> 3. UX/mail : on noie l'utilisateur + on alourdit le mail d'erreurs.
+>
+> **Fix attendu** : appliquer le même plafond ( `maxErrorsThreshold` ) au collecteur
+> d'erreurs du référentiel récursif → couper la collecte à N et signaler « N+ erreurs ,
+> tronqué » ( au lieu de tout accumuler ) . Iso-résultat sur le verdict ( import reste
+> rejeté ) , seul le **volume d'erreurs remontées** est borné. Lié au chantier
+> « récursif streamé » ( même chemin mémoire ) .
+
 ### [x] PgBouncer (infra) - IMPLÉMENTÉ derrière toggle, OFF par défaut
 Pooler transaction-mode devant PG. La vraie réponse scaling 10+ users : multiplexe
 les transactions courtes du backend sur un petit jeu stable de connexions PG, donc
@@ -154,6 +181,75 @@ max_wal_size, checkpoint_completion_target, disque WAL. **Config DB, aval requis
 ### [ ] Observabilité scale (Grafana)
 Métriques bloat / lock waits / saturation pool / WAL rate + alertes. **Étendre dashboards.**
 
+### [i] Heartbeat transform NULL - ANALYSÉ, PAS un bug ( faux soupçon levé )
+Constat live ( import 2M , 31/05 ) : `last_heartbeat_at` reste NULL pendant tout le
+transform ( ~350s ) , puis bat ( ~30s ) dès le finalize. Soupçonné faux-zombie à 10M.
+**Vérification code : ce n'est PAS un bug.** Design délibéré et cohérent :
+
+> La transaction de l'import détient un **verrou de ligne** sur SA row `workflow_log`
+> pendant toute la phase synchrone ( transform + COPY ) . `beat_workflow` ( V17 ) sonde
+> en `FOR UPDATE NOWAIT` → row verrouillée → skip silencieux ( beat redondant ) . Le
+> sweeper `mark_zombie_workflows` ( V4 ) sonde en `FOR UPDATE SKIP LOCKED` → **skip la
+> même row verrouillée** → ne peut PAS marquer zombie un import actif. Le verrou EST la
+> preuve de vie. Après commit de la tx ( finalize deferred , row libérée ) , le
+> `HeartbeatService` ( thread dédié ) bat pour couvrir la phase finalize longue. Aucun
+> trou : pas de fenêtre IN_PROGRESS + déverrouillée + sans heartbeat > seuil.
+
+> **Sweeper audité OK** : guard `p_minutes>0` , `WHERE status='IN_PROGRESS' AND
+> COALESCE(last_heartbeat_at,start_time) < now()-Nmin` , `FOR UPDATE SKIP LOCKED` ,
+> UPDATE atomique. Boot-cleanup ( toutes IN_PROGRESS → CANCELLED , SKIP LOCKED ) correct
+> en mono-instance ( cf `APP_WORKFLOW_ZOMBIE_CLEANUP_ON_BOOT` ) .
+
+> **Invariant porteur ( à documenter / tester pour ne pas le casser )** : la sûreté
+> dépend du fait que la tx d'import **garde le verrou de la row workflow_log en continu**
+> pendant toute la phase synchrone. Si un refacto futur committait par chunk ( libère le
+> verrou entre chunks ) ou écrivait la row sur une connexion auto-commit séparée , la
+> protection SKIP-LOCKED tomberait → faux-zombie réel. Ajouter un test de non-régression
+> sur cet invariant. Reste seulement cosmétique : pas d'indicateur de vivacité en UI
+> pendant le transform ( le verrou n'est pas exposé au front ) .
+
+### [ ] Heartbeat watchdog - amélioration observabilité ( pattern standard )
+Refacto optionnel pour avoir une **vraie vivacité + progression en UI pendant le transform**
+( aujourd'hui figé , cf note ci-dessus ) , et **découpler du verrou + de la tx longue** :
+
+> **Écrire la row IN_PROGRESS HORS de la tx d'import** ( connexion auto-commit séparée ,
+> comme `WorkflowLogWriter` ) **et ne JAMAIS l'UPDATE en in-tx** ( phase , parent , etc.
+> sur connexion séparée aussi ) . Conséquence : la row n'est plus verrouillée par la tx
+> d'import → le `HeartbeatService` ( thread dédié ) bat librement toutes les 30s dès le
+> transform → progression temps réel + le sweeper retombe sur l'ancienneté heartbeat
+> standard ( plus besoin du `SKIP LOCKED` comme protection ) .
+>
+> **Trade-off** : on perd la détection-crash gratuite du verrou ( JVM tuée → plus de
+> verrou → sweeper détecte ) ; remplacée par l'ancienneté heartbeat ( pattern watchdog
+> normal , équivalent ) . Optionnel : doubler avec `pg_advisory_lock(corrId)` dédié comme
+> jeton de vie explicite , découplé de la row.
+>
+> Pas urgent ( l'actuel est correct ) ; à faire si l'UI figée gêne , ou avec le découpage
+> de la tx longue.
+
+### [ ] Finalize / UPSERT staging→final lent - levier corrigé
+Bench live 2M : finalize ~420s ( 50% du temps total ) , DB-bound , maintenance des index
+GIN ( refValues , refsLinkedTo ) dominante sur chaque batch ( `DataFileRead/Extend` ) .
+
+> **drop+rebuild GIN au finalize = ÉCARTÉ.** `referencevalue` est une table partagée
+> ( tous dépôts + toutes lectures publi/dépubli/download/filtres ) . Drop d'un index
+> partagé sous dépôts parallèles + lectures = race ( 2 dépôts ne peuvent pas drop/rebuild
+> chacun ) , et un dépôt qui foire après le drop laisse la base sans index → rampe
+> totale. `DROP/CREATE INDEX` ne composent pas avec le finalize atomique ;
+> `CONCURRENTLY` ne tient pas dans une tx. C'est une astuce de **load initial one-shot
+> sur table privée/vide** , pas pour de l'UPSERT incrémental concurrent.
+>
+> **Best practice pour ce cas** :
+> 1. **Partitionnement par dépôt/version** ( cf PHASE 2 ci-dessous ) : construire la
+>    partition + ses index en isolation puis `ATTACH PARTITION` ( méta quasi-instantané ) .
+>    Le GIN de la nouvelle partition est bâti une fois sur ses seules données , sans
+>    contention avec les autres dépôts ni les lectures. **La vraie réponse.**
+> 2. **En attendant ( cheap , testable )** : `CASCADE_IMPORT_FINALIZE_MAINTENANCE_WORK_MEM`
+>    est **vide** → construction/maintenance GIN au défaut cluster. Poser 256MB-1GB
+>    ( SET LOCAL pendant le finalize , déjà plombé ) accélère la maintenance d'index.
+>    À A/B-bencher iso-résultat.
+> 3. dup-check WARN scanne les 2M ( ~37s ) même sans agir → si policy OFF , gain net.
+
 ---
 
 ## PHASE 2 - Structurel (différé par décision)
@@ -164,8 +260,14 @@ Générer ZIP/CSV au publish, servir le fichier au download → tue latence + co
 ### [ ] (écarté) Soft-unpublish (visibilité + delete différé)
 Unpublish instantané par flag + delete physique batché hors chemin critique.
 
-### [ ] (écarté) Partitionnement par version
-Drop-partition au unpublish/supersede (instantané) + pruning lecture. Gros chantier.
+### [ ] Partitionnement par dépôt/version - RÉPONSE STRUCTURELLE (finalize + volume + delete)
+Promu de "écarté" à levier central après le bench live : c'est la best-practice pour
+l'UPSERT incrémental concurrent dans une table indexée partagée ( cf finalize/GIN ci-dessus ).
+- Build partition + index GIN en isolation puis `ATTACH PARTITION` ( méta quasi-instantané ) :
+  GIN bâti une fois sur les seules données du dépôt , aucune contention inter-dépôts.
+- Drop-partition au unpublish/supersede/delete = **instantané** ( vs DELETE + vacuum d'une
+  table monolithique ) + pruning à la lecture.
+- Gros chantier : RLS / role / SECURITY DEFINER à préserver iso. Design d'abord.
 
 ---
 
@@ -199,3 +301,68 @@ a évité un ship cassé.
 **Bilan** : Phase 0 partielle livrée sans régression ( résilience 10 users + autovacuum 100M + index
 write ) . Le plus gros gain perf restant ( P5-A extract streaming + P4-A GIN ) nécessite un travail
 ciblé supplémentaire ( chirurgical / validation prod ) plutôt qu'un changement large autonome.
+
+---
+
+## TODO ( plus tard ) - Plafond de workers TRANSFORM par type d'opération ( fairness )
+
+**Statut** : analysé le 31/05/2026, **décidé : à faire plus tard** ( pas maintenant ). Décisions
+verrouillées ci-dessous pour reprise directe.
+
+### Besoin
+Plafonner le nombre de **workers transform concurrents PAR TYPE d'opération** sur le pool transform
+partagé, avec arbitrage inter-jobs. Ex : max dépôt = 2, pool = 4 → un dépôt utilise ≤2 threads, les
+2 restants dispo ; un publish qui arrive prend les dispo dans la limite de SON max ; au-delà, les
+chunks attendent ( pas de rejet ). But = empêcher qu'un gros dépôt n'affame les publish ( ~10 users,
+100M lignes ).
+
+### Faits d'archi ( vérifiés )
+- `cascade` ( repo local, branche **develop** ) : `WorkflowPoolRegistry` = singleton, **UN seul**
+  `transformPool` partagé par tous les workflows ( `getTransformExecutor()` ). Le « parallelism » par
+  workflow ne cappe PAS la part de threads qu'un job prend dans ce pool.
+- Tâches transform soumises dans les drivers : `StagedWorkflowDriver` ( CompletableFuture chaîné ) et
+  `PipelinedCoordinator` ( producer + `Semaphore inflight`, `transformPool` ). Ce sont les 2 points
+  d'insertion.
+- **UNPUBLISH / DELETE = SQL direct chunké, SANS stage transform.** PUBLISH FAST = COPY SQL, sans
+  transform. → le plafond worker ne concerne QUE **IMPORT + PUBLISH ( LITE/FULL )**.
+- Pattern existant réutilisable : `ImportRateLimiter` ( sémaphore par user, hot-resize ),
+  `CascadePoolReloader.resize()`, registre hot-edit `ConfigFieldRegistry` + `/api/dashboard/config`
+  ( ConfigEditPanel oa-live ).
+
+### Décisions verrouillées
+- **Design B** = **BoundedExecutor + `Semaphore` par type** sur le pool transform partagé ( pattern
+  Goetz/JCiP ). C'est la SEULE façon JDK propre ( pas de cap natif par sous-tâche dans un
+  ThreadPoolExecutor ). `acquire(label)` **sur le thread soumetteur, AVANT** `pool.execute` ;
+  `release` en `finally` ( + sur rejet/cancel ). NE PAS acquérir dans la tâche déjà sur un thread du
+  pool ( sinon threads bloqués → famine/deadlock ).
+- **Périmètre** : IMPORT + PUBLISH uniquement. Unpublish/delete restent gérés par le rate-limit de
+  jobs par user existant.
+- **Défaut = 0 ( illimité / OFF )** → comportement actuel à l'octet près, **opt-in strict**, zéro
+  régression tant que non activé.
+
+### Plan d'exécution
+- **C1 cascade** : SPI `TransformAdmissionController` ( interface, impl défaut **no-op** + impl
+  `LabeledSemaphoreAdmission` Map<label,Semaphore>, resize à chaud ). Brancher dans les 2 drivers
+  ( acquire avant submit, release finally, interruptible sur cancel ). Label porté par le builder
+  ( `.transformConcurrencyLabel("IMPORT"|"PUBLISH")` ). Tests : cap respecté, pas de deadlock, release
+  sur exception/cancel, fairness 2 types concurrents, ordering STAGED inchangé.
+- **C2 cascade** : bump version mineure + CHANGELOG + `mvn install` local + tag/push après validation.
+- **O1 openADOM** : bean controller depuis les plafonds, label IMPORT ( CascadeImportPipeline ) /
+  PUBLISH ( PublishLifecyclePhase2Handler ), bump dépendance cascade.
+- **O2** : props `cascade.import.max-transform-workers` + `openadom.publish.max-transform-workers`
+  ( défaut 0=OFF, volatile+setter resize ), enregistrées HOT dans `ConfigFieldRegistry` ( règle
+  1 ≤ cap ≤ pool transform, warning si cap > pool ).
+- **O3** : env ( cascade.env ) + deployment ( commentaires/commit EN pour local_deployment ).
+- **OA1 oa-live** : 2 champs éditables dans **Configuration > Dynamique** ( max workers dépôt / publish )
+  via ConfigEditPanel, validation + warning perf.
+- **OA2 oa-live** : observabilité **Supervision > Temps-réel** : workers transform in-use / en attente
+  par type ( events cascade → endpoint live → bloc UI ).
+- **V** : bench iso-résultat AVANT/APRÈS sous rôle applicatif ( mêmes lignes + RLS ), débit
+  transform/copy/finalize, scénario 1 gros dépôt + N publish ( fairness + non-famine ), cancel <5s avec
+  chunk en attente de permit, full backend tests + tests cascade.
+
+### Risques à surveiller
+Famine/deadlock si acquire après occupation d'un thread pool ( → acquire avant submit ) ; effondrement
+débit si cap trop bas ; interaction avec `parallelism` ( cap = borne sup, parallelism = cible, cap≥1,
+recursive forcé à 1 ) ; iso-résultat ( throttle ne doit que retarder ) ; fuite de permits sur
+cancel/exception ( release finally ) ; compat ascendante cascade ( no-op par défaut ).
