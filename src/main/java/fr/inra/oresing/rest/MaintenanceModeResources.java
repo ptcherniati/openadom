@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Duration;
@@ -56,10 +57,13 @@ public class MaintenanceModeResources {
     /**
      * État courant du mode maintenance.
      *
-     * @param enabled      maintenance active.
-     * @param allowAdmins  accès admin autorisé ( cookie de contournement ) .
+     * @param enabled           maintenance active.
+     * @param allowAdmins       accès admin autorisé ( cookie de contournement ) .
+     * @param adminAccessToken  jeton d'accès courant ( 6 car ) pour construire le
+     *                          lien d'auto-récupération du cookie ; {@code null}
+     *                          si l'accès admin n'est pas autorisé.
      */
-    public record MaintenanceStatus(boolean enabled, boolean allowAdmins) {
+    public record MaintenanceStatus(boolean enabled, boolean allowAdmins, String adminAccessToken) {
     }
 
     /**
@@ -102,18 +106,23 @@ public class MaintenanceModeResources {
     @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
     @PostMapping(value = "/bypass-cookie", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<MaintenanceStatus> acquireBypassCookie() {
+    public ResponseEntity<MaintenanceStatus> acquireBypassCookie(
+            @RequestParam(name = "token", required = false) String token) {
         // Permet à un AUTRE admin ( que celui qui a activé ) d'obtenir le cookie
-        // pour tester. Sans effet utile si l'accès admin n'est pas autorisé.
-        ResponseCookie cookie = maintenanceModeService.isAdminBypassEnabled()
-                ? bypassCookie()
-                : clearedBypassCookie();
+        // pour tester. Si un jeton est fourni ( lien d'accès ) , il doit
+        // correspondre au jeton courant ( les anciens liens, d'un cycle de
+        // maintenance précédent, sont ainsi invalidés ) . Sans jeton, l'auth
+        // admin suffit ( bouton dans la console ) .
+        boolean ok = maintenanceModeService.isAdminBypassEnabled()
+                && (token == null || maintenanceModeService.isAccessTokenValid(token));
+        ResponseCookie cookie = ok ? bypassCookie() : clearedBypassCookie();
         return withBypassCookie(cookie, currentStatus());
     }
 
     private MaintenanceStatus currentStatus() {
         return new MaintenanceStatus(maintenanceModeService.isEnabled(),
-                maintenanceModeService.isAdminBypassEnabled());
+                maintenanceModeService.isAdminBypassEnabled(),
+                maintenanceModeService.getAdminAccessToken());
     }
 
     private ResponseEntity<MaintenanceStatus> withBypassCookie(ResponseCookie cookie, MaintenanceStatus body) {

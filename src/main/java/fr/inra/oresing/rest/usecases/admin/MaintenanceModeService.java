@@ -9,6 +9,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.SecureRandom;
 import java.time.Instant;
 
 /**
@@ -71,6 +72,34 @@ public class MaintenanceModeService {
     }
 
     /**
+     * Jeton d'accès admin courant ( 6 caractères ) , régénéré à chaque activation
+     * avec accès admin. Sert à construire un lien d'auto-récupération du cookie
+     * et à invalider les anciens liens ( un nouveau cycle de maintenance change
+     * le jeton ) . {@code null} si l'accès admin n'est pas autorisé.
+     */
+    public String getAdminAccessToken() {
+        if (!isAdminBypassEnabled()) {
+            return null;
+        }
+        try {
+            for (String line : Files.readAllLines(adminBypassFlagPath, StandardCharsets.UTF_8)) {
+                if (line.startsWith("token=")) {
+                    return line.substring("token=".length()).strip();
+                }
+            }
+        } catch (IOException e) {
+            log.warn("Lecture du jeton d'accès maintenance impossible : {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /** @return {@code true} si {@code token} correspond au jeton d'accès courant. */
+    public boolean isAccessTokenValid(String token) {
+        String current = getAdminAccessToken();
+        return current != null && !current.isBlank() && current.equals(token);
+    }
+
+    /**
      * Secret du cookie de contournement ( valeur à poser dans le cookie
      * {@code oa_maint_bypass} ) , ou chaîne vide si non configuré.
      */
@@ -115,16 +144,34 @@ public class MaintenanceModeService {
         }
     }
 
-    /** Pose ( true ) ou retire ( false ) le drapeau d'accès admin. Idempotent. */
+    /**
+     * Pose ( true ) ou retire ( false ) le drapeau d'accès admin. Idempotent.
+     * À la pose, génère un nouveau jeton d'accès ( 6 caractères ) , stocké dans
+     * le drapeau ( ainsi un nouveau cycle de maintenance invalide les anciens
+     * liens d'auto-récupération du cookie ) .
+     */
     private void setAdminBypass(boolean allow) throws IOException {
         if (allow) {
             if (bypassSecret.isEmpty()) {
                 log.warn("Accès admin en maintenance demandé mais OPENADOM_MAINTENANCE_BYPASS_SECRET est vide "
                         + "- le cookie de contournement ne pourra pas être validé par le proxy.");
             }
-            Files.writeString(adminBypassFlagPath, "enabled_at=" + Instant.now() + "\n", StandardCharsets.UTF_8);
+            Files.writeString(adminBypassFlagPath,
+                    "enabled_at=" + Instant.now() + "\ntoken=" + generateAccessToken() + "\n",
+                    StandardCharsets.UTF_8);
         } else {
             Files.deleteIfExists(adminBypassFlagPath);
         }
+    }
+
+    /** Jeton court ( 6 caractères alphanumériques ) , aléatoire sécurisé. */
+    private static String generateAccessToken() {
+        final String alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sans I,O,0,1 ambigus
+        SecureRandom rnd = new SecureRandom();
+        StringBuilder sb = new StringBuilder(6);
+        for (int i = 0; i < 6; i++) {
+            sb.append(alphabet.charAt(rnd.nextInt(alphabet.length())));
+        }
+        return sb.toString();
     }
 }
