@@ -95,18 +95,22 @@ public class AuthorizationFilter extends GenericFilterBean {
 
     private final fr.inra.oresing.monitoring.session.JwtBlacklistRegistry jwtBlacklist;
 
+    private final fr.inra.oresing.rest.usecases.admin.UserAccessService userAccessService;
+
     @Autowired
     public AuthorizationFilter(
             ServiceContainer serviceContainer,
             JsonRowMapper<?> jsonRowMapper,
             JWTExtractor jWTExtractor,
             OreExceptionHandler exceptionHandler,
-            fr.inra.oresing.monitoring.session.JwtBlacklistRegistry jwtBlacklist) {
+            fr.inra.oresing.monitoring.session.JwtBlacklistRegistry jwtBlacklist,
+            fr.inra.oresing.rest.usecases.admin.UserAccessService userAccessService) {
         this.exceptionHandler = exceptionHandler;
         this.mapper = jsonRowMapper;
         this.jWTExtractor = jWTExtractor;
         this.serviceContainer = serviceContainer;
         this.jwtBlacklist = jwtBlacklist;
+        this.userAccessService = userAccessService;
     }
 
     @Override
@@ -232,6 +236,8 @@ public class AuthorizationFilter extends GenericFilterBean {
             code = "TOKEN_EXPIRED";
         } else if (ex.getMessage() != null && ex.getMessage().contains("revoked by admin")) {
             code = "TOKEN_REVOKED";
+        } else if (ex.getMessage() != null && ex.getMessage().contains("access blocked")) {
+            code = "ACCESS_BLOCKED";
         } else {
             code = "TOKEN_INVALID";
         }
@@ -426,6 +432,15 @@ public class AuthorizationFilter extends GenericFilterBean {
             throw new BadCredentialsException("Token revoked by admin kick");
         }
         OreSiRequestClient requestClient = jWTExtractor.getRequestClientFromJwt(jwtToken);
+        // Blocage d'accès par utilisateur ( autoritaire ) : l'identifiant est
+        // relu depuis le JWT validé ci-dessus , jamais depuis le cookie
+        // oa_uid ( que nginx utilise pour le rideau UX ) , donc non
+        // contournable . Un utilisateur bloqué se voit refuser TOUT appel
+        // /api ; le code ACCESS_BLOCKED déclenche côté front la redirection
+        // vers la page de maintenance .
+        if (userAccessService.isBlocked(requestClient.id())) {
+            throw new BadCredentialsException("User access blocked by admin");
+        }
         return new OreSiAuthenticationToken(
                 requestClient,
                 request.getRequestURI(),

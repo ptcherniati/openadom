@@ -27,7 +27,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -38,6 +40,7 @@ import org.springframework.web.util.UriUtils;
 
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.time.Duration;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Map;
@@ -217,8 +220,33 @@ public class AuthenticationResources {
                 .orElse(null);
         if (result != null) {
             registerSession(request, response, result);
+            // Cookie d'identité ( UUID ) : permet à nginx de servir la page de
+            // maintenance à un utilisateur bloqué sur n'importe quel service .
+            // Non sensible ( HttpOnly , juste l'UUID ) ; l'enforcement réel des
+            // données reste le filtre backend , qui relit l'UUID du JWT validé .
+            response.addHeader(HttpHeaders.SET_COOKIE, identityCookie(result.id()).toString());
         }
         return result;
+    }
+
+    /** Cookie {@code oa_uid} = UUID utilisateur , durée alignée sur le JWT. */
+    private ResponseCookie identityCookie(UUID userId) {
+        return baseIdentityCookie(userId == null ? "" : userId.toString(),
+                Duration.ofSeconds(jwtExpirationSeconds));
+    }
+
+    private ResponseCookie clearedIdentityCookie() {
+        return baseIdentityCookie("", Duration.ZERO);
+    }
+
+    private ResponseCookie baseIdentityCookie(String value, Duration maxAge) {
+        return ResponseCookie.from("oa_uid", value)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .sameSite("Lax")
+                .maxAge(maxAge)
+                .build();
     }
 
     @Operation(
@@ -232,8 +260,11 @@ public class AuthenticationResources {
     @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<String> logout(HttpServletResponse response) {
         terminateCurrentUserSessions(SessionInfo.END_LOGOUT);
+        // Efface le cookie d'identité posé au login ( cf. identityCookie ).
         return ResponseEntity
-                .ok("{\"message\": \"Disconnected\"}");
+                .ok()
+                .header(HttpHeaders.SET_COOKIE, clearedIdentityCookie().toString())
+                .body("{\"message\": \"Disconnected\"}");
     }
 
     /**
