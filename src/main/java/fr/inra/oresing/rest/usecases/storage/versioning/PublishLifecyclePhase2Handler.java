@@ -395,6 +395,7 @@ public class PublishLifecyclePhase2Handler {
                 // d'eviction auto ) . Granularite per-dataType : cle cache
                 // app::dataType , aucune purge globale .
                 refreshFilterListCacheSilently(application, ev.dataName());
+                recordCacheTrigger(application, ev);
                 finalStatus = WorkflowLogEntry.STATUS_COMPLETED;
                 logRepository.updatePhase(ev.correlationId(),
                         fr.inra.oresing.workflow.WorkflowPhase.DONE);
@@ -860,6 +861,29 @@ public class PublishLifecyclePhase2Handler {
     // ------------------------------------------------------------
     // Cache / atomic-commit / audit / mail
     // ------------------------------------------------------------
+
+    /**
+     * Record ( best-effort , observability-only ) what triggered the cache
+     * invalidations above : the publish-lifecycle action ( PUBLISH /
+     * UNPUBLISH / DELETE_FILE ) , the target datatype or reference , and the
+     * initiating login carried by the event . Surfaced in oa-live ( Caches
+     * tab , "last update" modal ) . Never throws .
+     */
+    private void recordCacheTrigger(Application application, PublishLifecycleEvent ev) {
+        try {
+            String dataName = ev.dataName();
+            String kind = dataName == null ? null
+                    : (application.isData(dataName) ? fr.inra.oresing.cache.CacheTrigger.DATATYPE
+                                                    : fr.inra.oresing.cache.CacheTrigger.REFERENCE);
+            fr.inra.oresing.cache.CacheTrigger trigger = fr.inra.oresing.cache.CacheTrigger.now(
+                    ev.action().name(), application.getName(), kind, dataName, ev.userLogin());
+            serviceContainer.cacheInvalidationTracker().recordFilterFamily(trigger);
+            serviceContainer.cacheInvalidationTracker().record(
+                    fr.inra.oresing.cache.CacheInvalidationTracker.REFERENCED_FILES, trigger);
+        } catch (RuntimeException ex) {
+            log.warn("recordCacheTrigger failed : {}", ex.getMessage());
+        }
+    }
 
     private void invalidateReferencedFilesCacheSilently(String applicationName) {
         try {

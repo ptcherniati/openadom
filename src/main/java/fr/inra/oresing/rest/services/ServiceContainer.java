@@ -58,4 +58,8 @@ public class ServiceContainer {
     public Email emailService() {
         return (Email) context.getBean("emailService");
     }
+
+    public fr.inra.oresing.cache.CacheInvalidationTracker cacheInvalidationTracker() {
+        return context.getBean(fr.inra.oresing.cache.CacheInvalidationTracker.class);
+    }
 }

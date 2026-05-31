@@ -753,6 +753,10 @@ public class OreSiResources {
             for (String dataName : application.getAllDataNames()) {
                 serviceContainer.dataService().refreshFilterListCache(application, dataName);
             }
+            // Trace du déclencheur d'invalidation cache ( oa-live / Caches ) :
+            // mise à jour de configuration ( pas de cible unique ) .
+            serviceContainer.cacheInvalidationTracker().recordFilterFamily(
+                    fr.inra.oresing.cache.CacheTrigger.now("CONFIG_UPDATE", application.getName(), null, null, cacheTriggerLogin()));
             fluxSink.next(new ReactiveTypeResult(uuid));
             fluxSink.complete();
         });
@@ -912,6 +916,11 @@ public class OreSiResources {
             // aussi le cache des filtres ( #58 ) .
             Application application = serviceContainer.applicationService().getApplication(nameOrId);
             serviceContainer.dataService().refreshFilterListCache(application, dataName);
+            // Trace du déclencheur d'invalidation cache ( oa-live / Caches ) :
+            // dépôt sur un type de donnée / référentiel .
+            serviceContainer.cacheInvalidationTracker().recordFilterFamily(
+                    fr.inra.oresing.cache.CacheTrigger.now("DEPOSIT", application.getName(),
+                            cacheTargetKind(application, dataName), dataName, cacheTriggerLogin()));
             String fileName = file == null ? null : file.getOriginalFilename();
             DataVersioningResult finalized = serviceContainer.versioningService()
                     .finalizePostCommit(locale, nameOrId, dataName, fileName, dataVersioningResult, true);
@@ -1334,6 +1343,29 @@ public class OreSiResources {
                 .cacheControl(cacheControl)
                 .header("X-Filter-Cache", cacheStatusHeader)
                 .body(result.json());
+    }
+
+    /**
+     * Type de cible pour la trace d'invalidation cache : type de donnée vs
+     * référentiel . {@code null} si le nom est absent ( ex : MAJ config ) .
+     */
+    private static String cacheTargetKind(Application application, String dataName) {
+        if (dataName == null) {
+            return null;
+        }
+        return application.isData(dataName)
+                ? fr.inra.oresing.cache.CacheTrigger.DATATYPE
+                : fr.inra.oresing.cache.CacheTrigger.REFERENCE;
+    }
+
+    /** Login courant pour la trace d'invalidation cache ( best-effort , null si indisponible ) . */
+    private String cacheTriggerLogin() {
+        try {
+            var roles = serviceContainer.authenticationService().getCurrentUserRoles();
+            return roles != null ? roles.userLogin() : null;
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     /**

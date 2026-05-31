@@ -153,6 +153,8 @@ public class CacheAdminResources {
         dataService.invalidateFilterListCacheForApplication(application.getName());
         authorizationService.invalidateAuthorizationScopesForApplication(application.getName());
         dataService.invalidateCheckedFormatComponentsForApplication(application.getName());
+        serviceContainer.cacheInvalidationTracker().recordFilterFamily(
+                fr.inra.oresing.cache.CacheTrigger.now("ADMIN_CLEAR_APP", application.getName(), null, null, currentLogin()));
 
         log.info("Admin invalidate-caches for app {} requested", application.getName());
         return ResponseEntity.ok(Map.of(
@@ -199,6 +201,11 @@ public class CacheAdminResources {
         // promesse "tous les caches vides" . Fix : appel symetrique avec les
         // autres invalidateAll* .
         withBinaryFileService(bfs -> bfs.invalidateAllReferencedFilesCaches());
+        fr.inra.oresing.cache.CacheTrigger clearAll =
+                fr.inra.oresing.cache.CacheTrigger.now("ADMIN_CLEAR_ALL", null, null, null, currentLogin());
+        serviceContainer.cacheInvalidationTracker().recordFilterFamily(clearAll);
+        serviceContainer.cacheInvalidationTracker().record(
+                fr.inra.oresing.cache.CacheInvalidationTracker.REFERENCED_FILES, clearAll);
 
         log.warn("Admin invalidate-all-caches : tous les caches memoire JVM vides");
         return ResponseEntity.ok(Map.of(
@@ -243,25 +250,29 @@ public class CacheAdminResources {
     public ResponseEntity<Map<String, Object>> cacheStats() {
         DataService dataService = serviceContainer.dataService();
         AuthorizationService authorizationService = serviceContainer.authorizationService();
+        fr.inra.oresing.cache.CacheInvalidationTracker tracker = serviceContainer.cacheInvalidationTracker();
         Map<String, Object> body = new java.util.LinkedHashMap<>();
         body.put("filterList", cacheEntryStats(
                 dataService.isFilterListCacheEnabled(),
                 dataService.getFilterListCacheMaxEntries(),
                 0,
                 dataService.getFilterListCacheSize(),
-                dataService.getFilterListCacheLastWriteAt()));
+                dataService.getFilterListCacheLastWriteAt(),
+                tracker.last(fr.inra.oresing.cache.CacheInvalidationTracker.FILTER_LIST)));
         body.put("authorizationScopes", cacheEntryStats(
                 authorizationService.isAuthorizationScopesCacheEnabled(),
                 authorizationService.getAuthorizationScopesCacheMaxEntries(),
                 authorizationService.getAuthorizationScopesCacheTtlMinutes(),
                 authorizationService.getAuthorizationScopesCacheSize(),
-                authorizationService.getAuthorizationScopesCacheLastWriteAt()));
+                authorizationService.getAuthorizationScopesCacheLastWriteAt(),
+                tracker.last(fr.inra.oresing.cache.CacheInvalidationTracker.AUTHORIZATION_SCOPES)));
         body.put("checkedFormatComponents", cacheEntryStats(
                 dataService.isCheckedFormatComponentsCacheEnabled(),
                 dataService.getCheckedFormatComponentsCacheMaxEntries(),
                 dataService.getCheckedFormatComponentsCacheTtlMinutes(),
                 dataService.getCheckedFormatComponentsCacheSize(),
-                dataService.getCheckedFormatComponentsCacheLastWriteAt()));
+                dataService.getCheckedFormatComponentsCacheLastWriteAt(),
+                tracker.last(fr.inra.oresing.cache.CacheInvalidationTracker.CHECKED_FORMAT_COMPONENTS)));
         // Audit CACHE_ADMIN ( 23/5/26 ) : referencedFiles ( BinaryFileService )
         // etait absent de l'observabilite admin -> oa-live ne pouvait pas
         // l'afficher . Expose desormais flag + capacite + TTL + size + lastWrite ,
@@ -271,7 +282,8 @@ public class CacheAdminResources {
                 bfs.getReferencedFilesCacheMaxEntries(),
                 bfs.getReferencedFilesCacheTtlMinutes(),
                 bfs.getReferencedFilesCacheSize(),
-                bfs.getReferencedFilesCacheLastWriteAt())));
+                bfs.getReferencedFilesCacheLastWriteAt(),
+                tracker.last(fr.inra.oresing.cache.CacheInvalidationTracker.REFERENCED_FILES))));
         body.put("frontEtagDefaults", Map.of(
                 "maxEntries", dataService.getFrontEtagCacheMaxEntries(),
                 "maxBytesMb", dataService.getFrontEtagCacheMaxBytesMb()
@@ -299,6 +311,16 @@ public class CacheAdminResources {
         }
     }
 
+    /** Current authenticated login , best-effort ( null if unavailable ) . */
+    private String currentLogin() {
+        try {
+            var roles = serviceContainer.authenticationService().getCurrentUserRoles();
+            return roles != null ? roles.userLogin() : null;
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
     /**
      * Builder homogene d'une entree stats avec le champ {@code lastUpdatedAt}
      * ( ISO instant ou null si jamais ecrit ) . Centralise le mapping pour
@@ -307,13 +329,34 @@ public class CacheAdminResources {
      */
     private static Map<String, Object> cacheEntryStats(boolean enabled, int maxEntries,
                                                        long ttlMinutes, int entries,
-                                                       java.time.Instant lastWriteAt) {
+                                                       java.time.Instant lastWriteAt,
+                                                       fr.inra.oresing.cache.CacheTrigger lastTrigger) {
         Map<String, Object> m = new java.util.LinkedHashMap<>();
         m.put("enabled", enabled);
         m.put("maxEntries", maxEntries);
         m.put("ttlMinutes", ttlMinutes);
         m.put("entries", entries);
         m.put("lastUpdatedAt", lastWriteAt != null ? lastWriteAt.toString() : null);
+        m.put("lastTrigger", lastTriggerToMap(lastTrigger));
+        return m;
+    }
+
+    /**
+     * Serialise the last invalidation trigger ( what business operation moved
+     * the cache , on which datatype / reference , by whom , when ) , or null if
+     * none recorded since boot ( cache only lazily populated by reads ) .
+     */
+    private static Map<String, Object> lastTriggerToMap(fr.inra.oresing.cache.CacheTrigger t) {
+        if (t == null) {
+            return null;
+        }
+        Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("operation", t.operation());
+        m.put("application", t.application());
+        m.put("targetKind", t.targetKind());
+        m.put("targetName", t.targetName());
+        m.put("login", t.login());
+        m.put("at", t.at() != null ? t.at().toString() : null);
         return m;
     }
 }
