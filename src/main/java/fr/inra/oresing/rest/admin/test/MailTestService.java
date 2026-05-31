@@ -32,9 +32,7 @@ public class MailTestService {
     public static final String DEFAULT_BODY = """
             Ceci est un message de test envoyé depuis la console d'administration OpenADOM.
 
-            Si vous le recevez, la configuration de la messagerie est opérationnelle :
-            OpenADOM peut bien envoyer ses courriels ( notifications, demandes de droits,
-            alertes ).
+            Si vous le recevez, la configuration de la messagerie est opérationnelle : OpenADOM peut bien envoyer ses courriels ( notifications, demandes de droits, alertes ).
 
             Aucune action n'est requise. Ce message peut être supprimé.
             """;
