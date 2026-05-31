@@ -1,5 +1,6 @@
 package fr.inra.oresing.domain.application.configuration;
 
+import fr.inra.oresing.domain.exceptions.application.SiOreConfigurationFormatException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -104,5 +105,92 @@ class TagTest {
     @Test
     void testOrderStrictTagPatternConstant() {
         Assertions.assertEquals("__ORDER_STRICT__", Tag.OrderStrictTag.ORDER_STRICT_PATTERN);
+    }
+
+    @Test
+    void testStepTagBuilder() {
+        Tag.StepTag tag = TagBuilder.stepTag(3);
+        Assertions.assertEquals(Tag.TagDefinitions.STEP_TAG, tag.tagDefinition());
+        Assertions.assertEquals(3, tag.stepLevel());
+    }
+
+    @Test
+    void testStepTagFromBuildTag() {
+        // Le parsing YAML => Java passe par Tag.buildTag(String) ; vérifie que la
+        // chaîne "__STEP_2__" produit bien un StepTag de niveau 2.
+        Tag tag = Tag.buildTag("__STEP_2__");
+        Assertions.assertInstanceOf(Tag.StepTag.class, tag);
+        Tag.StepTag stepTag = (Tag.StepTag) tag;
+        Assertions.assertEquals(Tag.TagDefinitions.STEP_TAG, stepTag.tagDefinition());
+        Assertions.assertEquals(2, stepTag.stepLevel());
+    }
+
+    @Test
+    void testStepTagIsDefinedTag() {
+        Tag.StepTag tag = TagBuilder.stepTag(1);
+        Assertions.assertInstanceOf(Tag.DefinedTag.class, tag);
+    }
+
+    @Test
+    void testStepTagPatternConstant() {
+        Assertions.assertEquals("__STEP_(\\d+)__", Tag.StepTag.STEP_TAG_PATTERN.pattern());
+    }
+
+    @Test
+    void testStepTagWithoutParameterIsBusinessTag() {
+        // Le motif sans paramètre (__STEP__) n'est pas capté par StepTag :
+        // il reste un BusinessTag libre.
+        Tag tag = Tag.buildTag("__STEP__");
+        Assertions.assertInstanceOf(Tag.BusinessTag.class, tag);
+        Assertions.assertFalse(tag instanceof Tag.StepTag);
+    }
+
+    @Test
+    void testBusinessTagWithoutParameterFromBuildTag() {
+        Tag tag = Tag.buildTag("__STEP__");
+        Assertions.assertInstanceOf(Tag.BusinessTag.class, tag);
+        Tag.BusinessTag businessTag = (Tag.BusinessTag) tag;
+        Assertions.assertEquals(Tag.TagDefinitions.BUSINESS_TAG, businessTag.tagDefinition());
+        Assertions.assertEquals("STEP", businessTag.tagPrefix());
+        Assertions.assertNull(businessTag.tagParameter());
+    }
+
+    @Test
+    void testBusinessTagWithParameterFromBuildTag() {
+        Tag tag = Tag.buildTag("__GROUP_100__");
+        Assertions.assertInstanceOf(Tag.BusinessTag.class, tag);
+        Tag.BusinessTag businessTag = (Tag.BusinessTag) tag;
+        Assertions.assertEquals("GROUP", businessTag.tagPrefix());
+        Assertions.assertEquals(100, businessTag.tagParameter());
+    }
+
+    @Test
+    void testZoneBusinessTagWithParameterFromBuildTag() {
+        Tag tag = Tag.buildTag("__ZONE_3__");
+        Assertions.assertInstanceOf(Tag.BusinessTag.class, tag);
+        Tag.BusinessTag businessTag = (Tag.BusinessTag) tag;
+        Assertions.assertEquals("ZONE", businessTag.tagPrefix());
+        Assertions.assertEquals(3, businessTag.tagParameter());
+    }
+
+    @Test
+    void testReservedTagsWinBeforeBusinessTag() {
+        Assertions.assertInstanceOf(Tag.OrderTag.class, Tag.buildTag("__ORDER_5__"));
+        Assertions.assertInstanceOf(Tag.FilterTextTag.class, Tag.buildTag("__FILTER_TEXT__"));
+        // __STEP_xxx__ est un tag système réservé : il l'emporte sur le BusinessTag
+        // générique de même forme (__PREFIX_123__).
+        Assertions.assertInstanceOf(Tag.StepTag.class, Tag.buildTag("__STEP_2__"));
+    }
+
+    @Test
+    void testInvalidBusinessTagPatternsAreRejected() {
+        Assertions.assertThrows(SiOreConfigurationFormatException.class, () -> Tag.buildTag("__foo__"));
+        Assertions.assertThrows(SiOreConfigurationFormatException.class, () -> Tag.buildTag("__1STEP__"));
+    }
+
+    @Test
+    void testBusinessTagIsNotDefinedTag() {
+        Tag.BusinessTag tag = TagBuilder.businessTag("STEP", null);
+        Assertions.assertFalse(Tag.DefinedTag.class.isInstance(tag));
     }
 }

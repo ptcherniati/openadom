@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.IsEqual;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
@@ -789,11 +790,66 @@ public class Fixtures {
             Assertions.assertTrue(errors.isEmpty(),
                     "Le chargement de l'application ne devrait pas contenir d'erreurs %s".formatted(errors.toString()));
 
+            // Vérification systématique (et légère) de la cohérence des index de
+            // filtre après chaque dépôt de configuration réussi : tant que
+            // app.filterModel.legacyDefault=true, chaque referencetype déclaré doit
+            // être couvert par un index GIN « legacy » spécifique par datatype.
+            // Cf. documentations/features/ACCELERATED_FILTERS.md §3.4.
+            assertLegacyGinIndexCoherence(applicationName);
+
             return mvcResult;
 
         } catch (final Exception e) {
             throw e.getCause() == null ? e : e.getCause();
         }
+    }
+
+    /**
+     * Vérifie qu'après le dépôt d'une configuration, <em>tous</em> les
+     * {@code referencetype} déclarés (référentiels ET datatypes, lus depuis la
+     * colonne {@code public.application.data}) sont couverts par un index GIN
+     * « legacy » spécifique par datatype
+     * ({@code USING gin (refvalues jsonb_path_ops) WHERE referencetype = '<type>'}).
+     *
+     * <p>Vérification volontairement minimale (deux requêtes catalogue) afin de
+     * pouvoir l'exécuter après chaque dépôt sans impact notable sur la durée des
+     * tests. Le GIN statique global {@code referenceType_refValue_gin_idx} est
+     * exclu (définition multi-colonnes), de sorte que ce contrôle constate la
+     * couverture réelle par les index par datatype — précondition à la suppression
+     * du GIN statique (cf. ACCELERATED_FILTERS.md §3.4).
+     *
+     * <p>Si l'application ne déclare aucun {@code referencetype}, la vérification
+     * est sans objet et ne fait rien.
+     */
+    private void assertLegacyGinIndexCoherence(final String applicationName) {
+        final List<String> allReferenceTypes = namedParameterJdbcTemplate.queryForList(
+                "SELECT unnest(data) FROM public.application WHERE name = :name",
+                new MapSqlParameterSource("name", applicationName),
+                String.class);
+        if (allReferenceTypes.isEmpty()) {
+            return;
+        }
+        final List<String> legacyIndexDefs = namedParameterJdbcTemplate.queryForList(
+                """
+                SELECT indexdef FROM pg_indexes
+                WHERE schemaname = :schema
+                  AND indexdef LIKE '%gin (refvalues jsonb_path_ops)%'
+                  AND indexdef LIKE '%referencetype = %'
+                """,
+                new MapSqlParameterSource("schema", applicationName),
+                String.class);
+        final Pattern referencetypePredicate = Pattern.compile("referencetype = '([^']+)'");
+        final Set<String> covered = legacyIndexDefs.stream()
+                .map(referencetypePredicate::matcher)
+                .filter(Matcher::find)
+                .map(matcher -> matcher.group(1))
+                .collect(Collectors.toSet());
+        final List<String> notCovered = allReferenceTypes.stream()
+                .filter(referenceType -> !covered.contains(referenceType))
+                .toList();
+        Assertions.assertTrue(notCovered.isEmpty(),
+                "Index GIN legacy manquant pour referencetype %s (application %s, couverts = %s)"
+                        .formatted(notCovered, applicationName, covered));
     }
 
     MvcResult changeConfiguration(final MockMultipartFile file,

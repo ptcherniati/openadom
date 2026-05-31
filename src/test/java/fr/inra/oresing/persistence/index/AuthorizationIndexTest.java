@@ -13,6 +13,7 @@ import org.mockito.Mockito;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -117,6 +118,71 @@ class AuthorizationIndexTest {
                 createIndexesSql);
     }
 
+
+    @Test
+    void createIndexWithNoFilterModelSkipsRefvaluesIndex() {
+        StandardDataDescription pem = dataDescription(FilterModel.NONE, Map.of(), new Authorization(
+                List.of(
+                        new AuthorizationScopeComponentData("projet", "dataProjet"),
+                        new AuthorizationScopeComponentData("sites", "dataSites")
+                ),
+                "timeScope"
+        ));
+        AuthorizationIndex index = new AuthorizationIndex(applicationFor(pem));
+
+        assertEquals(
+                """
+                        CREATE INDEX IF NOT EXISTS authorization_pem_index_auth_index
+                        ON monsore.referencevalue USING gin
+                        (
+                            (("authorization").requiredauthorizations.dataProjet),
+                            (("authorization").requiredauthorizations.dataSites)
+                        )
+                        WHERE referencetype = 'pem';
+                        
+                        CREATE INDEX IF NOT EXISTS authorization_pem_index_timescope_index
+                        ON monsore.referencevalue USING gist
+                        ((("authorization").timescope))
+                        WHERE referencetype = 'pem';
+                        
+                        """,
+                index.createIndex(PEM));
+    }
+
+    @Test
+    void createIndexWithDefinedFiltersCreatesColumnIndexes() {
+        ComponentDescription listComponent = ComponentDescriptionBuilder.basicComponent()
+                .componentKey("status")
+                .tags(Set.of(Tag.FilterListTag.instance()))
+                .build();
+        ComponentDescription textComponent = ComponentDescriptionBuilder.basicComponent()
+                .componentKey("comment")
+                .tags(Set.of(Tag.FilterTextTag.instance()))
+                .build();
+        Map<String, ComponentDescription> components = new LinkedHashMap<>();
+        components.put("status", listComponent);
+        components.put("comment", textComponent);
+        StandardDataDescription pem = dataDescription(FilterModel.DEFINED_FILTERS, components, null);
+        AuthorizationIndex index = new AuthorizationIndex(applicationFor(pem));
+
+        assertEquals(
+                """
+                        CREATE INDEX IF NOT EXISTS authorization_pem_index_filter_status_index
+                        ON monsore.referencevalue ((refvalues->>'status'))
+                        WHERE referencetype = 'pem';
+                        
+                        CREATE INDEX IF NOT EXISTS authorization_pem_index_filter_comment_text_index
+                        ON monsore.referencevalue USING gin (lower(refvalues->>'comment') gin_trgm_ops)
+                        WHERE referencetype = 'pem';
+                        
+                        """,
+                index.createIndex(PEM));
+        assertEquals(Set.of(
+                        "authorization_pem_index_filter_status_index",
+                        "authorization_pem_index_filter_comment_text_index"),
+                index.expectedIndexNames());
+    }
+
     @Test
     void testSqlFilterForAuthorization() {
         LocalDateTimeRange timescope = LocalDateTimeRange.forDay(LocalDate.of(1984, 1, 2));
@@ -145,6 +211,7 @@ class AuthorizationIndexTest {
                 null,
                 null,
                 null,
+                FilterModel.LEGACY_GIN,
                 null,
                 null,
                 null,
@@ -155,6 +222,36 @@ class AuthorizationIndexTest {
                         ),
                         "timeScope"
                 ),
+                null,
+                null,
+                null
+        );
+    }
+
+    private Application applicationFor(StandardDataDescription pem) {
+        Application application = Mockito.mock(Application.class, "mockedApplicationForFilterModel");
+        Configuration configuration = Mockito.mock(Configuration.class, "mockedConfigurationForFilterModel");
+        Mockito.when(application.getName()).thenReturn(MONSORE);
+        Mockito.when(application.getConfiguration()).thenReturn(configuration);
+        Mockito.when(configuration.dataDescription()).thenReturn(Map.of(PEM, pem));
+        Mockito.when(application.findData(PEM)).thenReturn(Optional.of(pem));
+        Mockito.when(application.getAllDataNames()).thenReturn(List.of(PEM));
+        return application;
+    }
+
+    private StandardDataDescription dataDescription(FilterModel filterModel, Map<String, ComponentDescription> components, Authorization authorization) {
+        return new StandardDataDescription(
+                ';',
+                null,
+                null,
+                null,
+                null,
+                filterModel,
+                null,
+                components,
+                null,
+                authorization,
+                null,
                 null,
                 null
         );

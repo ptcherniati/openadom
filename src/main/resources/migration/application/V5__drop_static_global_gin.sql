@@ -1,0 +1,25 @@
+-- -----------------------------------------------------------------
+-- Suppression du GIN statique global referenceType_refValue_gin_idx
+-- -----------------------------------------------------------------
+-- Cet index GIN etait cree inconditionnellement par V1 sur
+-- referencevalue avec la cle ( (referencetype)::jsonb , refvalues
+-- jsonb_path_ops ) , couvrant TOUS les datatypes en un seul index .
+--
+-- Il est desormais entierement redondant : chaque referencetype filtre
+-- possede son propre GIN partiel ( USING gin (refvalues jsonb_path_ops)
+-- WHERE referencetype = '<dt>' ) cree par AuthorizationIndex.createIndex()
+-- des que effectiveFilterModel(<dt>) == LEGACY_GIN . Ces index partiels
+-- sont plus petits et plus selectifs ( pas de discrimination du
+-- referencetype dans la cle ) .
+--
+-- Conserver les deux doublait le cout d'ecriture ( WAL + fastupdate ) et
+-- l'espace disque sur les plus grosses tables , et neutralisait la
+-- differentiation des filtres ( un type regle sur NONE restait indexe ) .
+-- Cf. documentations/features/ACCELERATED_FILTERS.md §3 . La couverture
+-- par index partiel est verifiee a chaque depot par la garde de test
+-- Fixtures.assertLegacyGinIndexCoherence , precondition a cette suppression .
+--
+-- L'index avait ete cree sans guillemets : son nom reel est donc
+-- entierement en minuscules ( referencetype_refvalue_gin_idx ) .
+
+DROP INDEX IF EXISTS ${applicationSchema}.referencetype_refvalue_gin_idx;

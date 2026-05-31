@@ -37,4 +37,12 @@ public class TagBuilder {
     public static Tag.OrderStrictTag orderStrictTag() {
         return Tag.OrderStrictTag.instance();
     }
+
+    public static Tag.StepTag stepTag(int level) {
+        return new Tag.StepTag(level);
+    }
+
+    public static Tag.BusinessTag businessTag(String prefix, Integer parameter) {
+        return new Tag.BusinessTag(prefix, parameter);
+    }
 }

@@ -9,6 +9,7 @@ public class StandardDataDescriptionBuilder {
     private Integer firstRowLine = 2;
     private Boolean allowUnexpectedColumns = false;
     private Set<Tag> tags = Set.of();
+    private FilterModel filterModel = FilterModel.defaultValue();
     private LinkedHashSet<String> naturalKey = new LinkedHashSet<>();
     private Map<String, ComponentDescription> componentDescriptions = Map.of();
     private Submission submission;
@@ -39,6 +40,11 @@ public class StandardDataDescriptionBuilder {
 
     public StandardDataDescriptionBuilder tags(Set<Tag> tags) {
         this.tags = tags;
+        return this;
+    }
+
+    public StandardDataDescriptionBuilder filterModel(FilterModel filterModel) {
+        this.filterModel = filterModel;
         return this;
     }
 
@@ -84,6 +90,7 @@ public class StandardDataDescriptionBuilder {
                 firstRowLine,
                 allowUnexpectedColumns,
                 tags,
+                filterModel,
                 naturalKey,
                 componentDescriptions,
                 submission,
