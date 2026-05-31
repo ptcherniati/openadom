@@ -16,11 +16,13 @@ public class BinaryFile extends OreSiEntity {
     private InputStream fileData;
     private BinaryFileInfos params;
     /**
-     * Publish FAST path : cache CSV processed ( JSON lines DataValue
-     * serialisees ) capture au 1er upload pour activer le FAST path au
-     * republish ( bypass DataImporter ) . Stocke en colonne bytea separee
-     * pour ne pas alourdir les requetes courantes ( fileData / params ) .
-     * {@code null} pour fichiers pre-feature ou si capture desactivee .
+     * Publish FAST path : cache binaire de {@code referencevalue} ( COPY
+     * BINARY ) capture en async APRES un publish ( cf {@code CacheCaptureService}
+     * ) pour activer le FAST path au republish suivant ( bypass DataImporter ) .
+     * Stocke en colonne {@code oid} ( Large Object ) separee pour ne pas alourdir
+     * les requetes courantes ( fileData / params ) et supporter > 1 GB .
+     * {@code null} si jamais publie , capture desactivee / echouee , ou cache
+     * vide apres un republish FAST en mode CACHED_ROTATION .
      */
     private transient InputStream processedData;
     private Long processedSize;

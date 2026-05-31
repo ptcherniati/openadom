@@ -255,10 +255,12 @@ public class ConfigFieldRegistry {
 
         // ---- Publish FAST path + mode CACHED_ROTATION ( hot ) ----
         register(ConfigField.enumField("publish.publishMode", PublishProperties.PublishMode.class)
-                .description("Strategie pipeline publication . CASCADE_ALWAYS = legacy "
-                        + "( cascade re-execute a chaque republish ) . CACHED_ROTATION = "
-                        + "snapshot rows -> processed_data au unpublish , COPY -> referencevalue "
-                        + "+ clear au republish . Pas de duplication storage en steady state .")
+                .description("Strategie pipeline publication . CASCADE_ALWAYS = "
+                        + "cascade re-execute a chaque republish ; le cache processed_data "
+                        + "est conserve ( jamais vide ) . CACHED_ROTATION = le republish FAST "
+                        + "consomme le cache processed_data ( COPY -> referencevalue ) puis le "
+                        + "vide ; il est re-rempli par la capture async du publish suivant . "
+                        + "Pas de duplication storage en steady state .")
                 .getter(() -> publishProperties.getPublishMode().name())
                 .setter(s -> publishProperties.setPublishMode(PublishProperties.PublishMode.valueOf(s)))
                 .build());
@@ -272,9 +274,10 @@ public class ConfigFieldRegistry {
                 .build());
 
         register(ConfigField.boolField("publish.captureProcessedEnabled")
-                .description("Mode CASCADE_ALWAYS : capture JSON processed pendant cascade pour "
-                        + "armer FAST path subsequent ( +30% disk ) . Ignore en CACHED_ROTATION "
-                        + "( cache alimente par snapshot SQL au unpublish ) .")
+                .description("Active la capture async ( post-publish ) de referencevalue -> "
+                        + "processed_data pour armer le FAST path du prochain republish . "
+                        + "Best-effort , sans retry ; vaut pour les deux modes "
+                        + "( CASCADE_ALWAYS et CACHED_ROTATION ) .")
                 .getter(publishProperties::isCaptureProcessedEnabled)
                 .setter(publishProperties::setCaptureProcessedEnabled)
                 .build());

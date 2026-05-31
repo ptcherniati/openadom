@@ -90,7 +90,7 @@ public class PublishLifecyclePhase2Handler {
 
     /**
      * Registry des pg_backend_pid actifs , utilise pour register/deregister
-     * autour des phases SQL longues ( snapshot string_agg , DELETE referencevalue )
+     * autour des phases SQL longues ( DELETE referencevalue , COPY FAST path )
      * afin que {@code pg_cancel_backend} puisse interrompre le statement en
      * cours quand l'utilisateur clique cancel . Cf {@link BackendPidRegistry} .
      */
@@ -669,29 +669,24 @@ public class PublishLifecyclePhase2Handler {
      * DELETE des rows referencevalue pour ce fileId . Le binaryfile reste
      * intact ( on garde la possibilite de republier ) .
      *
-     * <p>Mode {@code CACHED_ROTATION} : strategie d'optimisation FAST path .
+     * <p>Concretement , l'unpublish fait UNIQUEMENT : COUNT puis DELETE
+     * chunke des rows referencevalue ( progression live + cancel cooperatif
+     * entre chunks ) . Il ne touche PAS au cache {@code processed_data} :
      * <ul>
-     *   <li><b>Cas nominal</b> : le cache {@code processed_data} a deja ete
-     *       capture au upload ( Sprint 2 B.2 ) ou au 1er publish ( capture
-     *       path dans {@code doPublish} ) , et le {@code configHash} est
-     *       enregistre . Le cache reste valide tant que {@code configHash}
-     *       n'a pas change ( verification au republish via
-     *       {@code tryFast = hashMatch && processedSize > 0} ) . Dans ce cas
-     *       l'unpublish fait UNIQUEMENT le DELETE referencevalue - on
-     *       PRESERVE le cache existant pour permettre un FAST path au
-     *       republish suivant ( gain x100 vs cascade FULL sur 1M+ rows ) .</li>
-     *   <li><b>Cas legacy / pre-feature</b> : cache absent ou configHash
-     *       manquant ( fichier upload avant Sprint 2 B.2 ) . On tente un
-     *       snapshot best-effort via {@code string_agg} server-side pour
-     *       alimenter le cache + on capture le hash courant . Si le snapshot
-     *       echoue ( typiquement {@code string buffer > 1 GB} sur gros
-     *       datasets ) , on retombe sur DELETE seul - le republish fera
-     *       cascade FULL ( comportement legacy , pas de regression ) .</li>
+     *   <li>il ne le cree pas ( pas de snapshot a l'unpublish ) ;</li>
+     *   <li>il ne l'efface pas - un cache existant ( capture async d'un
+     *       publish anterieur ) est PRESERVE tel quel pour permettre un FAST
+     *       path au republish suivant ( gain x100 vs cascade FULL sur 1M+
+     *       rows ) tant que {@code configHash} n'a pas change .</li>
      * </ul>
      *
-     * <p>Critique : on ne fait PLUS de {@code clearProcessedData} sur
-     * snapshot failure - bug observe ou un cache pre-existant valide etait
-     * detruit pour rien , forcant le republish a cascade FULL .
+     * <p>Le cache n'est rempli QUE par la capture async post-publish
+     * ( {@link CacheCaptureService} , best-effort , sans retry ) ou par
+     * l'endpoint admin BUILD_CACHE - jamais a l'upload ni a l'unpublish .
+     * Si le cache est absent ou stale au republish , le routage
+     * {@code tryFast = hashMatch && processedSize > 0} retombe naturellement
+     * sur la cascade ( LITE / FULL ) - le cache n'est qu'une optim , jamais
+     * une invariante de correction .
      */
     private long doUnpublish(Application application, PublishLifecycleEvent ev) throws Exception {
         DataRepository dataRepo = repository.getRepository(application).data();

@@ -108,43 +108,43 @@ public class PublishProperties {
      *       Cache {@code processed_data} cree au 1er republish et garde a vie .</li>
      *
      *   <li>{@link PublishMode#CACHED_ROTATION} : rotation cache lifecycle .
-     *       <ol>
-     *         <li>Unpublish : SQL snapshot {@code referencevalue} -&gt;
-     *             {@code binaryfile.processed_data} AVANT delete rows .</li>
-     *         <li>Republish : COPY {@code processed_data} -&gt;
-     *             {@code referencevalue} ( via staging ou direct ) APUIS
-     *             clear {@code processed_data} = NULL .</li>
-     *       </ol>
-     *       Cache existe UNIQUEMENT pendant fenetre unpublished
-     *       ( pas de duplication storage en steady state publie ) .</li>
+     *       Le cache {@code processed_data} est rempli par la capture async
+     *       post-publish ( cf {@code CacheCaptureService} ) ; l'unpublish
+     *       supprime les rows {@code referencevalue} mais PRESERVE le cache .
+     *       Au republish FAST , le cache est COPY -&gt;
+     *       {@code referencevalue} puis VIDE ( {@code processed_data = NULL} )
+     *       ; la capture async du publish suivant le re-remplit .
+     *       Pas de duplication storage en steady state .</li>
      * </ul>
      */
     private volatile PublishMode publishMode = PublishMode.CACHED_ROTATION;
 
     // ========================================================================
-    // FAST path / cache processed_data ( legacy CASCADE_ALWAYS mode flags )
+    // FAST path / cache processed_data
     // ========================================================================
 
     /**
      * Active le FAST path republish : si {@code binaryfile.processed_data}
      * cache est disponible + {@code configHash} matche -> {@code COPY
-     * processed_data -> staging -> referencevalue} directement , bypass
-     * complet {@code DataImporter} . ~5s pour 875K rows , heap ~10 MB .
+     * processed_data -> referencevalue} directement , bypass complet
+     * {@code DataImporter} . ~5s pour 875K rows , heap ~10 MB .
      *
-     * <p>Pertinent pour {@link PublishMode#CASCADE_ALWAYS} . En mode
-     * {@link PublishMode#CACHED_ROTATION} , le FAST path est toujours
-     * tente apres un unpublish ( le snapshot etant garanti ) .
+     * <p>Fallback automatique sur la cascade ( LITE / FULL ) si le cache est
+     * absent / stale ou si le COPY echoue - le cache n'est qu'une optim ,
+     * jamais une invariante de correction .
      */
     private volatile boolean fastPathEnabled = true;
 
     /**
-     * Pour {@link PublishMode#CASCADE_ALWAYS} : active la capture du JSON
-     * processed pendant cascade ( DataImporter ecrit chaque ligne dans
-     * un temp file persiste apres en {@code processed_data} ) .
-     * Permet d'armer FAST path subsequent .
+     * Active la capture async ( post-publish ) de {@code referencevalue} ->
+     * {@code binaryfile.processed_data} ( Large Object ) , dispatchee apres que
+     * le workflow ait atteint DONE ( cf {@code CacheCaptureService} ) , pour
+     * armer le FAST path du republish suivant .
      *
-     * <p>Ignore en {@link PublishMode#CACHED_ROTATION} ( cache est alimente
-     * via snapshot SQL au unpublish , pas via capture cascade ) .
+     * <p>Best-effort , sans retry : un echec est logge warn et avale ( le
+     * prochain republish retombe sur la cascade ) . S'applique aux DEUX modes
+     * ( {@link PublishMode#CASCADE_ALWAYS} et {@link PublishMode#CACHED_ROTATION} ) .
+     * La capture n'a PAS lieu a l'upload / import , uniquement au publish .
      */
     private volatile boolean captureProcessedEnabled = true;
 
