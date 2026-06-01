@@ -56,7 +56,19 @@ import java.util.stream.Stream;
 @Service
 public class UserAccessService {
 
+    /**
+     * TTL du cache mémoire de {@link #isBlocked} ( ms ) . {@code isBlocked} est
+     * appelé sur le chemin chaud du filtre d'authentification ( chaque requête
+     * /api ) : on évite un stat filesystem par requête. Effet immédiat sur
+     * {@code block}/{@code unblock} ( invalidation synchrone ) ; le TTL ne sert
+     * qu'à rattraper d'éventuelles modifications hors-bande des drapeaux.
+     */
+    private static final long CACHE_TTL_MS = 5_000;
+
     private final Path blockedDir;
+
+    private volatile Set<UUID> cachedBlocked = Set.of();
+    private volatile long cachedAtMs = 0L;
 
     public UserAccessService(
             @Value("${openadom.maintenance.flag-path:/maintenance/maintenance.flag}") String flagPath,
@@ -80,9 +92,35 @@ public class UserAccessService {
         return ids;
     }
 
-    /** @return true si l'utilisateur {@code userId} est bloqué. */
+    /**
+     * @return true si l'utilisateur {@code userId} est bloqué. Lecture servie
+     * par un cache mémoire ( cf. {@link #CACHE_TTL_MS} ) pour ne pas faire un
+     * stat filesystem à chaque requête /api.
+     */
     public boolean isBlocked(UUID userId) {
-        return userId != null && Files.exists(flagOf(userId));
+        return userId != null && currentlyBlocked().contains(userId);
+    }
+
+    /** Snapshot caché des UUID bloqués, rechargé à expiration du TTL. */
+    private Set<UUID> currentlyBlocked() {
+        if (System.currentTimeMillis() - cachedAtMs > CACHE_TTL_MS) {
+            reloadCache();
+        }
+        return cachedBlocked;
+    }
+
+    private synchronized void reloadCache() {
+        // Double-check : un autre thread a pu recharger pendant l'attente du lock.
+        if (System.currentTimeMillis() - cachedAtMs <= CACHE_TTL_MS) {
+            return;
+        }
+        cachedBlocked = blockedUserIds();
+        cachedAtMs = System.currentTimeMillis();
+    }
+
+    /** Force le rechargement au prochain {@link #isBlocked} ( effet immédiat ). */
+    private void invalidateCache() {
+        cachedAtMs = 0L;
     }
 
     /**
@@ -102,6 +140,7 @@ public class UserAccessService {
         try {
             Files.createDirectories(blockedDir);
             Files.writeString(flag, "blocked_at=" + Instant.now() + "\n", StandardCharsets.UTF_8);
+            invalidateCache();
             log.warn("Accès BLOQUÉ pour l'utilisateur {} ( drapeau {} )", userId, flag);
         } catch (IOException e) {
             throw new UncheckedIOException("Impossible de bloquer l'utilisateur " + userId + " ( écriture " + flag + " )", e);
@@ -112,6 +151,7 @@ public class UserAccessService {
         Path flag = flagOf(userId);
         try {
             boolean removed = Files.deleteIfExists(flag);
+            invalidateCache();
             log.warn("Accès RÉTABLI pour l'utilisateur {} ( drapeau {} , supprimé={} )", userId, flag, removed);
         } catch (IOException e) {
             throw new UncheckedIOException("Impossible de débloquer l'utilisateur " + userId + " ( suppression " + flag + " )", e);
