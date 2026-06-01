@@ -42,6 +42,7 @@ class CacheAdminResourcesUnitTest {
     private fr.inra.oresing.rest.binaryFile.BinaryFileService binaryFileService;
     private fr.inra.oresing.cache.CacheSizeEstimator cacheSizeEstimator;
     private fr.inra.oresing.cache.CachePreloader cachePreloader;
+    private fr.inra.oresing.cache.CacheInvalidationTracker cacheInvalidationTracker;
     private CacheAdminResources resources;
 
     @BeforeEach
@@ -58,11 +59,17 @@ class CacheAdminResourcesUnitTest {
         binaryFileService = mock(fr.inra.oresing.rest.binaryFile.BinaryFileService.class);
         cacheSizeEstimator = mock(fr.inra.oresing.cache.CacheSizeEstimator.class);
         cachePreloader = mock(fr.inra.oresing.cache.CachePreloader.class);
+        cacheInvalidationTracker = mock(fr.inra.oresing.cache.CacheInvalidationTracker.class);
 
         when(serviceContainer.dataService()).thenReturn(dataService);
         when(serviceContainer.authorizationService()).thenReturn(authorizationService);
         when(serviceContainer.applicationService()).thenReturn(applicationService);
         when(serviceContainer.binaryFileService()).thenReturn(binaryFileService);
+        // Tracker des invalidations : recordFilterFamily() est void ( no-op ) ,
+        // last() renvoie null par défaut ( pas de trigger récent ) , ce que le
+        // endpoint stats gère déjà. Sans ce stub, cacheInvalidationTracker()
+        // renvoyait null -> NullPointerException dans les endpoints.
+        when(serviceContainer.cacheInvalidationTracker()).thenReturn(cacheInvalidationTracker);
 
         resources = new CacheAdminResources(serviceContainer, cacheSizeEstimator, cachePreloader);
     }
